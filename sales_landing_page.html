@@ -683,6 +683,7 @@
         }
 
         .ai-widget-trigger:hover { transform: scale(1.05); background: var(--primary-hover); }
+        .ai-widget-trigger * { pointer-events: none; }
 
         .ai-widget-window {
             position: fixed;
@@ -865,7 +866,7 @@
 </div>
 
 <!-- Floating AI Support Agent Trigger Button -->
-<button id="aiAgentTrigger" class="ai-widget-trigger" onclick="toggleAiWidget()">
+<button type="button" id="aiAgentTrigger" class="ai-widget-trigger" onclick="toggleAiWidget(event)">
     💬 <span>AI Support & Voice Assistant</span>
 </button>
 
@@ -1298,10 +1299,15 @@
     let recognition = null;
     let isRecording = false;
 
-    function toggleAiWidget() {
+    function toggleAiWidget(e) {
+        if (e && e.preventDefault) {
+            e.preventDefault();
+        }
         const windowEl = document.getElementById('aiWidgetWindow');
         if (!windowEl) return;
-        if (windowEl.classList.contains('active') || windowEl.style.display === 'flex') {
+
+        const isCurrentlyOpen = windowEl.classList.contains('active') || windowEl.style.display === 'flex';
+        if (isCurrentlyOpen) {
             windowEl.style.display = 'none';
             windowEl.classList.remove('active');
         } else {
@@ -1309,6 +1315,13 @@
             windowEl.classList.add('active');
         }
     }
+
+    document.addEventListener('DOMContentLoaded', function() {
+        const btn = document.getElementById('aiAgentTrigger');
+        if (btn) {
+            btn.addEventListener('click', toggleAiWidget);
+        }
+    });
 
     function toggleVoiceOutput() {
         voiceOutputEnabled = !voiceOutputEnabled;
