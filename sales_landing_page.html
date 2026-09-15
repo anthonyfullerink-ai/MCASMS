@@ -625,9 +625,69 @@
             .steps-section { padding: 24px 16px; }
             .cta-btn { width: 100%; }
         }
+
+        /* Pre-Checkout Trial Modal */
+        .modal-overlay {
+            position: fixed;
+            top: 0; left: 0; width: 100vw; height: 100vh;
+            background: rgba(0, 0, 0, 0.85);
+            backdrop-filter: blur(8px);
+            z-index: 99999;
+            display: none;
+            justify-content: center;
+            align-items: center;
+            padding: 20px;
+        }
+
+        .modal-overlay.active { display: flex; }
+
+        .modal-card {
+            background: #131720;
+            border: 2px solid var(--warning);
+            border-radius: 20px;
+            padding: 32px;
+            max-width: 500px;
+            width: 100%;
+            box-shadow: 0 25px 60px rgba(0,0,0,0.8);
+            text-align: center;
+            position: relative;
+            animation: modalSlide 0.25s ease-out;
+        }
+
+        @keyframes modalSlide {
+            from { transform: translateY(20px); opacity: 0; }
+            to { transform: translateY(0); opacity: 1; }
+        }
     </style>
 </head>
 <body>
+
+<!-- 3-Day Free Trial Terms & Cancellation Notice Modal -->
+<div id="trialModal" class="modal-overlay">
+    <div class="modal-card">
+        <div style="font-size: 44px; margin-bottom: 8px;">🎁</div>
+        <h2 style="font-size: 24px; font-weight: 900; color: #FFF; margin: 0 0 8px 0;">3-Day Free Trial Notice</h2>
+        <div style="background: rgba(255, 179, 0, 0.15); border: 1px solid var(--warning); color: var(--warning); padding: 10px 16px; border-radius: 12px; font-weight: bold; font-size: 14px; margin-bottom: 20px;">
+            ⚡ $0.00 CHARGED TODAY
+        </div>
+        <p style="color: var(--text); font-size: 14px; line-height: 1.6; text-align: left; margin-bottom: 14px;">
+            You are starting your <strong>3-Day Free Trial</strong>. Stripe will collect and verify your payment method at checkout, but <strong>you are not being charged today ($0.00)</strong>.
+        </p>
+        <p style="color: var(--muted); font-size: 13px; line-height: 1.6; text-align: left; margin-bottom: 20px;">
+            If you do not cancel within 3 days (72 hours), your card will automatically be charged <strong>$49.99</strong> on Day 4 for your lifetime license.
+        </p>
+        <div style="background: #090B0E; border: 1px dashed var(--warning); border-radius: 12px; padding: 14px; text-align: left; margin-bottom: 24px;">
+            <div style="font-size: 11px; color: var(--muted); font-weight: bold; text-transform: uppercase;">1-Click Cancellation Email:</div>
+            <div style="font-size: 14px; font-weight: bold; color: var(--primary); margin-top: 4px;">
+                📧 <a href="mailto:contactus@offgridmediagroup.com?subject=Cancel%20Free%20Trial" style="color: var(--primary); text-decoration: underline;">contactus@offgridmediagroup.com</a>
+            </div>
+            <div style="font-size: 11px; color: var(--muted); margin-top: 4px;">Email us anytime during your 3-day trial to cancel before your charge.</div>
+        </div>
+
+        <button class="cta-btn" style="width: 100%; background: var(--warning); color: #000; margin-bottom: 10px; font-size: 15px;" onclick="proceedToStripeTrial()">Proceed to Secure Stripe Checkout ➔</button>
+        <button class="cta-btn" style="width: 100%; background: transparent; color: var(--muted); border: 1px solid var(--card-border); box-shadow: none; font-size: 13px; padding: 10px;" onclick="closeTrialModal()">Cancel & Return</button>
+    </div>
+</div>
 
 <div class="container">
     <!-- Header / Navigation -->
@@ -1002,6 +1062,14 @@
     }
 
     function initiateFreeTrialCheckout() {
+        document.getElementById('trialModal').classList.add('active');
+    }
+
+    function closeTrialModal() {
+        document.getElementById('trialModal').classList.remove('active');
+    }
+
+    function proceedToStripeTrial() {
         window.location.href = "https://buy.stripe.com/3cI9AT49g2X07Q41ux2go0a?trial_period_days=3";
     }
 
