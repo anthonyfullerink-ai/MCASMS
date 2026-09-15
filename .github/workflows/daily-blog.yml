@@ -1,0 +1,60 @@
+﻿name: Daily Autonomous AI Blog Publisher
+
+on:
+  schedule:
+    # Runs every day at 12:00 UTC (8:00 AM EST / 5:00 AM PST)
+    - cron: '0 12 * * *'
+  workflow_dispatch:
+    inputs:
+      category:
+        description: 'Optional Topic Category filter'
+        required: false
+        default: 'AUTO'
+        type: choice
+        options:
+          - AUTO
+          - Paid Ads & ROI
+          - Appliance vs. SaaS
+          - Contractor Playbooks
+          - Speed-to-Lead
+
+permissions:
+  contents: write
+
+jobs:
+  publish-blog:
+    name: Generate & Publish Daily Blog Article
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout Repository
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+
+      - name: Run Autonomous Blog Generator
+        env:
+          GEMINI_API_KEY: ${{ secrets.GEMINI_API_KEY }}
+        run: |
+          echo "🚀 Initiating Daily Autonomous Blog Generation..."
+          node scripts/generate_daily_blog.js
+
+      - name: Commit and Push New Article
+        run: |
+          git config --global user.name "github-actions[bot]"
+          git config --global user.email "github-actions[bot]@users.noreply.github.com"
+          
+          # Check if any new blog post or sitemap updates were created
+          if [ -n "$(git status --porcelain blog sitemap.xml)" ]; then
+            echo "📝 New blog post detected! Staging and committing..."
+            git add blog/posts.json blog/posts/ sitemap.xml
+            git commit -m "feat(blog): publish autonomous daily AI blog article [skip ci]"
+            git push origin main
+            echo "✅ Successfully published to production website!"
+          else
+            echo "ℹ️ No changes to commit (dry-run or no new article generated)."
+          fi

@@ -396,6 +396,7 @@
         <button id="tabBtn0" class="tab-btn active" onclick="switchTab(0)">👥 Sales & License Directory (<span id="countTab0">0</span>)</button>
         <button id="tabBtn1" class="tab-btn" onclick="switchTab(1)">🔑 Key Issuer & Verifier</button>
         <button id="tabBtn2" class="tab-btn" onclick="switchTab(2)">⚙️ Developer OTA & System Controls</button>
+        <button id="tabBtn3" class="tab-btn" onclick="switchTab(3)">📰 AI Blog Engine (<span id="countTabBlog">0</span>)</button>
     </div>
 
     <!-- TAB 0: Sales & License Directory -->
@@ -615,6 +616,64 @@
             </div>
         </div>
     </div>
+
+    <!-- TAB 3: AI Blog Engine & Publishing History -->
+    <div id="tab3" class="tab-content" style="display: none;">
+        <div class="card">
+            <div class="card-header">
+                <div>
+                    <h2>📰 AI Automated Blog Publishing & History</h2>
+                    <div style="font-size: 13px; color: var(--muted); margin-top: 4px;">
+                        Autonomous daily SEO articles written by Google Gemini, compiled into static HTML, and indexed to sitemap.xml.
+                    </div>
+                </div>
+                <div style="display: flex; gap: 10px; flex-wrap: wrap;">
+                    <button class="btn-action btn-primary-action" id="btnGenBlogNow" onclick="generateNewBlogArticle()">⚡ Generate Article Now (On-Demand)</button>
+                    <a href="/blog" target="_blank" class="btn-action" style="text-decoration: none; display: inline-flex; align-items: center; color: var(--primary);">Open Public Blog (/blog) ↗</a>
+                    <button class="btn-action" onclick="loadBlogDashboard()">🔄 Refresh History</button>
+                </div>
+            </div>
+
+            <!-- Blog Architecture Summary Cards -->
+            <div style="display: grid; grid-template-columns: repeat(4, 1fr); gap: 14px; margin-bottom: 20px;">
+                <div style="background: #090B0E; border: 1px solid var(--card-border); border-radius: 10px; padding: 14px;">
+                    <div style="font-size: 11px; color: var(--muted); font-weight: 700; text-transform: uppercase;">Published Articles</div>
+                    <div id="blogMetricTotal" style="font-size: 26px; font-weight: 900; color: var(--primary); margin-top: 4px;">--</div>
+                </div>
+                <div style="background: #090B0E; border: 1px solid var(--card-border); border-radius: 10px; padding: 14px;">
+                    <div style="font-size: 11px; color: var(--muted); font-weight: 700; text-transform: uppercase;">Publishing Cadence</div>
+                    <div style="font-size: 14px; font-weight: 800; color: #FFF; margin-top: 8px;">Daily @ 8:00 AM EST</div>
+                </div>
+                <div style="background: #090B0E; border: 1px solid var(--card-border); border-radius: 10px; padding: 14px;">
+                    <div style="font-size: 11px; color: var(--muted); font-weight: 700; text-transform: uppercase;">AI Engine</div>
+                    <div style="font-size: 14px; font-weight: 800; color: var(--accent); margin-top: 8px;">Google Gemini 1.5</div>
+                </div>
+                <div style="background: #090B0E; border: 1px solid var(--card-border); border-radius: 10px; padding: 14px;">
+                    <div style="font-size: 11px; color: var(--muted); font-weight: 700; text-transform: uppercase;">Cloud Automation</div>
+                    <div style="font-size: 14px; font-weight: 800; color: var(--primary); margin-top: 8px;">🟢 Autonomous (No PC Needed)</div>
+                </div>
+            </div>
+
+            <div id="blogGenAlert" style="display: none; background: rgba(0, 230, 118, 0.15); border: 1px solid var(--primary); color: #FFF; padding: 14px 18px; border-radius: 10px; margin-bottom: 20px; font-size: 13px; line-height: 1.5;">
+            </div>
+
+            <!-- Blog Articles History Table -->
+            <table>
+                <thead>
+                    <tr>
+                        <th style="width: 110px;">Date</th>
+                        <th>Article Title & Summary</th>
+                        <th style="width: 170px;">Category</th>
+                        <th style="width: 100px;">Read Time</th>
+                        <th style="width: 200px; text-align: right;">Actions</th>
+                    </tr>
+                </thead>
+                <tbody id="blogHistoryTableBody">
+                    <tr><td colspan="5" style="text-align: center; color: var(--muted); padding: 24px;">Loading blog history...</td></tr>
+                </tbody>
+            </table>
+        </div>
+    </div>
 </div>
 
 <script>
@@ -760,6 +819,7 @@
             document.getElementById("loginContainer").style.display = "none";
             document.getElementById("dashboardContainer").style.display = "block";
             renderDashboard();
+            loadBlogCount();
         } else {
             document.getElementById("loginContainer").style.display = "flex";
             document.getElementById("dashboardContainer").style.display = "none";
@@ -803,6 +863,8 @@
             initApiHostUi();
             loadLiveOtaVersion();
             checkStripeConnectionLive();
+        } else if (index === 3) {
+            loadBlogDashboard();
         }
     }
 
@@ -1401,6 +1463,153 @@
             text.innerHTML = `<span style="color: var(--primary); font-weight: bold;">🟢 VALID & ACTIVE LICENSE</span><br>${msg}`;
         } else {
             text.innerHTML = `<span style="color: var(--danger); font-weight: bold;">🔴 INVALID / REVOKED / EXPIRED</span><br>${msg}`;
+        }
+    }
+
+    // AI Blog Engine Functions
+    async function loadBlogDashboard() {
+        const tbody = document.getElementById("blogHistoryTableBody");
+        const metricTotal = document.getElementById("blogMetricTotal");
+        const countTabBlog = document.getElementById("countTabBlog");
+
+        try {
+            const apiBase = getApiBaseUrl();
+            const res = await fetch(`${apiBase}/api/blog-posts`);
+            if (!res.ok) throw new Error(`HTTP ${res.status}`);
+            const posts = await res.json();
+
+            if (metricTotal) metricTotal.innerText = posts.length;
+            if (countTabBlog) countTabBlog.innerText = posts.length;
+
+            if (!posts || posts.length === 0) {
+                tbody.innerHTML = `<tr><td colspan="5" style="text-align: center; color: var(--muted); padding: 30px;">No blog articles published yet. Click "Generate Article Now" to create your first one!</td></tr>`;
+                return;
+            }
+
+            tbody.innerHTML = posts.map(post => {
+                const categoryColors = {
+                    'Paid Ads & ROI': 'rgba(0, 230, 118, 0.15)',
+                    'Appliance vs. SaaS': 'rgba(41, 182, 246, 0.15)',
+                    'Contractor Playbooks': 'rgba(255, 179, 0, 0.15)',
+                    'Speed-to-Lead': 'rgba(187, 134, 252, 0.15)'
+                };
+                const categoryTextColors = {
+                    'Paid Ads & ROI': 'var(--primary)',
+                    'Appliance vs. SaaS': 'var(--accent)',
+                    'Contractor Playbooks': 'var(--warning)',
+                    'Speed-to-Lead': '#BB86FC'
+                };
+
+                const catBg = categoryColors[post.category] || 'rgba(255, 255, 255, 0.1)';
+                const catColor = categoryTextColors[post.category] || '#FFF';
+                const postUrl = `/blog/${post.slug}`;
+
+                return `
+                    <tr>
+                        <td style="color: var(--muted); font-size: 13px; white-space: nowrap;">${escapeHtml(post.date)}</td>
+                        <td>
+                            <div style="font-weight: 800; font-size: 15px; color: #FFF; margin-bottom: 4px;">
+                                <a href="${postUrl}" target="_blank" style="color: #FFF; text-decoration: none;" onmouseover="this.style.color='var(--primary)'" onmouseout="this.style.color='#FFF'">
+                                    ${escapeHtml(post.title)}
+                                </a>
+                            </div>
+                            <div style="color: var(--muted); font-size: 12px; line-height: 1.4;">
+                                ${escapeHtml(post.excerpt || post.metaDescription || '')}
+                            </div>
+                        </td>
+                        <td>
+                            <span class="badge" style="background: ${catBg}; color: ${catColor}; border: 1px solid ${catColor};">
+                                ${escapeHtml(post.category)}
+                            </span>
+                        </td>
+                        <td style="color: var(--muted); font-size: 13px;">${post.readTime || 4} min read</td>
+                        <td style="text-align: right; white-space: nowrap;">
+                            <a href="${postUrl}" target="_blank" class="btn-action" style="color: var(--primary); text-decoration: none; display: inline-block;">
+                                View Post ↗
+                            </a>
+                            <button class="btn-action" onclick="copyBlogLink('${post.slug}')">
+                                📋 Copy Link
+                            </button>
+                        </td>
+                    </tr>
+                `;
+            }).join('');
+        } catch (err) {
+            console.error("Failed to load blog posts:", err);
+            tbody.innerHTML = `<tr><td colspan="5" style="text-align: center; color: var(--danger); padding: 30px;">Error loading blog posts: ${escapeHtml(err.message)}</td></tr>`;
+        }
+    }
+
+    async function loadBlogCount() {
+        try {
+            const apiBase = getApiBaseUrl();
+            const res = await fetch(`${apiBase}/api/blog-posts`);
+            if (res.ok) {
+                const posts = await res.json();
+                const countTabBlog = document.getElementById("countTabBlog");
+                const metricTotal = document.getElementById("blogMetricTotal");
+                if (countTabBlog) countTabBlog.innerText = posts.length;
+                if (metricTotal) metricTotal.innerText = posts.length;
+            }
+        } catch (e) {
+            // Ignore background network error
+        }
+    }
+
+    function copyBlogLink(slug) {
+        const fullUrl = `${window.location.origin}/blog/${slug}`;
+        navigator.clipboard.writeText(fullUrl).then(() => {
+            alert(`Copied link to clipboard:\n${fullUrl}`);
+        }).catch(() => {
+            prompt("Copy article link:", fullUrl);
+        });
+    }
+
+    async function generateNewBlogArticle() {
+        const btn = document.getElementById("btnGenBlogNow");
+        const alertBox = document.getElementById("blogGenAlert");
+        
+        if (!confirm("Trigger autonomous Google Gemini article generation now? This will create a fresh SEO article and index it into the blog.")) {
+            return;
+        }
+
+        btn.disabled = true;
+        btn.innerText = "⏳ Generating Article with Gemini...";
+        alertBox.style.display = "block";
+        alertBox.style.background = "rgba(41, 182, 246, 0.15)";
+        alertBox.style.borderColor = "var(--accent)";
+        alertBox.innerHTML = `🤖 <strong>Google Gemini Engine Active</strong>: Brainstorming unique angle, writing long-form SEO copy, formatting JSON-LD Schema, and saving static HTML...`;
+
+        try {
+            const apiBase = getApiBaseUrl();
+            const res = await fetch(`${apiBase}/api/generate-blog`, { method: "POST" });
+            const data = await res.json();
+
+            if (data.success) {
+                alertBox.style.background = "rgba(0, 230, 118, 0.15)";
+                alertBox.style.borderColor = "var(--primary)";
+                const title = data.latestPost ? data.latestPost.title : "New Article";
+                const slug = data.latestPost ? data.latestPost.slug : "";
+                alertBox.innerHTML = `
+                    ✅ <strong>Article Published Successfully!</strong><br>
+                    <strong>Title:</strong> ${escapeHtml(title)}<br>
+                    <a href="/blog/${slug}" target="_blank" style="color: var(--primary); font-weight: bold; text-decoration: underline; margin-top: 6px; display: inline-block;">
+                        Read Published Article ↗ (/blog/${slug})
+                    </a>
+                `;
+                await loadBlogDashboard();
+            } else {
+                alertBox.style.background = "rgba(248, 81, 73, 0.15)";
+                alertBox.style.borderColor = "var(--danger)";
+                alertBox.innerHTML = `⚠️ <strong>Generation Note:</strong> ${escapeHtml(data.error || 'Check console or GEMINI_API_KEY')}`;
+            }
+        } catch (err) {
+            alertBox.style.background = "rgba(248, 81, 73, 0.15)";
+            alertBox.style.borderColor = "var(--danger)";
+            alertBox.innerHTML = `❌ <strong>Error:</strong> ${escapeHtml(err.message)}`;
+        } finally {
+            btn.disabled = false;
+            btn.innerText = "⚡ Generate Article Now (On-Demand)";
         }
     }
 

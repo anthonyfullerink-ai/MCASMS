@@ -3,6 +3,7 @@ const https = require('https');
 const fs = require('fs');
 const path = require('path');
 const querystring = require('querystring');
+const { exec } = require('child_process');
 
 const PORT = 8000;
 const MIME_TYPES = {
@@ -471,8 +472,80 @@ const server = http.createServer((req, res) => {
     return;
   }
 
+  // API Route: Get Blog Posts List
+  if ((relativePath === '/api/blog-posts' || relativePath === '/api/blog-posts/') && req.method === 'GET') {
+    const postsPath = path.join(__dirname, 'blog', 'posts.json');
+    if (fs.existsSync(postsPath)) {
+      const data = fs.readFileSync(postsPath, 'utf8');
+      res.writeHead(200, {
+        'Content-Type': 'application/json; charset=utf-8',
+        'Access-Control-Allow-Origin': '*'
+      });
+      res.end(data);
+    } else {
+      res.writeHead(200, {
+        'Content-Type': 'application/json; charset=utf-8',
+        'Access-Control-Allow-Origin': '*'
+      });
+      res.end(JSON.stringify([]));
+    }
+    return;
+  }
+
+  // API Route: Trigger Autonomous AI Blog Generation On-Demand
+  if ((relativePath === '/api/generate-blog' || relativePath === '/api/generate-blog/') && req.method === 'POST') {
+    const scriptPath = path.join(__dirname, 'scripts', 'generate_daily_blog.js');
+    console.log('🤖 [AI BLOG GENERATOR] Manually triggered from owner dashboard...');
+    exec(`node "${scriptPath}"`, { cwd: __dirname }, (error, stdout, stderr) => {
+      res.writeHead(200, {
+        'Content-Type': 'application/json; charset=utf-8',
+        'Access-Control-Allow-Origin': '*'
+      });
+      if (error) {
+        console.error('Blog generation execution failed:', error.message);
+        res.end(JSON.stringify({
+          success: false,
+          error: error.message,
+          stdout: stdout,
+          stderr: stderr
+        }));
+        return;
+      }
+      try {
+        const postsPath = path.join(__dirname, 'blog', 'posts.json');
+        const posts = JSON.parse(fs.readFileSync(postsPath, 'utf8'));
+        const latest = posts[0] || null;
+        res.end(JSON.stringify({
+          success: true,
+          message: 'New blog article generated and published successfully!',
+          latestPost: latest,
+          totalPosts: posts.length,
+          output: stdout
+        }));
+      } catch (e) {
+        res.end(JSON.stringify({
+          success: true,
+          message: 'Generator finished execution',
+          output: stdout
+        }));
+      }
+    });
+    return;
+  }
+
+  // Clean URL Routing
   if (relativePath === '/') {
     relativePath = '/sales_landing_page.html';
+  } else if (relativePath === '/owner' || relativePath === '/owner/') {
+    relativePath = '/owner_admin_dashboard.html';
+  } else if (relativePath === '/blog' || relativePath === '/blog/') {
+    relativePath = '/blog.html';
+  } else if (relativePath.startsWith('/blog/') && !relativePath.includes('.')) {
+    const slug = relativePath.replace('/blog/', '').replace(/\/$/, '');
+    const postHtmlPath = path.join(__dirname, 'blog', 'posts', `${slug}.html`);
+    if (fs.existsSync(postHtmlPath)) {
+      relativePath = `/blog/posts/${slug}.html`;
+    }
   }
 
   // Map /MissedCallAutoSMS.apk and /app-debug.apk from build output or root

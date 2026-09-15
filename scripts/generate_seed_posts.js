@@ -1,0 +1,295 @@
+﻿const fs = require('fs');
+const path = require('path');
+
+const templatePath = path.join(__dirname, '../blog/template.html');
+const template = fs.readFileSync(templatePath, 'utf8');
+
+const posts = [
+  {
+    slug: 'why-67-percent-of-paid-ad-leads-never-call-back',
+    title: 'Why 67% of Paid Ad Leads Never Call Back (And How Instant SMS Recovers Them)',
+    category: 'Paid Ads & ROI',
+    date: 'Sep 15, 2026',
+    isoDate: '2026-09-15T12:00:00Z',
+    readTime: 5,
+    tags: ['Google Ads', 'Local Services Ads', 'Lead Recovery', 'ROI'],
+    excerpt: 'If you spend money on Google Local Services Ads or Facebook Ads, a missed call is a direct donation to your competitor. Here is the math behind lead decay and how instant auto-texting saves your budget.',
+    metaDescription: 'Discover why 67% of paid ad callers never leave a voicemail or call back. Learn how instant missed-call auto-texting recovers wasted Google Ads budget in 15 seconds.',
+    takeaways: [
+      '67% of callers who reach a voicemail hang up and immediately dial the next Google search result.',
+      'Google Local Services Ads (LSA) can cost $35 to $110 per phone call—missing one call burns that investment completely.',
+      'A response within 5 minutes makes you 21x more likely to enter the sales cycle compared to waiting 30 minutes.',
+      'Automated SMS with natural 15-second human jitter delay stops the caller from browsing competitors.'
+    ],
+    contentHtml: `
+      <p>Every week, thousands of home service contractors, legal professionals, and local business owners log into Google Ads or Facebook Ads Manager and wonder why their customer acquisition cost keeps climbing.</p>
+      
+      <p>They tweak their headlines. They adjust their geo-targeting. They increase their bids. Yet, their actual booked revenue remains stubbornly flat.</p>
+
+      <p>In 90% of cases, the problem isn't the ad campaign. <strong>The leak is happening on the telephone.</strong></p>
+
+      <h2>The Brutal Reality of the Modern Consumer</h2>
+      <p>When someone needs an emergency plumber, a mobile mechanic, a locksmith, or an urgent roof repair, they are in high-stress, high-intent mode. They do not browse your "About Us" page. They click the phone number directly on Google Local Services Ads or Google Maps.</p>
+
+      <p>If that phone rings more than four times or drops to voicemail, here is what happens in the caller’s brain:</p>
+
+      <blockquote>
+        "They're too busy or closed. Let me try the next person on Google."
+      </blockquote>
+
+      <p>According to consumer research from Invoca and Harvard Business Review:</p>
+      <ul>
+        <li><strong>67% of callers hang up</strong> without leaving a voicemail.</li>
+        <li><strong>85% of people whose calls aren't answered</strong> will never call that same company back.</li>
+        <li><strong>78% of local service contracts</strong> go to the provider who responds first.</li>
+      </ul>
+
+      <h2>The Real Math: How Much Is A Missed Call Costing You?</h2>
+      <p>Let's look at real numbers for a typical trade business running Google Ads:</p>
+
+      <table class="comparison-table">
+        <thead>
+          <tr>
+            <th>Metric</th>
+            <th>Standard Voicemail</th>
+            <th>With Missed Call Auto SMS</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td>Monthly Ad Budget</td>
+            <td>$2,500.00</td>
+            <td>$2,500.00</td>
+          </tr>
+          <tr>
+            <td>Inbound Ad Calls ($50/call)</td>
+            <td>50 calls</td>
+            <td>50 calls</td>
+          </tr>
+          <tr>
+            <td>Calls Missed (on a job/driving)</td>
+            <td>18 calls (36%)</td>
+            <td>18 calls (36%)</td>
+          </tr>
+          <tr>
+            <td>Missed Leads Recovered</td>
+            <td>2 leads (11%)</td>
+            <td><strong>12 leads (67%)</strong></td>
+          </tr>
+          <tr>
+            <td>New Booked Jobs ($450 avg)</td>
+            <td>+1 job ($450)</td>
+            <td><strong>+6 jobs ($2,700)</strong></td>
+          </tr>
+          <tr>
+            <td><strong>Net Added Revenue / Mo</strong></td>
+            <td>$450.00</td>
+            <td><strong>+$2,700.00 / mo</strong></td>
+          </tr>
+        </tbody>
+      </table>
+
+      <p>By simply texting the caller back within 15 seconds, you stop them in their tracks before they click the next listing on Google.</p>
+
+      <h2>The Magic of Natural Jitter Delay</h2>
+      <p>Robotic, instantaneous replies that arrive in 0.5 seconds feel like automated bots. Customers ignore them because they look like automated spam.</p>
+
+      <p>Missed Call Auto SMS uses an intelligent <strong>15-second human jitter delay</strong>. To the customer, it looks like you picked up your personal phone, saw their missed call, and quickly texted them: <em>"Hey! Sorry I missed your call, I'm with a client right now. How can I help you? - Dave"</em>.</p>
+
+      <p>Over 80% of customers reply to that text with their issue, phone number, and address—locking in the lead before your competitors even know they were searching.</p>
+    `
+  },
+  {
+    slug: 'missed-call-auto-sms-vs-gohighlevel-twilio',
+    title: 'Missed Call Auto SMS vs. GoHighLevel & Twilio: Why Hardware Beats Cloud SaaS',
+    category: 'Appliance vs. SaaS',
+    date: 'Sep 14, 2026',
+    isoDate: '2026-09-14T12:00:00Z',
+    readTime: 6,
+    tags: ['GoHighLevel', 'Twilio', 'A2P 10DLC', 'Hardware Appliance', 'SaaS Alternative'],
+    excerpt: 'Comparing dedicated Android SIM appliances vs $297/mo SaaS stacks. Why local business owners are eliminating Twilio 10DLC registration delays, per-message fees, and recurring software subscriptions.',
+    metaDescription: 'Compare Missed Call Auto SMS to GoHighLevel and Twilio. Discover why a dedicated Android SIM appliance saves thousands in SaaS fees and bypasses A2P 10DLC carrier registration.',
+    takeaways: [
+      'Cloud platforms like GoHighLevel require $97 to $297/month subscriptions plus third-party Twilio per-text charges.',
+      'Twilio requires complex A2P 10DLC brand registration, employer identification numbers (EIN), and weeks of compliance approval.',
+      'Carrier-level SIM appliances send text messages directly through your phone carrier, meaning 100% A2P 10DLC exemption.',
+      'Missed Call Auto SMS has zero recurring monthly SaaS fees—a one-time $49.99 lifetime license.'
+    ],
+    contentHtml: `
+      <p>If you have ever researched "missed call text back" software, chances are you were bombarded with marketing for agency software like GoHighLevel, Podium, or custom Twilio webhooks.</p>
+
+      <p>While these platforms are powerful for enterprise call centers, for 95% of small business owners and contractors, they introduce a nightmare of complexity, monthly fees, and compliance hurdles.</p>
+
+      <h2>The Hidden Nightmare of Cloud SMS: A2P 10DLC</h2>
+      <p>In recent years, major mobile carriers (AT&T, Verizon, T-Mobile) enacted strict anti-spam regulations known as <strong>A2P 10DLC</strong> (Application-to-Person 10-Digit Long Code).</p>
+
+      <p>If you use a cloud service like Twilio, CallRail, or GoHighLevel to send an automated SMS, your message is classified as commercial application traffic. That means you must:</p>
+      <ul>
+        <li>Submit corporate tax documents (EIN / Articles of Incorporation).</li>
+        <li>Pay initial brand registration fees and monthly campaign fees.</li>
+        <li>Wait 2 to 6 weeks for manual carrier vetting.</li>
+        <li>Risk having your messages silently blocked or carrier-filtered if you don't follow exact opt-in disclosures.</li>
+      </ul>
+
+      <h2>The Hardware Appliance Alternative</h2>
+      <p><strong>Missed Call Auto SMS flips the script completely.</strong></p>
+
+      <p>Instead of routing messages through expensive cloud servers and virtual VoIP numbers that look suspicious to customers, Missed Call Auto SMS turns any dedicated Android device into an independent hardware appliance.</p>
+
+      <p>Because the SMS is sent directly through the phone's physical SIM card via your regular cellular network (T-Mobile, AT&T, Verizon, Mint, etc.):</p>
+      <ul>
+        <li><strong>You are 100% exempt from A2P 10DLC registration.</strong></li>
+        <li>Your messages show up as coming from your <strong>real, local phone number</strong>.</li>
+        <li>Delivery rates are <strong>virtually 100%</strong> because carriers treat it as standard peer-to-peer personal messaging.</li>
+        <li>You pay <strong>$0 per text</strong> because modern phone plans have unlimited SMS.</li>
+      </ul>
+
+      <h2>Cost Comparison: 1 Year of Operation</h2>
+      <table class="comparison-table">
+        <thead>
+          <tr>
+            <th>Expense Category</th>
+            <th>GoHighLevel + Twilio</th>
+            <th>Missed Call Auto SMS Appliance</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td>Monthly Software Subscription</td>
+            <td>$97 to $297 / month ($1,164 - $3,564/yr)</td>
+            <td><strong>$0.00 / month</strong></td>
+          </tr>
+          <tr>
+            <td>Per-Message Carrier & Twilio Fees</td>
+            <td>$0.0079 per text + carrier surcharges</td>
+            <td><strong>$0.00 (Included in SIM plan)</strong></td>
+          </tr>
+          <tr>
+            <td>A2P 10DLC Registration Costs</td>
+            <td>$15 - $50 setup + recurring campaign fees</td>
+            <td><strong>$0.00 (Exempt)</strong></td>
+          </tr>
+          <tr>
+            <td>One-Time License</td>
+            <td>None (Forever recurring)</td>
+            <td><strong>$49.99 Lifetime</strong></td>
+          </tr>
+          <tr>
+            <td><strong>Total Cost Year 1</strong></td>
+            <td><strong>$1,300 - $3,800+</strong></td>
+            <td><strong>$49.99 total</strong></td>
+          </tr>
+        </tbody>
+      </table>
+
+      <p>Why rent an overpriced software subscription when you can own a permanent appliance that never charges you monthly fees?</p>
+    `
+  },
+  {
+    slug: 'the-5-minute-contractor-speed-to-lead-rule',
+    title: 'The 5-Minute Contractor Rule: How Speed-to-Lead Decides $450+ Jobs',
+    category: 'Contractor Playbooks',
+    date: 'Sep 13, 2026',
+    isoDate: '2026-09-13T12:00:00Z',
+    readTime: 4,
+    tags: ['Speed to Lead', 'Contractor Sales', 'Conversion Rates', 'Lead Generation'],
+    excerpt: 'Data shows 78% of customers buy from the first business that answers them. Learn how solo contractors and trade businesses use automated jitter delay to book jobs while on a ladder.',
+    metaDescription: 'Learn why the 5-minute lead response rule decides who wins home service contracts. See how automated missed call text back books $450+ jobs while you work.',
+    takeaways: [
+      'Responding to an inbound inquiry within 5 minutes results in a 391% increase in conversion rates.',
+      'Solo operators and field technicians miss an average of 4 to 8 calls every day while working with their hands.',
+      'Custom auto-responses with business name placeholders create instant rapport while you are unavailable.',
+      'Business hours scheduling ensures you do not auto-text late-night callers while sleeping.'
+    ],
+    contentHtml: `
+      <p>In the home services industry—whether you're an electrician, HVAC technician, mobile detailer, or roofer—you face a constant dilemma:</p>
+
+      <p><strong>You can either do the work, or you can answer the phone. You cannot do both at the same second.</strong></p>
+
+      <p>If you're under a crawl space or on top of a two-story roof, stopping everything to pull out your phone and take a 7-minute consultation call is dangerous and inefficient. But letting it ring out means throwing away a \$450 or \$1,200 ticket.</p>
+
+      <h2>The Speed-to-Lead Decay Curve</h2>
+      <p>A landmark study by LeadResponseManagement.org analyzed thousands of inbound leads across service industries. Their findings should shock every business owner:</p>
+
+      <ul>
+        <li>The odds of qualifying a lead drop by <strong>400%</strong> between minute 5 and minute 10.</li>
+        <li>Waiting just 30 minutes to call someone back makes you <strong>21 times less likely</strong> to ever close that customer compared to responding in 5 minutes.</li>
+      </ul>
+
+      <p>Why? Because in 2026, people don't wait. They search, they tap, and if no one answers, they move down the list until someone does.</p>
+
+      <h2>Automating The First Touchpoint</h2>
+      <p>Missed Call Auto SMS solves the contractor dilemma permanently. The moment your phone finishes ringing and registers a missed call, the background engine waits 15 seconds and automatically fires a personalized SMS:</p>
+
+      <blockquote>
+        "Hey! Sorry I missed your call—I'm currently on a service call. What can we help you with today? - Dave at Apex Plumbing"
+      </blockquote>
+
+      <p>The caller instantly stops searching. They reply with their problem and address. When you climb down from the ladder or finish your service call 20 minutes later, you don't have a cold missed call—<strong>you have an open conversation ready to be scheduled and invoiced.</strong></p>
+
+      <h2>Built for Hardworking Field Operators</h2>
+      <p>Missed Call Auto SMS was specifically built around the real-world schedule of working contractors:</p>
+      <ul>
+        <li><strong>Saved Contacts Exclusion</strong>: Your spouse, kids, and suppliers won't get auto-replies when they call.</li>
+        <li><strong>Cooldown Safeguards</strong>: If the same person calls twice in an hour, they only receive one message.</li>
+        <li><strong>Business Hours Schedules</strong>: Set auto-replies to only fire Monday–Friday 8 AM–6 PM, or customize weekend behavior.</li>
+      </ul>
+    `
+  }
+];
+
+// Write individual static post HTML files
+posts.forEach(post => {
+  let html = template;
+  html = html.replace(/{{TITLE}}/g, post.title);
+  html = html.replace(/{{SLUG}}/g, post.slug);
+  html = html.replace(/{{DESCRIPTION}}/g, post.metaDescription);
+  html = html.replace(/{{CATEGORY}}/g, post.category);
+  html = html.replace(/{{DATE}}/g, post.date);
+  html = html.replace(/{{ISO_DATE}}/g, post.isoDate);
+  html = html.replace(/{{READ_TIME}}/g, post.readTime);
+  html = html.replace(/{{TAGS}}/g, post.tags.join(', '));
+  
+  const takeawaysHtml = post.takeaways.map(t => `<li>${t}</li>`).join('\n');
+  html = html.replace(/{{TAKEAWAYS_HTML}}/g, takeawaysHtml);
+  html = html.replace(/{{CONTENT_HTML}}/g, post.contentHtml);
+
+  const postFilePath = path.join(__dirname, `../blog/posts/${post.slug}.html`);
+  fs.writeFileSync(postFilePath, html, 'utf8');
+  console.log(`✅ Generated blog post: blog/posts/${post.slug}.html`);
+});
+
+// Write blog/posts.json
+const postsJsonPath = path.join(__dirname, '../blog/posts.json');
+fs.writeFileSync(postsJsonPath, JSON.stringify(posts, null, 2), 'utf8');
+console.log('✅ Generated blog/posts.json');
+
+// Generate sitemap.xml
+let sitemapXml = `<?xml version="1.0" encoding="UTF-8"?>
+<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
+  <url>
+    <loc>https://missedcallautosms.com/</loc>
+    <changefreq>daily</changefreq>
+    <priority>1.0</priority>
+  </url>
+  <url>
+    <loc>https://missedcallautosms.com/blog</loc>
+    <changefreq>daily</changefreq>
+    <priority>0.9</priority>
+  </url>
+`;
+
+posts.forEach(p => {
+  sitemapXml += `  <url>
+    <loc>https://missedcallautosms.com/blog/${p.slug}</loc>
+    <lastmod>${p.isoDate.split('T')[0]}</lastmod>
+    <changefreq>monthly</changefreq>
+    <priority>0.8</priority>
+  </url>
+`;
+});
+
+sitemapXml += `</urlset>\n`;
+
+fs.writeFileSync(path.join(__dirname, '../sitemap.xml'), sitemapXml, 'utf8');
+console.log('✅ Generated sitemap.xml');

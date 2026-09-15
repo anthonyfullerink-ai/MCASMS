@@ -1,0 +1,425 @@
+﻿<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Missed Call Auto SMS Blog | Lead Recovery, Paid Ads ROI & Local Business Automation</title>
+    <meta name="description" content="Discover proven strategies to convert missed phone calls into booked revenue. Stop burning Google and Facebook ad spend, bypass expensive SaaS fees, and boost contractor response times.">
+    <link rel="canonical" href="https://missedcallautosms.com/blog">
+
+    <!-- OpenGraph -->
+    <meta property="og:type" content="website">
+    <meta property="og:url" content="https://missedcallautosms.com/blog">
+    <meta property="og:title" content="Missed Call Auto SMS Blog | Turn Missed Calls Into Revenue">
+    <meta property="og:description" content="Proven playbooks on speed-to-lead, ad spend recovery, and why dedicated Android hardware appliances beat $297/mo SaaS subscriptions.">
+
+    <style>
+        :root {
+            --bg: #0D1017;
+            --card: #161B22;
+            --border: #303644;
+            --primary: #00E676;
+            --primary-glow: rgba(0, 230, 118, 0.2);
+            --text: #FFFFFF;
+            --muted: #8B949E;
+            --accent: #58A6FF;
+            --warning: #FFB300;
+        }
+
+        * { box-sizing: border-box; }
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+            background-color: var(--bg);
+            color: var(--text);
+            margin: 0;
+            padding: 0;
+            line-height: 1.6;
+        }
+
+        /* Nav */
+        .nav {
+            border-bottom: 1px solid var(--border);
+            padding: 16px 24px;
+            background: rgba(13, 16, 23, 0.95);
+            backdrop-filter: blur(10px);
+            position: sticky;
+            top: 0;
+            z-index: 100;
+        }
+        .nav-inner {
+            max-width: 1140px;
+            margin: 0 auto;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        .nav-logo {
+            font-size: 20px;
+            font-weight: 900;
+            color: var(--primary);
+            text-decoration: none;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+        .nav-links {
+            display: flex;
+            gap: 20px;
+            align-items: center;
+        }
+        .nav-link {
+            color: var(--muted);
+            text-decoration: none;
+            font-weight: 600;
+            font-size: 14px;
+            transition: color 0.2s;
+        }
+        .nav-link:hover, .nav-link.active { color: var(--primary); }
+        .btn-nav-trial {
+            background: var(--primary);
+            color: #000;
+            font-weight: bold;
+            padding: 8px 18px;
+            border-radius: 20px;
+            text-decoration: none;
+            font-size: 13px;
+        }
+
+        /* Hero */
+        .hero {
+            text-align: center;
+            padding: 60px 20px 40px 20px;
+            max-width: 860px;
+            margin: 0 auto;
+        }
+        .hero-badge {
+            display: inline-block;
+            background: rgba(0, 230, 118, 0.1);
+            color: var(--primary);
+            border: 1px solid rgba(0, 230, 118, 0.3);
+            padding: 6px 16px;
+            border-radius: 20px;
+            font-size: 12px;
+            font-weight: 800;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            margin-bottom: 16px;
+        }
+        .hero h1 {
+            font-size: 40px;
+            font-weight: 900;
+            margin: 0 0 16px 0;
+            color: #FFF;
+            line-height: 1.2;
+        }
+        .hero p {
+            color: var(--muted);
+            font-size: 18px;
+            margin: 0;
+        }
+
+        /* Controls / Filters */
+        .controls {
+            max-width: 1140px;
+            margin: 0 auto 36px auto;
+            padding: 0 20px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            flex-wrap: wrap;
+            gap: 16px;
+        }
+        .categories {
+            display: flex;
+            gap: 8px;
+            flex-wrap: wrap;
+        }
+        .cat-btn {
+            background: var(--card);
+            border: 1px solid var(--border);
+            color: var(--muted);
+            padding: 8px 16px;
+            border-radius: 20px;
+            font-size: 13px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+        .cat-btn:hover, .cat-btn.active {
+            background: var(--primary);
+            color: #000;
+            border-color: var(--primary);
+        }
+        .search-box {
+            position: relative;
+            min-width: 260px;
+        }
+        .search-input {
+            width: 100%;
+            background: var(--card);
+            border: 1px solid var(--border);
+            color: #FFF;
+            padding: 10px 14px 10px 36px;
+            border-radius: 20px;
+            font-size: 14px;
+            outline: none;
+        }
+        .search-input:focus { border-color: var(--primary); }
+        .search-icon {
+            position: absolute;
+            left: 12px;
+            top: 50%;
+            transform: translateY(-50%);
+            color: var(--muted);
+            font-size: 14px;
+        }
+
+        /* Grid */
+        .blog-grid {
+            max-width: 1140px;
+            margin: 0 auto 80px auto;
+            padding: 0 20px;
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(340px, 1fr));
+            gap: 24px;
+        }
+
+        .post-card {
+            background: var(--card);
+            border: 1px solid var(--border);
+            border-radius: 16px;
+            padding: 24px;
+            display: flex;
+            flex-direction: column;
+            justify-content: space-between;
+            transition: transform 0.2s, border-color 0.2s, box-shadow 0.2s;
+            text-decoration: none;
+            color: inherit;
+        }
+        .post-card:hover {
+            transform: translateY(-4px);
+            border-color: var(--primary);
+            box-shadow: 0 10px 30px rgba(0, 230, 118, 0.15);
+        }
+        .card-top {
+            margin-bottom: 16px;
+        }
+        .card-category {
+            display: inline-block;
+            font-size: 11px;
+            font-weight: 800;
+            text-transform: uppercase;
+            color: var(--primary);
+            margin-bottom: 8px;
+            letter-spacing: 0.5px;
+        }
+        .card-title {
+            font-size: 20px;
+            font-weight: 800;
+            color: #FFF;
+            margin: 0 0 10px 0;
+            line-height: 1.4;
+        }
+        .card-excerpt {
+            color: #A0AEC0;
+            font-size: 14px;
+            line-height: 1.6;
+            margin: 0 0 16px 0;
+        }
+        .card-meta {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            font-size: 12px;
+            color: var(--muted);
+            border-top: 1px solid rgba(48, 54, 68, 0.6);
+            padding-top: 14px;
+        }
+        .card-read-more {
+            color: var(--primary);
+            font-weight: bold;
+            display: flex;
+            align-items: center;
+            gap: 4px;
+        }
+
+        /* Banner */
+        .cta-section {
+            background: linear-gradient(135deg, #161B22, #0D1017);
+            border-top: 1px solid var(--border);
+            padding: 60px 20px;
+            text-align: center;
+        }
+        .cta-inner {
+            max-width: 680px;
+            margin: 0 auto;
+        }
+        .cta-inner h2 {
+            font-size: 30px;
+            font-weight: 900;
+            margin: 0 0 12px 0;
+        }
+        .cta-inner p {
+            color: #CBD5E0;
+            font-size: 16px;
+            margin: 0 0 24px 0;
+        }
+        .btn-large-trial {
+            display: inline-block;
+            background: var(--primary);
+            color: #000;
+            font-size: 17px;
+            font-weight: 900;
+            padding: 16px 36px;
+            border-radius: 30px;
+            text-decoration: none;
+            box-shadow: 0 6px 20px rgba(0, 230, 118, 0.3);
+            transition: transform 0.2s;
+        }
+        .btn-large-trial:hover { transform: translateY(-2px); }
+
+        .footer {
+            border-top: 1px solid var(--border);
+            padding: 30px 20px;
+            text-align: center;
+            color: var(--muted);
+            font-size: 13px;
+        }
+        .footer a { color: var(--primary); text-decoration: none; }
+
+        @media (max-width: 768px) {
+            .hero h1 { font-size: 28px; }
+            .blog-grid { grid-template-columns: 1fr; }
+        }
+    </style>
+</head>
+<body>
+
+    <nav class="nav">
+        <div class="nav-inner">
+            <a href="/" class="nav-logo">
+                <span>⚡ Missed Call Auto SMS</span>
+            </a>
+            <div class="nav-links">
+                <a href="/blog" class="nav-link active">Blog</a>
+                <a href="/#features" class="nav-link">Features</a>
+                <a href="/#pricing" class="nav-link">Pricing</a>
+                <a href="https://buy.stripe.com/3cI9AT49g2X07Q41ux2go0a?trial_period_days=3" class="btn-nav-trial">Free 3-Day Trial</a>
+            </div>
+        </div>
+    </nav>
+
+    <header class="hero">
+        <div class="hero-badge">📚 Business Growth & Lead Recovery Insights</div>
+        <h1>Stop Burning Ad Spend on Missed Calls</h1>
+        <p>Expert playbooks on speed-to-lead psychology, Google LSA conversion, and why dedicated Android hardware appliances beat expensive monthly SaaS subscriptions.</p>
+    </header>
+
+    <div class="controls">
+        <div class="categories" id="catFilters">
+            <button class="cat-btn active" onclick="filterCategory('all')">All Articles</button>
+            <button class="cat-btn" onclick="filterCategory('Paid Ads & ROI')">Paid Ads & ROI</button>
+            <button class="cat-btn" onclick="filterCategory('Appliance vs. SaaS')">Appliance vs. SaaS</button>
+            <button class="cat-btn" onclick="filterCategory('Contractor Playbooks')">Contractor Playbooks</button>
+            <button class="cat-btn" onclick="filterCategory('Speed-to-Lead')">Speed-to-Lead</button>
+        </div>
+        <div class="search-box">
+            <span class="search-icon">🔍</span>
+            <input type="text" id="searchInput" class="search-input" placeholder="Search articles..." oninput="handleSearch()">
+        </div>
+    </div>
+
+    <main class="blog-grid" id="postsContainer">
+        <!-- Rendered via JavaScript from posts.json -->
+        <div style="grid-column: 1/-1; text-align: center; color: var(--muted); padding: 40px;">
+            Loading articles...
+        </div>
+    </main>
+
+    <section class="cta-section">
+        <div class="cta-inner">
+            <h2>Start Converting Missed Calls Into Cash</h2>
+            <p>67% of callers who reach a voicemail immediately call your competitor. Recover your leads in 15 seconds with your real phone number.</p>
+            <a href="https://buy.stripe.com/3cI9AT49g2X07Q41ux2go0a?trial_period_days=3" class="btn-large-trial">
+                🚀 Start 3-Day Free Trial ($0 Today)
+            </a>
+            <div style="font-size: 12px; color: var(--muted); margin-top: 12px;">
+                Instant Android APK Download • Zero Twilio 10DLC delays • $49.99 Lifetime after trial
+            </div>
+        </div>
+    </section>
+
+    <footer class="footer">
+        <div>&copy; 2026 Missed Call Auto SMS. Dedicated Hardware Auto-Text Appliance.</div>
+        <div style="margin-top: 8px;">
+            <a href="/">Home</a> &bull; <a href="/blog">Blog</a> &bull; <a href="/owner_admin_dashboard.html">Owner Admin</a>
+        </div>
+    </footer>
+
+    <script>
+        let allPosts = [];
+        let currentCategory = 'all';
+
+        async function loadPosts() {
+            try {
+                const res = await fetch('/blog/posts.json?_t=' + Date.now());
+                if (!res.ok) throw new Error('HTTP ' + res.status);
+                allPosts = await res.json();
+                renderPosts();
+            } catch (e) {
+                console.warn('Could not load posts.json dynamically:', e.message);
+                const container = document.getElementById('postsContainer');
+                container.innerHTML = '<div style="grid-column:1/-1; text-align:center; color: var(--muted); padding:40px;">Could not load article list. Please refresh or check back shortly.</div>';
+            }
+        }
+
+        function renderPosts() {
+            const container = document.getElementById('postsContainer');
+            const term = (document.getElementById('searchInput').value || '').trim().toLowerCase();
+
+            const filtered = allPosts.filter(p => {
+                const matchCat = (currentCategory === 'all') || (p.category === currentCategory);
+                const matchTerm = !term || 
+                    (p.title && p.title.toLowerCase().includes(term)) ||
+                    (p.excerpt && p.excerpt.toLowerCase().includes(term)) ||
+                    (p.tags && p.tags.join(' ').toLowerCase().includes(term));
+                return matchCat && matchTerm;
+            });
+
+            if (filtered.length === 0) {
+                container.innerHTML = '<div style="grid-column: 1/-1; text-align: center; color: var(--muted); padding: 40px;">No articles found matching your criteria.</div>';
+                return;
+            }
+
+            container.innerHTML = filtered.map(post => {
+                const postUrl = '/blog/' + post.slug;
+                return '<a href="' + postUrl + '" class="post-card">' +
+                    '<div class="card-top">' +
+                        '<span class="card-category">' + (post.category || 'Article') + '</span>' +
+                        '<h2 class="card-title">' + post.title + '</h2>' +
+                        '<p class="card-excerpt">' + post.excerpt + '</p>' +
+                    '</div>' +
+                    '<div class="card-meta">' +
+                        '<span>📅 ' + post.date + ' &bull; ⏱️ ' + (post.readTime || 4) + ' min</span>' +
+                        '<span class="card-read-more">Read &rarr;</span>' +
+                    '</div>' +
+                '</a>';
+            }).join('');
+        }
+
+        function filterCategory(cat) {
+            currentCategory = cat;
+            document.querySelectorAll('.cat-btn').forEach(btn => {
+                btn.classList.toggle('active', btn.innerText.includes(cat) || (cat === 'all' && btn.innerText === 'All Articles'));
+            });
+            renderPosts();
+        }
+
+        function handleSearch() {
+            renderPosts();
+        }
+
+        loadPosts();
+    </script>
+</body>
+</html>
