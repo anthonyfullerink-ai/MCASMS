@@ -60,6 +60,15 @@ fun DashboardScreen(
         }
     }
 
+    val currentAppVersion = remember {
+        try {
+            val pInfo = context.packageManager.getPackageInfo(context.packageName, 0)
+            "v${pInfo.versionName} (Build ${pInfo.versionCode})"
+        } catch (e: Exception) {
+            "v1.1.2 (Build 4)"
+        }
+    }
+
     val successfulReplies = logs.count { it.status == LogStatus.SENT }
     // 33% estimated conversion rate on instant auto-text response
     val estimatedSavedRevenue = (successfulReplies * 0.33 * settings.averageJobValue).roundToInt()
@@ -451,29 +460,101 @@ fun DashboardScreen(
                 colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface),
                 border = androidx.compose.foundation.BorderStroke(1.dp, MaterialTheme.colorScheme.outlineVariant)
             ) {
-                Row(
+                Column(
                     modifier = Modifier
                         .fillMaxWidth()
-                        .padding(16.dp),
-                    horizontalArrangement = Arrangement.SpaceBetween,
-                    verticalAlignment = Alignment.CenterVertically
+                        .padding(16.dp)
                 ) {
-                    Column(modifier = Modifier.weight(1f)) {
-                        Text(
-                            text = "In-App Software Updates",
-                            fontWeight = FontWeight.Bold,
-                            style = MaterialTheme.typography.titleSmall
-                        )
-                        Text(
-                            text = "Check server for latest feature updates & bug fixes.",
-                            style = MaterialTheme.typography.bodySmall,
-                            color = MaterialTheme.colorScheme.onSurfaceVariant
-                        )
+                    Row(
+                        modifier = Modifier.fillMaxWidth(),
+                        horizontalArrangement = Arrangement.SpaceBetween,
+                        verticalAlignment = Alignment.CenterVertically
+                    ) {
+                        Row(
+                            verticalAlignment = Alignment.CenterVertically,
+                            horizontalArrangement = Arrangement.spacedBy(8.dp)
+                        ) {
+                            Icon(
+                                imageVector = Icons.Default.SystemUpdate,
+                                contentDescription = null,
+                                tint = MaterialTheme.colorScheme.primary,
+                                modifier = Modifier.size(20.dp)
+                            )
+                            Text(
+                                text = "Software & OTA Updates",
+                                fontWeight = FontWeight.Bold,
+                                style = MaterialTheme.typography.titleSmall
+                            )
+                        }
+
+                        Surface(
+                            shape = RoundedCornerShape(8.dp),
+                            color = MaterialTheme.colorScheme.primary.copy(alpha = 0.12f),
+                            border = androidx.compose.foundation.BorderStroke(1.dp, MaterialTheme.colorScheme.primary.copy(alpha = 0.35f))
+                        ) {
+                            Text(
+                                text = currentAppVersion,
+                                style = MaterialTheme.typography.labelSmall,
+                                color = MaterialTheme.colorScheme.primary,
+                                fontWeight = FontWeight.Bold,
+                                modifier = Modifier.padding(horizontal = 8.dp, vertical = 3.dp)
+                            )
+                        }
                     }
 
-                    Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-                        OutlinedButton(
+                    Spacer(modifier = Modifier.height(8.dp))
+
+                    Text(
+                        text = "Check cloud servers for the latest feature releases, security updates, and instant over-the-air patches.",
+                        style = MaterialTheme.typography.bodySmall,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant
+                    )
+
+                    Spacer(modifier = Modifier.height(14.dp))
+
+                    Row(
+                        modifier = Modifier.fillMaxWidth(),
+                        horizontalArrangement = Arrangement.spacedBy(10.dp)
+                    ) {
+                        Button(
+                            modifier = Modifier.weight(1.25f),
                             enabled = !isCheckingUpdate,
+                            shape = RoundedCornerShape(10.dp),
+                            onClick = {
+                                isCheckingUpdate = true
+                                coroutineScope.launch {
+                                    val updateUrl = settings.remoteUpdateUrl.ifBlank { RemoteUpdateManager.DEFAULT_UPDATE_URL }
+                                    when (val res = updateManager.checkForUpdatesDetailed(updateUrl, forceCheck = false)) {
+                                        is com.missedcall.autotext.remote.UpdateCheckResult.Available -> {
+                                            availableUpdate = res.updateInfo
+                                            Toast.makeText(context, "🚀 New Update Available: v${res.updateInfo.versionName} (Build ${res.updateInfo.versionCode})!", Toast.LENGTH_LONG).show()
+                                        }
+                                        is com.missedcall.autotext.remote.UpdateCheckResult.UpToDate -> {
+                                            Toast.makeText(context, "✅ App is up to date (v${res.currentVersionName}, Build ${res.currentVersionCode})!", Toast.LENGTH_SHORT).show()
+                                        }
+                                        is com.missedcall.autotext.remote.UpdateCheckResult.Error -> {
+                                            Toast.makeText(context, "⚠️ Update Check Failed: ${res.message}", Toast.LENGTH_LONG).show()
+                                        }
+                                    }
+                                    isCheckingUpdate = false
+                                }
+                            }
+                        ) {
+                            if (isCheckingUpdate) {
+                                CircularProgressIndicator(modifier = Modifier.size(16.dp), strokeWidth = 2.dp, color = Color.White)
+                                Spacer(modifier = Modifier.width(6.dp))
+                                Text("Checking...", style = MaterialTheme.typography.labelMedium)
+                            } else {
+                                Icon(Icons.Default.Refresh, contentDescription = null, modifier = Modifier.size(16.dp))
+                                Spacer(modifier = Modifier.width(6.dp))
+                                Text("Check Updates", style = MaterialTheme.typography.labelMedium)
+                            }
+                        }
+
+                        OutlinedButton(
+                            modifier = Modifier.weight(1f),
+                            enabled = !isCheckingUpdate,
+                            shape = RoundedCornerShape(10.dp),
                             onClick = {
                                 isCheckingUpdate = true
                                 coroutineScope.launch {
@@ -494,38 +575,9 @@ fun DashboardScreen(
                                 }
                             }
                         ) {
-                            Text("Force OTA", style = MaterialTheme.typography.labelSmall)
-                        }
-
-                        Button(
-                            enabled = !isCheckingUpdate,
-                            onClick = {
-                                isCheckingUpdate = true
-                                coroutineScope.launch {
-                                    val updateUrl = settings.remoteUpdateUrl.ifBlank { RemoteUpdateManager.DEFAULT_UPDATE_URL }
-                                    when (val res = updateManager.checkForUpdatesDetailed(updateUrl, forceCheck = false)) {
-                                        is com.missedcall.autotext.remote.UpdateCheckResult.Available -> {
-                                            availableUpdate = res.updateInfo
-                                            Toast.makeText(context, "🚀 New Update Available: v${res.updateInfo.versionName} (Build ${res.updateInfo.versionCode})!", Toast.LENGTH_LONG).show()
-                                        }
-                                        is com.missedcall.autotext.remote.UpdateCheckResult.UpToDate -> {
-                                            Toast.makeText(context, "✅ App is up to date (v${res.currentVersionName}, Build ${res.currentVersionCode})!", Toast.LENGTH_SHORT).show()
-                                        }
-                                        is com.missedcall.autotext.remote.UpdateCheckResult.Error -> {
-                                            Toast.makeText(context, "⚠️ Update Check Failed: ${res.message}\nTried: ${res.attemptedUrls.firstOrNull()}", Toast.LENGTH_LONG).show()
-                                        }
-                                    }
-                                    isCheckingUpdate = false
-                                }
-                            }
-                        ) {
-                            if (isCheckingUpdate) {
-                                CircularProgressIndicator(modifier = Modifier.size(16.dp), strokeWidth = 2.dp, color = Color.White)
-                            } else {
-                                Icon(Icons.Default.Refresh, contentDescription = null, modifier = Modifier.size(16.dp))
-                                Spacer(modifier = Modifier.width(4.dp))
-                                Text("Check Updates")
-                            }
+                            Icon(Icons.Default.Download, contentDescription = null, modifier = Modifier.size(16.dp))
+                            Spacer(modifier = Modifier.width(4.dp))
+                            Text("Force OTA", style = MaterialTheme.typography.labelMedium)
                         }
                     }
                 }
