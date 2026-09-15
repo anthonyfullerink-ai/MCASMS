@@ -672,12 +672,14 @@
             font-weight: 900;
             font-size: 14px;
             cursor: pointer;
-            box-shadow: 0 10px 25px rgba(0, 230, 118, 0.4);
-            z-index: 99990;
+            box-shadow: 0 10px 30px rgba(0, 230, 118, 0.5);
+            z-index: 999999;
             display: flex;
             align-items: center;
             gap: 8px;
-            transition: transform 0.2s;
+            transition: transform 0.2s, background 0.2s;
+            touch-action: manipulation;
+            -webkit-tap-highlight-color: transparent;
         }
 
         .ai-widget-trigger:hover { transform: scale(1.05); background: var(--primary-hover); }
@@ -691,17 +693,17 @@
             height: 520px;
             max-height: calc(100vh - 120px);
             background: #131720;
-            border: 1px solid var(--card-border);
+            border: 2px solid var(--primary);
             border-radius: 20px;
-            box-shadow: 0 20px 50px rgba(0,0,0,0.8);
-            z-index: 99995;
+            box-shadow: 0 25px 60px rgba(0,0,0,0.9);
+            z-index: 1000000;
             display: none;
             flex-direction: column;
             overflow: hidden;
             animation: modalSlide 0.2s ease-out;
         }
 
-        .ai-widget-window.active { display: flex; }
+        .ai-widget-window.active { display: flex !important; }
 
         .ai-widget-header {
             background: #1A202C;
@@ -1298,7 +1300,14 @@
 
     function toggleAiWidget() {
         const windowEl = document.getElementById('aiWidgetWindow');
-        windowEl.classList.toggle('active');
+        if (!windowEl) return;
+        if (windowEl.classList.contains('active') || windowEl.style.display === 'flex') {
+            windowEl.style.display = 'none';
+            windowEl.classList.remove('active');
+        } else {
+            windowEl.style.display = 'flex';
+            windowEl.classList.add('active');
+        }
     }
 
     function toggleVoiceOutput() {
