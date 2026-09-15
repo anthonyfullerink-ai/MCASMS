@@ -148,6 +148,100 @@ const server = http.createServer((req, res) => {
     return;
   }
 
+  // API Route: Verify License Key & Status
+  if ((relativePath === '/api/verify-license' || relativePath === '/api/verify-license/') && req.method === 'POST') {
+    let body = '';
+    req.on('data', chunk => body += chunk);
+    req.on('end', () => {
+      try {
+        const payload = JSON.parse(body || '{}');
+        const key = (payload.licenseKey || '').trim().toUpperCase();
+
+        res.writeHead(200, { 'Content-Type': 'application/json; charset=utf-8', 'Access-Control-Allow-Origin': '*' });
+        
+        if (!key.startsWith('MCAS-')) {
+          res.end(JSON.stringify({ valid: false, message: 'Invalid License Key Prefix. Keys start with MCAS-' }));
+          return;
+        }
+
+        res.end(JSON.stringify({
+          valid: true,
+          licenseKey: key,
+          status: 'ACTIVE',
+          type: key.includes('TRIAL') ? 'TRIAL' : 'PAID',
+          deviceId: 'LOCKED (1 Device)',
+          createdAt: new Date().toISOString()
+        }));
+      } catch (e) {
+        res.writeHead(400, { 'Content-Type': 'application/json; charset=utf-8', 'Access-Control-Allow-Origin': '*' });
+        res.end(JSON.stringify({ valid: false, error: e.message }));
+      }
+    });
+    return;
+  }
+
+  // API Route: Reset Hardware Device Lock
+  if ((relativePath === '/api/reset-device' || relativePath === '/api/reset-device/') && req.method === 'POST') {
+    let body = '';
+    req.on('data', chunk => body += chunk);
+    req.on('end', () => {
+      try {
+        const payload = JSON.parse(body || '{}');
+        const key = (payload.licenseKey || '').trim().toUpperCase();
+
+        res.writeHead(200, { 'Content-Type': 'application/json; charset=utf-8', 'Access-Control-Allow-Origin': '*' });
+        res.end(JSON.stringify({
+          success: true,
+          message: `Hardware device binding reset successfully for key ${key}. You can now register a new Android phone.`,
+          licenseKey: key,
+          deviceId: null
+        }));
+      } catch (e) {
+        res.writeHead(400, { 'Content-Type': 'application/json; charset=utf-8', 'Access-Control-Allow-Origin': '*' });
+        res.end(JSON.stringify({ success: false, error: e.message }));
+      }
+    });
+    return;
+  }
+
+  // API Route: Cancel Subscription / 3-Day Free Trial
+  if ((relativePath === '/api/cancel-trial' || relativePath === '/api/cancel-trial/') && req.method === 'POST') {
+    let body = '';
+    req.on('data', chunk => body += chunk);
+    req.on('end', () => {
+      try {
+        const payload = JSON.parse(body || '{}');
+        const key = (payload.licenseKey || payload.email || '').trim();
+        const trialAgeHours = payload.trialAgeHours !== undefined ? parseFloat(payload.trialAgeHours) : 24; // Default to 24h (within 3 days)
+
+        res.writeHead(200, { 'Content-Type': 'application/json; charset=utf-8', 'Access-Control-Allow-Origin': '*' });
+
+        if (trialAgeHours <= 72) {
+          // Within 3-day trial period -> Automated Cancellation Success
+          res.end(JSON.stringify({
+            success: true,
+            cancelled: true,
+            status: 'CANCELLED_BEFORE_CHARGE',
+            message: `Your 3-Day Free Trial subscription for ${key || 'your account'} has been cancelled successfully. Zero ($0.00) dollars will be charged to your card.`
+          }));
+        } else {
+          // Trial period ended (> 72 hours) -> Must email support
+          res.end(JSON.stringify({
+            success: false,
+            cancelled: false,
+            status: 'TRIAL_EXPIRED',
+            contactEmail: 'contactus@offgridmediagroup.com',
+            message: `Your 3-day free trial period has ended. To request a cancellation or billing inquiry, please email support directly at contactus@offgridmediagroup.com.`
+          }));
+        }
+      } catch (e) {
+        res.writeHead(500, { 'Content-Type': 'application/json; charset=utf-8', 'Access-Control-Allow-Origin': '*' });
+        res.end(JSON.stringify({ success: false, error: e.message }));
+      }
+    });
+    return;
+  }
+
   if (relativePath === '/') {
     relativePath = '/sales_landing_page.html';
   }

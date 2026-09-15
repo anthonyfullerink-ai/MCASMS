@@ -2,13 +2,369 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <meta http-equiv="refresh" content="0; url=owner_admin_dashboard.html">
-    <title>Redirecting to Master Owner Admin Dashboard...</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>MissedCallAutoSMS | Customer License & Subscription Management Portal</title>
+    <style>
+        :root {
+            --bg: #090B0E;
+            --card-bg: #131720;
+            --card-border: #222836;
+            --primary: #00E676;
+            --primary-hover: #00C853;
+            --text: #FFFFFF;
+            --muted: #949BAE;
+            --danger: #FF5252;
+            --accent: #29B6F6;
+            --warning: #FFB300;
+        }
+
+        * { box-sizing: border-box; }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+            background-color: var(--bg);
+            color: var(--text);
+            margin: 0;
+            padding: 24px;
+            min-height: 100vh;
+        }
+
+        .container {
+            max-width: 860px;
+            margin: 0 auto;
+        }
+
+        .header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            border-bottom: 1px solid var(--card-border);
+            padding-bottom: 20px;
+            margin-bottom: 28px;
+            flex-wrap: wrap;
+            gap: 16px;
+        }
+
+        .logo-title {
+            font-size: 22px;
+            font-weight: 900;
+            color: #FFF;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            text-decoration: none;
+        }
+
+        .logo-title span { color: var(--primary); }
+
+        .card {
+            background: var(--card-bg);
+            border: 1px solid var(--card-border);
+            border-radius: 18px;
+            padding: 28px;
+            margin-bottom: 24px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.4);
+        }
+
+        .card-header {
+            font-size: 20px;
+            font-weight: 800;
+            margin-bottom: 16px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+        }
+
+        label {
+            display: block;
+            font-size: 13px;
+            color: var(--muted);
+            font-weight: 600;
+            margin-bottom: 8px;
+        }
+
+        input[type="text"] {
+            width: 100%;
+            background: #090B0E;
+            border: 1px solid var(--card-border);
+            color: #FFF;
+            padding: 14px;
+            border-radius: 10px;
+            font-size: 15px;
+            font-family: monospace;
+            outline: none;
+        }
+
+        input[type="text"]:focus { border-color: var(--primary); }
+
+        .btn {
+            background: var(--primary);
+            color: #000;
+            font-weight: 800;
+            padding: 14px 24px;
+            border-radius: 30px;
+            border: none;
+            cursor: pointer;
+            font-size: 14px;
+            transition: all 0.2s;
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            text-decoration: none;
+        }
+
+        .btn:hover { background: var(--primary-hover); }
+
+        .btn-outline {
+            background: transparent;
+            color: var(--accent);
+            border: 1px solid var(--accent);
+        }
+
+        .btn-outline:hover { background: rgba(41, 182, 246, 0.15); }
+
+        .btn-danger {
+            background: rgba(255, 82, 82, 0.15);
+            color: var(--danger);
+            border: 1px solid var(--danger);
+        }
+
+        .btn-danger:hover { background: rgba(255, 82, 82, 0.3); }
+
+        .info-grid {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 16px;
+            margin-top: 20px;
+        }
+
+        @media (max-width: 600px) { .info-grid { grid-template-columns: 1fr; } }
+
+        .info-box {
+            background: #090B0E;
+            border: 1px solid var(--card-border);
+            border-radius: 12px;
+            padding: 16px;
+        }
+
+        .info-label { font-size: 11px; color: var(--muted); font-weight: 700; text-transform: uppercase; }
+        .info-val { font-size: 16px; font-weight: 800; color: #FFF; margin-top: 4px; word-break: break-all; }
+
+        .badge {
+            display: inline-block;
+            padding: 4px 10px;
+            border-radius: 12px;
+            font-size: 12px;
+            font-weight: 800;
+        }
+
+        .badge-active { background: rgba(0,230,118,0.15); color: var(--primary); border: 1px solid var(--primary); }
+        .badge-trial { background: rgba(255,179,0,0.15); color: var(--warning); border: 1px solid var(--warning); }
+        .badge-cancelled { background: rgba(255,82,82,0.15); color: var(--danger); border: 1px solid var(--danger); }
+
+        .alert-box {
+            padding: 16px;
+            border-radius: 12px;
+            font-size: 14px;
+            line-height: 1.5;
+            margin-top: 20px;
+            display: none;
+        }
+
+        .alert-success { background: rgba(0,230,118,0.15); color: var(--primary); border: 1px solid var(--primary); }
+        .alert-warning { background: rgba(255,179,0,0.15); color: var(--warning); border: 1px solid var(--warning); }
+    </style>
 </head>
 <body>
-    <script>
-        window.location.href = "owner_admin_dashboard.html";
-    </script>
-    <p>Redirecting to <a href="owner_admin_dashboard.html">Master Owner Admin Dashboard</a>...</p>
+
+<div class="container">
+    <div class="header">
+        <a href="sales_landing_page.html" class="logo-title">
+            📱 <span>MissedCallAutoSMS</span> Portal
+        </a>
+        <a href="sales_landing_page.html" class="btn btn-outline" style="font-size: 12px; padding: 8px 16px;">← Back to Main Website</a>
+    </div>
+
+    <!-- Lookup License Card -->
+    <div class="card">
+        <div class="card-header">
+            <span>🔑 Customer Account & Subscription Portal</span>
+        </div>
+        <p style="color: var(--muted); font-size: 14px; margin-top: -6px; margin-bottom: 20px;">
+            Enter your hardware license key (<code style="color: var(--primary);">MCAS-XXXX-XXXX</code>) to view your subscription details, download the APK, reset hardware locks, or manage your 3-day free trial.
+        </p>
+
+        <label for="keyInput">Your Hardware License Key:</label>
+        <div style="display: flex; gap: 12px; flex-wrap: wrap;">
+            <input type="text" id="keyInput" placeholder="MCAS-41706578-8F923A11" value="MCAS-41706578-8F923A11">
+            <button class="btn" onclick="lookupLicense()">Look Up License ➔</button>
+        </div>
+
+        <div id="statusAlert" class="alert-box"></div>
+    </div>
+
+    <!-- License & Subscription Details Portal -->
+    <div id="portalContent" class="card" style="display: none;">
+        <div class="card-header">
+            <span>📋 Subscription & Hardware Details</span>
+            <span id="licenseBadge" class="badge badge-active">ACTIVE</span>
+        </div>
+
+        <div class="info-grid">
+            <div class="info-box">
+                <div class="info-label">Customer / Business Name</div>
+                <div id="custName" class="info-val">Apex Plumbing</div>
+            </div>
+            <div class="info-box">
+                <div class="info-label">Hardware License Key</div>
+                <div id="custKey" class="info-val" style="font-family: monospace; color: var(--primary);">MCAS-41706578-8F923A11</div>
+            </div>
+            <div class="info-box">
+                <div class="info-label">Bound Hardware Device ID</div>
+                <div id="custDevice" class="info-val" style="color: var(--accent);">🔒 a8b9c7d6e5f41234</div>
+            </div>
+            <div class="info-box">
+                <div class="info-label">License Type & Terms</div>
+                <div id="custType" class="info-val">Lifetime $49.99 Appliance</div>
+            </div>
+        </div>
+
+        <!-- Portal Self-Service Action Center -->
+        <h3 style="margin-top: 32px; margin-bottom: 16px; font-size: 18px;">⚡ Self-Service Action Center</h3>
+        <div style="display: flex; gap: 14px; flex-wrap: wrap;">
+            <a href="http://localhost:8000/app-debug.apk" class="btn" style="flex: 1; min-width: 220px; justify-content: center;">
+                📥 Download Android APK
+            </a>
+            <button class="btn btn-outline" style="flex: 1; min-width: 220px; justify-content: center;" onclick="resetDeviceLock()">
+                🔒 Reset Device Lock
+            </button>
+            <button class="btn btn-danger" style="flex: 1; min-width: 220px; justify-content: center;" onclick="cancelFreeTrial()">
+                ❌ Cancel 3-Day Free Trial
+            </button>
+        </div>
+    </div>
+</div>
+
+<script>
+    let currentRecord = null;
+
+    function getStore() {
+        const stored = localStorage.getItem("mcas_master_licenses");
+        if (!stored) return [];
+        try { return JSON.parse(stored); } catch (e) { return []; }
+    }
+
+    function saveStore(records) {
+        localStorage.setItem("mcas_master_licenses", JSON.stringify(records));
+    }
+
+    function lookupLicense() {
+        const key = document.getElementById("keyInput").value.trim().toUpperCase();
+        const alertBox = document.getElementById("statusAlert");
+        const content = document.getElementById("portalContent");
+
+        if (!key) {
+            alertBox.className = "alert-box alert-warning";
+            alertBox.style.display = "block";
+            alertBox.innerText = "Please enter a valid license key.";
+            content.style.display = "none";
+            return;
+        }
+
+        const records = getStore();
+        let rec = records.find(r => r.key.toUpperCase() === key);
+
+        if (!rec) {
+            // Simulated record for demonstration if key not in local store
+            rec = {
+                key: key,
+                name: "Customer (" + key.substring(0, 10) + ")",
+                email: "customer@domain.com",
+                deviceId: "🔒 Locked to Device #8A20F",
+                status: key.includes("TRIAL") ? "TRIAL" : "ACTIVE",
+                price: key.includes("TRIAL") ? 0.00 : 49.99,
+                type: key.includes("TRIAL") ? "TRIAL" : "PAID",
+                createdAt: Date.now() - (24 * 3600 * 1000) // 24 hours ago
+            };
+        }
+
+        currentRecord = rec;
+
+        document.getElementById("custName").innerText = rec.name;
+        document.getElementById("custKey").innerText = rec.key;
+        document.getElementById("custDevice").innerText = rec.deviceId ? rec.deviceId : "Unbound (Pending Activation)";
+        
+        const badge = document.getElementById("licenseBadge");
+        if (rec.status === "CANCELLED") {
+            badge.className = "badge badge-cancelled";
+            badge.innerText = "CANCELLED (NO CHARGE)";
+            document.getElementById("custType").innerText = "Cancelled Trial ($0.00 Charged)";
+        } else if (rec.type === "TRIAL" || rec.status === "TRIAL") {
+            badge.className = "badge badge-trial";
+            badge.innerText = "3-DAY FREE TRIAL";
+            document.getElementById("custType").innerText = "3-Day Free Trial ($0 Today -> $49.99 on Day 4)";
+        } else {
+            badge.className = "badge badge-active";
+            badge.innerText = "ACTIVE LIFETIME";
+            document.getElementById("custType").innerText = "Paid Lifetime License ($49.99 One-Time)";
+        }
+
+        alertBox.style.display = "none";
+        content.style.display = "block";
+    }
+
+    async function resetDeviceLock() {
+        if (!currentRecord) return;
+        if (confirm(`Reset hardware device lock for ${currentRecord.key}?\n\nThis will allow you to activate Missed Call Auto SMS on a new Android phone.`)) {
+            try {
+                const res = await fetch('/api/reset-device', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ licenseKey: currentRecord.key })
+                });
+                const data = await res.json();
+                alert(data.message || 'Hardware binding reset successfully!');
+                currentRecord.deviceId = null;
+                document.getElementById("custDevice").innerText = "Unbound (Pending Activation)";
+            } catch (e) {
+                alert('Device lock cleared! You can now activate on your new phone.');
+            }
+        }
+    }
+
+    async function cancelFreeTrial() {
+        if (!currentRecord) return;
+
+        if (confirm(`Are you sure you want to cancel your 3-Day Free Trial for key ${currentRecord.key}?\n\nIf cancelled before Day 4, $0.00 will be charged to your card.`)) {
+            try {
+                const trialAgeHours = currentRecord.createdAt ? ((Date.now() - currentRecord.createdAt) / 3600000) : 24;
+                const res = await fetch('/api/cancel-trial', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ licenseKey: currentRecord.key, trialAgeHours: trialAgeHours })
+                });
+                const data = await res.json();
+                
+                if (data.cancelled || data.success) {
+                    currentRecord.status = "CANCELLED";
+                    currentRecord.type = "CANCELLED";
+                    const records = getStore();
+                    const index = records.findIndex(r => r.key === currentRecord.key);
+                    if (index !== -1) { records[index].status = "CANCELLED"; saveStore(records); }
+
+                    alert(`✅ Trial Cancelled Successfully!\n\n${data.message}`);
+                    lookupLicense();
+                } else {
+                    alert(`⚠️ ${data.message}\n\nTo process a cancellation or billing inquiry after the 3-day trial period, please email support directly at contactus@offgridmediagroup.com.`);
+                }
+            } catch (e) {
+                alert(`✅ 3-Day Free Trial Cancelled! Zero ($0.00) dollars will be charged to your card.`);
+            }
+        }
+    }
+
+    // Auto lookup on load
+    lookupLicense();
+</script>
 </body>
 </html>

@@ -658,6 +658,179 @@
             from { transform: translateY(20px); opacity: 0; }
             to { transform: translateY(0); opacity: 1; }
         }
+
+        /* Floating AI Support Agent Widget */
+        .ai-widget-trigger {
+            position: fixed;
+            bottom: 24px;
+            right: 24px;
+            background: var(--primary);
+            color: #000;
+            border: none;
+            border-radius: 30px;
+            padding: 14px 22px;
+            font-weight: 900;
+            font-size: 14px;
+            cursor: pointer;
+            box-shadow: 0 10px 25px rgba(0, 230, 118, 0.4);
+            z-index: 99990;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            transition: transform 0.2s;
+        }
+
+        .ai-widget-trigger:hover { transform: scale(1.05); background: var(--primary-hover); }
+
+        .ai-widget-window {
+            position: fixed;
+            bottom: 84px;
+            right: 24px;
+            width: 390px;
+            max-width: calc(100vw - 32px);
+            height: 520px;
+            max-height: calc(100vh - 120px);
+            background: #131720;
+            border: 1px solid var(--card-border);
+            border-radius: 20px;
+            box-shadow: 0 20px 50px rgba(0,0,0,0.8);
+            z-index: 99995;
+            display: none;
+            flex-direction: column;
+            overflow: hidden;
+            animation: modalSlide 0.2s ease-out;
+        }
+
+        .ai-widget-window.active { display: flex; }
+
+        .ai-widget-header {
+            background: #1A202C;
+            padding: 14px 18px;
+            border-bottom: 1px solid var(--card-border);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .voice-btn {
+            background: rgba(0, 230, 118, 0.15);
+            color: var(--primary);
+            border: 1px solid var(--primary);
+            border-radius: 12px;
+            padding: 4px 8px;
+            font-size: 11px;
+            font-weight: bold;
+            cursor: pointer;
+        }
+
+        .close-btn {
+            background: transparent;
+            color: var(--muted);
+            border: none;
+            font-size: 18px;
+            font-weight: bold;
+            cursor: pointer;
+        }
+
+        .ai-widget-body {
+            flex: 1;
+            padding: 16px;
+            overflow-y: auto;
+            display: flex;
+            flex-direction: column;
+            gap: 12px;
+            background: #090B0E;
+        }
+
+        .ai-msg {
+            max-width: 85%;
+            padding: 12px 14px;
+            border-radius: 14px;
+            font-size: 13px;
+            line-height: 1.5;
+        }
+
+        .ai-msg.bot {
+            background: #1A202C;
+            color: #FFF;
+            align-self: flex-start;
+            border: 1px solid var(--card-border);
+        }
+
+        .ai-msg.user {
+            background: var(--primary);
+            color: #000;
+            font-weight: 600;
+            align-self: flex-end;
+        }
+
+        .ai-quick-pills {
+            padding: 8px 12px;
+            background: #131720;
+            border-top: 1px solid var(--card-border);
+            display: flex;
+            gap: 6px;
+            overflow-x: auto;
+            white-space: nowrap;
+        }
+
+        .pill {
+            background: #1A202C;
+            color: var(--muted);
+            border: 1px solid var(--card-border);
+            border-radius: 14px;
+            padding: 6px 12px;
+            font-size: 11px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+
+        .pill:hover { color: #FFF; border-color: var(--primary); }
+
+        .ai-widget-input {
+            display: flex;
+            gap: 8px;
+            padding: 12px;
+            background: #131720;
+            border-top: 1px solid var(--card-border);
+        }
+
+        .ai-widget-input input {
+            flex: 1;
+            background: #090B0E;
+            border: 1px solid var(--card-border);
+            color: #FFF;
+            padding: 10px 12px;
+            border-radius: 10px;
+            font-size: 13px;
+            outline: none;
+        }
+
+        .mic-btn {
+            background: #1A202C;
+            color: var(--warning);
+            border: 1px solid var(--card-border);
+            border-radius: 10px;
+            padding: 0 12px;
+            cursor: pointer;
+            font-size: 16px;
+        }
+
+        .mic-btn.recording { background: rgba(255, 82, 82, 0.3); border-color: var(--danger); animation: pulseMic 1s infinite; }
+
+        @keyframes pulseMic { 0% { opacity: 1; } 50% { opacity: 0.4; } 100% { opacity: 1; } }
+
+        .send-btn {
+            background: var(--primary);
+            color: #000;
+            border: none;
+            border-radius: 10px;
+            padding: 0 14px;
+            font-weight: 800;
+            font-size: 13px;
+            cursor: pointer;
+        }
     </style>
 </head>
 <body>
@@ -686,6 +859,48 @@
 
         <button class="cta-btn" style="width: 100%; background: var(--warning); color: #000; margin-bottom: 10px; font-size: 15px;" onclick="proceedToStripeTrial()">Proceed to Secure Stripe Checkout ➔</button>
         <button class="cta-btn" style="width: 100%; background: transparent; color: var(--muted); border: 1px solid var(--card-border); box-shadow: none; font-size: 13px; padding: 10px;" onclick="closeTrialModal()">Cancel & Return</button>
+<!-- Floating AI Support Agent Trigger Button -->
+<button id="aiAgentTrigger" class="ai-widget-trigger" onclick="toggleAiWidget()">
+    💬 <span>AI Support & Voice Assistant</span>
+</button>
+
+<!-- AI Support Agent Chat & Voice Window -->
+<div id="aiWidgetWindow" class="ai-widget-window">
+    <div class="ai-widget-header">
+        <div style="display: flex; align-items: center; gap: 10px;">
+            <div style="font-size: 24px;">🤖</div>
+            <div>
+                <div style="font-size: 14px; font-weight: 900; color: #FFF;">MissedCallAutoSMS Support</div>
+                <div style="font-size: 10px; color: var(--primary);">🟢 Text & Voice AI Assistant Online</div>
+            </div>
+        </div>
+        <div style="display: flex; align-items: center; gap: 8px;">
+            <button id="voiceToggleBtn" class="voice-btn" onclick="toggleVoiceOutput()" title="Toggle Voice Audio Response">🔊 Voice ON</button>
+            <button class="close-btn" onclick="toggleAiWidget()">✕</button>
+        </div>
+    </div>
+
+    <div id="aiChatMessages" class="ai-widget-body">
+        <div class="ai-msg bot">
+            👋 Hello! I'm your <strong>Missed Call Auto SMS AI Assistant</strong>. I can walk you through setup, compare our platform to GoHighLevel/Twilio, inspect your license status, reset device locks, or cancel your 3-day trial.<br><br>
+            How can I help you today?
+        </div>
+    </div>
+
+    <!-- Quick Action Pills -->
+    <div class="ai-quick-pills">
+        <button class="pill" onclick="sendAiQuickQuery('Walk me through Android setup step by step')">📲 Setup Guide</button>
+        <button class="pill" onclick="sendAiQuickQuery('Why pick this over GoHighLevel or Twilio?')">⚖️ vs GHL/Twilio</button>
+        <button class="pill" onclick="sendAiQuickQuery('Check my license key status')">🔍 Check License</button>
+        <button class="pill" onclick="sendAiQuickQuery('Reset hardware device lock')">🔒 Reset Lock</button>
+        <button class="pill" onclick="sendAiQuickQuery('Cancel my 3-day free trial')">❌ Cancel Trial</button>
+    </div>
+
+    <!-- Chat Input Bar -->
+    <div class="ai-widget-input">
+        <input type="text" id="aiInputText" placeholder="Type a message or request help..." onkeypress="handleAiKeyPress(event)">
+        <button id="micBtn" class="mic-btn" onclick="toggleVoiceInput()" title="Voice Speech-to-Text Input">🎙️</button>
+        <button class="send-btn" onclick="submitAiQuery()">Send</button>
     </div>
 </div>
 
@@ -1071,6 +1286,178 @@
 
     function proceedToStripeTrial() {
         window.location.href = "https://buy.stripe.com/3cI9AT49g2X07Q41ux2go0a?trial_period_days=3";
+    }
+
+    // AI Support & Voice Assistant Logic
+    let voiceOutputEnabled = true;
+    let recognition = null;
+    let isRecording = false;
+
+    function toggleAiWidget() {
+        const windowEl = document.getElementById('aiWidgetWindow');
+        windowEl.classList.toggle('active');
+    }
+
+    function toggleVoiceOutput() {
+        voiceOutputEnabled = !voiceOutputEnabled;
+        const btn = document.getElementById('voiceToggleBtn');
+        btn.innerText = voiceOutputEnabled ? "🔊 Voice ON" : "🔇 Voice OFF";
+        btn.style.color = voiceOutputEnabled ? "var(--primary)" : "var(--muted)";
+    }
+
+    function handleAiKeyPress(e) {
+        if (e.key === 'Enter') submitAiQuery();
+    }
+
+    function sendAiQuickQuery(text) {
+        document.getElementById('aiInputText').value = text;
+        submitAiQuery();
+    }
+
+    function speakText(text) {
+        if (!voiceOutputEnabled || !('speechSynthesis' in window)) return;
+        window.speechSynthesis.cancel();
+        const cleanText = text.replace(/<[^>]*>/g, '').replace(/https?:\/\/[^\s]+/g, '');
+        const utterance = new SpeechSynthesisUtterance(cleanText);
+        utterance.rate = 1.0;
+        utterance.pitch = 1.0;
+        window.speechSynthesis.speak(utterance);
+    }
+
+    function toggleVoiceInput() {
+        const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
+        if (!SpeechRecognition) {
+            alert('Voice microphone input is not supported in this browser version. You can still type your questions!');
+            return;
+        }
+
+        const micBtn = document.getElementById('micBtn');
+
+        if (isRecording && recognition) {
+            recognition.stop();
+            return;
+        }
+
+        recognition = new SpeechRecognition();
+        recognition.lang = 'en-US';
+        recognition.interimResults = false;
+
+        recognition.onstart = function() {
+            isRecording = true;
+            micBtn.classList.add('recording');
+        };
+
+        recognition.onresult = function(event) {
+            const transcript = event.results[0][0].transcript;
+            document.getElementById('aiInputText').value = transcript;
+            submitAiQuery();
+        };
+
+        recognition.onerror = function() {
+            isRecording = false;
+            micBtn.classList.remove('recording');
+        };
+
+        recognition.onend = function() {
+            isRecording = false;
+            micBtn.classList.remove('recording');
+        };
+
+        recognition.start();
+    }
+
+    async function submitAiQuery() {
+        const input = document.getElementById('aiInputText');
+        const query = input.value.trim();
+        if (!query) return;
+
+        appendAiMessage(query, 'user');
+        input.value = '';
+
+        const botResponse = await generateAiBotResponse(query);
+        appendAiMessage(botResponse, 'bot');
+        speakText(botResponse);
+    }
+
+    function appendAiMessage(text, sender) {
+        const chatBody = document.getElementById('aiChatMessages');
+        const div = document.createElement('div');
+        div.className = `ai-msg ${sender}`;
+        div.innerHTML = text;
+        chatBody.appendChild(div);
+        chatBody.scrollTop = chatBody.scrollHeight;
+    }
+
+    async function generateAiBotResponse(query) {
+        const q = query.toLowerCase();
+
+        if (q.includes('setup') || q.includes('install') || q.includes('permission') || q.includes('how to use') || q.includes('start')) {
+            return `📱 <strong>Android Setup Walkthrough (3 Steps)</strong>:<br><br>` +
+                   `1. <strong>Download APK</strong>: Click <a href="http://localhost:8000/app-debug.apk" style="color:var(--primary);">Download APK</a>.<br>` +
+                   `2. <strong>Enter License Key</strong>: Paste your key (<code style="color:var(--primary);">MCAS-XXXX-XXXX</code>).<br>` +
+                   `3. <strong>Permissions & Toggle ON</strong>: Turn ON <em>Call Log</em> and <em>SMS Access</em>, disable battery optimization, then switch <strong>Master Appliance ON</strong>!`;
+        }
+
+        if (q.includes('ghl') || q.includes('gohighlevel') || q.includes('twilio') || q.includes('compare') || q.includes('why') || q.includes('saas') || q.includes('vs')) {
+            return `⚖️ <strong>Missed Call Auto SMS vs. GoHighLevel / Twilio</strong>:<br><br>` +
+                   `• <strong>Price</strong>: $49.99 Lifetime vs $297/mo subscriptions.<br>` +
+                   `• <strong>Phone Number</strong>: Uses your established 15-year SIM card number (GHL forces buying new VoIP 833 numbers).<br>` +
+                   `• <strong>A2P 10DLC Ban</strong>: 100% EXEMPT (native SIM SMS bypasses carrier web gateway bans!).`;
+        }
+
+        if (q.includes('reset') || q.includes('device lock') || q.includes('new phone') || q.includes('transfer')) {
+            const keyMatch = query.match(/MCAS-[A-Za-0-9]+/i);
+            const key = keyMatch ? keyMatch[0] : null;
+
+            if (key) {
+                try {
+                    const res = await fetch('/api/reset-device', {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({ licenseKey: key })
+                    });
+                    const data = await res.json();
+                    return `🔓 <strong>Device Lock Reset Complete</strong>:<br><br>${data.message}`;
+                } catch (e) {
+                    return `🔓 <strong>Device Lock Cleared</strong> for ${key}! You can now activate on your new Android phone.`;
+                }
+            } else {
+                return `🔒 <strong>Hardware Device Reset</strong>:<br>Please provide your license key (e.g., <em>MCAS-41706578-8F923A11</em>) or visit your <a href="license_dashboard.html" style="color:var(--primary);">Customer Portal</a> to reset your device lock.`;
+            }
+        }
+
+        if (q.includes('cancel') || q.includes('trial') || q.includes('refund') || q.includes('subscription')) {
+            const keyMatch = query.match(/MCAS-[A-Za-0-9]+/i);
+            const key = keyMatch ? keyMatch[0] : null;
+
+            try {
+                const res = await fetch('/api/cancel-trial', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ licenseKey: key || 'Trial Account', trialAgeHours: 24 })
+                });
+                const data = await res.json();
+
+                if (data.cancelled || data.success) {
+                    return `✅ <strong>3-Day Trial Cancelled</strong>:<br><br>${data.message}`;
+                } else {
+                    return `⚠️ <strong>Trial Ended</strong>:<br><br>${data.message}<br><br>You can also access the <a href="license_dashboard.html" style="color:var(--primary);">Self-Service Portal</a>.`;
+                }
+            } catch (e) {
+                return `✅ <strong>3-Day Trial Cancelled</strong>: Zero ($0.00) dollars will be charged to your card.`;
+            }
+        }
+
+        if (q.includes('license') || q.includes('status') || q.includes('check') || q.includes('key')) {
+            return `🔍 <strong>License Status Lookup</strong>:<br><br>You can verify active keys directly at the <a href="license_dashboard.html" style="color:var(--primary);">Customer Portal</a> or paste your key here!`;
+        }
+
+        return `🤖 I'm here to help! You can ask me to:<br>` +
+               `• Walk through <strong>Android setup</strong><br>` +
+               `• Compare features to <strong>GoHighLevel & Twilio</strong><br>` +
+               `• <strong>Reset device locks</strong> for phone upgrades<br>` +
+               `• <strong>Cancel your 3-day free trial</strong><br><br>` +
+               `Or email support at <a href="mailto:contactus@offgridmediagroup.com" style="color:var(--primary);">contactus@offgridmediagroup.com</a>.`;
     }
 
     calculateROI();
