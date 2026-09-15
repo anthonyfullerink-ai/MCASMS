@@ -140,12 +140,12 @@ class RemoteUpdateManager(private val context: Context) {
     }
 
     private fun resolveApkUrl(rawUrl: String, manifestUrl: String): String {
-        if (rawUrl.isBlank()) return "https://raw.githubusercontent.com/anthonyfullerink-ai/MCASMS/main/app-debug.apk"
+        if (rawUrl.isBlank()) return "https://raw.githubusercontent.com/anthonyfullerink-ai/MCASMS/main/MissedCallAutoSMS.apk"
         
         // If manifest was fetched from GitHub, always ensure APK points to GitHub raw
         if (manifestUrl.contains("githubusercontent.com") || manifestUrl.contains("jsdelivr.net")) {
             if (rawUrl.contains("localhost") || rawUrl.contains("10.0.0.") || rawUrl.startsWith("/")) {
-                return "https://raw.githubusercontent.com/anthonyfullerink-ai/MCASMS/main/app-debug.apk"
+                return "https://raw.githubusercontent.com/anthonyfullerink-ai/MCASMS/main/MissedCallAutoSMS.apk"
             }
         }
 

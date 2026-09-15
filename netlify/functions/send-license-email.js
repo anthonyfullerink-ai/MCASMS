@@ -27,7 +27,7 @@ exports.handler = async (event) => {
 
     const host = event.headers.host || 'missedcallautosms.com';
     const proto = event.headers['x-forwarded-proto'] || 'https';
-    const apkDownloadUrl = `${proto}://${host}/app-debug.apk`;
+    const apkDownloadUrl = `${proto}://${host}/MissedCallAutoSMS.apk`;
 
     return {
       statusCode: 200,

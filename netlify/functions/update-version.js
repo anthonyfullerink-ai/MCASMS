@@ -19,7 +19,7 @@ exports.handler = async (event) => {
     const version = {
       versionCode: parseInt(payload.versionCode, 10) || 4,
       versionName: payload.versionName || '1.1.2',
-      downloadUrl: payload.downloadUrl || 'https://raw.githubusercontent.com/anthonyfullerink-ai/MCASMS/main/app-debug.apk',
+      downloadUrl: payload.downloadUrl || 'https://raw.githubusercontent.com/anthonyfullerink-ai/MCASMS/main/MissedCallAutoSMS.apk',
       releaseNotes: payload.releaseNotes || 'Performance improvements and live Stripe diagnostics verification.',
       mandatory: Boolean(payload.mandatory),
       minSupportedVersion: parseInt(payload.minSupportedVersion, 10) || 1,

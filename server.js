@@ -19,7 +19,7 @@ const MIME_TYPES = {
 const LATEST_APP_VERSION = {
   versionCode: 4,
   versionName: '1.1.2',
-  downloadUrl: 'https://raw.githubusercontent.com/anthonyfullerink-ai/MCASMS/main/app-debug.apk',
+  downloadUrl: 'https://raw.githubusercontent.com/anthonyfullerink-ai/MCASMS/main/MissedCallAutoSMS.apk',
   releaseNotes: '• Fixed socket timeout during update checks\n• High-speed GitHub CDN live OTA updates\n• Seamless in-app download and installation\n• Enhanced reliability across all mobile networks',
   mandatory: true,
   minSupportedVersion: 1
@@ -88,7 +88,7 @@ function stripeApiRequest(endpoint, method = 'GET', postData = null) {
 
 function generateLicenseEmailHtml(data) {
   const { customerName, customerEmail, licenseKey, licenseType, price } = data;
-  const apkDownloadUrl = `http://localhost:8000/app-debug.apk`;
+  const apkDownloadUrl = `http://localhost:8000/MissedCallAutoSMS.apk`;
   const isFree = (price === 0 || licenseType === 'FREE');
 
   return `<!DOCTYPE html>
@@ -313,7 +313,7 @@ const server = http.createServer((req, res) => {
           sentTo: customerEmail,
           licenseKey: licenseKey,
           previewUrl: `http://localhost:8000/sent_emails/${fileName}`,
-          apkDownloadUrl: `http://localhost:8000/app-debug.apk`
+          apkDownloadUrl: `http://localhost:8000/MissedCallAutoSMS.apk`
         }));
       } catch (err) {
         res.writeHead(500, { 'Content-Type': 'application/json; charset=utf-8', 'Access-Control-Allow-Origin': '*' });
@@ -475,10 +475,16 @@ const server = http.createServer((req, res) => {
     relativePath = '/sales_landing_page.html';
   }
 
-  // Map /app-debug.apk from app build output if requested
+  // Map /MissedCallAutoSMS.apk and /app-debug.apk from build output or root
   let filePath = path.join(__dirname, relativePath);
-  if (relativePath === '/app-debug.apk') {
-    filePath = path.join(__dirname, 'app/build/outputs/apk/debug/app-debug.apk');
+  if (relativePath === '/MissedCallAutoSMS.apk' || relativePath === '/app-debug.apk') {
+    filePath = path.join(__dirname, 'MissedCallAutoSMS.apk');
+    if (!fs.existsSync(filePath)) {
+      filePath = path.join(__dirname, 'app-debug.apk');
+    }
+    if (!fs.existsSync(filePath)) {
+      filePath = path.join(__dirname, 'app/build/outputs/apk/debug/app-debug.apk');
+    }
   }
   
   fs.stat(filePath, (err, stats) => {
