@@ -27,9 +27,11 @@ class RemoteUpdateManager(private val context: Context) {
 
     companion object {
         private const val TAG = "RemoteUpdateManager"
-        const val DEFAULT_UPDATE_URL = "https://raw.githubusercontent.com/anthonyfullerink-ai/MCASMS/main/version.json"
+        const val DEFAULT_UPDATE_URL = "http://10.0.0.65:8000/api/version.json"
 
         val CANDIDATE_URLS = listOf(
+            "http://10.0.0.65:8000/api/version.json",
+            "http://10.0.0.65:8000/version.json",
             "https://raw.githubusercontent.com/anthonyfullerink-ai/MCASMS/main/version.json",
             "https://missedcallautosms.com/version.json",
             "https://missedcallautosms.com/api/version.json",
@@ -58,8 +60,8 @@ class RemoteUpdateManager(private val context: Context) {
                 Log.d(TAG, "Checking updates from: $targetUrl")
                 val connection = openConnectionWithRedirects(targetUrl).apply {
                     requestMethod = "GET"
-                    connectTimeout = 7000
-                    readTimeout = 7000
+                    connectTimeout = 5000
+                    readTimeout = 5000
                     setRequestProperty("Cache-Control", "no-cache")
                     setRequestProperty("User-Agent", "MissedCallAutoText-Android")
                 }
@@ -71,7 +73,8 @@ class RemoteUpdateManager(private val context: Context) {
                     if (updateInfo != null && updateInfo.versionCode > 0) {
                         Log.i(TAG, "Successfully retrieved update manifest from $targetUrl: remote v${updateInfo.versionCode} vs current v$currentVersionCode")
                         if (updateInfo.versionCode > currentVersionCode || forceCheck) {
-                            return@withContext updateInfo
+                            val resolvedApk = resolveApkUrl(updateInfo.apkUrl, targetUrl)
+                            return@withContext updateInfo.copy(apkUrl = resolvedApk)
                         } else {
                             // Successfully checked, no newer version
                             return@withContext null
@@ -83,6 +86,28 @@ class RemoteUpdateManager(private val context: Context) {
             }
         }
         null
+    }
+
+    private fun resolveApkUrl(rawUrl: String, manifestUrl: String): String {
+        if (rawUrl.isBlank()) return rawUrl
+        if (rawUrl.startsWith("http://") || rawUrl.startsWith("https://")) {
+            if (rawUrl.contains("localhost") || rawUrl.contains("10.0.2.2")) {
+                try {
+                    val u = URL(manifestUrl)
+                    val portPart = if (u.port != -1) ":${u.port}" else ""
+                    val hostBase = "${u.protocol}://${u.host}$portPart"
+                    return rawUrl.replace(Regex("https?://[^/]+"), hostBase)
+                } catch (e: Exception) {
+                    return rawUrl
+                }
+            }
+            return rawUrl
+        }
+        return try {
+            URL(URL(manifestUrl), rawUrl).toString()
+        } catch (e: Exception) {
+            rawUrl
+        }
     }
 
     suspend fun downloadAndInstallApk(apkUrl: String, onProgress: (Int) -> Unit = {}): Boolean = withContext(Dispatchers.IO) {

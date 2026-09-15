@@ -19,8 +19,8 @@ const MIME_TYPES = {
 const LATEST_APP_VERSION = {
   versionCode: 2,
   versionName: '1.1.0',
-  downloadUrl: 'https://raw.githubusercontent.com/anthonyfullerink-ai/MCASMS/main/app-debug.apk',
-  releaseNotes: '• In-App Customer Account & Subscription Portal\n• Cryptographic hardware device lock binding\n• Direct 1-tap Stripe trial cancellation ($0 charged)\n• Auto-text appliance stability improvements',
+  downloadUrl: 'http://10.0.0.65:8000/app-debug.apk',
+  releaseNotes: '• Automatic In-App OTA Update Checker\n• In-App Customer Account & Subscription Portal\n• Cryptographic hardware device lock binding\n• Direct 1-tap Stripe trial cancellation ($0 charged)\n• Auto-text appliance stability improvements',
   mandatory: false,
   minSupportedVersion: 1
 };
