@@ -1431,7 +1431,7 @@
         }
 
         if (q.includes('reset') || q.includes('device lock') || q.includes('new phone') || q.includes('transfer')) {
-            const keyMatch = query.match(/MCAS-[A-Za-0-9]+/i);
+            const keyMatch = query.match(/MCAS-[A-Za-z0-9\-]+/i);
             const key = keyMatch ? keyMatch[0] : null;
 
             if (key) {
@@ -1452,7 +1452,7 @@
         }
 
         if (q.includes('cancel') || q.includes('trial') || q.includes('refund') || q.includes('subscription')) {
-            const keyMatch = query.match(/MCAS-[A-Za-0-9]+/i);
+            const keyMatch = query.match(/MCAS-[A-Za-z0-9\-]+/i);
             const key = keyMatch ? keyMatch[0] : null;
 
             try {
