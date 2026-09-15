@@ -1,0 +1,14 @@
+[build]
+  publish = "."
+
+# Serve sales_landing_page.html as homepage
+[[redirects]]
+  from = "/"
+  to = "/sales_landing_page.html"
+  status = 200
+
+# Direct access to dashboards
+[[redirects]]
+  from = "/owner"
+  to = "/owner_admin_dashboard.html"
+  status = 200
