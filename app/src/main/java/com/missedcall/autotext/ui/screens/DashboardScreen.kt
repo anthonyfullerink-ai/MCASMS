@@ -77,6 +77,19 @@ fun DashboardScreen(
         label = "alpha"
     )
 
+    // Automatic Background OTA Update Check on Startup
+    LaunchedEffect(Unit) {
+        try {
+            val updateUrl = settings.remoteUpdateUrl.ifBlank { RemoteUpdateManager.DEFAULT_UPDATE_URL }
+            val update = updateManager.checkForUpdates(updateUrl)
+            if (update != null) {
+                availableUpdate = update
+            }
+        } catch (e: Exception) {
+            // Ignore background error
+        }
+    }
+
     // OTA Update Dialog
     availableUpdate?.let { update ->
         AlertDialog(
@@ -433,13 +446,25 @@ fun DashboardScreen(
                         onClick = {
                             isCheckingUpdate = true
                             coroutineScope.launch {
+                                val currentVersionCode = try {
+                                    context.packageManager.getPackageInfo(context.packageName, 0).versionCode
+                                } catch (e: Exception) { 1 }
+                                val currentVersionName = try {
+                                    context.packageManager.getPackageInfo(context.packageName, 0).versionName ?: "1.0.0"
+                                } catch (e: Exception) { "1.0.0" }
+
                                 val updateUrl = settings.remoteUpdateUrl.ifBlank { RemoteUpdateManager.DEFAULT_UPDATE_URL }
                                 val update = updateManager.checkForUpdates(updateUrl)
                                 isCheckingUpdate = false
                                 if (update != null) {
                                     availableUpdate = update
                                 } else {
-                                    Toast.makeText(context, "App is up to date! (v1.1.0)", Toast.LENGTH_SHORT).show()
+                                    val latestInfo = updateManager.checkForUpdates(updateUrl, forceCheck = true)
+                                    if (latestInfo != null && latestInfo.versionCode <= currentVersionCode) {
+                                        Toast.makeText(context, "✅ App is up to date (v$currentVersionName)!", Toast.LENGTH_SHORT).show()
+                                    } else {
+                                        Toast.makeText(context, "App is up to date (v$currentVersionName).", Toast.LENGTH_SHORT).show()
+                                    }
                                 }
                             }
                         }

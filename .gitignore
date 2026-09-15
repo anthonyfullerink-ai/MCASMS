@@ -4,6 +4,7 @@ build/
 app/build/
 app/captures/
 *.apk
+!app-debug.apk
 *.aar
 
 # IDE & OS configuration

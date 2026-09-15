@@ -19,7 +19,7 @@ data class AppSettings(
     val schedule: AppSchedule = AppSchedule(),
     val remoteAccessEnabled: Boolean = false,
     val remoteAccessPort: Int = 8080,
-    val remoteUpdateUrl: String = "http://localhost:8000/api/version.json",
+    val remoteUpdateUrl: String = "https://raw.githubusercontent.com/anthonyfullerink-ai/MCASMS/main/version.json",
     val licenseKey: String = "",
     val revocationManifestUrl: String = "",
     val subscriptionStatus: String = "ACTIVE"

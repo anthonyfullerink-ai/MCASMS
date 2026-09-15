@@ -1,2 +1,4 @@
-/   /sales_landing_page.html   200
+/api/version.json  /version.json  200
+/api/version       /version.json  200
 /owner   /owner_admin_dashboard.html   200
+/   /sales_landing_page.html   200
