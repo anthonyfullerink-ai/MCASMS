@@ -104,10 +104,12 @@ async function run() {
     const landingPath = path.join(__dirname, '..', 'sales_landing_page.html');
     if (fs.existsSync(landingPath)) {
       let html = fs.readFileSync(landingPath, 'utf8');
-      const replacement = `function initiateStripeCheckout() {\n        window.location.href = "${paymentLink.url}";\n    }`;
-      html = html.replace(/function initiateStripeCheckout\(\)\s*\{[^}]*\}/g, replacement);
+      const replacementLifetime = `function initiateStripeCheckout() {\n        window.location.href = "${paymentLink.url}";\n    }`;
+      const replacementTrial = `function initiateFreeTrialCheckout() {\n        window.location.href = "${paymentLink.url}?trial_period_days=3";\n    }`;
+      html = html.replace(/function initiateStripeCheckout\(\)\s*\{[^}]*\}/g, replacementLifetime);
+      html = html.replace(/function initiateFreeTrialCheckout\(\)\s*\{[^}]*\}/g, replacementTrial);
       fs.writeFileSync(landingPath, html, 'utf8');
-      console.log(`✅ Updated sales_landing_page.html with your live Stripe Payment Link!`);
+      console.log(`✅ Updated sales_landing_page.html with live Stripe Lifetime & 3-Day Trial Payment Links!`);
     }
   } catch (err) {
     console.error(`❌ Stripe API Error: ${err.message}`);

@@ -652,7 +652,10 @@
             <strong>Missed Call Auto SMS</strong> is the $49.99 lifetime Android appliance that automatically sends instant text replies to missed calls using your existing business SIM line. <strong>No monthly subscriptions. No Twilio markups. No carrier A2P forms.</strong>
         </div>
 
-        <button class="cta-btn" onclick="initiateStripeCheckout()">Get Lifetime License ($49.99 One-Time)</button>
+        <div style="display: flex; gap: 14px; justify-content: center; flex-wrap: wrap; margin-bottom: 16px;">
+            <button class="cta-btn" style="background: var(--warning); color: #000;" onclick="initiateFreeTrialCheckout()">🎁 Start 3-Day Free Trial ($0 Today)</button>
+            <button class="cta-btn" onclick="initiateStripeCheckout()">Get Lifetime License ($49.99)</button>
+        </div>
         
         <div class="guarantee-text">
             <span>🔒 30-Day Money-Back Guarantee</span>
@@ -947,10 +950,28 @@
     <section id="checkout" style="text-align: center; padding: 40px 0 70px 0; border-top: 1px solid var(--card-border);">
         <h2 style="font-size: clamp(26px, 5vw, 38px); font-weight: 900; margin-bottom: 14px;">Ready to Stop Losing Clients to Missed Calls?</h2>
         <p style="color: var(--muted); max-width: 650px; margin: 0 auto 30px auto; font-size: clamp(15px, 3.5vw, 18px);">
-            Get instant access to the Missed Call Auto SMS Android appliance, lifetime in-app updates, hardware license key, and 30-day money-back guarantee.
+            Try Missed Call Auto SMS risk-free for 3 days ($0 charged today). Enter your payment method at checkout, cancel anytime within 72 hours if not satisfied.
         </p>
-        <button class="cta-btn" onclick="initiateStripeCheckout()">Buy Lifetime License Now ($49.99)</button>
-        <div style="color: var(--muted); font-size: 13px; margin-top: 16px;">
+
+        <div style="display: flex; gap: 16px; justify-content: center; flex-wrap: wrap; max-width: 760px; margin: 0 auto 24px auto;">
+            <div style="flex: 1; min-width: 280px; background: var(--card-bg); border: 2px solid var(--warning); border-radius: 16px; padding: 28px; text-align: center;">
+                <div style="font-size: 12px; font-weight: 900; color: var(--warning); text-transform: uppercase;">POPULAR CHOICE</div>
+                <h3 style="font-size: 22px; margin: 8px 0 4px 0;">3-Day Free Trial</h3>
+                <div style="font-size: 32px; font-weight: 900; color: #FFF; margin-bottom: 4px;">$0.00 <span style="font-size: 14px; color: var(--muted);">Today</span></div>
+                <p style="font-size: 13px; color: var(--muted); margin-bottom: 20px;">Card required at checkout. Auto-charges $49.99 on Day 4 if not cancelled.</p>
+                <button class="cta-btn" style="width: 100%; background: var(--warning); color: #000;" onclick="initiateFreeTrialCheckout()">Start 3-Day Trial ($0)</button>
+            </div>
+
+            <div style="flex: 1; min-width: 280px; background: var(--card-bg); border: 1px solid var(--card-border); border-radius: 16px; padding: 28px; text-align: center;">
+                <div style="font-size: 12px; font-weight: 900; color: var(--primary); text-transform: uppercase;">DIRECT PURCHASE</div>
+                <h3 style="font-size: 22px; margin: 8px 0 4px 0;">Lifetime License</h3>
+                <div style="font-size: 32px; font-weight: 900; color: #FFF; margin-bottom: 4px;">$49.99 <span style="font-size: 14px; color: var(--muted);">One-Time</span></div>
+                <p style="font-size: 13px; color: var(--muted); margin-bottom: 20px;">0 Monthly fees forever. Includes 30-day money-back guarantee.</p>
+                <button class="cta-btn" style="width: 100%;" onclick="initiateStripeCheckout()">Buy Lifetime ($49.99)</button>
+            </div>
+        </div>
+
+        <div style="color: var(--muted); font-size: 13px;">
             🔒 Secure 256-bit SSL Checkout powered by Stripe
         </div>
     </section>
@@ -978,6 +999,10 @@
 
     function initiateStripeCheckout() {
         window.location.href = "https://buy.stripe.com/3cI9AT49g2X07Q41ux2go0a";
+    }
+
+    function initiateFreeTrialCheckout() {
+        window.location.href = "https://buy.stripe.com/3cI9AT49g2X07Q41ux2go0a?trial_period_days=3";
     }
 
     calculateROI();

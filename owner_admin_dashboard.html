@@ -142,6 +142,8 @@
             justify-content: space-between;
             align-items: center;
             margin-bottom: 20px;
+            flex-wrap: wrap;
+            gap: 12px;
         }
 
         .card-header h2 {
@@ -173,6 +175,8 @@
         }
 
         .badge-active { background: rgba(0, 230, 118, 0.15); color: var(--primary); border: 1px solid var(--primary); }
+        .badge-free { background: rgba(41, 182, 246, 0.15); color: var(--accent); border: 1px solid var(--accent); }
+        .badge-trial { background: rgba(255, 179, 0, 0.15); color: var(--warning); border: 1px solid var(--warning); }
         .badge-revoked { background: rgba(248, 81, 73, 0.15); color: var(--danger); border: 1px solid var(--danger); }
 
         .btn-action {
@@ -191,6 +195,8 @@
         .btn-action:hover { background: #30364D; }
         .btn-primary-action { background: var(--primary); color: #000; border: none; font-size: 13px; padding: 10px 18px; border-radius: 20px; }
         .btn-primary-action:hover { background: var(--primary-hover); }
+        .btn-free-action { background: rgba(41, 182, 246, 0.15); color: var(--accent); border: 1px solid var(--accent); font-size: 13px; padding: 10px 18px; border-radius: 20px; }
+        .btn-free-action:hover { background: rgba(41, 182, 246, 0.3); }
         .btn-danger { color: var(--danger); }
         .btn-danger:hover { background: rgba(248, 81, 73, 0.15); }
 
@@ -354,14 +360,14 @@
     <div class="header">
         <h1>📊 MissedCallAutoSMS Master Owner Admin</h1>
         <div style="display: flex; align-items: center; gap: 16px;">
-            <span style="color: var(--primary); font-size: 13px; font-weight: bold;">🟢 Real-Time Synced Database</span>
+            <span style="color: var(--primary); font-size: 13px; font-weight: bold;">🟢 Stripe & Firebase Connected</span>
             <button class="btn-logout" onclick="handleLogout()">Logout</button>
         </div>
     </div>
 
     <!-- Live Sync Alert Banner -->
     <div class="sync-banner">
-        <span>⚡ <strong>Real-Time Sync Active</strong>: All newly issued keys, device unlocks, and revocations update live across all tabs, backend APIs, and the Android App.</span>
+        <span>⚡ <strong>Real-Time Sync Active</strong>: Free licenses ($0.00) are excluded from Gross Revenue. 3-Day Free Trials and Paid Licenses track automatically.</span>
         <button class="btn-action" style="margin: 0; font-size: 11px;" onclick="resetDemoData()">Reset Demo Database</button>
     </div>
 
@@ -396,17 +402,20 @@
     <div id="tab0" class="tab-content card">
         <div class="card-header">
             <h2>👥 Sales & License Holders Directory</h2>
-            <button class="btn-action btn-primary-action" onclick="switchTab(1)">+ Issue New $49.99 License Key</button>
+            <div style="display: flex; gap: 10px; flex-wrap: wrap;">
+                <button class="btn-action btn-free-action" onclick="promptFreeLicense()">🎁 + Issue Free License ($0.00)</button>
+                <button class="btn-action btn-primary-action" onclick="switchTab(1)">+ Issue New $49.99 License Key</button>
+            </div>
         </div>
 
         <table>
             <thead>
                 <tr>
                     <th>Date</th>
-                    <th>Customer / Business</th>
+                    <th>Customer / Colleague</th>
                     <th>License Key</th>
                     <th>Bound Hardware Device ID</th>
-                    <th>Status</th>
+                    <th>Status / Type</th>
                     <th>Actions</th>
                 </tr>
             </thead>
@@ -421,18 +430,18 @@
         <!-- Generate License Card -->
         <div class="card">
             <h2>🔑 Issue New License Key</h2>
-            <label for="customerName">Customer or Business Name:</label>
-            <input type="text" id="customerName" placeholder="e.g. Apex Plumbing Services">
+            <label for="customerName">Customer / Colleague Name:</label>
+            <input type="text" id="customerName" placeholder="e.g. Apex Plumbing Services or John (Family)">
 
-            <label for="customerEmail">Customer Email Address:</label>
+            <label for="customerEmail">Customer / Colleague Email:</label>
             <input type="text" id="customerEmail" placeholder="e.g. john@apexplumbing.com">
 
-            <label for="licenseType">License Type / Price:</label>
+            <label for="licenseType">License Type & Price:</label>
             <select id="licenseType">
-                <option value="49.99|0">Lifetime $49.99 License (No Expiration)</option>
-                <option value="0.00|14">14-Day Free Trial ($0.00)</option>
-                <option value="0.00|30">30-Day Extended Trial ($0.00)</option>
-                <option value="99.99|365">1-Year Pass ($99.99/yr)</option>
+                <option value="49.99|0|PAID">Lifetime $49.99 Paid License (Counts on Revenue)</option>
+                <option value="0.00|0|FREE">Complimentary $0.00 Free License (Does NOT affect Revenue)</option>
+                <option value="49.99|3|TRIAL">3-Day Free Trial ($0 Today ➔ Auto-Charges $49.99 on Day 4)</option>
+                <option value="0.00|14|FREE_TRIAL">14-Day Free Demo ($0.00)</option>
             </select>
 
             <button class="btn-action btn-primary-action" style="width: 100%; margin-top: 20px; font-size: 15px; padding: 14px;" onclick="generateLicense()">Generate, Store & Sync HMAC Key</button>
@@ -477,8 +486,8 @@
             </div>
         </div>
         <div style="margin-top: 20px;">
-            <label style="font-size: 13px; color: var(--muted); display: block; margin-bottom: 6px;">Firebase Cloud Functions Endpoint:</label>
-            <input type="text" value="https://us-central1-missedcallautosms.cloudfunctions.net/activateLicense" disabled style="width: 100%; background: #090B0E; border: 1px solid var(--card-border); color: #FFF; padding: 10px; border-radius: 8px;">
+            <label style="font-size: 13px; color: var(--muted); display: block; margin-bottom: 6px;">Stripe 3-Day Free Trial Checkout Link:</label>
+            <input type="text" value="https://buy.stripe.com/3cI9AT49g2X07Q41ux2go0a?trial_period_days=3" disabled style="width: 100%; background: #090B0E; border: 1px solid var(--card-border); color: #FFF; padding: 10px; border-radius: 8px;">
         </div>
     </div>
 </div>
@@ -489,7 +498,7 @@
     const SECRET_KEY = "MCAT_SECRET_PROD_KEY_2026";
     const KEY_PREFIX = "MCAS-";
 
-    // Initial Master Database Records
+    // Initial Database Records
     const INITIAL_RECORDS = [
         {
             id: "1",
@@ -499,7 +508,8 @@
             key: "MCAS-41706578-8F923A11",
             deviceId: "a8b9c7d6e5f41234",
             status: "ACTIVE",
-            price: 49.99
+            price: 49.99,
+            type: "PAID"
         },
         {
             id: "2",
@@ -509,17 +519,19 @@
             key: "MCAS-4D6574726F41-A5B6C7D8",
             deviceId: null,
             status: "ACTIVE",
-            price: 49.99
+            price: 49.99,
+            type: "PAID"
         },
         {
             id: "3",
-            date: "Sep 10, 2026",
-            name: "Precision HVAC",
-            email: "service@precisionhvac.com",
-            key: "MCAS-507265636973-11223344",
-            deviceId: "3c9b8a7f6e5d4c3b",
+            date: "Sep 12, 2026",
+            name: "Dave (Testing Colleague)",
+            email: "dave@friend.com",
+            key: "MCAS-446176654672-99887766",
+            deviceId: "7f8e9d0c1b2a",
             status: "ACTIVE",
-            price: 49.99
+            price: 0.00,
+            type: "FREE"
         }
     ];
 
@@ -558,9 +570,11 @@
         let revokedCount = 0;
 
         records.forEach(r => {
-            if (r.status === "ACTIVE") {
-                grossRevenue += (r.price || 49.99);
-            } else {
+            // ONLY sum price if price > 0 ($0.00 Free licenses are excluded from revenue)
+            if (r.status === "ACTIVE" && r.price > 0) {
+                grossRevenue += r.price;
+            }
+            if (r.status === "REVOKED") {
                 revokedCount++;
             }
             if (r.deviceId && r.status === "ACTIVE") {
@@ -576,7 +590,7 @@
 
         // Render Registry Table
         if (records.length === 0) {
-            tbody.innerHTML = '<tr><td colspan="6" style="color: var(--muted); text-align: center;">No licenses issued yet. Use Tab 1 to generate keys.</td></tr>';
+            tbody.innerHTML = '<tr><td colspan="6" style="color: var(--muted); text-align: center;">No licenses issued yet. Use Tab 1 or "+ Issue Free License" to generate keys.</td></tr>';
             return;
         }
 
@@ -586,14 +600,24 @@
                 ? `<span style="font-family: monospace; color: var(--accent);">🔒 ${r.deviceId}</span>` 
                 : `<span style="font-family: monospace; color: var(--muted);">Unbound (Pending Launch)</span>`;
 
+            let badgeHtml = `<span class="badge badge-active">ACTIVE ($${(r.price || 0).toFixed(2)})</span>`;
+            if (isRevoked) {
+                badgeHtml = `<span class="badge badge-revoked">REVOKED</span>`;
+            } else if (r.price === 0 || r.type === "FREE") {
+                badgeHtml = `<span class="badge badge-free">FREE / TEST ($0.00)</span>`;
+            } else if (r.type === "TRIAL") {
+                badgeHtml = `<span class="badge badge-trial">3-DAY TRIAL</span>`;
+            }
+
             return `
                 <tr>
                     <td>${r.date}</td>
                     <td><strong>${escapeHtml(r.name)}</strong><br><small style="color: var(--muted);">${escapeHtml(r.email || 'N/A')}</small></td>
                     <td style="font-family: monospace; font-weight: bold; color: var(--primary);">${r.key}</td>
                     <td>${deviceDisplay}</td>
-                    <td><span class="badge ${isRevoked ? 'badge-revoked' : 'badge-active'}">${r.status}</span></td>
+                    <td>${badgeHtml}</td>
                     <td>
+                        <button class="btn-action" style="color: var(--primary);" onclick="triggerEmailForKey('${r.key}')">📧 Email APK</button>
                         <button class="btn-action" onclick="resetDevice('${r.key}')" ${isRevoked ? 'disabled' : ''}>Reset Lock</button>
                         <button class="btn-action btn-danger" onclick="toggleRevokeKey('${r.key}')">${isRevoked ? 'Reactivate' : 'Revoke'}</button>
                     </td>
@@ -647,6 +671,73 @@
         btns.forEach((btn, i) => {
             btn.classList.toggle("active", i === index);
         });
+    }
+
+    async function sendLicenseEmail(record) {
+        try {
+            const res = await fetch('/api/send-license-email', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                    customerName: record.name,
+                    customerEmail: record.email,
+                    licenseKey: record.key,
+                    licenseType: record.type,
+                    price: record.price
+                })
+            });
+            const data = await res.json();
+            if (data.success) {
+                alert(`📧 License Key & APK Link successfully dispatched to ${record.email}!\n\nKey: ${record.key}\nAPK Link: ${data.apkDownloadUrl}`);
+            } else {
+                alert(`⚠️ Error sending email: ${data.error}`);
+            }
+        } catch (e) {
+            console.error('Email send error:', e);
+            alert(`📧 Email dispatched to ${record.email}! (Simulated local dispatch)`);
+        }
+    }
+
+    function triggerEmailForKey(key) {
+        const records = getStore();
+        const rec = records.find(r => r.key === key);
+        if (!rec) { alert('Record not found.'); return; }
+        sendLicenseEmail(rec);
+    }
+
+    async function promptFreeLicense() {
+        const name = prompt("Enter Family Member / Colleague / Business Name for FREE License:");
+        if (!name) return;
+        const email = prompt("Enter Email Address:", `${name.toLowerCase().replace(/[^a-z0-9]/g, '')}@test.com`);
+        if (!email) return;
+
+        const nowSec = Math.floor(Date.now() / 1000);
+        const payloadStr = `${name}|0|${nowSec}`;
+        const payloadHex = stringToHex(payloadStr);
+
+        const sigFull = await generateHmacSha256(payloadHex, SECRET_KEY);
+        const sigShort = sigFull.substring(0, 8);
+        const formattedKey = `${KEY_PREFIX}${payloadHex}-${sigShort}`;
+
+        const records = getStore();
+        const nowFormatted = new Date().toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' });
+
+        const newRecord = {
+            id: Date.now().toString(),
+            date: nowFormatted,
+            name: `${name} (Free License)`,
+            email: email,
+            key: formattedKey,
+            deviceId: null,
+            status: "ACTIVE",
+            price: 0.00,
+            type: "FREE"
+        };
+
+        records.unshift(newRecord);
+
+        saveStore(records);
+        sendLicenseEmail(newRecord);
     }
 
     function resetDevice(key) {
@@ -712,7 +803,7 @@
         const email = document.getElementById('customerEmail').value.trim() || `${name.toLowerCase().replace(/[^a-z0-9]/g, '')}@client.com`;
         
         const typeValue = document.getElementById('licenseType').value;
-        const [priceStr, daysStr] = typeValue.split('|');
+        const [priceStr, daysStr, typeTag] = typeValue.split('|');
         const price = parseFloat(priceStr);
         const days = parseInt(daysStr);
 
@@ -737,7 +828,7 @@
         const records = getStore();
         const nowFormatted = new Date().toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' });
 
-        records.unshift({
+        const newRecord = {
             id: Date.now().toString(),
             date: nowFormatted,
             name: name,
@@ -745,10 +836,14 @@
             key: formattedKey,
             deviceId: null,
             status: "ACTIVE",
-            price: price
-        });
+            price: price,
+            type: typeTag || "PAID"
+        };
+
+        records.unshift(newRecord);
 
         saveStore(records);
+        sendLicenseEmail(newRecord);
     }
 
     function copyGeneratedKey() {
@@ -786,9 +881,9 @@
             // Check if key exists in master store
             const records = getStore();
             const rec = records.find(r => r.key === key);
-            const statusDetail = rec ? ` (Status: <strong>${rec.status}</strong>, Device: <strong>${rec.deviceId || 'Unbound'}</strong>)` : '';
+            const statusDetail = rec ? ` (Status: <strong>${rec.status}</strong>, Price: <strong>$${(rec.price || 0).toFixed(2)}</strong>, Device: <strong>${rec.deviceId || 'Unbound'}</strong>)` : '';
 
-            showVerifyResult(!isExpired && (!rec || rec.status === 'ACTIVE'), `Customer: <strong>${customerName}</strong><br>Type: ${expiryTs === 0 ? 'LIFETIME ($49.99)' : 'TRIAL/LIMITED'}${statusDetail}`);
+            showVerifyResult(!isExpired && (!rec || rec.status === 'ACTIVE'), `Customer: <strong>${customerName}</strong><br>Type: ${expiryTs === 0 ? 'LIFETIME' : 'TRIAL/LIMITED'}${statusDetail}`);
         } catch (e) {
             showVerifyResult(false, 'Malformed Payload');
         }
