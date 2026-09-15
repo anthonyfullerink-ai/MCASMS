@@ -23,26 +23,30 @@ data class UpdateInfo(
     val mandatory: Boolean = false
 )
 
+sealed class UpdateCheckResult {
+    data class Available(val updateInfo: UpdateInfo, val sourceUrl: String) : UpdateCheckResult()
+    data class UpToDate(val currentVersionCode: Int, val currentVersionName: String, val remoteVersionCode: Int, val sourceUrl: String) : UpdateCheckResult()
+    data class Error(val message: String, val attemptedUrls: List<String>) : UpdateCheckResult()
+}
+
 class RemoteUpdateManager(private val context: Context) {
 
     companion object {
         private const val TAG = "RemoteUpdateManager"
-        const val DEFAULT_UPDATE_URL = "http://10.0.0.65:8000/api/version.json"
+        const val DEFAULT_UPDATE_URL = "https://raw.githubusercontent.com/anthonyfullerink-ai/MCASMS/main/version.json"
 
         val CANDIDATE_URLS = listOf(
+            "https://raw.githubusercontent.com/anthonyfullerink-ai/MCASMS/main/version.json",
+            "https://cdn.jsdelivr.net/gh/anthonyfullerink-ai/MCASMS@main/version.json",
             "http://10.0.0.65:8000/api/version.json",
             "http://10.0.0.65:8000/version.json",
-            "https://raw.githubusercontent.com/anthonyfullerink-ai/MCASMS/main/version.json",
-            "https://missedcallautosms.com/version.json",
-            "https://missedcallautosms.com/api/version.json",
-            "http://10.0.2.2:8000/api/version.json",
-            "http://localhost:8000/api/version.json"
+            "http://10.0.2.2:8000/api/version.json"
         )
     }
 
     private val gson = Gson()
 
-    suspend fun checkForUpdates(manifestUrl: String = DEFAULT_UPDATE_URL, forceCheck: Boolean = false): UpdateInfo? = withContext(Dispatchers.IO) {
+    suspend fun checkForUpdatesDetailed(manifestUrl: String = DEFAULT_UPDATE_URL, forceCheck: Boolean = false): UpdateCheckResult = withContext(Dispatchers.IO) {
         val targets = mutableListOf<String>()
         if (manifestUrl.isNotBlank() && !manifestUrl.contains("localhost")) {
             targets.add(manifestUrl)
@@ -54,15 +58,31 @@ class RemoteUpdateManager(private val context: Context) {
         } catch (e: Exception) {
             1
         }
+        val currentVersionName = try {
+            context.packageManager.getPackageInfo(context.packageName, 0).versionName ?: "1.0.0"
+        } catch (e: Exception) {
+            "1.0.0"
+        }
+
+        var lastError: String? = null
 
         for (targetUrl in targets) {
             try {
-                Log.d(TAG, "Checking updates from: $targetUrl")
-                val connection = openConnectionWithRedirects(targetUrl).apply {
+                // Add timestamp query parameter to bypass CDN/HTTP caches
+                val cacheBustUrl = if (targetUrl.contains("?")) {
+                    "$targetUrl&_t=${System.currentTimeMillis()}"
+                } else {
+                    "$targetUrl?_t=${System.currentTimeMillis()}"
+                }
+
+                Log.d(TAG, "Checking live OTA updates from: $cacheBustUrl")
+                val connection = openConnectionWithRedirects(cacheBustUrl).apply {
                     requestMethod = "GET"
-                    connectTimeout = 5000
-                    readTimeout = 5000
-                    setRequestProperty("Cache-Control", "no-cache")
+                    connectTimeout = 7000
+                    readTimeout = 7000
+                    setRequestProperty("Cache-Control", "no-cache, no-store, must-revalidate")
+                    setRequestProperty("Pragma", "no-cache")
+                    setRequestProperty("Expires", "0")
                     setRequestProperty("User-Agent", "MissedCallAutoText-Android")
                 }
 
@@ -71,25 +91,46 @@ class RemoteUpdateManager(private val context: Context) {
                     val updateInfo = gson.fromJson(json, UpdateInfo::class.java)
 
                     if (updateInfo != null && updateInfo.versionCode > 0) {
-                        Log.i(TAG, "Successfully retrieved update manifest from $targetUrl: remote v${updateInfo.versionCode} vs current v$currentVersionCode")
+                        Log.i(TAG, "Retrieved update manifest from $targetUrl: remote v${updateInfo.versionName} (${updateInfo.versionCode}) vs current v$currentVersionName ($currentVersionCode)")
+                        val resolvedApk = resolveApkUrl(updateInfo.apkUrl, targetUrl)
+                        val finalUpdateInfo = updateInfo.copy(apkUrl = resolvedApk)
+
                         if (updateInfo.versionCode > currentVersionCode || forceCheck) {
-                            val resolvedApk = resolveApkUrl(updateInfo.apkUrl, targetUrl)
-                            return@withContext updateInfo.copy(apkUrl = resolvedApk)
+                            return@withContext UpdateCheckResult.Available(finalUpdateInfo, targetUrl)
                         } else {
-                            // Successfully checked, no newer version
-                            return@withContext null
+                            return@withContext UpdateCheckResult.UpToDate(currentVersionCode, currentVersionName, updateInfo.versionCode, targetUrl)
                         }
                     }
+                } else {
+                    lastError = "HTTP ${connection.responseCode} from $targetUrl"
+                    Log.w(TAG, lastError)
                 }
             } catch (e: Exception) {
-                Log.w(TAG, "Failed check from $targetUrl: ${e.message}")
+                lastError = "${e.javaClass.simpleName}: ${e.message}"
+                Log.w(TAG, "Failed check from $targetUrl: $lastError")
             }
         }
-        null
+
+        UpdateCheckResult.Error(lastError ?: "Could not connect to any update servers", targets)
+    }
+
+    suspend fun checkForUpdates(manifestUrl: String = DEFAULT_UPDATE_URL, forceCheck: Boolean = false): UpdateInfo? {
+        return when (val result = checkForUpdatesDetailed(manifestUrl, forceCheck)) {
+            is UpdateCheckResult.Available -> result.updateInfo
+            else -> null
+        }
     }
 
     private fun resolveApkUrl(rawUrl: String, manifestUrl: String): String {
-        if (rawUrl.isBlank()) return rawUrl
+        if (rawUrl.isBlank()) return "https://raw.githubusercontent.com/anthonyfullerink-ai/MCASMS/main/app-debug.apk"
+        
+        // If manifest was fetched from GitHub, always ensure APK points to GitHub raw
+        if (manifestUrl.contains("githubusercontent.com") || manifestUrl.contains("jsdelivr.net")) {
+            if (rawUrl.contains("localhost") || rawUrl.contains("10.0.0.") || rawUrl.startsWith("/")) {
+                return "https://raw.githubusercontent.com/anthonyfullerink-ai/MCASMS/main/app-debug.apk"
+            }
+        }
+
         if (rawUrl.startsWith("http://") || rawUrl.startsWith("https://")) {
             if (rawUrl.contains("localhost") || rawUrl.contains("10.0.2.2")) {
                 try {

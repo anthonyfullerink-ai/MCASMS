@@ -81,9 +81,9 @@ fun DashboardScreen(
     LaunchedEffect(Unit) {
         try {
             val updateUrl = settings.remoteUpdateUrl.ifBlank { RemoteUpdateManager.DEFAULT_UPDATE_URL }
-            val update = updateManager.checkForUpdates(updateUrl)
-            if (update != null) {
-                availableUpdate = update
+            val result = updateManager.checkForUpdatesDetailed(updateUrl, forceCheck = false)
+            if (result is com.missedcall.autotext.remote.UpdateCheckResult.Available) {
+                availableUpdate = result.updateInfo
             }
         } catch (e: Exception) {
             // Ignore background error
@@ -93,19 +93,47 @@ fun DashboardScreen(
     // OTA Update Dialog
     availableUpdate?.let { update ->
         AlertDialog(
-            onDismissRequest = { availableUpdate = null },
+            onDismissRequest = {
+                if (!update.mandatory) {
+                    availableUpdate = null
+                }
+            },
             title = {
                 Row(verticalAlignment = Alignment.CenterVertically) {
-                    Icon(Icons.Default.SystemUpdate, contentDescription = null, tint = MaterialTheme.colorScheme.primary)
+                    Icon(
+                        Icons.Default.SystemUpdate, 
+                        contentDescription = null, 
+                        tint = if (update.mandatory) MaterialTheme.colorScheme.error else MaterialTheme.colorScheme.primary
+                    )
                     Spacer(modifier = Modifier.width(8.dp))
-                    Text("App Update Available (v${update.versionName})")
+                    Text(if (update.mandatory) "Mandatory Update: v${update.versionName}" else "App Update Available (v${update.versionName})")
                 }
             },
             text = {
                 Column {
+                    if (update.mandatory) {
+                        Surface(
+                            color = MaterialTheme.colorScheme.errorContainer,
+                            shape = MaterialTheme.shapes.small,
+                            modifier = Modifier.fillMaxWidth().padding(bottom = 8.dp)
+                        ) {
+                            Text(
+                                text = "⚠️ This is a required critical update (Build ${update.versionCode}). Please install to continue using Missed Call Auto SMS.",
+                                color = MaterialTheme.colorScheme.onErrorContainer,
+                                style = MaterialTheme.typography.bodySmall,
+                                modifier = Modifier.padding(8.dp)
+                            )
+                        }
+                    }
                     Text(
                         text = update.releaseNotes ?: "A new performance and feature update is ready for Missed Call Auto SMS.",
                         style = MaterialTheme.typography.bodyMedium
+                    )
+                    Spacer(modifier = Modifier.height(8.dp))
+                    Text(
+                        text = "Source: ${update.apkUrl}",
+                        style = MaterialTheme.typography.bodySmall,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant
                     )
                     if (isDownloadingApk) {
                         Spacer(modifier = Modifier.height(16.dp))
@@ -135,7 +163,9 @@ fun DashboardScreen(
                             if (!success) {
                                 Toast.makeText(context, "Failed to download update APK", Toast.LENGTH_SHORT).show()
                             }
-                            availableUpdate = null
+                            if (!update.mandatory) {
+                                availableUpdate = null
+                            }
                         }
                     }
                 ) {
@@ -143,7 +173,7 @@ fun DashboardScreen(
                 }
             },
             dismissButton = {
-                if (!isDownloadingApk) {
+                if (!isDownloadingApk && !update.mandatory) {
                     TextButton(onClick = { availableUpdate = null }) {
                         Text("Later")
                     }
@@ -441,40 +471,61 @@ fun DashboardScreen(
                         )
                     }
 
-                    Button(
-                        enabled = !isCheckingUpdate,
-                        onClick = {
-                            isCheckingUpdate = true
-                            coroutineScope.launch {
-                                val currentVersionCode = try {
-                                    context.packageManager.getPackageInfo(context.packageName, 0).versionCode
-                                } catch (e: Exception) { 1 }
-                                val currentVersionName = try {
-                                    context.packageManager.getPackageInfo(context.packageName, 0).versionName ?: "1.0.0"
-                                } catch (e: Exception) { "1.0.0" }
-
-                                val updateUrl = settings.remoteUpdateUrl.ifBlank { RemoteUpdateManager.DEFAULT_UPDATE_URL }
-                                val update = updateManager.checkForUpdates(updateUrl)
-                                isCheckingUpdate = false
-                                if (update != null) {
-                                    availableUpdate = update
-                                } else {
-                                    val latestInfo = updateManager.checkForUpdates(updateUrl, forceCheck = true)
-                                    if (latestInfo != null && latestInfo.versionCode <= currentVersionCode) {
-                                        Toast.makeText(context, "✅ App is up to date (v$currentVersionName)!", Toast.LENGTH_SHORT).show()
-                                    } else {
-                                        Toast.makeText(context, "App is up to date (v$currentVersionName).", Toast.LENGTH_SHORT).show()
+                    Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                        OutlinedButton(
+                            enabled = !isCheckingUpdate,
+                            onClick = {
+                                isCheckingUpdate = true
+                                coroutineScope.launch {
+                                    val updateUrl = settings.remoteUpdateUrl.ifBlank { RemoteUpdateManager.DEFAULT_UPDATE_URL }
+                                    when (val res = updateManager.checkForUpdatesDetailed(updateUrl, forceCheck = true)) {
+                                        is com.missedcall.autotext.remote.UpdateCheckResult.Available -> {
+                                            availableUpdate = res.updateInfo
+                                            Toast.makeText(context, "🚀 Forcing OTA Update to v${res.updateInfo.versionName} (Build ${res.updateInfo.versionCode})!", Toast.LENGTH_LONG).show()
+                                        }
+                                        is com.missedcall.autotext.remote.UpdateCheckResult.Error -> {
+                                            Toast.makeText(context, "⚠️ Connection Error: ${res.message}", Toast.LENGTH_LONG).show()
+                                        }
+                                        is com.missedcall.autotext.remote.UpdateCheckResult.UpToDate -> {
+                                            Toast.makeText(context, "✅ App is on Build ${res.currentVersionCode}", Toast.LENGTH_SHORT).show()
+                                        }
                                     }
+                                    isCheckingUpdate = false
                                 }
                             }
+                        ) {
+                            Text("Force OTA", style = MaterialTheme.typography.labelSmall)
                         }
-                    ) {
-                        if (isCheckingUpdate) {
-                            CircularProgressIndicator(modifier = Modifier.size(16.dp), strokeWidth = 2.dp, color = Color.White)
-                        } else {
-                            Icon(Icons.Default.Refresh, contentDescription = null, modifier = Modifier.size(16.dp))
-                            Spacer(modifier = Modifier.width(4.dp))
-                            Text("Check Updates")
+
+                        Button(
+                            enabled = !isCheckingUpdate,
+                            onClick = {
+                                isCheckingUpdate = true
+                                coroutineScope.launch {
+                                    val updateUrl = settings.remoteUpdateUrl.ifBlank { RemoteUpdateManager.DEFAULT_UPDATE_URL }
+                                    when (val res = updateManager.checkForUpdatesDetailed(updateUrl, forceCheck = false)) {
+                                        is com.missedcall.autotext.remote.UpdateCheckResult.Available -> {
+                                            availableUpdate = res.updateInfo
+                                            Toast.makeText(context, "🚀 New Update Available: v${res.updateInfo.versionName} (Build ${res.updateInfo.versionCode})!", Toast.LENGTH_LONG).show()
+                                        }
+                                        is com.missedcall.autotext.remote.UpdateCheckResult.UpToDate -> {
+                                            Toast.makeText(context, "✅ App is up to date (v${res.currentVersionName}, Build ${res.currentVersionCode})!", Toast.LENGTH_SHORT).show()
+                                        }
+                                        is com.missedcall.autotext.remote.UpdateCheckResult.Error -> {
+                                            Toast.makeText(context, "⚠️ Update Check Failed: ${res.message}\nTried: ${res.attemptedUrls.firstOrNull()}", Toast.LENGTH_LONG).show()
+                                        }
+                                    }
+                                    isCheckingUpdate = false
+                                }
+                            }
+                        ) {
+                            if (isCheckingUpdate) {
+                                CircularProgressIndicator(modifier = Modifier.size(16.dp), strokeWidth = 2.dp, color = Color.White)
+                            } else {
+                                Icon(Icons.Default.Refresh, contentDescription = null, modifier = Modifier.size(16.dp))
+                                Spacer(modifier = Modifier.width(4.dp))
+                                Text("Check Updates")
+                            }
                         }
                     }
                 }

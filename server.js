@@ -211,6 +211,17 @@ const server = http.createServer((req, res) => {
 
         saveLiveAppVersion(updated);
 
+        // Auto-push live OTA update to GitHub so it broadcasts globally to all mobile devices
+        try {
+          const { exec } = require('child_process');
+          exec('git add version.json && git commit -m "Live OTA release v' + updated.versionName + ' (build ' + updated.versionCode + ')" && git push origin main', (gitErr, gitStdout) => {
+            if (gitErr) console.warn('Git push notice:', gitErr.message);
+            else console.log('Successfully pushed OTA version to GitHub live:', gitStdout);
+          });
+        } catch (e) {
+          console.warn('Auto-push skipped:', e.message);
+        }
+
         res.writeHead(200, {
           'Content-Type': 'application/json; charset=utf-8',
           'Access-Control-Allow-Origin': '*'

@@ -1,9 +1,9 @@
 {
   "versionCode": 3,
   "versionName": "1.1.1",
-  "downloadUrl": "http://10.0.0.65:8000/app-debug.apk",
-  "releaseNotes": "Performance improvements and live Stripe diagnostics verification.",
-  "mandatory": false,
+  "downloadUrl": "https://raw.githubusercontent.com/anthonyfullerink-ai/MCASMS/main/app-debug.apk",
+  "releaseNotes": "• Live OTA updates connected to global GitHub CDN\n• Forced over-the-air update capability enabled\n• Real-time version check diagnostics\n• Direct in-app APK installer",
+  "mandatory": true,
   "minSupportedVersion": 1,
-  "updatedAt": "2026-09-15T21:23:48.756Z"
+  "updatedAt": "2026-09-15T21:46:00.000Z"
 }
