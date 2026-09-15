@@ -1,14 +1,56 @@
 [build]
   publish = "."
+  functions = "netlify/functions"
+
+# API Route: Version Manifest (serve static version.json)
+[[redirects]]
+  from = "/api/version.json"
+  to = "/version.json"
+  status = 200
+
+[[redirects]]
+  from = "/api/version"
+  to = "/version.json"
+  status = 200
+
+# API Route: Live Stripe Status Check
+[[redirects]]
+  from = "/api/stripe-status"
+  to = "/.netlify/functions/stripe-status"
+  status = 200
+
+# API Route: Cancel 3-Day Trial
+[[redirects]]
+  from = "/api/cancel-trial"
+  to = "/.netlify/functions/cancel-trial"
+  status = 200
+
+# API Route: Device Reset
+[[redirects]]
+  from = "/api/reset-device"
+  to = "/.netlify/functions/reset-device"
+  status = 200
+
+# API Route: Send License Email
+[[redirects]]
+  from = "/api/send-license-email"
+  to = "/.netlify/functions/send-license-email"
+  status = 200
+
+# API Route: Update OTA Version
+[[redirects]]
+  from = "/api/update-version"
+  to = "/.netlify/functions/update-version"
+  status = 200
+
+# Direct access to owner dashboard
+[[redirects]]
+  from = "/owner"
+  to = "/owner_admin_dashboard.html"
+  status = 200
 
 # Serve sales_landing_page.html as homepage
 [[redirects]]
   from = "/"
   to = "/sales_landing_page.html"
-  status = 200
-
-# Direct access to dashboards
-[[redirects]]
-  from = "/owner"
-  to = "/owner_admin_dashboard.html"
   status = 200

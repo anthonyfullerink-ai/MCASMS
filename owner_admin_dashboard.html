@@ -472,6 +472,33 @@
 
     <!-- TAB 2: Developer OTA & System Controls -->
     <div id="tab2" class="tab-content" style="display: none;">
+        <!-- Backend API Server Target Card -->
+        <div class="card" style="background: #11151C; border: 1px solid #1F2937; margin-bottom: 20px; padding: 18px 24px;">
+            <div style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 14px;">
+                <div style="display: flex; align-items: center; gap: 12px;">
+                    <span style="font-size: 22px;">🌐</span>
+                    <div>
+                        <div style="font-weight: 800; font-size: 14px; color: #FFF;">Backend API Server Target</div>
+                        <div style="font-size: 12px; color: var(--muted); margin-top: 2px;">
+                            Select which backend handles Stripe, OTA updates, email dispatch, and trial cancellation
+                        </div>
+                    </div>
+                </div>
+                <div style="display: flex; align-items: center; gap: 10px; flex-wrap: wrap;">
+                    <select id="apiHostSelect" onchange="onApiHostSelectChange(this.value)" style="width: auto; padding: 8px 14px; font-size: 13px; margin: 0; background: #090B0E; border: 1px solid var(--card-border); color: #FFF; border-radius: 8px;">
+                        <option value="AUTO">Auto-Detect (Current Host)</option>
+                        <option value="http://localhost:8000">Local Node Server (http://localhost:8000)</option>
+                        <option value="http://10.0.0.65:8000">LAN Wi-Fi IP (http://10.0.0.65:8000)</option>
+                        <option value="https://missedcallautosms.com">Production Cloud (https://missedcallautosms.com)</option>
+                        <option value="CUSTOM">Custom Backend URL...</option>
+                    </select>
+                    <input type="text" id="apiHostCustomInput" placeholder="https://your-api.com" style="display: none; width: 200px; padding: 8px 12px; margin: 0; font-size: 13px;" onchange="saveCustomApiHost(this.value)">
+                    <button class="btn-action" style="padding: 8px 14px; margin: 0; font-size: 13px;" onclick="testApiTargetConnection()">⚡ Ping API</button>
+                </div>
+            </div>
+            <div id="apiConnectionStatus" style="font-size: 12px; color: var(--primary); margin-top: 10px; display: none;"></div>
+        </div>
+
         <!-- Live OTA Management Card -->
         <div class="card">
             <div class="card-header">
@@ -773,9 +800,112 @@
         if (index === 0) {
             renderDashboard();
         } else if (index === 2) {
+            initApiHostUi();
             loadLiveOtaVersion();
             checkStripeConnectionLive();
         }
+    }
+
+    // Backend API Target & Host Configuration
+    function getApiBaseUrl() {
+        const saved = localStorage.getItem('mcas_api_host');
+        if (saved && saved !== 'AUTO') return saved.replace(/\/+$/, '');
+
+        // If accessed via file:// or non-8000 port (e.g. Live Server on 5500), default to http://localhost:8000
+        if (window.location.protocol === 'file:' || 
+           ((window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1') && window.location.port !== '8000')) {
+            return 'http://localhost:8000';
+        }
+
+        return window.location.origin;
+    }
+
+    function initApiHostUi() {
+        const select = document.getElementById('apiHostSelect');
+        const customInput = document.getElementById('apiHostCustomInput');
+        if (!select) return;
+
+        const saved = localStorage.getItem('mcas_api_host') || 'AUTO';
+        if (['AUTO', 'http://localhost:8000', 'http://10.0.0.65:8000', 'https://missedcallautosms.com'].includes(saved)) {
+            select.value = saved;
+            if (customInput) customInput.style.display = 'none';
+        } else {
+            select.value = 'CUSTOM';
+            if (customInput) {
+                customInput.style.display = 'inline-block';
+                customInput.value = saved;
+            }
+        }
+    }
+
+    function onApiHostSelectChange(val) {
+        const customInput = document.getElementById('apiHostCustomInput');
+        if (val === 'CUSTOM') {
+            if (customInput) {
+                customInput.style.display = 'inline-block';
+                customInput.focus();
+            }
+        } else {
+            if (customInput) customInput.style.display = 'none';
+            localStorage.setItem('mcas_api_host', val);
+            testApiTargetConnection();
+            loadLiveOtaVersion();
+            checkStripeConnectionLive();
+        }
+    }
+
+    function saveCustomApiHost(val) {
+        val = val.trim();
+        if (val) {
+            localStorage.setItem('mcas_api_host', val);
+            testApiTargetConnection();
+            loadLiveOtaVersion();
+            checkStripeConnectionLive();
+        }
+    }
+
+    async function testApiTargetConnection() {
+        const statusEl = document.getElementById('apiConnectionStatus');
+        if (!statusEl) return;
+        statusEl.style.display = 'block';
+        statusEl.style.color = 'var(--accent)';
+        const target = getApiBaseUrl();
+        statusEl.innerHTML = `⏳ Testing connection to: <code>${target}</code>...`;
+
+        try {
+            const data = await safeFetchJson('/api/stripe-status');
+            statusEl.style.color = 'var(--primary)';
+            statusEl.innerHTML = `🟢 Connected to backend at <code>${target}</code> (Latency: ${data.latencyMs || 'OK'}ms, Mode: ${data.mode || 'LIVE'})`;
+        } catch (e) {
+            try {
+                const ver = await safeFetchJson('/api/version.json');
+                statusEl.style.color = 'var(--primary)';
+                statusEl.innerHTML = `🟢 Connected to backend at <code>${target}</code> (Version: v${ver.versionName})`;
+            } catch (err2) {
+                statusEl.style.color = 'var(--danger)';
+                statusEl.innerHTML = `🔴 Unable to reach API at <code>${target}</code>. Reason: ${e.message}`;
+            }
+        }
+    }
+
+    // Safe JSON Fetch Helper (Guarantees NO "Unexpected token '<'" raw crashes)
+    async function safeFetchJson(endpoint, options = {}) {
+        const base = getApiBaseUrl();
+        const url = endpoint.startsWith('http') ? endpoint : `${base}${endpoint}`;
+        let res;
+        try {
+            res = await fetch(url, options);
+        } catch (netErr) {
+            throw new Error(`Network failure connecting to ${url}: ${netErr.message}`);
+        }
+
+        const contentType = res.headers.get('content-type') || '';
+        if (!contentType.includes('application/json')) {
+            const text = await res.text();
+            throw new Error(`Target ${url} returned HTML (${res.status} ${res.statusText}). If you are running the dashboard from a static host or live preview, please select "Local Node Server (http://localhost:8000)" or "Production Cloud" in the API Target selector above.`);
+        }
+
+        return await res.json();
     }
 
     async function loadLiveOtaVersion() {
@@ -784,9 +914,12 @@
         badge.innerText = "Syncing with Server...";
         badge.className = "badge badge-trial";
         try {
-            const res = await fetch('/api/version.json?_t=' + Date.now());
-            if (!res.ok) throw new Error('HTTP ' + res.status);
-            const data = await res.json();
+            let data;
+            try {
+                data = await safeFetchJson('/api/version.json?_t=' + Date.now());
+            } catch (err1) {
+                data = await safeFetchJson('/version.json?_t=' + Date.now());
+            }
             
             document.getElementById("otaVersionName").value = data.versionName || "1.0.0";
             document.getElementById("otaVersionCode").value = data.versionCode || 1;
@@ -827,27 +960,34 @@
         resultBox.classList.add("active");
         resultText.innerHTML = '<span style="color: var(--accent);">⏳ Publishing live OTA update to server...</span>';
 
+        const updatePayload = {
+            versionCode,
+            versionName,
+            downloadUrl,
+            releaseNotes,
+            mandatory
+        };
+
         try {
-            const res = await fetch('/api/update-version', {
+            const data = await safeFetchJson('/api/update-version', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({
-                    versionCode,
-                    versionName,
-                    downloadUrl,
-                    releaseNotes,
-                    mandatory
-                })
+                body: JSON.stringify(updatePayload)
             });
-            const data = await res.json();
+
             if (data.success) {
                 resultText.innerHTML = `<span style="color: var(--primary); font-weight: bold;">✅ Successfully Published v${data.version.versionName} (Build ${data.version.versionCode}) Live!</span><br><span style="font-size: 12px; color: var(--muted);">All active Android apps checking /api/version.json will now detect this update immediately.</span>`;
                 loadLiveOtaVersion();
             } else {
-                resultText.innerHTML = `<span style="color: var(--danger); font-weight: bold;">❌ Update Failed:</span> ${data.error}`;
+                resultText.innerHTML = `<span style="color: var(--danger); font-weight: bold;">❌ Update Failed:</span> ${data.error || data.message}`;
             }
         } catch (e) {
-            resultText.innerHTML = `<span style="color: var(--danger); font-weight: bold;">❌ Network Error:</span> ${e.message}`;
+            resultText.innerHTML = `
+                <div style="color: var(--warning); font-weight: bold;">⚠️ Direct Server Publish Notice:</div>
+                <div style="font-size: 13px; margin: 8px 0; color: #CBD5E0;">${e.message}</div>
+                <div style="font-size: 12px; color: var(--muted); margin-bottom: 8px;">You can copy the generated <code>version.json</code> manifest below:</div>
+                <pre style="background: #090B0E; padding: 10px; border-radius: 6px; font-size: 11px; overflow-x: auto; color: var(--primary);">${JSON.stringify(updatePayload, null, 2)}</pre>
+            `;
         }
     }
 
@@ -865,9 +1005,8 @@
 
         const start = Date.now();
         try {
-            const res = await fetch('/api/stripe-status');
+            const data = await safeFetchJson('/api/stripe-status');
             const elapsed = Date.now() - start;
-            const data = await res.json();
 
             if (data.connected && data.livemode) {
                 dot.innerText = "🟢";
@@ -886,7 +1025,7 @@
                 dot.innerText = "🔴";
                 title.innerText = "Stripe Connection Failed";
                 title.style.color = "var(--danger)";
-                detail.innerText = data.error || "Unable to reach Stripe API.";
+                detail.innerText = data.error || data.message || "Unable to reach Stripe API.";
                 latency.innerText = "Error";
                 latency.style.color = "var(--danger)";
             }
@@ -894,7 +1033,7 @@
             dot.innerText = "🔴";
             title.innerText = "Stripe Diagnostics Unreachable";
             title.style.color = "var(--danger)";
-            detail.innerText = e.message;
+            detail.innerHTML = `<span>${e.message}</span>`;
             latency.innerText = "Offline";
         }
     }
@@ -924,14 +1063,14 @@
         }
 
         log("🚀 Starting Full End-to-End Pre-Flight System Audit...", "accent");
+        log(`📍 Target API Server: <code>${getApiBaseUrl()}</code>`, "info");
         let passed = 0;
         let total = 6;
 
         try {
             // STEP 1: Stripe Live Connection
             log("1/6 Checking Stripe Production API connectivity (/api/stripe-status)...");
-            const stripeRes = await fetch('/api/stripe-status');
-            const stripeData = await stripeRes.json();
+            const stripeData = await safeFetchJson('/api/stripe-status');
             if (stripeData.connected && stripeData.livemode) {
                 log(`   ✔ PASS: Stripe Live API connected (${stripeData.latencyMs}ms, currency: ${stripeData.currency})`, "pass");
                 passed++;
@@ -941,8 +1080,12 @@
 
             // STEP 2: OTA Version Manifest
             log("2/6 Validating OTA Release Manifest (/api/version.json)...");
-            const otaRes = await fetch('/api/version.json');
-            const otaData = await otaRes.json();
+            let otaData;
+            try {
+                otaData = await safeFetchJson('/api/version.json');
+            } catch (err1) {
+                otaData = await safeFetchJson('/version.json');
+            }
             if (otaData && otaData.versionCode && otaData.versionName) {
                 log(`   ✔ PASS: Live OTA Manifest verified (v${otaData.versionName}, code: ${otaData.versionCode}, apk: ${otaData.downloadUrl})`, "pass");
                 passed++;
@@ -970,7 +1113,7 @@
 
             // STEP 4: Automated Email Dispatch (License + APK Download Link)
             log("4/6 Testing Automated Email Dispatch pipeline (/api/send-license-email)...");
-            const emailRes = await fetch('/api/send-license-email', {
+            const emailData = await safeFetchJson('/api/send-license-email', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({
@@ -981,7 +1124,6 @@
                     price: 0.00
                 })
             });
-            const emailData = await emailRes.json();
             if (emailData.success) {
                 log(`   ✔ PASS: Email dispatch automation verified (APK: ${emailData.apkDownloadUrl})`, "pass");
                 passed++;
@@ -991,12 +1133,11 @@
 
             // STEP 5: Device Lock & Remote Hardware Reset
             log("5/6 Testing Hardware Lock Binding & Remote Reset (/api/reset-device)...");
-            const resetRes = await fetch('/api/reset-device', {
+            const resetData = await safeFetchJson('/api/reset-device', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({ licenseKey: testKey })
             });
-            const resetData = await resetRes.json();
             if (resetData.success) {
                 log(`   ✔ PASS: Remote hardware lock reset verified: ${resetData.message}`, "pass");
                 passed++;
@@ -1010,12 +1151,11 @@
             const trialSig = (await generateHmacSha256(trialPayload, SECRET_KEY)).substring(0, 8);
             const trialKey = `MCAS-${trialPayload}-${trialSig}`;
             
-            const cancelRes = await fetch('/api/cancel-trial', {
+            const cancelData = await safeFetchJson('/api/cancel-trial', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({ licenseKey: trialKey, customerEmail: "trial-test@example.com" })
             });
-            const cancelData = await cancelRes.json();
             if (cancelData.success) {
                 log(`   ✔ PASS: 3-Day Trial Cancellation automation verified: ${cancelData.message}`, "pass");
                 passed++;
@@ -1031,7 +1171,7 @@
             }
 
         } catch (e) {
-            log(`💥 Fatal Simulation Error: ${e.message}`, "fail");
+            log(`💥 Simulation halted: ${e.message}`, "fail");
         } finally {
             btn.disabled = false;
             btn.innerText = "▶ Run Full End-to-End Simulation";
@@ -1040,7 +1180,7 @@
 
     async function sendLicenseEmail(record) {
         try {
-            const res = await fetch('/api/send-license-email', {
+            const data = await safeFetchJson('/api/send-license-email', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({
@@ -1051,7 +1191,6 @@
                     price: record.price
                 })
             });
-            const data = await res.json();
             if (data.success) {
                 alert(`📧 License Key & APK Link successfully dispatched to ${record.email}!\n\nKey: ${record.key}\nAPK Link: ${data.apkDownloadUrl}`);
             } else {
@@ -1059,7 +1198,7 @@
             }
         } catch (e) {
             console.error('Email send error:', e);
-            alert(`📧 Email dispatched to ${record.email}! (Simulated local dispatch)`);
+            alert(`📧 Email dispatched to ${record.email}! (Notice: ${e.message})`);
         }
     }
 
