@@ -147,16 +147,123 @@ function generateLicenseEmailHtml(data) {
 </html>`;
 }
 
+function getLiveAppVersion() {
+  const versionFile = path.join(__dirname, 'version.json');
+  if (fs.existsSync(versionFile)) {
+    try {
+      return JSON.parse(fs.readFileSync(versionFile, 'utf8'));
+    } catch (e) {
+      console.error('Error reading version.json:', e.message);
+    }
+  }
+  return LATEST_APP_VERSION;
+}
+
+function saveLiveAppVersion(versionData) {
+  const versionFile = path.join(__dirname, 'version.json');
+  fs.writeFileSync(versionFile, JSON.stringify(versionData, null, 2), 'utf8');
+  Object.assign(LATEST_APP_VERSION, versionData);
+  return versionData;
+}
+
 const server = http.createServer((req, res) => {
   let relativePath = decodeURIComponent(req.url.split('?')[0]);
   
-  // API Route: OTA Version Check
-  if (relativePath === '/api/version.json' || relativePath === '/api/version') {
+  // Pre-flight CORS handler
+  if (req.method === 'OPTIONS') {
+    res.writeHead(204, {
+      'Access-Control-Allow-Origin': '*',
+      'Access-Control-Allow-Methods': 'GET, POST, OPTIONS',
+      'Access-Control-Allow-Headers': 'Content-Type, Authorization'
+    });
+    res.end();
+    return;
+  }
+
+  // API Route: OTA Version Check (Dynamic from disk)
+  if (relativePath === '/api/version.json' || relativePath === '/api/version' || relativePath === '/version.json') {
     res.writeHead(200, {
       'Content-Type': 'application/json; charset=utf-8',
       'Access-Control-Allow-Origin': '*'
     });
-    res.end(JSON.stringify(LATEST_APP_VERSION, null, 2));
+    res.end(JSON.stringify(getLiveAppVersion(), null, 2));
+    return;
+  }
+
+  // API Route: Update & Publish Live OTA Version
+  if ((relativePath === '/api/update-version' || relativePath === '/api/update-version/') && req.method === 'POST') {
+    let body = '';
+    req.on('data', chunk => body += chunk);
+    req.on('end', () => {
+      try {
+        const payload = JSON.parse(body || '{}');
+        const current = getLiveAppVersion();
+
+        const updated = {
+          versionCode: parseInt(payload.versionCode, 10) || current.versionCode || 2,
+          versionName: payload.versionName || current.versionName || '1.1.0',
+          downloadUrl: payload.downloadUrl || current.downloadUrl || 'http://10.0.0.65:8000/app-debug.apk',
+          releaseNotes: payload.releaseNotes || current.releaseNotes || 'Bug fixes and performance enhancements.',
+          mandatory: Boolean(payload.mandatory),
+          minSupportedVersion: parseInt(payload.minSupportedVersion, 10) || 1,
+          updatedAt: new Date().toISOString()
+        };
+
+        saveLiveAppVersion(updated);
+
+        res.writeHead(200, {
+          'Content-Type': 'application/json; charset=utf-8',
+          'Access-Control-Allow-Origin': '*'
+        });
+        res.end(JSON.stringify({
+          success: true,
+          message: `Live OTA Version v${updated.versionName} (build ${updated.versionCode}) published successfully!`,
+          version: updated
+        }));
+      } catch (err) {
+        res.writeHead(400, { 'Content-Type': 'application/json; charset=utf-8', 'Access-Control-Allow-Origin': '*' });
+        res.end(JSON.stringify({ success: false, error: err.message }));
+      }
+    });
+    return;
+  }
+
+  // API Route: Stripe API Diagnostics & Live Connection Status
+  if (relativePath === '/api/stripe-status' || relativePath === '/api/stripe-status/') {
+    const startTime = Date.now();
+    stripeApiRequest('/v1/balance')
+      .then(balance => {
+        const latencyMs = Date.now() - startTime;
+        res.writeHead(200, {
+          'Content-Type': 'application/json; charset=utf-8',
+          'Access-Control-Allow-Origin': '*'
+        });
+        const isLive = balance.livemode !== undefined ? balance.livemode : true;
+        const availableCurrencies = (balance.available || []).map(a => a.currency.toUpperCase()).join(', ') || 'USD';
+        res.end(JSON.stringify({
+          success: true,
+          connected: true,
+          livemode: isLive,
+          mode: isLive ? 'LIVE PRODUCTION' : 'TEST MODE',
+          currency: availableCurrencies,
+          latencyMs: latencyMs,
+          checkoutTrialUrl: 'https://buy.stripe.com/3cI9AT49g2X07Q41ux2go0a?trial_period_days=3',
+          checkoutLifetimeUrl: 'https://buy.stripe.com/3cI9AT49g2X07Q41ux2go0a',
+          message: 'Stripe API connection verified and active'
+        }));
+      })
+      .catch(err => {
+        res.writeHead(200, {
+          'Content-Type': 'application/json; charset=utf-8',
+          'Access-Control-Allow-Origin': '*'
+        });
+        res.end(JSON.stringify({
+          success: false,
+          connected: false,
+          error: err.message,
+          message: 'Stripe API connection failed: ' + err.message
+        }));
+      });
     return;
   }
 

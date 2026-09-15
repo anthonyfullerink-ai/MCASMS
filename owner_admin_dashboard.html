@@ -471,28 +471,120 @@
     </div>
 
     <!-- TAB 2: Developer OTA & System Controls -->
-    <div id="tab2" class="tab-content card" style="display: none;">
-        <div class="card-header">
-            <h2>⚙️ Developer OTA Release & System Controls</h2>
+    <div id="tab2" class="tab-content" style="display: none;">
+        <!-- Live OTA Management Card -->
+        <div class="card">
+            <div class="card-header">
+                <div>
+                    <h2>🚀 Live Developer OTA Release Controls</h2>
+                    <div style="font-size: 13px; color: var(--muted); margin-top: 4px;">Connected dynamically to live server manifest: <code>/api/version.json</code></div>
+                </div>
+                <div id="otaLiveBadge" class="badge badge-active" style="font-size: 13px; padding: 6px 14px;">Loading Live Version...</div>
+            </div>
+
+            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 20px;">
+                <div>
+                    <label for="otaVersionName">Release Version Name:</label>
+                    <input type="text" id="otaVersionName" placeholder="e.g. 1.2.0">
+                </div>
+                <div>
+                    <div style="display: flex; justify-content: space-between; align-items: flex-end;">
+                        <label for="otaVersionCode" style="margin-top: 14px;">Version Code (Integer):</label>
+                        <button class="btn-action" style="padding: 4px 10px; font-size: 11px; margin-bottom: 2px;" onclick="bumpOtaVersionCode()">+ Bump (+1)</button>
+                    </div>
+                    <input type="number" id="otaVersionCode" placeholder="e.g. 3" style="width: 100%; background: #090B0E; border: 1px solid var(--card-border); color: #FFF; padding: 12px 14px; border-radius: 10px; font-size: 14px; font-weight: 600; margin-top: 6px; outline: none;">
+                </div>
+            </div>
+
+            <div style="margin-top: 14px;">
+                <label for="otaDownloadUrl">APK Download URL (Direct APK Hosting):</label>
+                <input type="text" id="otaDownloadUrl" placeholder="e.g. http://10.0.0.65:8000/app-debug.apk or /app-debug.apk">
+                <div style="font-size: 11px; color: var(--muted); margin-top: 4px;">
+                    💡 Android client resolves relative paths (e.g., <code>/app-debug.apk</code>) against the active server host automatically.
+                </div>
+            </div>
+
+            <div style="margin-top: 14px;">
+                <label for="otaReleaseNotes">Release Notes / Changelog:</label>
+                <textarea id="otaReleaseNotes" rows="3" placeholder="Describe the updates in this release..." style="width: 100%; background: #090B0E; border: 1px solid var(--card-border); color: #FFF; padding: 12px 14px; border-radius: 10px; font-size: 14px; font-weight: 500; margin-top: 6px; outline: none; resize: vertical;"></textarea>
+            </div>
+
+            <div style="display: flex; align-items: center; gap: 10px; margin-top: 16px;">
+                <input type="checkbox" id="otaMandatory" style="width: 18px; height: 18px; accent-color: var(--primary); cursor: pointer;">
+                <label for="otaMandatory" style="margin-top: 0; cursor: pointer; color: #FFF; font-size: 14px;">
+                    Mandatory Update (forces immediate download & install dialog on app launch)
+                </label>
+            </div>
+
+            <div style="display: flex; gap: 12px; margin-top: 22px; flex-wrap: wrap;">
+                <button class="btn-action btn-primary-action" onclick="publishLiveOtaUpdate()">🚀 Publish Live OTA Update Now</button>
+                <button class="btn-action" onclick="loadLiveOtaVersion()">🔄 Refresh From Server</button>
+                <a href="/api/version.json" target="_blank" class="btn-action" style="text-decoration: none; display: inline-flex; align-items: center;">Inspect Manifest JSON ↗</a>
+            </div>
+
+            <div id="otaResultBox" class="result-box" style="margin-top: 16px;">
+                <div id="otaResultText"></div>
+            </div>
         </div>
-        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 20px;">
-            <div>
-                <label style="font-size: 13px; color: var(--muted); display: block; margin-bottom: 6px;">Current OTA Release Version:</label>
-                <input type="text" value="v1.1.0 (versionCode: 2)" disabled style="width: 100%; background: #090B0E; border: 1px solid var(--card-border); color: #FFF; padding: 10px; border-radius: 8px;">
+
+        <!-- Stripe Live Diagnostics & Production Links Card -->
+        <div class="card">
+            <div class="card-header">
+                <div>
+                    <h2>💳 Stripe Production Diagnostics & Live System Links</h2>
+                    <div style="font-size: 13px; color: var(--muted); margin-top: 4px;">Live payment processing engine and checkout gateways</div>
+                </div>
+                <button class="btn-action" onclick="checkStripeConnectionLive()">⚡ Test Stripe Live API</button>
             </div>
-            <div>
-                <label style="font-size: 13px; color: var(--muted); display: block; margin-bottom: 6px;">OTA Update Endpoint:</label>
-                <input type="text" value="https://missedcallautosms.com/api/version.json" disabled style="width: 100%; background: #090B0E; border: 1px solid var(--card-border); color: #FFF; padding: 10px; border-radius: 8px;">
+
+            <div id="stripeStatusBanner" style="background: rgba(22, 27, 34, 0.8); border: 1px solid var(--card-border); border-radius: 12px; padding: 16px; margin-bottom: 20px;">
+                <div style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 10px;">
+                    <div style="display: flex; align-items: center; gap: 12px;">
+                        <span id="stripeStatusDot" style="font-size: 18px;">⚪</span>
+                        <div>
+                            <div id="stripeStatusTitle" style="font-weight: 800; font-size: 15px; color: #FFF;">Checking Stripe API status...</div>
+                            <div id="stripeStatusDetail" style="font-size: 12px; color: var(--muted); margin-top: 2px;">Connecting to /api/stripe-status</div>
+                        </div>
+                    </div>
+                    <div id="stripeLatencyBadge" class="badge" style="background: #21262D; color: var(--muted); font-size: 12px;">-- ms</div>
+                </div>
+            </div>
+
+            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 20px;">
+                <div>
+                    <label style="font-size: 13px; color: var(--muted); display: block; margin-bottom: 6px;">Stripe 3-Day Free Trial Checkout Link:</label>
+                    <input type="text" value="https://buy.stripe.com/3cI9AT49g2X07Q41ux2go0a?trial_period_days=3" readonly onclick="this.select()" style="width: 100%; background: #090B0E; border: 1px solid var(--card-border); color: #FFF; padding: 10px; border-radius: 8px;">
+                </div>
+                <div>
+                    <label style="font-size: 13px; color: var(--muted); display: block; margin-bottom: 6px;">Stripe Lifetime $49.99 Direct Link:</label>
+                    <input type="text" value="https://buy.stripe.com/3cI9AT49g2X07Q41ux2go0a" readonly onclick="this.select()" style="width: 100%; background: #090B0E; border: 1px solid var(--card-border); color: #FFF; padding: 10px; border-radius: 8px;">
+                </div>
+            </div>
+
+            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 20px; margin-top: 16px;">
+                <div>
+                    <label style="font-size: 13px; color: var(--muted); display: block; margin-bottom: 6px;">AI Support & Instant Cancellation Endpoint:</label>
+                    <input type="text" value="/api/cancel-trial" readonly style="width: 100%; background: #090B0E; border: 1px solid var(--card-border); color: #FFF; padding: 10px; border-radius: 8px;">
+                </div>
+                <div>
+                    <label style="font-size: 13px; color: var(--muted); display: block; margin-bottom: 6px;">Support & Trial Cancellation Email:</label>
+                    <input type="text" value="contactus@offgridmediagroup.com" readonly style="width: 100%; background: #090B0E; border: 1px solid var(--card-border); color: var(--primary); font-weight: bold; padding: 10px; border-radius: 8px;">
+                </div>
             </div>
         </div>
-        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 20px; margin-top: 20px;">
-            <div>
-                <label style="font-size: 13px; color: var(--muted); display: block; margin-bottom: 6px;">Stripe 3-Day Free Trial Checkout Link:</label>
-                <input type="text" value="https://buy.stripe.com/3cI9AT49g2X07Q41ux2go0a?trial_period_days=3" disabled style="width: 100%; background: #090B0E; border: 1px solid var(--card-border); color: #FFF; padding: 10px; border-radius: 8px;">
+
+        <!-- End-to-End System Simulation & Audit Console -->
+        <div class="card">
+            <div class="card-header">
+                <div>
+                    <h2>🧪 Pre-Flight End-to-End System Simulator</h2>
+                    <div style="font-size: 13px; color: var(--muted); margin-top: 4px;">Executes synthetic checkout, license generation, email dispatch, device lock reset, and trial cancellation</div>
+                </div>
+                <button id="btnRunSimulation" class="btn-action btn-primary-action" onclick="runFullSystemSimulation()">▶ Run Full End-to-End Simulation</button>
             </div>
-            <div>
-                <label style="font-size: 13px; color: var(--muted); display: block; margin-bottom: 6px;">Support & Trial Cancellation Email:</label>
-                <input type="text" value="contactus@offgridmediagroup.com" disabled style="width: 100%; background: #090B0E; border: 1px solid var(--card-border); color: var(--primary); font-weight: bold; padding: 10px; border-radius: 8px;">
+
+            <div id="simConsole" style="background: #090B0E; border: 1px solid var(--card-border); border-radius: 12px; padding: 16px; font-family: 'SF Mono', Consolas, monospace; font-size: 13px; min-height: 160px; max-height: 320px; overflow-y: auto; color: #8B949E; line-height: 1.6;">
+                <div>Press "Run Full End-to-End Simulation" to audit all live endpoints and automation pipelines...</div>
             </div>
         </div>
     </div>
@@ -677,6 +769,273 @@
         btns.forEach((btn, i) => {
             btn.classList.toggle("active", i === index);
         });
+
+        if (index === 0) {
+            renderDashboard();
+        } else if (index === 2) {
+            loadLiveOtaVersion();
+            checkStripeConnectionLive();
+        }
+    }
+
+    async function loadLiveOtaVersion() {
+        const badge = document.getElementById("otaLiveBadge");
+        if (!badge) return;
+        badge.innerText = "Syncing with Server...";
+        badge.className = "badge badge-trial";
+        try {
+            const res = await fetch('/api/version.json?_t=' + Date.now());
+            if (!res.ok) throw new Error('HTTP ' + res.status);
+            const data = await res.json();
+            
+            document.getElementById("otaVersionName").value = data.versionName || "1.0.0";
+            document.getElementById("otaVersionCode").value = data.versionCode || 1;
+            document.getElementById("otaDownloadUrl").value = data.downloadUrl || "";
+            document.getElementById("otaReleaseNotes").value = data.releaseNotes || "";
+            document.getElementById("otaMandatory").checked = !!data.mandatory;
+
+            badge.innerText = `🟢 LIVE: v${data.versionName} (Build ${data.versionCode})`;
+            badge.className = "badge badge-active";
+        } catch (e) {
+            console.error('Failed to load OTA version:', e);
+            badge.innerText = "🔴 Server Sync Offline";
+            badge.className = "badge badge-revoked";
+        }
+    }
+
+    function bumpOtaVersionCode() {
+        const input = document.getElementById("otaVersionCode");
+        let current = parseInt(input.value) || 1;
+        input.value = current + 1;
+    }
+
+    async function publishLiveOtaUpdate() {
+        const resultBox = document.getElementById("otaResultBox");
+        const resultText = document.getElementById("otaResultText");
+        
+        const versionName = document.getElementById("otaVersionName").value.trim();
+        const versionCode = parseInt(document.getElementById("otaVersionCode").value) || 1;
+        const downloadUrl = document.getElementById("otaDownloadUrl").value.trim();
+        const releaseNotes = document.getElementById("otaReleaseNotes").value.trim();
+        const mandatory = document.getElementById("otaMandatory").checked;
+
+        if (!versionName || !downloadUrl) {
+            alert("Please provide both Version Name and APK Download URL.");
+            return;
+        }
+
+        resultBox.classList.add("active");
+        resultText.innerHTML = '<span style="color: var(--accent);">⏳ Publishing live OTA update to server...</span>';
+
+        try {
+            const res = await fetch('/api/update-version', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                    versionCode,
+                    versionName,
+                    downloadUrl,
+                    releaseNotes,
+                    mandatory
+                })
+            });
+            const data = await res.json();
+            if (data.success) {
+                resultText.innerHTML = `<span style="color: var(--primary); font-weight: bold;">✅ Successfully Published v${data.version.versionName} (Build ${data.version.versionCode}) Live!</span><br><span style="font-size: 12px; color: var(--muted);">All active Android apps checking /api/version.json will now detect this update immediately.</span>`;
+                loadLiveOtaVersion();
+            } else {
+                resultText.innerHTML = `<span style="color: var(--danger); font-weight: bold;">❌ Update Failed:</span> ${data.error}`;
+            }
+        } catch (e) {
+            resultText.innerHTML = `<span style="color: var(--danger); font-weight: bold;">❌ Network Error:</span> ${e.message}`;
+        }
+    }
+
+    async function checkStripeConnectionLive() {
+        const dot = document.getElementById("stripeStatusDot");
+        const title = document.getElementById("stripeStatusTitle");
+        const detail = document.getElementById("stripeStatusDetail");
+        const latency = document.getElementById("stripeLatencyBadge");
+        if (!dot) return;
+
+        dot.innerText = "⏳";
+        title.innerText = "Querying Stripe Production API...";
+        detail.innerText = "Authenticating secret key and checking balance endpoint...";
+        latency.innerText = "-- ms";
+
+        const start = Date.now();
+        try {
+            const res = await fetch('/api/stripe-status');
+            const elapsed = Date.now() - start;
+            const data = await res.json();
+
+            if (data.connected && data.livemode) {
+                dot.innerText = "🟢";
+                title.innerText = "Stripe Live Production Connected & Active";
+                title.style.color = "var(--primary)";
+                detail.innerHTML = `Mode: <strong>LIVE PRODUCTION</strong> | Currency: <strong>${(data.currency || 'USD').toUpperCase()}</strong> | Account: Ready for real transactions`;
+                latency.innerText = `${data.latencyMs || elapsed} ms`;
+                latency.style.color = "var(--primary)";
+                latency.style.borderColor = "var(--primary)";
+            } else if (data.connected) {
+                dot.innerText = "🟡";
+                title.innerText = "Stripe Connected (Test Mode)";
+                detail.innerText = "API key is active in test mode.";
+                latency.innerText = `${data.latencyMs || elapsed} ms`;
+            } else {
+                dot.innerText = "🔴";
+                title.innerText = "Stripe Connection Failed";
+                title.style.color = "var(--danger)";
+                detail.innerText = data.error || "Unable to reach Stripe API.";
+                latency.innerText = "Error";
+                latency.style.color = "var(--danger)";
+            }
+        } catch (e) {
+            dot.innerText = "🔴";
+            title.innerText = "Stripe Diagnostics Unreachable";
+            title.style.color = "var(--danger)";
+            detail.innerText = e.message;
+            latency.innerText = "Offline";
+        }
+    }
+
+    async function runFullSystemSimulation() {
+        const btn = document.getElementById("btnRunSimulation");
+        const consoleEl = document.getElementById("simConsole");
+        btn.disabled = true;
+        btn.innerText = "⏳ Running Simulation...";
+        consoleEl.innerHTML = "";
+
+        function log(msg, type = "info") {
+            const colors = {
+                info: "#8B949E",
+                pass: "var(--primary)",
+                warn: "var(--warning)",
+                fail: "var(--danger)",
+                accent: "var(--accent)"
+            };
+            const time = new Date().toLocaleTimeString();
+            const div = document.createElement("div");
+            div.style.color = colors[type] || "#8B949E";
+            div.style.marginBottom = "4px";
+            div.innerHTML = `[${time}] ${msg}`;
+            consoleEl.appendChild(div);
+            consoleEl.scrollTop = consoleEl.scrollHeight;
+        }
+
+        log("🚀 Starting Full End-to-End Pre-Flight System Audit...", "accent");
+        let passed = 0;
+        let total = 6;
+
+        try {
+            // STEP 1: Stripe Live Connection
+            log("1/6 Checking Stripe Production API connectivity (/api/stripe-status)...");
+            const stripeRes = await fetch('/api/stripe-status');
+            const stripeData = await stripeRes.json();
+            if (stripeData.connected && stripeData.livemode) {
+                log(`   ✔ PASS: Stripe Live API connected (${stripeData.latencyMs}ms, currency: ${stripeData.currency})`, "pass");
+                passed++;
+            } else {
+                log(`   ✖ FAIL: Stripe connection error: ${stripeData.error || 'Not in live mode'}`, "fail");
+            }
+
+            // STEP 2: OTA Version Manifest
+            log("2/6 Validating OTA Release Manifest (/api/version.json)...");
+            const otaRes = await fetch('/api/version.json');
+            const otaData = await otaRes.json();
+            if (otaData && otaData.versionCode && otaData.versionName) {
+                log(`   ✔ PASS: Live OTA Manifest verified (v${otaData.versionName}, code: ${otaData.versionCode}, apk: ${otaData.downloadUrl})`, "pass");
+                passed++;
+            } else {
+                log("   ✖ FAIL: Live OTA Manifest invalid or missing fields", "fail");
+            }
+
+            // STEP 3: Cryptographic HMAC License Generation & Verification
+            log("3/6 Testing Synthetic HMAC SHA-256 License Key generation & verification...");
+            const testName = "E2E Test Corp";
+            const hexName = stringToHex(testName);
+            const testPayload = `${hexName}|0`;
+            const testSigFull = await generateHmacSha256(testPayload, SECRET_KEY);
+            const testKey = `MCAS-${testPayload}-${testSigFull.substring(0, 8)}`;
+            
+            // Verify checksum
+            const testParts = testKey.substring(KEY_PREFIX.length).split('-');
+            const checkSigFull = await generateHmacSha256(testParts[0], SECRET_KEY);
+            if (checkSigFull.substring(0, testParts[1].length) === testParts[1]) {
+                log(`   ✔ PASS: HMAC Key generated and verified (${testKey})`, "pass");
+                passed++;
+            } else {
+                log("   ✖ FAIL: HMAC checksum verification failed", "fail");
+            }
+
+            // STEP 4: Automated Email Dispatch (License + APK Download Link)
+            log("4/6 Testing Automated Email Dispatch pipeline (/api/send-license-email)...");
+            const emailRes = await fetch('/api/send-license-email', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                    customerName: "E2E Test Corp",
+                    customerEmail: "simulated-test@offgridmediagroup.com",
+                    licenseKey: testKey,
+                    licenseType: "FREE",
+                    price: 0.00
+                })
+            });
+            const emailData = await emailRes.json();
+            if (emailData.success) {
+                log(`   ✔ PASS: Email dispatch automation verified (APK: ${emailData.apkDownloadUrl})`, "pass");
+                passed++;
+            } else {
+                log(`   ✖ FAIL: Email dispatch failed: ${emailData.error}`, "fail");
+            }
+
+            // STEP 5: Device Lock & Remote Hardware Reset
+            log("5/6 Testing Hardware Lock Binding & Remote Reset (/api/reset-device)...");
+            const resetRes = await fetch('/api/reset-device', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ licenseKey: testKey })
+            });
+            const resetData = await resetRes.json();
+            if (resetData.success) {
+                log(`   ✔ PASS: Remote hardware lock reset verified: ${resetData.message}`, "pass");
+                passed++;
+            } else {
+                log(`   ✖ FAIL: Device reset error: ${resetData.error}`, "fail");
+            }
+
+            // STEP 6: 3-Day Trial Cancellation Automation
+            log("6/6 Testing AI Support 3-Day Trial Cancellation (/api/cancel-trial)...");
+            const trialPayload = `${stringToHex("Trial User")}|${Math.floor(Date.now()/1000) + 86400*3}`;
+            const trialSig = (await generateHmacSha256(trialPayload, SECRET_KEY)).substring(0, 8);
+            const trialKey = `MCAS-${trialPayload}-${trialSig}`;
+            
+            const cancelRes = await fetch('/api/cancel-trial', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ licenseKey: trialKey, customerEmail: "trial-test@example.com" })
+            });
+            const cancelData = await cancelRes.json();
+            if (cancelData.success) {
+                log(`   ✔ PASS: 3-Day Trial Cancellation automation verified: ${cancelData.message}`, "pass");
+                passed++;
+            } else {
+                log(`   ✖ FAIL: Trial cancellation error: ${cancelData.error}`, "fail");
+            }
+
+            log("--------------------------------------------------", "info");
+            if (passed === total) {
+                log(`🎉 ALL ${passed}/${total} SYSTEM TESTS PASSED! PRODUCTION READY.`, "pass");
+            } else {
+                log(`⚠️ ${passed}/${total} Tests passed. Please inspect the failed items above.`, "warn");
+            }
+
+        } catch (e) {
+            log(`💥 Fatal Simulation Error: ${e.message}`, "fail");
+        } finally {
+            btn.disabled = false;
+            btn.innerText = "▶ Run Full End-to-End Simulation";
+        }
     }
 
     async function sendLicenseEmail(record) {

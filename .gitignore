@@ -25,3 +25,6 @@ yarn-error.log*
 # Secrets & Environment variables
 .env
 .env.local
+
+# Simulated sent emails
+sent_emails/
