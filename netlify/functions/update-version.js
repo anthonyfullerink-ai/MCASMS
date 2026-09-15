@@ -17,9 +17,9 @@ exports.handler = async (event) => {
     }
 
     const version = {
-      versionCode: parseInt(payload.versionCode, 10) || 3,
-      versionName: payload.versionName || '1.1.1',
-      downloadUrl: payload.downloadUrl || 'http://10.0.0.65:8000/app-debug.apk',
+      versionCode: parseInt(payload.versionCode, 10) || 4,
+      versionName: payload.versionName || '1.1.2',
+      downloadUrl: payload.downloadUrl || 'https://raw.githubusercontent.com/anthonyfullerink-ai/MCASMS/main/app-debug.apk',
       releaseNotes: payload.releaseNotes || 'Performance improvements and live Stripe diagnostics verification.',
       mandatory: Boolean(payload.mandatory),
       minSupportedVersion: parseInt(payload.minSupportedVersion, 10) || 1,

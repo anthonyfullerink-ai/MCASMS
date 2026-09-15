@@ -47,11 +47,22 @@ class RemoteUpdateManager(private val context: Context) {
     private val gson = Gson()
 
     suspend fun checkForUpdatesDetailed(manifestUrl: String = DEFAULT_UPDATE_URL, forceCheck: Boolean = false): UpdateCheckResult = withContext(Dispatchers.IO) {
+        // Prioritize global public CDN endpoints first so updates work anywhere on mobile data or Wi-Fi
         val targets = mutableListOf<String>()
-        if (manifestUrl.isNotBlank() && !manifestUrl.contains("localhost")) {
-            targets.add(manifestUrl)
+        targets.add(DEFAULT_UPDATE_URL)
+        targets.add("https://cdn.jsdelivr.net/gh/anthonyfullerink-ai/MCASMS@main/version.json")
+
+        // If a custom HTTPS manifest was provided and isn't already present, prioritize it
+        if (manifestUrl.isNotBlank() && manifestUrl.startsWith("https://") && !targets.contains(manifestUrl)) {
+            targets.add(0, manifestUrl)
         }
-        CANDIDATE_URLS.forEach { if (!targets.contains(it)) targets.add(it) }
+
+        // Add remaining candidate URLs (e.g. LAN fallbacks) with low priority
+        CANDIDATE_URLS.forEach { candidate ->
+            if (!targets.contains(candidate) && !candidate.contains("localhost")) {
+                targets.add(candidate)
+            }
+        }
 
         val currentVersionCode = try {
             context.packageManager.getPackageInfo(context.packageName, 0).versionCode
@@ -75,16 +86,23 @@ class RemoteUpdateManager(private val context: Context) {
                     "$targetUrl?_t=${System.currentTimeMillis()}"
                 }
 
+                // Short timeout for LAN IPs (e.g. 10.0.0.x) to avoid hanging mobile devices
+                val isLocalLan = targetUrl.contains("10.0.0.") || targetUrl.contains("10.0.2.") || targetUrl.contains("192.168.")
+                val connTimeout = if (isLocalLan) 2500 else 8000
+
                 Log.d(TAG, "Checking live OTA updates from: $cacheBustUrl")
-                val connection = openConnectionWithRedirects(cacheBustUrl).apply {
-                    requestMethod = "GET"
-                    connectTimeout = 7000
-                    readTimeout = 7000
-                    setRequestProperty("Cache-Control", "no-cache, no-store, must-revalidate")
-                    setRequestProperty("Pragma", "no-cache")
-                    setRequestProperty("Expires", "0")
-                    setRequestProperty("User-Agent", "MissedCallAutoText-Android")
-                }
+                val headers = mapOf(
+                    "Cache-Control" to "no-cache, no-store, must-revalidate",
+                    "Pragma" to "no-cache",
+                    "Expires" to "0"
+                )
+                val connection = openConnectionWithRedirects(
+                    initialUrl = cacheBustUrl,
+                    method = "GET",
+                    connectTimeoutMs = connTimeout,
+                    readTimeoutMs = 8000,
+                    headers = headers
+                )
 
                 if (connection.responseCode in 200..299) {
                     val json = connection.inputStream.bufferedReader().use { it.readText() }
@@ -154,11 +172,12 @@ class RemoteUpdateManager(private val context: Context) {
     suspend fun downloadAndInstallApk(apkUrl: String, onProgress: (Int) -> Unit = {}): Boolean = withContext(Dispatchers.IO) {
         return@withContext try {
             Log.i(TAG, "Downloading APK update from: $apkUrl")
-            val connection = openConnectionWithRedirects(apkUrl).apply {
-                connectTimeout = 20000
-                readTimeout = 30000
-                setRequestProperty("User-Agent", "MissedCallAutoText-Android")
-            }
+            val connection = openConnectionWithRedirects(
+                initialUrl = apkUrl,
+                method = "GET",
+                connectTimeoutMs = 20000,
+                readTimeoutMs = 35000
+            )
 
             val fileLength = connection.contentLength
             val apkFile = File(context.cacheDir, "update.apk")
@@ -188,21 +207,31 @@ class RemoteUpdateManager(private val context: Context) {
         }
     }
 
-    private fun openConnectionWithRedirects(initialUrl: String): HttpURLConnection {
+    private fun openConnectionWithRedirects(
+        initialUrl: String,
+        method: String = "GET",
+        connectTimeoutMs: Int = 10000,
+        readTimeoutMs: Int = 15000,
+        headers: Map<String, String> = emptyMap()
+    ): HttpURLConnection {
         var currentUrl = initialUrl
         var redirects = 0
         while (redirects < 5) {
             val url = URL(currentUrl)
-            val connection = url.openConnection() as HttpURLConnection
-            connection.instanceFollowRedirects = false
-            connection.connectTimeout = 12000
-            connection.readTimeout = 15000
-            connection.setRequestProperty("User-Agent", "MissedCallAutoText-Android")
+            val connection = (url.openConnection() as HttpURLConnection).apply {
+                requestMethod = method
+                connectTimeout = connectTimeoutMs
+                readTimeout = readTimeoutMs
+                instanceFollowRedirects = false
+                setRequestProperty("User-Agent", "MissedCallAutoText-Android")
+                headers.forEach { (k, v) -> setRequestProperty(k, v) }
+            }
             connection.connect()
 
             val status = connection.responseCode
             if (status in listOf(301, 302, 303, 307, 308)) {
                 val newUrl = connection.getHeaderField("Location")
+                connection.disconnect()
                 if (!newUrl.isNullOrBlank()) {
                     currentUrl = if (newUrl.startsWith("http")) newUrl else URL(URL(currentUrl), newUrl).toString()
                     redirects++
@@ -211,7 +240,15 @@ class RemoteUpdateManager(private val context: Context) {
             }
             return connection
         }
-        return URL(currentUrl).openConnection() as HttpURLConnection
+        val finalConn = (URL(currentUrl).openConnection() as HttpURLConnection).apply {
+            requestMethod = method
+            connectTimeout = connectTimeoutMs
+            readTimeout = readTimeoutMs
+            setRequestProperty("User-Agent", "MissedCallAutoText-Android")
+            headers.forEach { (k, v) -> setRequestProperty(k, v) }
+        }
+        finalConn.connect()
+        return finalConn
     }
 
     private fun installApk(apkFile: File) {

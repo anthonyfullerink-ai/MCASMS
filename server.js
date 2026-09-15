@@ -17,11 +17,11 @@ const MIME_TYPES = {
 };
 
 const LATEST_APP_VERSION = {
-  versionCode: 2,
-  versionName: '1.1.0',
-  downloadUrl: 'http://10.0.0.65:8000/app-debug.apk',
-  releaseNotes: '• Automatic In-App OTA Update Checker\n• In-App Customer Account & Subscription Portal\n• Cryptographic hardware device lock binding\n• Direct 1-tap Stripe trial cancellation ($0 charged)\n• Auto-text appliance stability improvements',
-  mandatory: false,
+  versionCode: 4,
+  versionName: '1.1.2',
+  downloadUrl: 'https://raw.githubusercontent.com/anthonyfullerink-ai/MCASMS/main/app-debug.apk',
+  releaseNotes: '• Fixed socket timeout during update checks\n• High-speed GitHub CDN live OTA updates\n• Seamless in-app download and installation\n• Enhanced reliability across all mobile networks',
+  mandatory: true,
   minSupportedVersion: 1
 };
 
