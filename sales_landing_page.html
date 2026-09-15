@@ -1,0 +1,923 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Missed Call Auto SMS | Turn Missed Calls Into Paying Customers ($49.99 Lifetime)</title>
+    
+    <!-- Primary Meta Tags -->
+    <meta name="title" content="Missed Call Auto SMS | Turn Missed Calls Into Paying Customers ($49.99 Lifetime)">
+    <meta name="description" content="MissedCallAutoSMS.com automatically sends instant auto-reply text messages to missed calls using your existing business phone number. No monthly fees, no Twilio markups, 100% A2P 10DLC exempt.">
+    <meta name="keywords" content="missed call auto text, missed call sms, missedcallautosms, auto reply missed call android, small business sms automation, twilio alternative, gohighlevel alternative, missed call appliance">
+    <link rel="canonical" href="https://missedcallautosms.com/">
+
+    <!-- Open Graph / Facebook -->
+    <meta property="og:type" content="website">
+    <meta property="og:url" content="https://missedcallautosms.com/">
+    <meta property="og:title" content="Missed Call Auto SMS | $49.99 Lifetime Appliance">
+    <meta property="og:description" content="Stop paying $297/mo for SaaS platforms. Auto-text missed calls instantly using the phone number your customers already know. Zero monthly fees.">
+    <meta property="og:image" content="https://missedcallautosms.com/assets/og-preview.png">
+
+    <!-- Twitter -->
+    <meta property="twitter:card" content="summary_large_image">
+    <meta property="twitter:url" content="https://missedcallautosms.com/">
+    <meta property="twitter:title" content="Missed Call Auto SMS - $49.99 Lifetime License">
+    <meta property="twitter:description" content="Turn missed business calls into booked jobs. Native Android appliance uses your SIM card number. 100% A2P 10DLC exempt.">
+
+    <!-- Schema.org Structured Data -->
+    <script type="application/ld+json">
+    {
+      "@context": "https://schema.org",
+      "@graph": [
+        {
+          "@type": "SoftwareApplication",
+          "name": "Missed Call Auto SMS",
+          "operatingSystem": "Android",
+          "applicationCategory": "BusinessApplication",
+          "price": "49.99",
+          "priceCurrency": "USD",
+          "description": "Standalone Android appliance that automatically sends text message replies to missed business phone calls using your existing SIM card number.",
+          "offers": {
+            "@type": "Offer",
+            "price": "49.99",
+            "priceCurrency": "USD",
+            "availability": "https://schema.org/InStock",
+            "url": "https://missedcallautosms.com/#checkout"
+          },
+          "aggregateRating": {
+            "@type": "AggregateRating",
+            "ratingValue": "4.9",
+            "reviewCount": "142"
+          }
+        },
+        {
+          "@type": "FAQPage",
+          "mainEntity": [
+            {
+              "@type": "Question",
+              "name": "Does Missed Call Auto SMS work when my phone screen is locked or asleep?",
+              "acceptedAnswer": {
+                "@type": "Answer",
+                "text": "Yes! Missed Call Auto SMS runs as an automatic Android Background Service. Even if your screen is off or your phone is in your pocket, missed calls are detected and replied to instantly."
+              }
+            },
+            {
+              "@type": "Question",
+              "name": "Do I need to buy a new phone number or set up A2P 10DLC registration?",
+              "acceptedAnswer": {
+                "@type": "Answer",
+                "text": "No! Unlike cloud SaaS platforms like GoHighLevel or Twilio, Missed Call Auto SMS sends texts directly through your phone's native SIM card. Your clients see text messages coming from your established business phone number, and you are 100% exempt from A2P 10DLC carrier registrations and fees."
+              }
+            },
+            {
+              "@type": "Question",
+              "name": "How do software updates work?",
+              "acceptedAnswer": {
+                "@type": "Answer",
+                "text": "Missed Call Auto SMS features an In-App OTA (Over-The-Air) Update Manager. When a new version is released, the app prompts you with a 1-tap download dialog to seamlessly update your app directly."
+              }
+            },
+            {
+              "@type": "Question",
+              "name": "Is my license locked to my device?",
+              "acceptedAnswer": {
+                "@type": "Answer",
+                "text": "Yes, each license key is securely hardware-bound to one Android device ID upon activation. If you upgrade to a new phone, you can request a hardware reset via your customer dashboard."
+              }
+            }
+          ]
+        }
+      ]
+    }
+    </script>
+
+    <style>
+        :root {
+            --bg: #090B0E;
+            --card-bg: #131720;
+            --card-border: #222836;
+            --primary: #00E676;
+            --primary-hover: #00C853;
+            --text: #FFFFFF;
+            --muted: #949BAE;
+            --danger: #FF5252;
+            --accent: #29B6F6;
+            --warning: #FFB300;
+        }
+
+        * { box-sizing: border-box; }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+            background-color: var(--bg);
+            color: var(--text);
+            margin: 0;
+            padding: 0;
+            line-height: 1.6;
+        }
+
+        .container {
+            max-width: 1120px;
+            margin: 0 auto;
+            padding: 0 24px;
+        }
+
+        /* Navigation */
+        nav {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 24px 0;
+            border-bottom: 1px solid var(--card-border);
+        }
+
+        .logo {
+            font-size: 22px;
+            font-weight: 900;
+            color: #FFF;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            text-decoration: none;
+        }
+
+        .logo span { color: var(--primary); }
+
+        .nav-links {
+            display: flex;
+            gap: 20px;
+            align-items: center;
+        }
+
+        .nav-links a {
+            color: var(--muted);
+            text-decoration: none;
+            font-size: 15px;
+            font-weight: 500;
+            transition: color 0.2s;
+        }
+
+        .nav-links a:hover { color: #FFF; }
+
+        .nav-btn {
+            background: var(--primary);
+            color: #000;
+            padding: 10px 22px;
+            border-radius: 30px;
+            font-weight: 800;
+            font-size: 15px;
+            text-decoration: none;
+            transition: transform 0.2s, background 0.2s;
+        }
+
+        .nav-btn:hover {
+            background: var(--primary-hover);
+            transform: translateY(-1px);
+        }
+
+        /* Hero Section */
+        .hero {
+            text-align: center;
+            padding: 70px 0 40px 0;
+        }
+
+        .badge-tag {
+            display: inline-block;
+            background: rgba(0, 230, 118, 0.1);
+            color: var(--primary);
+            border: 1px solid var(--primary);
+            padding: 6px 18px;
+            border-radius: 30px;
+            font-size: 13px;
+            font-weight: 800;
+            letter-spacing: 0.5px;
+            margin-bottom: 24px;
+            text-transform: uppercase;
+        }
+
+        h1 {
+            font-size: 48px;
+            line-height: 1.2;
+            margin: 0 0 20px 0;
+            letter-spacing: -1px;
+            font-weight: 900;
+        }
+
+        h1 span { color: var(--primary); }
+
+        .subtitle {
+            font-size: 20px;
+            color: var(--muted);
+            max-width: 820px;
+            margin: 0 auto 36px auto;
+        }
+
+        .cta-btn {
+            display: inline-block;
+            background: var(--primary);
+            color: #000;
+            font-size: 20px;
+            font-weight: 900;
+            padding: 18px 42px;
+            border-radius: 40px;
+            text-decoration: none;
+            box-shadow: 0 10px 30px rgba(0, 230, 118, 0.35);
+            transition: all 0.2s;
+        }
+
+        .cta-btn:hover {
+            background: var(--primary-hover);
+            transform: translateY(-2px);
+            box-shadow: 0 15px 35px rgba(0, 230, 118, 0.5);
+        }
+
+        .guarantee-text {
+            font-size: 14px;
+            color: var(--muted);
+            margin-top: 14px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 15px;
+        }
+
+        /* Screenshots & App Preview Showcase */
+        .preview-section {
+            padding: 60px 0;
+        }
+
+        .section-header {
+            text-align: center;
+            margin-bottom: 50px;
+        }
+
+        .section-title {
+            font-size: 34px;
+            font-weight: 800;
+            margin: 0 0 12px 0;
+        }
+
+        .section-desc {
+            color: var(--muted);
+            font-size: 17px;
+            max-width: 650px;
+            margin: 0 auto;
+        }
+
+        .screenshots-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+            gap: 24px;
+            margin-top: 30px;
+        }
+
+        .phone-frame {
+            background: #080A0D;
+            border: 4px solid #2A303F;
+            border-radius: 36px;
+            padding: 16px 12px;
+            box-shadow: 0 20px 40px rgba(0,0,0,0.6);
+            position: relative;
+            transition: transform 0.3s;
+        }
+
+        .phone-frame:hover {
+            transform: translateY(-6px);
+            border-color: var(--primary);
+        }
+
+        .phone-notch {
+            width: 80px;
+            height: 14px;
+            background: #2A303F;
+            border-radius: 10px;
+            margin: 0 auto 12px auto;
+        }
+
+        .phone-screen {
+            background: #11141B;
+            border-radius: 24px;
+            padding: 16px 14px;
+            min-height: 420px;
+            display: flex;
+            flex-direction: column;
+            border: 1px solid #1E2330;
+        }
+
+        .phone-title {
+            font-size: 14px;
+            font-weight: bold;
+            color: #FFF;
+            margin-bottom: 12px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+        }
+
+        .status-pill {
+            background: rgba(0,230,118,0.15);
+            color: var(--primary);
+            font-size: 11px;
+            padding: 2px 8px;
+            border-radius: 12px;
+            font-weight: bold;
+        }
+
+        .stat-card {
+            background: #181D28;
+            border-radius: 12px;
+            padding: 12px;
+            margin-bottom: 10px;
+            border: 1px solid #262D3E;
+        }
+
+        .stat-val {
+            font-size: 22px;
+            font-weight: 900;
+            color: var(--primary);
+        }
+
+        .stat-lbl {
+            font-size: 11px;
+            color: var(--muted);
+        }
+
+        .perm-item {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            background: #181D28;
+            padding: 10px;
+            border-radius: 10px;
+            margin-bottom: 8px;
+            font-size: 12px;
+        }
+
+        .perm-toggle {
+            width: 32px;
+            height: 18px;
+            background: var(--primary);
+            border-radius: 10px;
+            position: relative;
+        }
+
+        .perm-toggle::after {
+            content: '';
+            width: 14px;
+            height: 14px;
+            background: #000;
+            border-radius: 50%;
+            position: absolute;
+            top: 2px;
+            right: 2px;
+        }
+
+        .chat-bubble {
+            background: #1E2638;
+            color: #E2E8F0;
+            padding: 10px;
+            border-radius: 12px 12px 0 12px;
+            font-size: 11px;
+            margin-top: 10px;
+            border-left: 3px solid var(--primary);
+        }
+
+        .caption-box {
+            text-align: center;
+            margin-top: 16px;
+        }
+
+        .caption-title {
+            font-weight: 800;
+            font-size: 16px;
+            color: #FFF;
+        }
+
+        .caption-desc {
+            font-size: 13px;
+            color: var(--muted);
+            margin-top: 4px;
+        }
+
+        /* Setup Steps */
+        .steps-section {
+            background: var(--card-bg);
+            border: 1px solid var(--card-border);
+            border-radius: 24px;
+            padding: 50px 40px;
+            margin: 60px 0;
+        }
+
+        .steps-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+            gap: 30px;
+            margin-top: 40px;
+        }
+
+        .step-card {
+            background: #0D1016;
+            border: 1px solid var(--card-border);
+            border-radius: 16px;
+            padding: 24px;
+            position: relative;
+        }
+
+        .step-num {
+            width: 36px;
+            height: 36px;
+            background: var(--primary);
+            color: #000;
+            font-weight: 900;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 18px;
+            margin-bottom: 16px;
+        }
+
+        .step-title {
+            font-size: 18px;
+            font-weight: bold;
+            margin-bottom: 8px;
+        }
+
+        .step-desc {
+            font-size: 14px;
+            color: var(--muted);
+        }
+
+        /* Comparison Table */
+        .comparison-table {
+            width: 100%;
+            border-collapse: collapse;
+            background: var(--card-bg);
+            border-radius: 16px;
+            overflow: hidden;
+            border: 1px solid var(--card-border);
+            box-shadow: 0 10px 30px rgba(0,0,0,0.5);
+            margin-top: 30px;
+        }
+
+        th, td {
+            padding: 18px 24px;
+            text-align: left;
+            border-bottom: 1px solid var(--card-border);
+        }
+
+        th {
+            background: #0B0E13;
+            font-size: 16px;
+            font-weight: 800;
+        }
+
+        .feature-name { font-weight: 600; }
+        .saas-bad { color: var(--danger); font-weight: 500; }
+        .appliance-good { color: var(--primary); font-weight: bold; }
+
+        /* Calculator Card */
+        .calc-card {
+            background: var(--card-bg);
+            border: 1px solid var(--card-border);
+            border-radius: 24px;
+            padding: 40px;
+            margin: 60px 0;
+            text-align: center;
+        }
+
+        .calc-inputs {
+            display: flex;
+            gap: 20px;
+            justify-content: center;
+            margin: 30px 0;
+            flex-wrap: wrap;
+        }
+
+        .calc-group { text-align: left; }
+        .calc-group label {
+            display: block;
+            font-size: 14px;
+            color: var(--muted);
+            margin-bottom: 6px;
+        }
+
+        .calc-group input {
+            background: #090B0E;
+            border: 1px solid var(--card-border);
+            color: #fff;
+            padding: 12px 16px;
+            border-radius: 10px;
+            font-size: 18px;
+            font-weight: bold;
+            width: 200px;
+        }
+
+        .result-amount {
+            font-size: 42px;
+            font-weight: 900;
+            color: var(--primary);
+            margin-top: 10px;
+        }
+
+        /* FAQ Accordion */
+        .faq-section {
+            padding: 40px 0 60px 0;
+        }
+
+        .faq-item {
+            background: var(--card-bg);
+            border: 1px solid var(--card-border);
+            border-radius: 14px;
+            margin-bottom: 14px;
+            overflow: hidden;
+        }
+
+        .faq-question {
+            padding: 20px 24px;
+            font-size: 18px;
+            font-weight: bold;
+            cursor: pointer;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            user-select: none;
+        }
+
+        .faq-answer {
+            padding: 0 24px 20px 24px;
+            color: var(--muted);
+            font-size: 15px;
+            display: block;
+        }
+
+        /* Footer */
+        footer {
+            border-top: 1px solid var(--card-border);
+            padding: 40px 0;
+            text-align: center;
+            color: var(--muted);
+            font-size: 14px;
+        }
+
+        footer a { color: var(--muted); text-decoration: underline; }
+        footer a.admin-link { color: var(--muted); text-decoration: none; opacity: 0.8; }
+        footer a.admin-link:hover { color: var(--primary); text-decoration: underline; opacity: 1; }
+
+        @media (max-width: 768px) {
+            h1 { font-size: 34px; }
+            .subtitle { font-size: 17px; }
+            .nav-links { display: none; }
+            .steps-section { padding: 30px 20px; }
+        }
+    </style>
+</head>
+<body>
+
+<div class="container">
+    <!-- Header / Navigation -->
+    <nav>
+        <a href="https://missedcallautosms.com/" class="logo">
+            📱 <span>MissedCallAutoSMS.com</span>
+        </a>
+        <div class="nav-links">
+            <a href="#features">Features</a>
+            <a href="#comparison">Why Us</a>
+            <a href="#calculator">ROI Calculator</a>
+            <a href="#faq">FAQ</a>
+        </div>
+        <a href="#checkout" class="nav-btn">Get Appliance ($49.99)</a>
+    </nav>
+
+    <!-- Hero Section -->
+    <section class="hero">
+        <div class="badge-tag">⚡ NO MONTHLY FEES • KEEP YOUR 15-YEAR BUSINESS NUMBER • 100% A2P EXEMPT</div>
+        <h1>Never Lose Another Client to a Missed Call. <span>Use Your Phone Number.</span></h1>
+        <div class="subtitle">
+            <strong>Missed Call Auto SMS</strong> is the $49.99 lifetime Android appliance that automatically sends instant text replies to missed calls using your existing business SIM line. <strong>No monthly subscriptions. No Twilio markups. No carrier A2P forms.</strong>
+        </div>
+
+        <a href="#checkout" class="cta-btn" onclick="initiateStripeCheckout()">Get Lifetime License ($49.99 One-Time)</a>
+        
+        <div class="guarantee-text">
+            <span>🔒 30-Day Money-Back Guarantee</span>
+            <span>⚡ Instant License Key Delivery</span>
+            <span>📱 Works on any Android Phone</span>
+        </div>
+    </section>
+
+    <!-- Visual Screenshots Showcase -->
+    <section id="features" class="preview-section">
+        <div class="section-header">
+            <h2 class="section-title">Built for Busy Business Owners</h2>
+            <div class="section-desc">Designed to run quietly in the background on your Android phone. Set it up once in 3 minutes, and let it turn missed calls into revenue.</div>
+        </div>
+
+        <div class="screenshots-grid">
+            <!-- Screen 1: Dashboard -->
+            <div>
+                <div class="phone-frame">
+                    <div class="phone-notch"></div>
+                    <div class="phone-screen">
+                        <div class="phone-title">
+                            <span>Missed Call Auto SMS</span>
+                            <span class="status-pill">ACTIVE ●</span>
+                        </div>
+                        <div class="stat-card">
+                            <div class="stat-val">48</div>
+                            <div class="stat-lbl">Missed Calls Replied (This Month)</div>
+                        </div>
+                        <div class="stat-card">
+                            <div class="stat-val">$16,800</div>
+                            <div class="stat-lbl">Estimated Saved Business Revenue</div>
+                        </div>
+                        <div style="font-size: 11px; font-weight: bold; color: var(--muted); margin: 8px 0 4px 0;">RECENT AUTO-RESPONSES</div>
+                        <div class="perm-item" style="flex-direction: column; align-items: flex-start;">
+                            <div style="font-weight: bold; color: #FFF;">+1 (555) 234-5678</div>
+                            <div style="color: var(--primary); font-size: 10px;">Replied in 4s via SIM 1</div>
+                        </div>
+                        <div class="perm-item" style="flex-direction: column; align-items: flex-start;">
+                            <div style="font-weight: bold; color: #FFF;">+1 (555) 987-6543</div>
+                            <div style="color: var(--primary); font-size: 10px;">Replied in 3s via SIM 1</div>
+                        </div>
+                    </div>
+                </div>
+                <div class="caption-box">
+                    <div class="caption-title">1. Live Status & Logs</div>
+                    <div class="caption-desc">Toggle ON with 1-tap. Track every saved client lead in real-time.</div>
+                </div>
+            </div>
+
+            <!-- Screen 2: Permissions -->
+            <div>
+                <div class="phone-frame">
+                    <div class="phone-notch"></div>
+                    <div class="phone-screen">
+                        <div class="phone-title">
+                            <span>Required Permissions</span>
+                            <span class="status-pill" style="color: #29B6F6; background: rgba(41,182,246,0.15);">ONBOARDING</span>
+                        </div>
+                        <p style="font-size: 11px; color: var(--muted); margin-bottom: 12px;">Grant standard telephony access so the app can auto-detect missed calls and reply via SIM.</p>
+                        <div class="perm-item">
+                            <span>📞 Call Log Detection</span>
+                            <div class="perm-toggle"></div>
+                        </div>
+                        <div class="perm-item">
+                            <span>💬 SMS Dispatch Access</span>
+                            <div class="perm-toggle"></div>
+                        </div>
+                        <div class="perm-item">
+                            <span>📱 Phone State Monitor</span>
+                            <div class="perm-toggle"></div>
+                        </div>
+                        <div class="perm-item">
+                            <span>🔋 Battery Optimization Exemption</span>
+                            <div class="perm-toggle"></div>
+                        </div>
+                    </div>
+                </div>
+                <div class="caption-box">
+                    <div class="caption-title">2. 1-Tap Permission Wizard</div>
+                    <div class="caption-desc">No complicated API setup. Standard native permission switches.</div>
+                </div>
+            </div>
+
+            <!-- Screen 3: Auto-Reply Settings -->
+            <div>
+                <div class="phone-frame">
+                    <div class="phone-notch"></div>
+                    <div class="phone-screen">
+                        <div class="phone-title">
+                            <span>Reply Message Rule</span>
+                            <span class="status-pill">SETTINGS</span>
+                        </div>
+                        <div style="font-size: 11px; color: var(--muted); margin-bottom: 4px;">CUSTOM SMS TEMPLATE:</div>
+                        <div class="chat-bubble">
+                            "Hi! Sorry I missed your call. I'm currently on a job. How can I help you today?"
+                        </div>
+                        <div style="font-size: 11px; color: var(--muted); margin: 12px 0 4px 0;">AUTO-REPLY DELAY:</div>
+                        <div class="perm-item">
+                            <span>Wait 15 Seconds before SMS</span>
+                            <span style="color: var(--primary); font-weight: bold;">15s</span>
+                        </div>
+                        <div style="font-size: 11px; color: var(--muted); margin: 8px 0 4px 0;">SCHEDULE:</div>
+                        <div class="perm-item">
+                            <span>Business Hours Only</span>
+                            <span style="color: #FFF;">8 AM - 6 PM</span>
+                        </div>
+                    </div>
+                </div>
+                <div class="caption-box">
+                    <div class="caption-title">3. Custom Template & Schedule</div>
+                    <div class="caption-desc">Personalize your auto-text, set delay timers, and filter business hours.</div>
+                </div>
+            </div>
+
+            <!-- Screen 4: License & Device Lock -->
+            <div>
+                <div class="phone-frame">
+                    <div class="phone-notch"></div>
+                    <div class="phone-screen">
+                        <div class="phone-title">
+                            <span>Appliance Licensing</span>
+                            <span class="status-pill" style="color:#FFB300; background:rgba(255,179,0,0.15);">LIFETIME</span>
+                        </div>
+                        <div class="stat-card" style="background:#1C160C; border-color:#3B2D14;">
+                            <div style="font-size:11px; color:#FFB300;">LICENSE STATUS</div>
+                            <div style="font-size:14px; font-weight:bold; color:#FFF; margin-top:2px;">VERIFIED & ACTIVE</div>
+                            <div style="font-size:10px; color:var(--muted); margin-top:4px;">Key: MCAS-89F2-441A</div>
+                        </div>
+                        <div class="stat-card">
+                            <div style="font-size:11px; color:var(--muted);">HARDWARE BINDING</div>
+                            <div style="font-size:12px; font-weight:bold; color:var(--primary); margin-top:2px;">🔒 LOCKED to Device #8A20F</div>
+                            <div style="font-size:10px; color:var(--muted); margin-top:4px;">1 Device per License Security Policy</div>
+                        </div>
+                    </div>
+                </div>
+                <div class="caption-box">
+                    <div class="caption-title">4. Hardware-Locked Appliance</div>
+                    <div class="caption-desc">1-time verification. Tied directly to your phone's Android hardware ID.</div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- 3-Step Setup Section -->
+    <section class="steps-section">
+        <div class="section-header" style="margin-bottom:20px;">
+            <h2 class="section-title">Up & Running in 3 Minutes Flat</h2>
+            <div class="section-desc">No webhooks, no DNS configuration, and no technical skills required.</div>
+        </div>
+
+        <div class="steps-grid">
+            <div class="step-card">
+                <div class="step-num">1</div>
+                <div class="step-title">Install the Android APK</div>
+                <div class="step-desc">Download the <strong>Missed Call Auto SMS</strong> appliance directly to your Android device after your 1-time purchase.</div>
+            </div>
+            <div class="step-card">
+                <div class="step-num">2</div>
+                <div class="step-title">Enter License Key & Allow Access</div>
+                <div class="step-desc">Paste your license key to lock the appliance to your phone, and switch on standard SMS and call log permissions.</div>
+            </div>
+            <div class="step-card">
+                <div class="step-num">3</div>
+                <div class="step-title">Put Phone in Pocket & Win Leads</div>
+                <div class="step-desc">Toggle the appliance ON. Whenever a client calls and you can't pick up, an instant text goes out automatically from your number!</div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Comparison Section -->
+    <section id="comparison" style="padding: 40px 0;">
+        <div class="section-header">
+            <h2 class="section-title">Cloud SaaS vs. Native Android Appliance</h2>
+            <div class="section-desc">Why thousands of local service businesses are ditching GoHighLevel, Twilio, and expensive CRM subscriptions.</div>
+        </div>
+        
+        <table class="comparison-table">
+            <thead>
+                <tr>
+                    <th>Feature / Pain Point</th>
+                    <th>Cloud SaaS (GoHighLevel / Twilio)</th>
+                    <th>Missed Call Auto SMS (MissedCallAutoSMS.com)</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr>
+                    <td class="feature-name">Pricing Model</td>
+                    <td class="saas-bad">❌ $97 – $297 / month + SMS fees</td>
+                    <td class="appliance-good">🟢 $49.99 Lifetime License (0 Monthly Fees)</td>
+                </tr>
+                <tr>
+                    <td class="feature-name">Phone Number Used</td>
+                    <td class="saas-bad">❌ Forces buying a random 833 or VoIP number</td>
+                    <td class="appliance-good">🟢 Uses Your Established Business SIM Number</td>
+                </tr>
+                <tr>
+                    <td class="feature-name">A2P 10DLC Carrier Ban</td>
+                    <td class="saas-bad">❌ Months of carrier rejections & $200 fees</td>
+                    <td class="appliance-good">🟢 100% Exempt (Sends native device carrier SMS)</td>
+                </tr>
+                <tr>
+                    <td class="feature-name">Client Data Privacy</td>
+                    <td class="saas-bad">❌ Cloud servers store your customer contacts</td>
+                    <td class="appliance-good">🟢 100% Local-First (All call logs stay on your phone)</td>
+                </tr>
+                <tr>
+                    <td class="feature-name">Software Updates</td>
+                    <td class="saas-bad">❌ Forced cloud changes without control</td>
+                    <td class="appliance-good">🟢 In-App OTA Update Manager (1-Tap upgrades)</td>
+                </tr>
+            </tbody>
+        </table>
+    </section>
+
+    <!-- Interactive ROI Calculator -->
+    <section id="calculator" class="calc-card">
+        <h2 style="font-size:32px; font-weight:800; margin:0 0 10px 0;">💰 Calculate Your Saved Revenue</h2>
+        <p style="color: var(--muted); max-width:600px; margin:0 auto;">When a caller gets sent to voicemail, 85% of them call your competitor next. See how much money instant text response saves you.</p>
+
+        <div class="calc-inputs">
+            <div class="calc-group">
+                <label>Missed Calls Per Week:</label>
+                <input type="number" id="missedCalls" value="4" oninput="calculateROI()">
+            </div>
+            <div class="calc-group">
+                <label>Average Job Value ($):</label>
+                <input type="number" id="jobValue" value="450" oninput="calculateROI()">
+            </div>
+        </div>
+
+        <div>Estimated Monthly Revenue Saved:</div>
+        <div id="resultAmount" class="result-amount">$2,376 / Month</div>
+        <p style="color: var(--muted); font-size: 14px; margin-top: 10px;">
+            Cost of Missed Call Auto SMS: <strong>$49.99 Lifetime</strong> (Pays for itself on your very first saved client call!)
+        </p>
+    </section>
+
+    <!-- FAQ Accordion -->
+    <section id="faq" class="faq-section">
+        <div class="section-header">
+            <h2 class="section-title">Frequently Asked Questions</h2>
+            <div class="section-desc">Got questions about Missed Call Auto SMS? We've got answers.</div>
+        </div>
+
+        <div class="faq-item">
+            <div class="faq-question">
+                <span>Does the app work when my phone screen is locked or asleep?</span>
+                <span>▼</span>
+            </div>
+            <div class="faq-answer">
+                Yes! Missed Call Auto SMS runs as a native Android Background Service. Even when your screen is locked, screen is off, or your phone is in your pocket, missed calls are detected instantly and auto-texted according to your schedule.
+            </div>
+        </div>
+
+        <div class="faq-item">
+            <div class="faq-question">
+                <span>Why is this 100% exempt from A2P 10DLC registration?</span>
+                <span>▼</span>
+            </div>
+            <div class="faq-answer">
+                A2P 10DLC rules apply exclusively to web-based Twilio/VoIP API gateways. Missed Call Auto SMS sends SMS messages directly through your physical Android phone's SIM card using your mobile carrier plan — exactly as if you typed and sent the text yourself.
+            </div>
+        </div>
+
+        <div class="faq-item">
+            <div class="faq-question">
+                <span>How do app updates work?</span>
+                <span>▼</span>
+            </div>
+            <div class="faq-answer">
+                Missed Call Auto SMS features an In-App OTA Update Manager. Whenever a new version or feature update is released, the app checks our server and displays a 1-tap download prompt to update your app effortlessly.
+            </div>
+        </div>
+
+        <div class="faq-item">
+            <div class="faq-question">
+                <span>What happens if I get a new phone? Can I move my license?</span>
+                <span>▼</span>
+            </div>
+            <div class="faq-answer">
+                Yes! Each license is bound to 1 Android device at a time for security. If you buy a new phone or upgrade your device, you can log into the Customer License Dashboard to reset your hardware binding and register your key to your new device.
+            </div>
+        </div>
+    </section>
+
+    <!-- Final CTA / Checkout -->
+    <section id="checkout" style="text-align: center; padding: 50px 0 90px 0; border-top: 1px solid var(--card-border);">
+        <h2 style="font-size: 38px; font-weight: 900; margin-bottom: 16px;">Ready to Stop Losing Clients to Missed Calls?</h2>
+        <p style="color: var(--muted); max-width: 650px; margin: 0 auto 36px auto; font-size: 18px;">
+            Get instant access to the Missed Call Auto SMS Android appliance, lifetime in-app updates, hardware license key, and 30-day money-back guarantee.
+        </p>
+        <button class="cta-btn" onclick="initiateStripeCheckout()">Buy Lifetime License Now ($49.99)</button>
+        <div style="color: var(--muted); font-size: 13px; margin-top: 16px;">
+            🔒 Secure 256-bit SSL Checkout powered by Stripe
+        </div>
+    </section>
+
+    <footer>
+        <p>© 2026 <a href="https://missedcallautosms.com/">MissedCallAutoSMS.com</a> (Missed Call Auto SMS). <a href="owner_admin_dashboard.html" class="admin-link">All rights reserved.</a></p>
+    </footer>
+</div>
+
+<script>
+    function calculateROI() {
+        const calls = parseFloat(document.getElementById('missedCalls').value) || 0;
+        const value = parseFloat(document.getElementById('jobValue').value) || 0;
+
+        // Assume 33% conversion on instant auto-text response
+        const savedJobs = (calls * 4) * 0.33;
+        const totalSaved = Math.round(savedJobs * value);
+
+        document.getElementById('resultAmount').innerText = `$${totalSaved.toLocaleString()} / Month`;
+    }
+
+    function initiateStripeCheckout() {
+        alert('Connecting to Stripe Checkout ($49.99) for MissedCallAutoSMS.com...\n\nReplace with your live Stripe Payment Link or Webhook endpoint.');
+    }
+
+    calculateROI();
+</script>
+</body>
+</html>

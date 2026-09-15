@@ -1,0 +1,522 @@
+package com.missedcall.autotext.ui.screens
+
+import android.content.Context
+import android.content.Intent
+import android.net.Uri
+import android.os.PowerManager
+import android.provider.Settings
+import android.widget.Toast
+import androidx.compose.foundation.background
+import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.foundation.verticalScroll
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.BatteryAlert
+import androidx.compose.material.icons.filled.CheckCircle
+import androidx.compose.material.icons.filled.Key
+import androidx.compose.material.icons.filled.Schedule
+import androidx.compose.material.icons.filled.Security
+import androidx.compose.material.icons.filled.VerifiedUser
+import androidx.compose.material3.*
+import androidx.compose.runtime.*
+import androidx.compose.ui.Alignment
+import androidx.compose.ui.Modifier
+import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.unit.dp
+import com.missedcall.autotext.data.AppSettings
+import com.missedcall.autotext.data.license.LicenseManager
+import com.missedcall.autotext.data.license.LicenseStatus
+import com.missedcall.autotext.ui.theme.ActiveGreenContainer
+import com.missedcall.autotext.ui.theme.ActiveGreenText
+import com.missedcall.autotext.ui.theme.AmberWarning
+import kotlin.math.roundToInt
+
+@OptIn(ExperimentalMaterial3Api::class, ExperimentalLayoutApi::class)
+@Composable
+fun SettingsScreen(
+    settings: AppSettings,
+    onSettingsChanged: (AppSettings) -> Unit,
+    missingPermissions: List<String>,
+    onRequestPermissions: () -> Unit
+) {
+    val context = LocalContext.current
+    val scrollState = rememberScrollState()
+
+    var isIgnoringBattery by remember { mutableStateOf(checkBatteryOptimization(context)) }
+    var inputLicenseKey by remember { mutableStateOf(settings.licenseKey) }
+    val licenseInfo = remember(settings.licenseKey) { LicenseManager.verifyLicenseKey(settings.licenseKey) }
+
+    Column(
+        modifier = Modifier
+            .fillMaxSize()
+            .verticalScroll(scrollState)
+            .padding(16.dp),
+        verticalArrangement = Arrangement.spacedBy(16.dp)
+    ) {
+
+        // 1. App Appliance License Card
+        Card(
+            shape = RoundedCornerShape(16.dp),
+            colors = CardDefaults.cardColors(
+                containerColor = if (licenseInfo.status == LicenseStatus.ACTIVE_LIFETIME) ActiveGreenContainer else MaterialTheme.colorScheme.surfaceVariant
+            ),
+            modifier = Modifier.fillMaxWidth()
+        ) {
+            Column(modifier = Modifier.padding(16.dp)) {
+                Row(
+                    modifier = Modifier.fillMaxWidth(),
+                    horizontalArrangement = Arrangement.SpaceBetween,
+                    verticalAlignment = Alignment.CenterVertically
+                ) {
+                    Row(verticalAlignment = Alignment.CenterVertically) {
+                        Icon(
+                            imageVector = if (licenseInfo.status == LicenseStatus.ACTIVE_LIFETIME) Icons.Default.VerifiedUser else Icons.Default.Key,
+                            contentDescription = "License Icon",
+                            tint = if (licenseInfo.status == LicenseStatus.ACTIVE_LIFETIME) ActiveGreenText else MaterialTheme.colorScheme.primary
+                        )
+                        Spacer(modifier = Modifier.width(8.dp))
+                        Text(
+                            text = "Appliance License",
+                            style = MaterialTheme.typography.titleMedium,
+                            fontWeight = FontWeight.Bold,
+                            color = if (licenseInfo.status == LicenseStatus.ACTIVE_LIFETIME) ActiveGreenText else MaterialTheme.colorScheme.onSurfaceVariant
+                        )
+                    }
+
+                    val badgeText = when (licenseInfo.status) {
+                        LicenseStatus.ACTIVE_LIFETIME -> "ACTIVE"
+                        LicenseStatus.EXPIRED -> "EXPIRED"
+                        LicenseStatus.REVOKED -> "REVOKED"
+                        else -> "UNLICENSED"
+                    }
+
+                    Surface(
+                        shape = RoundedCornerShape(12.dp),
+                        color = if (licenseInfo.status == LicenseStatus.ACTIVE_LIFETIME) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.error
+                    ) {
+                        Text(
+                            text = badgeText,
+                            fontWeight = FontWeight.Bold,
+                            style = MaterialTheme.typography.labelSmall,
+                            color = MaterialTheme.colorScheme.onPrimary,
+                            modifier = Modifier.padding(horizontal = 10.dp, vertical = 4.dp)
+                        )
+                    }
+                }
+
+                Spacer(modifier = Modifier.height(12.dp))
+
+                if (licenseInfo.status == LicenseStatus.ACTIVE_LIFETIME) {
+                    Text(
+                        text = "Licensed to: ${licenseInfo.licensedTo}",
+                        style = MaterialTheme.typography.bodyMedium,
+                        fontWeight = FontWeight.Bold,
+                        color = ActiveGreenText
+                    )
+                    Spacer(modifier = Modifier.height(4.dp))
+                    Text(
+                        text = "Key: ${licenseInfo.licenseKey}",
+                        style = MaterialTheme.typography.bodySmall,
+                        color = ActiveGreenText.copy(alpha = 0.8f)
+                    )
+                } else {
+                    Text(
+                        text = "Enter your 16-character License Key ($49.99 purchase) to activate auto-text appliance features.",
+                        style = MaterialTheme.typography.bodySmall
+                    )
+                    Spacer(modifier = Modifier.height(8.dp))
+
+                    OutlinedTextField(
+                        value = inputLicenseKey,
+                        onValueChange = { inputLicenseKey = it.uppercase() },
+                        label = { Text("License Key (e.g. MCAT-XXXX-XXXX-XXXX)") },
+                        singleLine = true,
+                        modifier = Modifier.fillMaxWidth()
+                    )
+
+                    Spacer(modifier = Modifier.height(10.dp))
+
+                    Button(
+                        onClick = {
+                            val verification = LicenseManager.verifyLicenseKey(inputLicenseKey)
+                            if (verification.status == LicenseStatus.ACTIVE_LIFETIME) {
+                                onSettingsChanged(settings.copy(licenseKey = inputLicenseKey))
+                                Toast.makeText(context, "License Activated! Thank you.", Toast.LENGTH_LONG).show()
+                            } else {
+                                Toast.makeText(context, "Invalid License Key format or checksum.", Toast.LENGTH_LONG).show()
+                            }
+                        },
+                        modifier = Modifier.fillMaxWidth()
+                    ) {
+                        Text("Activate License")
+                    }
+                }
+            }
+        }
+
+        // 2. Permissions Status Card (With Sideloaded Restricted Settings Unlock Guide)
+        if (missingPermissions.isNotEmpty()) {
+            Card(
+                colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.errorContainer),
+                shape = RoundedCornerShape(16.dp),
+                modifier = Modifier.fillMaxWidth()
+            ) {
+                Column(modifier = Modifier.padding(16.dp)) {
+                    Row(verticalAlignment = Alignment.CenterVertically) {
+                        Icon(
+                            imageVector = Icons.Default.Security,
+                            contentDescription = "Permission Warning",
+                            tint = MaterialTheme.colorScheme.onErrorContainer
+                        )
+                        Spacer(modifier = Modifier.width(8.dp))
+                        Text(
+                            text = "Action Required: Grant Telephony & SMS",
+                            fontWeight = FontWeight.Bold,
+                            color = MaterialTheme.colorScheme.onErrorContainer
+                        )
+                    }
+                    Spacer(modifier = Modifier.height(8.dp))
+                    Text(
+                        text = "Auto Text requires Telephony, SMS, and Contacts permissions to intercept calls and auto-reply.",
+                        style = MaterialTheme.typography.bodySmall,
+                        color = MaterialTheme.colorScheme.onErrorContainer
+                    )
+
+                    Spacer(modifier = Modifier.height(12.dp))
+                    Surface(
+                        shape = RoundedCornerShape(8.dp),
+                        color = MaterialTheme.colorScheme.error.copy(alpha = 0.15f),
+                        modifier = Modifier.fillMaxWidth()
+                    ) {
+                        Column(modifier = Modifier.padding(10.dp)) {
+                            Text(
+                                text = "🔒 If SMS Permission says \"Restricted Setting\" (Android 13+):",
+                                fontWeight = FontWeight.Bold,
+                                style = MaterialTheme.typography.labelMedium,
+                                color = MaterialTheme.colorScheme.onErrorContainer
+                            )
+                            Spacer(modifier = Modifier.height(4.dp))
+                            Text(
+                                text = "1. Tap \"Open Phone Settings\" below.\n" +
+                                       "2. Tap the 3 dots (⋮) in the top-right corner of the App Info page.\n" +
+                                       "3. Tap \"Allow restricted settings\" & enter your phone PIN.\n" +
+                                       "4. Tap Permissions -> SMS -> Allow.",
+                                style = MaterialTheme.typography.bodySmall,
+                                color = MaterialTheme.colorScheme.onErrorContainer
+                            )
+                        }
+                    }
+
+                    Spacer(modifier = Modifier.height(12.dp))
+                    Button(
+                        onClick = onRequestPermissions,
+                        colors = ButtonDefaults.buttonColors(containerColor = MaterialTheme.colorScheme.error)
+                    ) {
+                        Text("Open Phone Settings")
+                    }
+                }
+            }
+        }
+
+        // 3. Battery Optimization Exempt Card
+        Card(
+            colors = CardDefaults.cardColors(
+                containerColor = if (isIgnoringBattery) ActiveGreenContainer else MaterialTheme.colorScheme.surfaceVariant
+            ),
+            shape = RoundedCornerShape(16.dp),
+            modifier = Modifier.fillMaxWidth()
+        ) {
+            Column(modifier = Modifier.padding(16.dp)) {
+                Row(verticalAlignment = Alignment.CenterVertically) {
+                    Icon(
+                        imageVector = if (isIgnoringBattery) Icons.Default.CheckCircle else Icons.Default.BatteryAlert,
+                        contentDescription = "Battery Status",
+                        tint = if (isIgnoringBattery) ActiveGreenText else AmberWarning
+                    )
+                    Spacer(modifier = Modifier.width(8.dp))
+                    Text(
+                        text = if (isIgnoringBattery) "Battery Optimization Disabled" else "Battery Optimization Active",
+                        fontWeight = FontWeight.Bold,
+                        color = if (isIgnoringBattery) ActiveGreenText else MaterialTheme.colorScheme.onSurfaceVariant
+                    )
+                }
+                Spacer(modifier = Modifier.height(8.dp))
+                Text(
+                    text = if (isIgnoringBattery)
+                        "Background execution is optimized. The appliance will reliably send text replies even when the screen is locked."
+                    else
+                        "Android may restrict background execution when screen is off. Request battery exemption for 100% reliability.",
+                    style = MaterialTheme.typography.bodySmall
+                )
+                if (!isIgnoringBattery) {
+                    Spacer(modifier = Modifier.height(12.dp))
+                    Button(
+                        onClick = {
+                            requestIgnoreBatteryOptimizations(context)
+                            isIgnoringBattery = checkBatteryOptimization(context)
+                        }
+                    ) {
+                        Text("Disable Battery Optimization")
+                    }
+                }
+            }
+        }
+
+        // 4. Business Name Card
+        Card(
+            shape = RoundedCornerShape(16.dp),
+            modifier = Modifier.fillMaxWidth()
+        ) {
+            Column(modifier = Modifier.padding(16.dp)) {
+                Text(
+                    text = "Business Information",
+                    style = MaterialTheme.typography.titleMedium,
+                    fontWeight = FontWeight.Bold
+                )
+                Spacer(modifier = Modifier.height(12.dp))
+                OutlinedTextField(
+                    value = settings.businessName,
+                    onValueChange = { onSettingsChanged(settings.copy(businessName = it)) },
+                    label = { Text("Business Name") },
+                    singleLine = true,
+                    modifier = Modifier.fillMaxWidth()
+                )
+            }
+        }
+
+        // 5. Message Template Card
+        Card(
+            shape = RoundedCornerShape(16.dp),
+            modifier = Modifier.fillMaxWidth()
+        ) {
+            Column(modifier = Modifier.padding(16.dp)) {
+                Text(
+                    text = "Auto-Reply Template",
+                    style = MaterialTheme.typography.titleMedium,
+                    fontWeight = FontWeight.Bold
+                )
+                Spacer(modifier = Modifier.height(8.dp))
+                Text(
+                    text = "Use token placeholders to dynamic replace text dynamically.",
+                    style = MaterialTheme.typography.bodySmall,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant
+                )
+                Spacer(modifier = Modifier.height(8.dp))
+
+                Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                    FilterChip(
+                        selected = false,
+                        onClick = {
+                            onSettingsChanged(
+                                settings.copy(messageTemplate = settings.messageTemplate + " {business_name}")
+                            )
+                        },
+                        label = { Text("+ {business_name}") }
+                    )
+                    FilterChip(
+                        selected = false,
+                        onClick = {
+                            onSettingsChanged(
+                                settings.copy(messageTemplate = settings.messageTemplate + " {name}")
+                            )
+                        },
+                        label = { Text("+ {name}") }
+                    )
+                }
+
+                Spacer(modifier = Modifier.height(8.dp))
+                OutlinedTextField(
+                    value = settings.messageTemplate,
+                    onValueChange = { onSettingsChanged(settings.copy(messageTemplate = it)) },
+                    minLines = 3,
+                    maxLines = 5,
+                    modifier = Modifier.fillMaxWidth()
+                )
+            }
+        }
+
+        // 6. Jitter Delay & Cooldown Window Card
+        Card(
+            shape = RoundedCornerShape(16.dp),
+            modifier = Modifier.fillMaxWidth()
+        ) {
+            Column(modifier = Modifier.padding(16.dp)) {
+                Text(
+                    text = "Dispatch Timing & Rules",
+                    style = MaterialTheme.typography.titleMedium,
+                    fontWeight = FontWeight.Bold
+                )
+
+                Spacer(modifier = Modifier.height(16.dp))
+                Text(
+                    text = "Random Jitter Delay: ${settings.jitterDelaySeconds} seconds",
+                    fontWeight = FontWeight.Medium
+                )
+                Text(
+                    text = "Simulates human response time before sending SMS.",
+                    style = MaterialTheme.typography.bodySmall,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant
+                )
+                Slider(
+                    value = settings.jitterDelaySeconds.toFloat(),
+                    onValueChange = { onSettingsChanged(settings.copy(jitterDelaySeconds = it.roundToInt())) },
+                    valueRange = 5f..60f,
+                    steps = 11
+                )
+
+                HorizontalDivider(modifier = Modifier.padding(vertical = 12.dp))
+
+                Text(
+                    text = "Cooldown Window: ${settings.cooldownHours} hour(s)",
+                    fontWeight = FontWeight.Medium
+                )
+                Text(
+                    text = "Prevents spamming repeat callers within this time window.",
+                    style = MaterialTheme.typography.bodySmall,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant
+                )
+                Spacer(modifier = Modifier.height(8.dp))
+
+                Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                    listOf(1, 4, 12, 24).forEach { hours ->
+                        FilterChip(
+                            selected = settings.cooldownHours == hours,
+                            onClick = { onSettingsChanged(settings.copy(cooldownHours = hours)) },
+                            label = { Text("${hours}h") }
+                        )
+                    }
+                }
+
+                HorizontalDivider(modifier = Modifier.padding(vertical = 12.dp))
+
+                Row(
+                    modifier = Modifier.fillMaxWidth(),
+                    horizontalArrangement = Arrangement.SpaceBetween,
+                    verticalAlignment = Alignment.CenterVertically
+                ) {
+                    Column(modifier = Modifier.weight(1f)) {
+                        Text(
+                            text = "Exclude Saved Contacts",
+                            fontWeight = FontWeight.Medium
+                        )
+                        Text(
+                            text = "Do not text callers existing in phone contacts.",
+                            style = MaterialTheme.typography.bodySmall,
+                            color = MaterialTheme.colorScheme.onSurfaceVariant
+                        )
+                    }
+                    Switch(
+                        checked = settings.excludeSavedContacts,
+                        onCheckedChange = { onSettingsChanged(settings.copy(excludeSavedContacts = it)) }
+                    )
+                }
+            }
+        }
+
+        // 7. Business Hours Schedule Card
+        Card(
+            shape = RoundedCornerShape(16.dp),
+            modifier = Modifier.fillMaxWidth()
+        ) {
+            Column(modifier = Modifier.padding(16.dp)) {
+                Row(
+                    modifier = Modifier.fillMaxWidth(),
+                    horizontalArrangement = Arrangement.SpaceBetween,
+                    verticalAlignment = Alignment.CenterVertically
+                ) {
+                    Row(verticalAlignment = Alignment.CenterVertically) {
+                        Icon(Icons.Default.Schedule, contentDescription = null)
+                        Spacer(modifier = Modifier.width(8.dp))
+                        Text(
+                            text = "Business Hours Filter",
+                            style = MaterialTheme.typography.titleMedium,
+                            fontWeight = FontWeight.Bold
+                        )
+                    }
+                    Switch(
+                        checked = settings.businessHoursEnabled,
+                        onCheckedChange = { onSettingsChanged(settings.copy(businessHoursEnabled = it)) }
+                    )
+                }
+
+                if (settings.businessHoursEnabled) {
+                    Spacer(modifier = Modifier.height(16.dp))
+                    Row(
+                        modifier = Modifier.fillMaxWidth(),
+                        horizontalArrangement = Arrangement.spacedBy(12.dp)
+                    ) {
+                        OutlinedTextField(
+                            value = settings.schedule.startTime,
+                            onValueChange = { newTime ->
+                                onSettingsChanged(
+                                    settings.copy(schedule = settings.schedule.copy(startTime = newTime))
+                                )
+                            },
+                            label = { Text("Start Time (HH:mm)") },
+                            singleLine = true,
+                            modifier = Modifier.weight(1f)
+                        )
+                        OutlinedTextField(
+                            value = settings.schedule.endTime,
+                            onValueChange = { newTime ->
+                                onSettingsChanged(
+                                    settings.copy(schedule = settings.schedule.copy(endTime = newTime))
+                                )
+                            },
+                            label = { Text("End Time (HH:mm)") },
+                            singleLine = true,
+                            modifier = Modifier.weight(1f)
+                        )
+                    }
+
+                    Spacer(modifier = Modifier.height(12.dp))
+                    Text(text = "Active Days", fontWeight = FontWeight.Medium)
+                    Spacer(modifier = Modifier.height(6.dp))
+
+                    val daysOfWeek = listOf("MONDAY", "TUESDAY", "WEDNESDAY", "THURSDAY", "FRIDAY", "SATURDAY", "SUNDAY")
+                    FlowRow(
+                        horizontalArrangement = Arrangement.spacedBy(6.dp),
+                        verticalArrangement = Arrangement.spacedBy(6.dp)
+                    ) {
+                        daysOfWeek.forEach { day ->
+                            val isSelected = settings.schedule.activeDays.contains(day)
+                            FilterChip(
+                                selected = isSelected,
+                                onClick = {
+                                    val newDays = if (isSelected) {
+                                        settings.schedule.activeDays - day
+                                    } else {
+                                        settings.schedule.activeDays + day
+                                    }
+                                    onSettingsChanged(
+                                        settings.copy(schedule = settings.schedule.copy(activeDays = newDays))
+                                    )
+                                },
+                                label = { Text(day.take(3)) }
+                            )
+                        }
+                    }
+                }
+            }
+        }
+    }
+}
+
+private fun checkBatteryOptimization(context: Context): Boolean {
+    val powerManager = context.getSystemService(Context.POWER_SERVICE) as PowerManager
+    return powerManager.isIgnoringBatteryOptimizations(context.packageName)
+}
+
+private fun requestIgnoreBatteryOptimizations(context: Context) {
+    try {
+        val intent = Intent(Settings.ACTION_REQUEST_IGNORE_BATTERY_OPTIMIZATIONS).apply {
+            data = Uri.parse("package:${context.packageName}")
+        }
+        context.startActivity(intent)
+    } catch (e: Exception) {
+        val intent = Intent(Settings.ACTION_IGNORE_BATTERY_OPTIMIZATION_SETTINGS)
+        context.startActivity(intent)
+    }
+}

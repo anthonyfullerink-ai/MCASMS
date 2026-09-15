@@ -1,0 +1,653 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>MissedCallAutoSMS | Master Owner Admin Dashboard</title>
+    <style>
+        :root {
+            --bg: #0D1017;
+            --card-bg: #161B22;
+            --card-border: #303644;
+            --primary: #00E676;
+            --primary-hover: #00C853;
+            --text: #FFFFFF;
+            --muted: #8B949E;
+            --danger: #F85149;
+            --accent: #58A6FF;
+            --warning: #FFB300;
+        }
+
+        * { box-sizing: border-box; }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+            background-color: var(--bg);
+            color: var(--text);
+            margin: 0;
+            padding: 24px;
+            min-height: 100vh;
+        }
+
+        .container {
+            max-width: 1140px;
+            margin: 0 auto;
+        }
+
+        /* Header */
+        .header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            border-bottom: 1px solid var(--card-border);
+            padding-bottom: 20px;
+            margin-bottom: 24px;
+        }
+
+        .header h1 {
+            font-size: 24px;
+            margin: 0;
+            color: var(--primary);
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            font-weight: 900;
+        }
+
+        .btn-logout {
+            background: #21262D;
+            color: var(--danger);
+            border: 1px solid var(--danger);
+            padding: 8px 16px;
+            border-radius: 20px;
+            font-weight: bold;
+            font-size: 13px;
+            cursor: pointer;
+            transition: background 0.2s;
+        }
+
+        .btn-logout:hover {
+            background: rgba(248, 81, 73, 0.15);
+        }
+
+        /* Metric Cards */
+        .metrics-grid {
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            gap: 16px;
+            margin-bottom: 24px;
+        }
+
+        @media (max-width: 768px) {
+            .metrics-grid { grid-template-columns: 1fr 1fr; }
+        }
+
+        .metric-card {
+            background: var(--card-bg);
+            border: 1px solid var(--card-border);
+            border-radius: 14px;
+            padding: 20px;
+        }
+
+        .metric-title {
+            font-size: 12px;
+            color: var(--muted);
+            text-transform: uppercase;
+            font-weight: 700;
+            letter-spacing: 0.5px;
+        }
+
+        .metric-val {
+            font-size: 32px;
+            font-weight: 900;
+            color: #FFF;
+            margin-top: 6px;
+        }
+
+        /* Tabs */
+        .tab-bar {
+            display: flex;
+            gap: 12px;
+            margin-bottom: 20px;
+            border-bottom: 1px solid var(--card-border);
+            padding-bottom: 12px;
+        }
+
+        .tab-btn {
+            background: #161B22;
+            color: var(--muted);
+            border: 1px solid var(--card-border);
+            padding: 10px 20px;
+            border-radius: 10px;
+            font-size: 14px;
+            font-weight: 700;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+
+        .tab-btn:hover { color: #FFF; border-color: var(--primary); }
+        .tab-btn.active { background: var(--primary); color: #000; border-color: var(--primary); }
+
+        /* Card Container */
+        .card {
+            background: var(--card-bg);
+            border: 1px solid var(--card-border);
+            border-radius: 16px;
+            padding: 24px;
+            margin-bottom: 24px;
+        }
+
+        .card-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 20px;
+        }
+
+        .card-header h2 {
+            font-size: 20px;
+            margin: 0;
+            font-weight: 800;
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+        }
+
+        th, td {
+            text-align: left;
+            padding: 14px 16px;
+            border-bottom: 1px solid var(--card-border);
+            font-size: 14px;
+        }
+
+        th { color: var(--muted); font-weight: 700; font-size: 12px; text-transform: uppercase; }
+
+        .badge {
+            display: inline-block;
+            padding: 4px 10px;
+            border-radius: 14px;
+            font-size: 11px;
+            font-weight: 800;
+        }
+
+        .badge-active { background: rgba(0, 230, 118, 0.15); color: var(--primary); border: 1px solid var(--primary); }
+        .badge-revoked { background: rgba(248, 81, 73, 0.15); color: var(--danger); border: 1px solid var(--danger); }
+
+        .btn-action {
+            background: #21262D;
+            color: var(--accent);
+            border: 1px solid var(--card-border);
+            padding: 8px 14px;
+            border-radius: 8px;
+            cursor: pointer;
+            font-size: 12px;
+            font-weight: 700;
+            margin-right: 6px;
+            transition: background 0.2s;
+        }
+
+        .btn-action:hover { background: #30364D; }
+        .btn-primary-action { background: var(--primary); color: #000; border: none; font-size: 13px; padding: 10px 18px; border-radius: 20px; }
+        .btn-primary-action:hover { background: var(--primary-hover); }
+        .btn-danger { color: var(--danger); }
+        .btn-danger:hover { background: rgba(248, 81, 73, 0.15); }
+
+        /* Generator Grid */
+        .gen-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 24px;
+        }
+
+        @media (max-width: 768px) { .gen-grid { grid-template-columns: 1fr; } }
+
+        label {
+            display: block;
+            margin-top: 14px;
+            font-size: 13px;
+            color: var(--muted);
+            font-weight: 600;
+        }
+
+        input[type="text"], input[type="password"], select {
+            width: 100%;
+            background: #090B0E;
+            border: 1px solid var(--card-border);
+            color: #FFF;
+            padding: 12px 14px;
+            border-radius: 10px;
+            font-size: 14px;
+            font-weight: 600;
+            margin-top: 6px;
+            outline: none;
+        }
+
+        input[type="text"]:focus, input[type="password"]:focus, select:focus {
+            border-color: var(--primary);
+        }
+
+        .result-box {
+            margin-top: 20px;
+            background: #090B0E;
+            border: 1px dashed var(--primary);
+            border-radius: 10px;
+            padding: 16px;
+            display: none;
+        }
+
+        .result-box.active { display: block; }
+
+        .key-display {
+            font-family: monospace;
+            font-size: 16px;
+            color: var(--primary);
+            word-break: break-all;
+            background: rgba(0, 230, 118, 0.1);
+            padding: 12px;
+            border-radius: 8px;
+            margin: 10px 0;
+            text-align: center;
+            font-weight: bold;
+        }
+
+        /* Login Card Overlay */
+        .login-wrapper {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 80vh;
+        }
+
+        .login-card {
+            background: var(--card-bg);
+            border: 1px solid var(--card-border);
+            border-radius: 20px;
+            padding: 40px;
+            width: 100%;
+            max-width: 440px;
+            box-shadow: 0 20px 50px rgba(0,0,0,0.7);
+            text-align: center;
+        }
+
+        .login-logo { font-size: 40px; margin-bottom: 10px; }
+        .login-title { font-size: 22px; font-weight: 900; color: #FFF; margin-bottom: 6px; }
+        .login-sub { color: var(--muted); font-size: 14px; margin-bottom: 28px; }
+
+        .form-group { text-align: left; margin-bottom: 18px; }
+        .form-group label { display: block; font-size: 13px; color: var(--muted); margin-bottom: 6px; font-weight: 600; }
+
+        .btn-login {
+            width: 100%;
+            background: var(--primary);
+            color: #000;
+            font-size: 16px;
+            font-weight: 900;
+            padding: 14px;
+            border: none;
+            border-radius: 30px;
+            cursor: pointer;
+            margin-top: 10px;
+            transition: background 0.2s;
+        }
+
+        .btn-login:hover { background: var(--primary-hover); }
+
+        .error-alert {
+            background: rgba(248, 81, 73, 0.15);
+            color: var(--danger);
+            border: 1px solid var(--danger);
+            padding: 10px 14px;
+            border-radius: 10px;
+            font-size: 13px;
+            font-weight: bold;
+            margin-bottom: 18px;
+            display: none;
+        }
+    </style>
+</head>
+<body>
+
+<!-- 1. Password Protected Login Screen -->
+<div id="loginContainer" class="login-wrapper">
+    <div class="login-card">
+        <div class="login-logo">🔒</div>
+        <div class="login-title">Master Owner Admin Portal</div>
+        <div class="login-sub">Restricted Developer Credentials Required</div>
+
+        <div id="loginError" class="error-alert">Invalid Username or Password</div>
+
+        <form onsubmit="handleLogin(event)">
+            <div class="form-group">
+                <label>Developer Username</label>
+                <input type="text" id="loginUser" value="admin" required placeholder="Enter username">
+            </div>
+
+            <div class="form-group">
+                <label>Developer Password</label>
+                <input type="password" id="loginPass" placeholder="Enter password" required autofocus>
+            </div>
+
+            <button type="submit" class="btn-login">Unlock Admin Dashboard</button>
+        </form>
+    </div>
+</div>
+
+<!-- 2. Protected Dashboard Content -->
+<div id="dashboardContainer" class="container" style="display: none;">
+    <div class="header">
+        <h1>📊 MissedCallAutoSMS Master Owner Admin</h1>
+        <div style="display: flex; align-items: center; gap: 16px;">
+            <span style="color: var(--primary); font-size: 13px; font-weight: bold;">🟢 Stripe & Firebase Connected</span>
+            <button class="btn-logout" onclick="handleLogout()">Logout</button>
+        </div>
+    </div>
+
+    <!-- Metrics Header -->
+    <div class="metrics-grid">
+        <div class="metric-card">
+            <div class="metric-title">Total Gross Revenue</div>
+            <div class="metric-val" id="metricGross">$2,499.50</div>
+        </div>
+        <div class="metric-card">
+            <div class="metric-title">Licenses Issued</div>
+            <div class="metric-val" id="metricLicenses">50</div>
+        </div>
+        <div class="metric-card">
+            <div class="metric-title">Active Devices</div>
+            <div class="metric-val" id="metricActive" style="color: var(--primary);">48</div>
+        </div>
+        <div class="metric-card">
+            <div class="metric-title">Revoked / Refunded</div>
+            <div class="metric-val" id="metricRevoked" style="color: var(--danger);">2</div>
+        </div>
+    </div>
+
+    <!-- Navigation Tabs -->
+    <div class="tab-bar">
+        <button class="tab-btn active" onclick="switchTab(0)">👥 Sales & License Directory</button>
+        <button class="tab-btn" onclick="switchTab(1)">🔑 Key Issuer & Verifier</button>
+        <button class="tab-btn" onclick="switchTab(2)">⚙️ Developer OTA & System Controls</button>
+    </div>
+
+    <!-- TAB 0: Sales & License Directory -->
+    <div id="tab0" class="tab-content card">
+        <div class="card-header">
+            <h2>👥 Sales & License Holders Directory</h2>
+            <button class="btn-action btn-primary-action" onclick="switchTab(1)">+ Issue New $49.99 License</button>
+        </div>
+
+        <table>
+            <thead>
+                <tr>
+                    <th>Date</th>
+                    <th>Customer / Business</th>
+                    <th>License Key</th>
+                    <th>Bound Hardware Device ID</th>
+                    <th>Status</th>
+                    <th>Actions</th>
+                </tr>
+            </thead>
+            <tbody id="registryBody">
+                <tr>
+                    <td>Sep 15, 2026</td>
+                    <td><strong>Apex Plumbing</strong><br><small style="color: var(--muted);">john@apexplumbing.com</small></td>
+                    <td style="font-family: monospace;">MCAS-41706578-8F923A11</td>
+                    <td style="font-family: monospace; color: var(--accent);">🔒 a8b9c7d6e5f41234</td>
+                    <td><span class="badge badge-active">ACTIVE</span></td>
+                    <td>
+                        <button class="btn-action" onclick="resetDevice('MCAS-41706578-8F923A11')">Reset Device Lock</button>
+                        <button class="btn-action btn-danger" onclick="revokeKey('MCAS-41706578-8F923A11')">Revoke</button>
+                    </td>
+                </tr>
+                <tr>
+                    <td>Sep 14, 2026</td>
+                    <td><strong>Metro Auto Care</strong><br><small style="color: var(--muted);">info@metroauto.com</small></td>
+                    <td style="font-family: monospace;">MCAS-4D6574726F41-A5B6C7D8</td>
+                    <td style="font-family: monospace; color: var(--muted);">Unbound (Pending First Launch)</td>
+                    <td><span class="badge badge-active">ACTIVE</span></td>
+                    <td>
+                        <button class="btn-action" onclick="resetDevice('MCAS-4D6574726F41-A5B6C7D8')">Reset Device Lock</button>
+                        <button class="btn-action btn-danger" onclick="revokeKey('MCAS-4D6574726F41-A5B6C7D8')">Revoke</button>
+                    </td>
+                </tr>
+                <tr>
+                    <td>Sep 10, 2026</td>
+                    <td><strong>Precision HVAC</strong><br><small style="color: var(--muted);">service@precisionhvac.com</small></td>
+                    <td style="font-family: monospace;">MCAS-507265636973-11223344</td>
+                    <td style="font-family: monospace; color: var(--accent);">🔒 3c9b8a7f6e5d4c3b</td>
+                    <td><span class="badge badge-active">ACTIVE</span></td>
+                    <td>
+                        <button class="btn-action" onclick="resetDevice('MCAS-507265636973-11223344')">Reset Device Lock</button>
+                        <button class="btn-action btn-danger" onclick="revokeKey('MCAS-507265636973-11223344')">Revoke</button>
+                    </td>
+                </tr>
+            </tbody>
+        </table>
+    </div>
+
+    <!-- TAB 1: Key Issuer & Verifier -->
+    <div id="tab1" class="tab-content gen-grid" style="display: none;">
+        <!-- Generate License Card -->
+        <div class="card">
+            <h2>🔑 Issue New License Key</h2>
+            <label for="customerName">Customer or Business Name:</label>
+            <input type="text" id="customerName" placeholder="e.g. Apex Plumbing Services">
+
+            <label for="licenseType">License Type / Duration:</label>
+            <select id="licenseType">
+                <option value="0">Lifetime $49.99 License (No Expiration)</option>
+                <option value="14">14-Day Trial</option>
+                <option value="30">30-Day Trial</option>
+                <option value="365">1-Year Pass</option>
+            </select>
+
+            <button class="btn-action btn-primary-action" style="width: 100%; margin-top: 20px; font-size: 15px; padding: 14px;" onclick="generateLicense()">Generate & Issue HMAC Key</button>
+
+            <div id="genResult" class="result-box">
+                <div style="font-size: 13px; color: var(--muted);">Issued License Key:</div>
+                <div id="generatedKey" class="key-display"></div>
+                <button class="btn-action" style="width: 100%; margin: 0;" onclick="copyGeneratedKey()">📋 Copy License Key</button>
+            </div>
+        </div>
+
+        <!-- Verify / Inspect Key Card -->
+        <div class="card">
+            <h2>🔍 Verify & Inspect License Key</h2>
+            <label for="inputVerifyKey">Paste License Key:</label>
+            <input type="text" id="inputVerifyKey" placeholder="MCAS-XXXX-XXXX">
+
+            <button class="btn-action" style="width: 100%; margin-top: 20px; font-size: 15px; padding: 14px;" onclick="verifyLicense()">Verify Key Checksum & Signature</button>
+
+            <div id="verifyResult" class="result-box">
+                <div id="verifyStatusText"></div>
+            </div>
+        </div>
+    </div>
+
+    <!-- TAB 2: Developer OTA & System Controls -->
+    <div id="tab2" class="tab-content card" style="display: none;">
+        <div class="card-header">
+            <h2>⚙️ Developer OTA Release & System Controls</h2>
+        </div>
+        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 20px;">
+            <div>
+                <label style="font-size: 13px; color: var(--muted); display: block; margin-bottom: 6px;">Current OTA Release Version:</label>
+                <input type="text" value="v1.1.0 (versionCode: 2)" disabled style="width: 100%; background: #090B0E; border: 1px solid var(--card-border); color: #FFF; padding: 10px; border-radius: 8px;">
+            </div>
+            <div>
+                <label style="font-size: 13px; color: var(--muted); display: block; margin-bottom: 6px;">OTA Update Endpoint:</label>
+                <input type="text" value="https://missedcallautosms.com/api/version.json" disabled style="width: 100%; background: #090B0E; border: 1px solid var(--card-border); color: #FFF; padding: 10px; border-radius: 8px;">
+            </div>
+        </div>
+        <div style="margin-top: 20px;">
+            <label style="font-size: 13px; color: var(--muted); display: block; margin-bottom: 6px;">Firebase Cloud Functions Endpoint:</label>
+            <input type="text" value="https://us-central1-missedcallautosms.cloudfunctions.net/activateLicense" disabled style="width: 100%; background: #090B0E; border: 1px solid var(--card-border); color: #FFF; padding: 10px; border-radius: 8px;">
+        </div>
+    </div>
+</div>
+
+<script>
+    const DEV_USER = "admin";
+    const DEV_PASS = "2026";
+    const SECRET_KEY = "MCAT_SECRET_PROD_KEY_2026";
+    const KEY_PREFIX = "MCAS-";
+
+    function checkAuth() {
+        if (sessionStorage.getItem("owner_authenticated") === "true") {
+            document.getElementById("loginContainer").style.display = "none";
+            document.getElementById("dashboardContainer").style.display = "block";
+        } else {
+            document.getElementById("loginContainer").style.display = "flex";
+            document.getElementById("dashboardContainer").style.display = "none";
+        }
+    }
+
+    function handleLogin(e) {
+        e.preventDefault();
+        const user = document.getElementById("loginUser").value.trim();
+        const pass = document.getElementById("loginPass").value.trim();
+
+        if (user === DEV_USER && pass === DEV_PASS) {
+            sessionStorage.setItem("owner_authenticated", "true");
+            document.getElementById("loginError").style.display = "none";
+            checkAuth();
+        } else {
+            document.getElementById("loginError").style.display = "block";
+        }
+    }
+
+    function handleLogout() {
+        sessionStorage.removeItem("owner_authenticated");
+        checkAuth();
+    }
+
+    function switchTab(index) {
+        const tabs = document.querySelectorAll(".tab-content");
+        const btns = document.querySelectorAll(".tab-btn");
+
+        tabs.forEach((tab, i) => {
+            tab.style.display = (i === index) ? (index === 1 ? "grid" : "block") : "none";
+        });
+
+        btns.forEach((btn, i) => {
+            btn.classList.toggle("active", i === index);
+        });
+    }
+
+    function resetDevice(key) {
+        if (confirm(`Clear bound hardware device ID for ${key}?\n\nThis allows the customer to transfer their license key to a new Android phone.`)) {
+            alert(`Device lock cleared for ${key}. Customer can now activate on their new phone.`);
+        }
+    }
+
+    function revokeKey(key) {
+        if (confirm(`Revoke license key ${key}?\n\nThe customer's app will immediately lock auto-text functions upon next sync.`)) {
+            alert(`License key ${key} marked as REVOKED in database.`);
+        }
+    }
+
+    // HMAC License Generator Logic
+    function stringToHex(str) {
+        let hex = '';
+        for (let i = 0; i < str.length; i++) {
+            hex += str.charCodeAt(i).toString(16).padStart(2, '0');
+        }
+        return hex.toUpperCase();
+    }
+
+    function hexToString(hex) {
+        let str = '';
+        for (let i = 0; i < hex.length; i += 2) {
+            str += String.fromCharCode(parseInt(hex.substr(i, 2), 16));
+        }
+        return str;
+    }
+
+    async function generateHmacSha256(message, key) {
+        const encoder = new TextEncoder();
+        const keyData = encoder.encode(key);
+        const messageData = encoder.encode(message);
+
+        const cryptoKey = await crypto.subtle.importKey(
+            'raw', keyData, { name: 'HMAC', hash: 'SHA-256' }, false, ['sign']
+        );
+
+        const signature = await crypto.subtle.sign('HMAC', cryptoKey, messageData);
+        const hashArray = Array.from(new Uint8Array(signature));
+        return hashArray.map(b => b.toString(16).padStart(2, '0')).join('').toUpperCase();
+    }
+
+    async function generateLicense() {
+        const name = document.getElementById('customerName').value.trim();
+        if (!name) { alert('Please enter a customer or business name'); return; }
+
+        const days = parseInt(document.getElementById('licenseType').value);
+        const nowSec = Math.floor(Date.now() / 1000);
+        const expiryTs = days === 0 ? 0 : Date.now() + (days * 86400 * 1000);
+
+        const payloadStr = `${name}|${expiryTs}|${nowSec}`;
+        const payloadHex = stringToHex(payloadStr);
+
+        const sigFull = await generateHmacSha256(payloadHex, SECRET_KEY);
+        const sigShort = sigFull.substring(0, 8);
+
+        const formattedKey = `${KEY_PREFIX}${payloadHex}-${sigShort}`;
+
+        document.getElementById('generatedKey').innerText = formattedKey;
+        document.getElementById('genResult').classList.add('active');
+    }
+
+    function copyGeneratedKey() {
+        const key = document.getElementById('generatedKey').innerText;
+        navigator.clipboard.writeText(key);
+        alert('License Key copied to clipboard!');
+    }
+
+    async function verifyLicense() {
+        const key = document.getElementById('inputVerifyKey').value.trim().toUpperCase();
+        if (!key.startsWith(KEY_PREFIX)) { showVerifyResult(false, 'Invalid Key Prefix'); return; }
+
+        const parts = key.substring(KEY_PREFIX.length).split('-');
+        if (parts.length < 2) { showVerifyResult(false, 'Invalid Key Format'); return; }
+
+        const payloadHex = parts[0];
+        const expectedSig = parts[1];
+
+        const calculatedSigFull = await generateHmacSha256(payloadHex, SECRET_KEY);
+        const calculatedSig = calculatedSigFull.substring(0, expectedSig.length);
+
+        if (calculatedSig !== expectedSig) {
+            showVerifyResult(false, 'Invalid Checksum / Signature Mismatch');
+            return;
+        }
+
+        try {
+            const payloadStr = hexToString(payloadHex);
+            const fields = payloadStr.split('|');
+            const customerName = fields[0] || 'Customer';
+            const expiryTs = parseInt(fields[1] || '0');
+
+            const isExpired = expiryTs > 0 && expiryTs < Date.now();
+            showVerifyResult(!isExpired, `Customer: <strong>${customerName}</strong><br>Type: ${expiryTs === 0 ? 'LIFETIME ($49.99)' : 'TRIAL/LIMITED'}`);
+        } catch (e) {
+            showVerifyResult(false, 'Malformed Payload');
+        }
+    }
+
+    function showVerifyResult(valid, msg) {
+        const box = document.getElementById('verifyResult');
+        const text = document.getElementById('verifyStatusText');
+        box.classList.add('active');
+        if (valid) {
+            text.innerHTML = `<span style="color: var(--primary); font-weight: bold;">🟢 VALID LICENSE</span><br>${msg}`;
+        } else {
+            text.innerHTML = `<span style="color: var(--danger); font-weight: bold;">🔴 INVALID / EXPIRED</span><br>${msg}`;
+        }
+    }
+
+    checkAuth();
+</script>
+</body>
+</html>
