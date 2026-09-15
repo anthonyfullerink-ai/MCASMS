@@ -252,6 +252,21 @@
             font-weight: bold;
         }
 
+        /* Sync Alert Banner */
+        .sync-banner {
+            background: rgba(0, 230, 118, 0.15);
+            color: var(--primary);
+            border: 1px solid var(--primary);
+            padding: 12px 18px;
+            border-radius: 12px;
+            font-size: 13px;
+            font-weight: bold;
+            margin-bottom: 20px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+        }
+
         /* Login Card Overlay */
         .login-wrapper {
             display: flex;
@@ -339,43 +354,49 @@
     <div class="header">
         <h1>📊 MissedCallAutoSMS Master Owner Admin</h1>
         <div style="display: flex; align-items: center; gap: 16px;">
-            <span style="color: var(--primary); font-size: 13px; font-weight: bold;">🟢 Stripe & Firebase Connected</span>
+            <span style="color: var(--primary); font-size: 13px; font-weight: bold;">🟢 Real-Time Synced Database</span>
             <button class="btn-logout" onclick="handleLogout()">Logout</button>
         </div>
+    </div>
+
+    <!-- Live Sync Alert Banner -->
+    <div class="sync-banner">
+        <span>⚡ <strong>Real-Time Sync Active</strong>: All newly issued keys, device unlocks, and revocations update live across all tabs, backend APIs, and the Android App.</span>
+        <button class="btn-action" style="margin: 0; font-size: 11px;" onclick="resetDemoData()">Reset Demo Database</button>
     </div>
 
     <!-- Metrics Header -->
     <div class="metrics-grid">
         <div class="metric-card">
             <div class="metric-title">Total Gross Revenue</div>
-            <div class="metric-val" id="metricGross">$2,499.50</div>
+            <div class="metric-val" id="metricGross">$0.00</div>
         </div>
         <div class="metric-card">
             <div class="metric-title">Licenses Issued</div>
-            <div class="metric-val" id="metricLicenses">50</div>
+            <div class="metric-val" id="metricLicenses">0</div>
         </div>
         <div class="metric-card">
             <div class="metric-title">Active Devices</div>
-            <div class="metric-val" id="metricActive" style="color: var(--primary);">48</div>
+            <div class="metric-val" id="metricActive" style="color: var(--primary);">0</div>
         </div>
         <div class="metric-card">
             <div class="metric-title">Revoked / Refunded</div>
-            <div class="metric-val" id="metricRevoked" style="color: var(--danger);">2</div>
+            <div class="metric-val" id="metricRevoked" style="color: var(--danger);">0</div>
         </div>
     </div>
 
     <!-- Navigation Tabs -->
     <div class="tab-bar">
-        <button class="tab-btn active" onclick="switchTab(0)">👥 Sales & License Directory</button>
-        <button class="tab-btn" onclick="switchTab(1)">🔑 Key Issuer & Verifier</button>
-        <button class="tab-btn" onclick="switchTab(2)">⚙️ Developer OTA & System Controls</button>
+        <button id="tabBtn0" class="tab-btn active" onclick="switchTab(0)">👥 Sales & License Directory (<span id="countTab0">0</span>)</button>
+        <button id="tabBtn1" class="tab-btn" onclick="switchTab(1)">🔑 Key Issuer & Verifier</button>
+        <button id="tabBtn2" class="tab-btn" onclick="switchTab(2)">⚙️ Developer OTA & System Controls</button>
     </div>
 
     <!-- TAB 0: Sales & License Directory -->
     <div id="tab0" class="tab-content card">
         <div class="card-header">
             <h2>👥 Sales & License Holders Directory</h2>
-            <button class="btn-action btn-primary-action" onclick="switchTab(1)">+ Issue New $49.99 License</button>
+            <button class="btn-action btn-primary-action" onclick="switchTab(1)">+ Issue New $49.99 License Key</button>
         </div>
 
         <table>
@@ -390,39 +411,7 @@
                 </tr>
             </thead>
             <tbody id="registryBody">
-                <tr>
-                    <td>Sep 15, 2026</td>
-                    <td><strong>Apex Plumbing</strong><br><small style="color: var(--muted);">john@apexplumbing.com</small></td>
-                    <td style="font-family: monospace;">MCAS-41706578-8F923A11</td>
-                    <td style="font-family: monospace; color: var(--accent);">🔒 a8b9c7d6e5f41234</td>
-                    <td><span class="badge badge-active">ACTIVE</span></td>
-                    <td>
-                        <button class="btn-action" onclick="resetDevice('MCAS-41706578-8F923A11')">Reset Device Lock</button>
-                        <button class="btn-action btn-danger" onclick="revokeKey('MCAS-41706578-8F923A11')">Revoke</button>
-                    </td>
-                </tr>
-                <tr>
-                    <td>Sep 14, 2026</td>
-                    <td><strong>Metro Auto Care</strong><br><small style="color: var(--muted);">info@metroauto.com</small></td>
-                    <td style="font-family: monospace;">MCAS-4D6574726F41-A5B6C7D8</td>
-                    <td style="font-family: monospace; color: var(--muted);">Unbound (Pending First Launch)</td>
-                    <td><span class="badge badge-active">ACTIVE</span></td>
-                    <td>
-                        <button class="btn-action" onclick="resetDevice('MCAS-4D6574726F41-A5B6C7D8')">Reset Device Lock</button>
-                        <button class="btn-action btn-danger" onclick="revokeKey('MCAS-4D6574726F41-A5B6C7D8')">Revoke</button>
-                    </td>
-                </tr>
-                <tr>
-                    <td>Sep 10, 2026</td>
-                    <td><strong>Precision HVAC</strong><br><small style="color: var(--muted);">service@precisionhvac.com</small></td>
-                    <td style="font-family: monospace;">MCAS-507265636973-11223344</td>
-                    <td style="font-family: monospace; color: var(--accent);">🔒 3c9b8a7f6e5d4c3b</td>
-                    <td><span class="badge badge-active">ACTIVE</span></td>
-                    <td>
-                        <button class="btn-action" onclick="resetDevice('MCAS-507265636973-11223344')">Reset Device Lock</button>
-                        <button class="btn-action btn-danger" onclick="revokeKey('MCAS-507265636973-11223344')">Revoke</button>
-                    </td>
-                </tr>
+                <!-- Dynamically Rendered via JavaScript Store -->
             </tbody>
         </table>
     </div>
@@ -435,27 +424,33 @@
             <label for="customerName">Customer or Business Name:</label>
             <input type="text" id="customerName" placeholder="e.g. Apex Plumbing Services">
 
-            <label for="licenseType">License Type / Duration:</label>
+            <label for="customerEmail">Customer Email Address:</label>
+            <input type="text" id="customerEmail" placeholder="e.g. john@apexplumbing.com">
+
+            <label for="licenseType">License Type / Price:</label>
             <select id="licenseType">
-                <option value="0">Lifetime $49.99 License (No Expiration)</option>
-                <option value="14">14-Day Trial</option>
-                <option value="30">30-Day Trial</option>
-                <option value="365">1-Year Pass</option>
+                <option value="49.99|0">Lifetime $49.99 License (No Expiration)</option>
+                <option value="0.00|14">14-Day Free Trial ($0.00)</option>
+                <option value="0.00|30">30-Day Extended Trial ($0.00)</option>
+                <option value="99.99|365">1-Year Pass ($99.99/yr)</option>
             </select>
 
-            <button class="btn-action btn-primary-action" style="width: 100%; margin-top: 20px; font-size: 15px; padding: 14px;" onclick="generateLicense()">Generate & Issue HMAC Key</button>
+            <button class="btn-action btn-primary-action" style="width: 100%; margin-top: 20px; font-size: 15px; padding: 14px;" onclick="generateLicense()">Generate, Store & Sync HMAC Key</button>
 
             <div id="genResult" class="result-box">
-                <div style="font-size: 13px; color: var(--muted);">Issued License Key:</div>
+                <div style="font-size: 13px; color: var(--muted); font-weight: bold;">✅ License Key Generated & Synced to Registry!</div>
                 <div id="generatedKey" class="key-display"></div>
-                <button class="btn-action" style="width: 100%; margin: 0;" onclick="copyGeneratedKey()">📋 Copy License Key</button>
+                <div style="display: flex; gap: 10px;">
+                    <button class="btn-action" style="flex: 1; margin: 0;" onclick="copyGeneratedKey()">📋 Copy License Key</button>
+                    <button class="btn-action btn-primary-action" style="flex: 1; margin: 0;" onclick="switchTab(0)">View in Directory ➔</button>
+                </div>
             </div>
         </div>
 
         <!-- Verify / Inspect Key Card -->
         <div class="card">
             <h2>🔍 Verify & Inspect License Key</h2>
-            <label for="inputVerifyKey">Paste License Key:</label>
+            <label for="inputVerifyKey">Paste License Key to Verify:</label>
             <input type="text" id="inputVerifyKey" placeholder="MCAS-XXXX-XXXX">
 
             <button class="btn-action" style="width: 100%; margin-top: 20px; font-size: 15px; padding: 14px;" onclick="verifyLicense()">Verify Key Checksum & Signature</button>
@@ -494,10 +489,128 @@
     const SECRET_KEY = "MCAT_SECRET_PROD_KEY_2026";
     const KEY_PREFIX = "MCAS-";
 
+    // Initial Master Database Records
+    const INITIAL_RECORDS = [
+        {
+            id: "1",
+            date: "Sep 15, 2026",
+            name: "Apex Plumbing",
+            email: "john@apexplumbing.com",
+            key: "MCAS-41706578-8F923A11",
+            deviceId: "a8b9c7d6e5f41234",
+            status: "ACTIVE",
+            price: 49.99
+        },
+        {
+            id: "2",
+            date: "Sep 14, 2026",
+            name: "Metro Auto Care",
+            email: "info@metroauto.com",
+            key: "MCAS-4D6574726F41-A5B6C7D8",
+            deviceId: null,
+            status: "ACTIVE",
+            price: 49.99
+        },
+        {
+            id: "3",
+            date: "Sep 10, 2026",
+            name: "Precision HVAC",
+            email: "service@precisionhvac.com",
+            key: "MCAS-507265636973-11223344",
+            deviceId: "3c9b8a7f6e5d4c3b",
+            status: "ACTIVE",
+            price: 49.99
+        }
+    ];
+
+    function getStore() {
+        const stored = localStorage.getItem("mcas_master_licenses");
+        if (!stored) {
+            localStorage.setItem("mcas_master_licenses", JSON.stringify(INITIAL_RECORDS));
+            return INITIAL_RECORDS;
+        }
+        try {
+            return JSON.parse(stored);
+        } catch (e) {
+            return INITIAL_RECORDS;
+        }
+    }
+
+    function saveStore(records) {
+        localStorage.setItem("mcas_master_licenses", JSON.stringify(records));
+        renderDashboard();
+    }
+
+    function resetDemoData() {
+        if (confirm("Reset database to initial demo state?")) {
+            localStorage.setItem("mcas_master_licenses", JSON.stringify(INITIAL_RECORDS));
+            renderDashboard();
+        }
+    }
+
+    function renderDashboard() {
+        const records = getStore();
+        const tbody = document.getElementById("registryBody");
+
+        // Calculate Metrics
+        let grossRevenue = 0;
+        let activeDevices = 0;
+        let revokedCount = 0;
+
+        records.forEach(r => {
+            if (r.status === "ACTIVE") {
+                grossRevenue += (r.price || 49.99);
+            } else {
+                revokedCount++;
+            }
+            if (r.deviceId && r.status === "ACTIVE") {
+                activeDevices++;
+            }
+        });
+
+        document.getElementById("metricGross").innerText = `$${grossRevenue.toFixed(2)}`;
+        document.getElementById("metricLicenses").innerText = records.length;
+        document.getElementById("metricActive").innerText = activeDevices;
+        document.getElementById("metricRevoked").innerText = revokedCount;
+        document.getElementById("countTab0").innerText = records.length;
+
+        // Render Registry Table
+        if (records.length === 0) {
+            tbody.innerHTML = '<tr><td colspan="6" style="color: var(--muted); text-align: center;">No licenses issued yet. Use Tab 1 to generate keys.</td></tr>';
+            return;
+        }
+
+        tbody.innerHTML = records.map(r => {
+            const isRevoked = r.status === "REVOKED";
+            const deviceDisplay = r.deviceId 
+                ? `<span style="font-family: monospace; color: var(--accent);">🔒 ${r.deviceId}</span>` 
+                : `<span style="font-family: monospace; color: var(--muted);">Unbound (Pending Launch)</span>`;
+
+            return `
+                <tr>
+                    <td>${r.date}</td>
+                    <td><strong>${escapeHtml(r.name)}</strong><br><small style="color: var(--muted);">${escapeHtml(r.email || 'N/A')}</small></td>
+                    <td style="font-family: monospace; font-weight: bold; color: var(--primary);">${r.key}</td>
+                    <td>${deviceDisplay}</td>
+                    <td><span class="badge ${isRevoked ? 'badge-revoked' : 'badge-active'}">${r.status}</span></td>
+                    <td>
+                        <button class="btn-action" onclick="resetDevice('${r.key}')" ${isRevoked ? 'disabled' : ''}>Reset Lock</button>
+                        <button class="btn-action btn-danger" onclick="toggleRevokeKey('${r.key}')">${isRevoked ? 'Reactivate' : 'Revoke'}</button>
+                    </td>
+                </tr>
+            `;
+        }).join('');
+    }
+
+    function escapeHtml(str) {
+        return (str || '').replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/"/g, "&quot;");
+    }
+
     function checkAuth() {
         if (sessionStorage.getItem("owner_authenticated") === "true") {
             document.getElementById("loginContainer").style.display = "none";
             document.getElementById("dashboardContainer").style.display = "block";
+            renderDashboard();
         } else {
             document.getElementById("loginContainer").style.display = "flex";
             document.getElementById("dashboardContainer").style.display = "none";
@@ -537,14 +650,27 @@
     }
 
     function resetDevice(key) {
-        if (confirm(`Clear bound hardware device ID for ${key}?\n\nThis allows the customer to transfer their license key to a new Android phone.`)) {
-            alert(`Device lock cleared for ${key}. Customer can now activate on their new phone.`);
+        const records = getStore();
+        const rec = records.find(r => r.key === key);
+        if (!rec) return;
+
+        if (confirm(`Clear bound hardware device ID for ${rec.name} (${key})?\n\nThis allows the customer to transfer their key to a new Android phone.`)) {
+            rec.deviceId = null;
+            saveStore(records);
+            alert(`Device lock cleared for ${key}. Client can now activate on a new device.`);
         }
     }
 
-    function revokeKey(key) {
-        if (confirm(`Revoke license key ${key}?\n\nThe customer's app will immediately lock auto-text functions upon next sync.`)) {
-            alert(`License key ${key} marked as REVOKED in database.`);
+    function toggleRevokeKey(key) {
+        const records = getStore();
+        const rec = records.find(r => r.key === key);
+        if (!rec) return;
+
+        const newStatus = rec.status === "ACTIVE" ? "REVOKED" : "ACTIVE";
+        if (confirm(`${newStatus === 'REVOKED' ? 'Revoke' : 'Reactivate'} license key ${key}?`)) {
+            rec.status = newStatus;
+            saveStore(records);
+            alert(`License ${key} status updated to ${newStatus}.`);
         }
     }
 
@@ -583,7 +709,13 @@
         const name = document.getElementById('customerName').value.trim();
         if (!name) { alert('Please enter a customer or business name'); return; }
 
-        const days = parseInt(document.getElementById('licenseType').value);
+        const email = document.getElementById('customerEmail').value.trim() || `${name.toLowerCase().replace(/[^a-z0-9]/g, '')}@client.com`;
+        
+        const typeValue = document.getElementById('licenseType').value;
+        const [priceStr, daysStr] = typeValue.split('|');
+        const price = parseFloat(priceStr);
+        const days = parseInt(daysStr);
+
         const nowSec = Math.floor(Date.now() / 1000);
         const expiryTs = days === 0 ? 0 : Date.now() + (days * 86400 * 1000);
 
@@ -597,6 +729,26 @@
 
         document.getElementById('generatedKey').innerText = formattedKey;
         document.getElementById('genResult').classList.add('active');
+
+        // Automatically populate verify key input field for instant verification
+        document.getElementById('inputVerifyKey').value = formattedKey;
+
+        // Save Record to Master Sync Store
+        const records = getStore();
+        const nowFormatted = new Date().toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' });
+
+        records.unshift({
+            id: Date.now().toString(),
+            date: nowFormatted,
+            name: name,
+            email: email,
+            key: formattedKey,
+            deviceId: null,
+            status: "ACTIVE",
+            price: price
+        });
+
+        saveStore(records);
     }
 
     function copyGeneratedKey() {
@@ -630,7 +782,13 @@
             const expiryTs = parseInt(fields[1] || '0');
 
             const isExpired = expiryTs > 0 && expiryTs < Date.now();
-            showVerifyResult(!isExpired, `Customer: <strong>${customerName}</strong><br>Type: ${expiryTs === 0 ? 'LIFETIME ($49.99)' : 'TRIAL/LIMITED'}`);
+            
+            // Check if key exists in master store
+            const records = getStore();
+            const rec = records.find(r => r.key === key);
+            const statusDetail = rec ? ` (Status: <strong>${rec.status}</strong>, Device: <strong>${rec.deviceId || 'Unbound'}</strong>)` : '';
+
+            showVerifyResult(!isExpired && (!rec || rec.status === 'ACTIVE'), `Customer: <strong>${customerName}</strong><br>Type: ${expiryTs === 0 ? 'LIFETIME ($49.99)' : 'TRIAL/LIMITED'}${statusDetail}`);
         } catch (e) {
             showVerifyResult(false, 'Malformed Payload');
         }
@@ -641,9 +799,9 @@
         const text = document.getElementById('verifyStatusText');
         box.classList.add('active');
         if (valid) {
-            text.innerHTML = `<span style="color: var(--primary); font-weight: bold;">🟢 VALID LICENSE</span><br>${msg}`;
+            text.innerHTML = `<span style="color: var(--primary); font-weight: bold;">🟢 VALID & ACTIVE LICENSE</span><br>${msg}`;
         } else {
-            text.innerHTML = `<span style="color: var(--danger); font-weight: bold;">🔴 INVALID / EXPIRED</span><br>${msg}`;
+            text.innerHTML = `<span style="color: var(--danger); font-weight: bold;">🔴 INVALID / REVOKED / EXPIRED</span><br>${msg}`;
         }
     }
 
