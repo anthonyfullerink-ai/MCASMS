@@ -872,7 +872,7 @@
         <div style="background: #090B0E; border: 1px solid rgba(0, 230, 118, 0.4); border-radius: 12px; padding: 14px; text-align: left; margin-bottom: 24px;">
             <div style="font-size: 11px; color: var(--primary); font-weight: 900; text-transform: uppercase; letter-spacing: 0.5px;">🤖 Instant 24/7 Cancellation:</div>
             <div style="font-size: 13px; color: var(--text); margin-top: 6px; line-height: 1.5;">
-                You can cancel at any time using our <strong>AI Support and Voice Assistant</strong> right on this page, or inside your Customer License Portal before Day 4 to guarantee $0.00 is charged.
+                You can cancel at any time using our <strong>AI Support and Voice Assistant</strong> right on this page, or directly inside your <strong>Missed Call Auto SMS Android App</strong> before Day 4 to guarantee $0.00 is charged.
             </div>
             <div style="margin-top: 10px;">
                 <button type="button" onclick="closeTrialModal(); openAiWidget(); sendAiQuickQuery('Cancel my 3-day free trial');" style="background: rgba(0, 230, 118, 0.12); border: 1px solid var(--primary); color: var(--primary); border-radius: 8px; padding: 7px 12px; font-size: 12px; font-weight: 700; cursor: pointer; display: inline-flex; align-items: center; gap: 6px;">
@@ -1243,7 +1243,7 @@
                 <span class="faq-icon">▼</span>
             </div>
             <div class="faq-answer">
-                Yes! Each license is bound to 1 Android device at a time for security. If you buy a new phone or upgrade your device, you can log into the Customer License Dashboard to reset your hardware binding and register your key to your new device.
+                Yes! Each license is bound to 1 Android device at a time for security. If you buy a new phone or upgrade your device, you can reset your hardware binding via our AI Support Assistant or contact support to transfer your key to your new device.
             </div>
         </div>
 
@@ -1253,7 +1253,7 @@
                 <span class="faq-icon">▼</span>
             </div>
             <div class="faq-answer">
-                You can cancel at any time using our <strong>AI Support and Voice Assistant</strong> right on this website, or through your Customer License Portal. Simply click the AI Assistant button, click or say "Cancel Trial", enter your checkout email or license key, and your Stripe subscription will be cancelled immediately with $0.00 charged.
+                You can cancel at any time using our <strong>AI Support and Voice Assistant</strong> right on this website, or directly inside your <strong>Missed Call Auto SMS Android App</strong> on your phone. Simply click the AI Assistant button or open your app's Account & Subscription Portal, confirm cancellation, and your Stripe subscription will be cancelled immediately with $0.00 charged.
             </div>
         </div>
     </section>
@@ -1538,7 +1538,8 @@
         }
 
         if (q.includes('license') || q.includes('status') || q.includes('check') || q.includes('key')) {
-            return `🔍 <strong>License Status Lookup</strong>:<br><br>You can verify active keys directly at the <a href="license_dashboard.html" style="color:var(--primary);">Customer Portal</a> or paste your key here!`;
+            return `🔍 <strong>License & Account Details</strong>:<br><br>` +
+                   `Your license key, business name, and hardware device binding live securely inside your <strong>Missed Call Auto SMS Android App</strong> on your phone (tap the Account icon in the top app bar). You can also paste your license key or email here and I will check your status immediately!`;
         }
 
         return `🤖 I'm here to help! You can ask me to:<br>` +

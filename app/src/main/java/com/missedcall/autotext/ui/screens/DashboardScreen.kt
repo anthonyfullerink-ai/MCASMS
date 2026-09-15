@@ -50,6 +50,7 @@ fun DashboardScreen(
     var availableUpdate by remember { mutableStateOf<UpdateInfo?>(null) }
     var isDownloadingApk by remember { mutableStateOf(false) }
     var downloadProgress by remember { mutableIntStateOf(0) }
+    var showAccountPortal by remember { mutableStateOf(false) }
 
     val androidId = remember {
         try {
@@ -310,44 +311,42 @@ fun DashboardScreen(
             }
         }
 
-        // 4. Hardware License & Device Lock Status
+        // 4. Hardware License & Account Subscription Portal
         item {
+            val isCancelled = settings.subscriptionStatus == "CANCELLED"
+            val isTrial = settings.subscriptionStatus == "TRIAL" || settings.licenseKey.contains("TRIAL", ignoreCase = true)
+
             Card(
                 colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface),
                 border = androidx.compose.foundation.BorderStroke(1.dp, MaterialTheme.colorScheme.outlineVariant)
             ) {
                 Column(modifier = Modifier.padding(16.dp)) {
-                    Row(verticalAlignment = Alignment.CenterVertically) {
-                        Icon(Icons.Default.VerifiedUser, contentDescription = null, tint = ActiveGreenText)
-                        Spacer(modifier = Modifier.width(8.dp))
-                        Text(
-                            text = "Appliance Licensing & Device Lock",
-                            fontWeight = FontWeight.Bold,
-                            style = MaterialTheme.typography.titleSmall
-                        )
-                    }
-
-                    Spacer(modifier = Modifier.height(10.dp))
-
                     Row(
                         modifier = Modifier.fillMaxWidth(),
-                        horizontalArrangement = Arrangement.SpaceBetween
+                        horizontalArrangement = Arrangement.SpaceBetween,
+                        verticalAlignment = Alignment.CenterVertically
                     ) {
-                        Column {
-                            Text(text = "LICENSE KEY", style = MaterialTheme.typography.labelSmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
+                        Row(verticalAlignment = Alignment.CenterVertically) {
+                            Icon(
+                                Icons.Default.AccountCircle,
+                                contentDescription = null,
+                                tint = if (isCancelled) MaterialTheme.colorScheme.onSurfaceVariant else if (isTrial) Color(0xFFFFB300) else ActiveGreenText
+                            )
+                            Spacer(modifier = Modifier.width(8.dp))
                             Text(
-                                text = if (settings.licenseKey.isNotBlank()) settings.licenseKey else "MCAS-89F2-441A (Verified)",
-                                fontWeight = FontWeight.SemiBold,
-                                style = MaterialTheme.typography.bodyMedium
+                                text = "Account & Subscription Portal",
+                                fontWeight = FontWeight.Bold,
+                                style = MaterialTheme.typography.titleSmall
                             )
                         }
+
                         Surface(
-                            color = ActiveGreenContainer,
+                            color = if (isCancelled) MaterialTheme.colorScheme.outlineVariant else if (isTrial) Color(0xFFFFB300) else ActiveGreenContainer,
                             shape = RoundedCornerShape(12.dp)
                         ) {
                             Text(
-                                text = "LIFETIME",
-                                color = ActiveGreenText,
+                                text = if (isCancelled) "CANCELLED" else if (isTrial) "3-DAY TRIAL" else "LIFETIME",
+                                color = if (isCancelled) MaterialTheme.colorScheme.onSurfaceVariant else if (isTrial) Color.Black else ActiveGreenText,
                                 fontWeight = FontWeight.Bold,
                                 fontSize = 11.sp,
                                 modifier = Modifier.padding(horizontal = 8.dp, vertical = 4.dp)
@@ -357,12 +356,48 @@ fun DashboardScreen(
 
                     Spacer(modifier = Modifier.height(10.dp))
 
+                    Row(
+                        modifier = Modifier.fillMaxWidth(),
+                        horizontalArrangement = Arrangement.SpaceBetween
+                    ) {
+                        Column {
+                            Text(text = "BUSINESS NAME", style = MaterialTheme.typography.labelSmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
+                            Text(
+                                text = settings.businessName.ifBlank { "My Business" },
+                                fontWeight = FontWeight.SemiBold,
+                                style = MaterialTheme.typography.bodyMedium
+                            )
+                        }
+
+                        Column(horizontalAlignment = Alignment.End) {
+                            Text(text = "LICENSE KEY", style = MaterialTheme.typography.labelSmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
+                            Text(
+                                text = if (settings.licenseKey.isNotBlank()) settings.licenseKey else "MCAS-DEMO-89F2",
+                                fontWeight = FontWeight.SemiBold,
+                                style = MaterialTheme.typography.bodyMedium
+                            )
+                        }
+                    }
+
+                    Spacer(modifier = Modifier.height(10.dp))
+
                     Text(text = "HARDWARE BINDING", style = MaterialTheme.typography.labelSmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
                     Text(
-                        text = "🔒 Locked to Device #${androidId.take(8).uppercase(Locale.ROOT)}",
+                        text = "🔒 Locked to Device #${androidId.take(10).uppercase(Locale.ROOT)} (Active Phone)",
                         style = MaterialTheme.typography.bodySmall,
                         color = MaterialTheme.colorScheme.primary
                     )
+
+                    Spacer(modifier = Modifier.height(12.dp))
+
+                    OutlinedButton(
+                        onClick = { showAccountPortal = true },
+                        modifier = Modifier.fillMaxWidth()
+                    ) {
+                        Icon(Icons.Default.ManageAccounts, contentDescription = null)
+                        Spacer(modifier = Modifier.width(8.dp))
+                        Text("Manage Account & Subscription")
+                    }
                 }
             }
         }
@@ -501,5 +536,13 @@ fun DashboardScreen(
                 }
             }
         }
+    }
+
+    if (showAccountPortal) {
+        CustomerAccountPortalDialog(
+            settings = settings,
+            onSettingsChanged = onSettingsChanged,
+            onDismiss = { showAccountPortal = false }
+        )
     }
 }

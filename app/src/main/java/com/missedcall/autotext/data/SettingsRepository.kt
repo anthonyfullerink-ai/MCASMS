@@ -33,6 +33,8 @@ class SettingsRepository(private val context: Context) {
         val REMOTE_UPDATE_URL = stringPreferencesKey("remote_update_url")
         val LICENSE_KEY = stringPreferencesKey("license_key")
         val REVOCATION_MANIFEST_URL = stringPreferencesKey("revocation_manifest_url")
+        val CUSTOMER_EMAIL = stringPreferencesKey("customer_email")
+        val SUBSCRIPTION_STATUS = stringPreferencesKey("subscription_status")
     }
 
     val settingsFlow: Flow<AppSettings> = context.dataStore.data.map { preferences ->
@@ -52,6 +54,7 @@ class SettingsRepository(private val context: Context) {
             messageTemplate = preferences[MESSAGE_TEMPLATE]
                 ?: "Hey! Sorry I missed your call. How can I help you today? - {business_name}",
             businessName = preferences[BUSINESS_NAME] ?: "My Business",
+            customerEmail = preferences[CUSTOMER_EMAIL] ?: "",
             jitterDelaySeconds = preferences[JITTER_DELAY_SECONDS] ?: 15,
             cooldownHours = preferences[COOLDOWN_HOURS] ?: 4,
             excludeSavedContacts = preferences[EXCLUDE_SAVED_CONTACTS] ?: true,
@@ -61,7 +64,8 @@ class SettingsRepository(private val context: Context) {
             remoteAccessPort = preferences[REMOTE_ACCESS_PORT] ?: 8080,
             remoteUpdateUrl = preferences[REMOTE_UPDATE_URL] ?: "",
             licenseKey = preferences[LICENSE_KEY] ?: "",
-            revocationManifestUrl = preferences[REVOCATION_MANIFEST_URL] ?: ""
+            revocationManifestUrl = preferences[REVOCATION_MANIFEST_URL] ?: "",
+            subscriptionStatus = preferences[SUBSCRIPTION_STATUS] ?: "ACTIVE"
         )
     }
 
@@ -80,6 +84,7 @@ class SettingsRepository(private val context: Context) {
             preferences[MASTER_ENABLED] = settings.masterEnabled
             preferences[MESSAGE_TEMPLATE] = settings.messageTemplate
             preferences[BUSINESS_NAME] = settings.businessName
+            preferences[CUSTOMER_EMAIL] = settings.customerEmail
             preferences[JITTER_DELAY_SECONDS] = settings.jitterDelaySeconds
             preferences[COOLDOWN_HOURS] = settings.cooldownHours
             preferences[EXCLUDE_SAVED_CONTACTS] = settings.excludeSavedContacts
@@ -90,6 +95,7 @@ class SettingsRepository(private val context: Context) {
             preferences[REMOTE_UPDATE_URL] = settings.remoteUpdateUrl
             preferences[LICENSE_KEY] = settings.licenseKey
             preferences[REVOCATION_MANIFEST_URL] = settings.revocationManifestUrl
+            preferences[SUBSCRIPTION_STATUS] = settings.subscriptionStatus
         }
     }
 }

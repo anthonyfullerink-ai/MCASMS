@@ -5,6 +5,7 @@ import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.AccountCircle
 import androidx.compose.material.icons.filled.Dashboard
 import androidx.compose.material.icons.filled.History
 import androidx.compose.material.icons.filled.Lock
@@ -40,13 +41,10 @@ fun MainScreen(
     onRequestPermissionBatch: (List<String>) -> Unit = {}
 ) {
     var selectedTab by remember { mutableIntStateOf(0) }
-    var devTapCount by remember { mutableIntStateOf(0) }
-    var showPasswordDialog by remember { mutableStateOf(false) }
-    var showDevDashboardDialog by remember { mutableStateOf(false) }
+    var showCustomerPortalDialog by remember { mutableStateOf(false) }
     var showOnboardingDialog by remember { mutableStateOf(false) }
 
     val context = LocalContext.current
-    val devPasswordSecret = "2026"
 
     // Trigger onboarding dialog if missing permissions exist
     LaunchedEffect(missingPermissions) {
@@ -63,80 +61,12 @@ fun MainScreen(
         )
     }
 
-    // Password Prompt Dialog for Secret Developer Admin Portal
-    if (showPasswordDialog) {
-        var inputPassword by remember { mutableStateOf("") }
-        var passwordError by remember { mutableStateOf(false) }
-
-        AlertDialog(
-            onDismissRequest = { showPasswordDialog = false },
-            title = {
-                Row(verticalAlignment = Alignment.CenterVertically) {
-                    Icon(Icons.Default.Lock, contentDescription = null, tint = MaterialTheme.colorScheme.primary)
-                    Spacer(modifier = Modifier.width(8.dp))
-                    Text("Developer Password")
-                }
-            },
-            text = {
-                Column {
-                    Text(
-                        text = "Enter Developer Password (default: 2026) to access Developer License Manager.",
-                        style = MaterialTheme.typography.bodySmall
-                    )
-                    Spacer(modifier = Modifier.height(12.dp))
-                    OutlinedTextField(
-                        value = inputPassword,
-                        onValueChange = {
-                            inputPassword = it
-                            passwordError = false
-                        },
-                        label = { Text("Developer Password") },
-                        singleLine = true,
-                        isError = passwordError,
-                        visualTransformation = PasswordVisualTransformation(),
-                        modifier = Modifier.fillMaxWidth()
-                    )
-                    if (passwordError) {
-                        Text(
-                            text = "Incorrect Password",
-                            color = MaterialTheme.colorScheme.error,
-                            style = MaterialTheme.typography.bodySmall,
-                            modifier = Modifier.padding(top = 4.dp)
-                        )
-                    }
-                }
-            },
-            confirmButton = {
-                Button(
-                    onClick = {
-                        if (inputPassword == devPasswordSecret) {
-                            showPasswordDialog = false
-                            showDevDashboardDialog = true
-                        } else {
-                            passwordError = true
-                        }
-                    }
-                ) {
-                    Text("Unlock Developer Dashboard")
-                }
-            },
-            dismissButton = {
-                TextButton(onClick = { showPasswordDialog = false }) {
-                    Text("Cancel")
-                }
-            }
-        )
-    }
-
-    // Full Mobile Developer Dashboard Dialog
-    if (showDevDashboardDialog) {
-        DeveloperDashboardDialog(
-            records = devRecords,
-            onAddRecord = onAddDevRecord,
-            onToggleRevoke = onToggleDevRevoke,
+    // Customer Account & Subscription Portal Dialog
+    if (showCustomerPortalDialog) {
+        CustomerAccountPortalDialog(
             settings = settings,
             onSettingsChanged = onSettingsChanged,
-            onDismiss = { showDevDashboardDialog = false }
+            onDismiss = { showCustomerPortalDialog = false }
         )
     }
 
@@ -145,13 +75,7 @@ fun MainScreen(
             TopAppBar(
                 title = {
                     Column(
-                        modifier = Modifier.clickable {
-                            devTapCount++
-                            if (devTapCount >= 5) {
-                                devTapCount = 0
-                                showPasswordDialog = true
-                            }
-                        }
+                        modifier = Modifier.clickable { showCustomerPortalDialog = true }
                     ) {
                         Text(
                             text = "Missed Call Auto SMS",
@@ -166,6 +90,18 @@ fun MainScreen(
                     }
                 },
                 actions = {
+                    IconButton(
+                        onClick = { showCustomerPortalDialog = true },
+                        modifier = Modifier.padding(end = 4.dp)
+                    ) {
+                        Icon(
+                            Icons.Default.AccountCircle,
+                            contentDescription = "My Account & Subscription",
+                            tint = MaterialTheme.colorScheme.primary,
+                            modifier = Modifier.size(28.dp)
+                        )
+                    }
+
                     Surface(
                         shape = RoundedCornerShape(20.dp),
                         color = if (settings.masterEnabled) ActiveGreenContainer else GrayPaused.copy(alpha = 0.2f),
