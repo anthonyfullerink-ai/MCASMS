@@ -5,16 +5,32 @@ import urllib.request
 import urllib.parse
 import re
 
+def load_env_file():
+    """
+    Parses local .env file
+    """
+    env_path = os.path.join(os.path.dirname(os.path.dirname(os.path.abspath(__file__))), ".env")
+    env_vars = {}
+    if os.path.exists(env_path):
+        with open(env_path, "r", encoding="utf-8") as f:
+            for line in f:
+                line = line.strip()
+                if line and not line.startswith("#") and "=" in line:
+                    k, v = line.split("=", 1)
+                    env_vars[k.strip()] = v.strip().strip("\"'")
+    return env_vars
+
 def create_stripe_product_and_link(secret_key):
     """
     Automates Stripe $49.99 Product & Payment Link Creation via REST API
     """
     secret_key = secret_key.strip()
     if not secret_key.startswith("sk_"):
-        print("❌ Error: Invalid Stripe Secret Key format. Should start with 'sk_live_' or 'sk_test_'")
+        print("❌ Error: Invalid Stripe Secret Key. Must start with 'sk_live_' or 'sk_test_'.")
+        print("   Please edit your .env file and set STRIPE_SECRET_KEY=sk_test_...")
         return
 
-    print("⚡ Connecting to Stripe API...")
+    print(f"⚡ Connecting to Stripe API with key ({secret_key[:7]}...)...")
 
     # 1. Create Product
     prod_url = "https://api.stripe.com/v1/products"
@@ -90,12 +106,17 @@ def create_stripe_product_and_link(secret_key):
         with open(landing_path, "w", encoding="utf-8") as f:
             f.write(content_updated)
 
-        print(f"✅ Updated sales_landing_page.html with your live Stripe Payment Link!")
+        print(f"✅ Updated sales_landing_page.html with your live Stripe Payment Link ({payment_link_url})!")
 
 if __name__ == "__main__":
+    env_vars = load_env_file()
+    key = env_vars.get("STRIPE_SECRET_KEY", "")
+
     if len(sys.argv) > 1:
         key = sys.argv[1]
-    else:
-        key = input("Enter your Stripe Secret Key (sk_live_... or sk_test_...): ")
     
+    if not key or "your_secret_key_here" in key:
+        print("📁 Reading from .env file...")
+        key = input("Enter your Stripe Secret Key (sk_live_... or sk_test_...): ")
+
     create_stripe_product_and_link(key)
