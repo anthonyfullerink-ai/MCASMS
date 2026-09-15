@@ -1,4 +1,4 @@
-﻿const fs = require('fs');
+const fs = require('fs');
 const path = require('path');
 const https = require('https');
 
@@ -24,10 +24,8 @@ loadEnv();
 
 const GEMINI_API_KEY = process.env.GEMINI_API_KEY || process.env.GOOGLE_API_KEY || '';
 
-async function callGemini(prompt) {
+async function callGeminiSingle(model, prompt) {
   return new Promise((resolve, reject) => {
-    // Model fallback sequence: gemini-1.5-flash -> gemini-1.5-pro -> gemini-2.0-flash
-    const model = process.env.GEMINI_MODEL || 'gemini-1.5-flash';
     const postData = JSON.stringify({
       contents: [{
         parts: [{ text: prompt }]
@@ -42,10 +40,11 @@ async function callGemini(prompt) {
     const options = {
       hostname: 'generativelanguage.googleapis.com',
       port: 443,
-      path: `/v1beta/models/${model}:generateContent?key=${GEMINI_API_KEY}`,
+      path: `/v1beta/models/${model}:generateContent`,
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
+        'x-goog-api-key': GEMINI_API_KEY,
         'Content-Length': Buffer.byteLength(postData)
       }
     };
@@ -73,6 +72,26 @@ async function callGemini(prompt) {
     req.write(postData);
     req.end();
   });
+}
+
+async function callGemini(prompt) {
+  const candidateModels = process.env.GEMINI_MODEL 
+    ? [process.env.GEMINI_MODEL]
+    : ['gemini-3.6-flash', 'gemini-3.5-flash', 'gemini-flash-latest', 'gemini-2.5-pro', 'gemini-pro-latest'];
+
+  let lastError = null;
+  for (const model of candidateModels) {
+    try {
+      console.log(`🤖 Attempting generation with model: ${model}...`);
+      const result = await callGeminiSingle(model, prompt);
+      console.log(`✔ Generation succeeded with model: ${model}`);
+      return result;
+    } catch (err) {
+      console.warn(`⚠️ Model ${model} returned error: ${err.message}. Trying fallback...`);
+      lastError = err;
+    }
+  }
+  throw lastError;
 }
 
 async function run() {
