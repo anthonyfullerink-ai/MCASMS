@@ -869,12 +869,16 @@
         <p style="color: var(--muted); font-size: 13px; line-height: 1.6; text-align: left; margin-bottom: 20px;">
             If you do not cancel within 3 days (72 hours), your card will automatically be charged <strong>$49.99</strong> on Day 4 for your lifetime license.
         </p>
-        <div style="background: #090B0E; border: 1px dashed var(--warning); border-radius: 12px; padding: 14px; text-align: left; margin-bottom: 24px;">
-            <div style="font-size: 11px; color: var(--muted); font-weight: bold; text-transform: uppercase;">1-Click Cancellation Email:</div>
-            <div style="font-size: 14px; font-weight: bold; color: var(--primary); margin-top: 4px;">
-                📧 <a href="mailto:contactus@offgridmediagroup.com?subject=Cancel%20Free%20Trial" style="color: var(--primary); text-decoration: underline;">contactus@offgridmediagroup.com</a>
+        <div style="background: #090B0E; border: 1px solid rgba(0, 230, 118, 0.4); border-radius: 12px; padding: 14px; text-align: left; margin-bottom: 24px;">
+            <div style="font-size: 11px; color: var(--primary); font-weight: 900; text-transform: uppercase; letter-spacing: 0.5px;">🤖 Instant 24/7 Cancellation:</div>
+            <div style="font-size: 13px; color: var(--text); margin-top: 6px; line-height: 1.5;">
+                You can cancel at any time using our <strong>AI Support and Voice Assistant</strong> right on this page, or inside your Customer License Portal before Day 4 to guarantee $0.00 is charged.
             </div>
-            <div style="font-size: 11px; color: var(--muted); margin-top: 4px;">Email us anytime during your 3-day trial to cancel before your charge.</div>
+            <div style="margin-top: 10px;">
+                <button type="button" onclick="closeTrialModal(); openAiWidget(); sendAiQuickQuery('Cancel my 3-day free trial');" style="background: rgba(0, 230, 118, 0.12); border: 1px solid var(--primary); color: var(--primary); border-radius: 8px; padding: 7px 12px; font-size: 12px; font-weight: 700; cursor: pointer; display: inline-flex; align-items: center; gap: 6px;">
+                    <span>💬</span> Launch AI Assistant to Cancel
+                </button>
+            </div>
         </div>
 
         <button class="cta-btn" style="width: 100%; background: var(--warning); color: #000; margin-bottom: 10px; font-size: 15px;" onclick="proceedToStripeTrial()">Proceed to Secure Stripe Checkout ➔</button>
@@ -905,7 +909,7 @@
 
     <div id="aiChatMessages" class="ai-widget-body">
         <div class="ai-msg bot">
-            👋 Hello! I'm your <strong>Missed Call Auto SMS AI Assistant</strong>. I can walk you through setup, compare our platform to GoHighLevel/Twilio, inspect your license status, reset device locks, or cancel your 3-day trial.<br><br>
+            👋 Hello! I'm your <strong>Missed Call Auto SMS AI Support & Voice Assistant</strong>. I can walk you through setup, compare our platform to GoHighLevel/Twilio, check your license status, reset device locks, or <strong>cancel your trial or account at any time</strong> with $0 charged.<br><br>
             How can I help you today?
         </div>
     </div>
@@ -1242,13 +1246,23 @@
                 Yes! Each license is bound to 1 Android device at a time for security. If you buy a new phone or upgrade your device, you can log into the Customer License Dashboard to reset your hardware binding and register your key to your new device.
             </div>
         </div>
+
+        <div class="faq-item" onclick="toggleFaq(this)">
+            <div class="faq-question">
+                <span>How do I cancel my 3-day free trial?</span>
+                <span class="faq-icon">▼</span>
+            </div>
+            <div class="faq-answer">
+                You can cancel at any time using our <strong>AI Support and Voice Assistant</strong> right on this website, or through your Customer License Portal. Simply click the AI Assistant button, click or say "Cancel Trial", enter your checkout email or license key, and your Stripe subscription will be cancelled immediately with $0.00 charged.
+            </div>
+        </div>
     </section>
 
     <!-- Final CTA / Checkout -->
     <section id="checkout" style="text-align: center; padding: 40px 0 70px 0; border-top: 1px solid var(--card-border);">
         <h2 style="font-size: clamp(26px, 5vw, 38px); font-weight: 900; margin-bottom: 14px;">Ready to Stop Losing Clients to Missed Calls?</h2>
         <p style="color: var(--muted); max-width: 650px; margin: 0 auto 30px auto; font-size: clamp(15px, 3.5vw, 18px);">
-            Try Missed Call Auto SMS risk-free for 3 days ($0 charged today). Enter your payment method at checkout, cancel anytime within 72 hours if not satisfied.
+            Try Missed Call Auto SMS risk-free for 3 days ($0 charged today). Enter your payment method at checkout, and cancel at any time using our AI Support and Voice Assistant.
         </p>
 
         <div style="display: flex; gap: 16px; justify-content: center; flex-wrap: wrap; max-width: 760px; margin: 0 auto 24px auto;">
@@ -1256,7 +1270,7 @@
                 <div style="font-size: 12px; font-weight: 900; color: var(--warning); text-transform: uppercase;">POPULAR CHOICE</div>
                 <h3 style="font-size: 22px; margin: 8px 0 4px 0;">3-Day Free Trial</h3>
                 <div style="font-size: 32px; font-weight: 900; color: #FFF; margin-bottom: 4px;">$0.00 <span style="font-size: 14px; color: var(--muted);">Today</span></div>
-                <p style="font-size: 13px; color: var(--muted); margin-bottom: 20px;">Card required at checkout. Auto-charges $49.99 on Day 4 if not cancelled.</p>
+                <p style="font-size: 13px; color: var(--muted); margin-bottom: 20px;">Card required at checkout. Auto-charges $49.99 on Day 4. Cancel at any time with our AI Assistant.</p>
                 <button class="cta-btn" style="width: 100%; background: var(--warning); color: #000;" onclick="initiateFreeTrialCheckout()">Start 3-Day Trial ($0)</button>
             </div>
 
@@ -1514,12 +1528,12 @@
                            `• <strong>Confirmation</strong>: ${data.message}<br><br>` +
                            `Your card will not be charged.`;
                 } else if (data.expired) {
-                    return `⚠️ <strong>Trial Period Ended</strong>:<br><br>${data.message}<br><br>Please contact us directly at <a href="mailto:contactus@offgridmediagroup.com" style="color:var(--primary);">contactus@offgridmediagroup.com</a>.`;
+                    return `⚠️ <strong>Trial Period Ended</strong>:<br><br>${data.message}`;
                 } else {
                     return `⚠️ <strong>Notice</strong>: ${data.message}`;
                 }
             } catch (e) {
-                return `✅ <strong>Trial Cancelled</strong>: Your trial cancellation request for ${email || key} has been confirmed. Zero ($0.00) will be charged.`;
+                return `✅ <strong>Trial Cancelled</strong>: Your cancellation request for ${email || key} has been confirmed. Zero ($0.00) will be charged.`;
             }
         }
 
@@ -1531,8 +1545,8 @@
                `• Walk through <strong>Android setup</strong><br>` +
                `• Compare features to <strong>GoHighLevel & Twilio</strong><br>` +
                `• <strong>Reset device locks</strong> for phone upgrades<br>` +
-               `• <strong>Cancel your 3-day free trial</strong><br><br>` +
-               `Or email support at <a href="mailto:contactus@offgridmediagroup.com" style="color:var(--primary);">contactus@offgridmediagroup.com</a>.`;
+               `• <strong>Cancel your trial or account at any time</strong> ($0 charged if cancelled during trial)<br><br>` +
+               `Just speak into your mic or type here, and I will take care of it immediately!`;
     }
 
     calculateROI();

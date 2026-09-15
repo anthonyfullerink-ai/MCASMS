@@ -363,12 +363,12 @@
                     alert(`✅ Trial Cancelled in Stripe Successfully!\n\n${data.message}`);
                     lookupLicense();
                 } else if (data.expired) {
-                    alert(`⚠️ ${data.message}\n\nTo process a cancellation or billing inquiry after the 3-day trial period, please email support directly at contactus@offgridmediagroup.com.`);
+                    alert(`⚠️ ${data.message}\n\nYou can also cancel or manage your account at any time using our 24/7 AI Support and Voice Assistant on the main website.`);
                 } else {
                     alert(`⚠️ ${data.message}`);
                 }
             } catch (e) {
-                alert(`Cancellation request submitted. If you do not receive an immediate confirmation, please email support at contactus@offgridmediagroup.com.`);
+                alert(`Cancellation request submitted. You can cancel or verify your account at any time using our AI Support and Voice Assistant on the main site.`);
             }
         }
     }

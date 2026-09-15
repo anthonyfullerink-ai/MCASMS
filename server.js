@@ -313,7 +313,7 @@ const server = http.createServer((req, res) => {
                       customerEmail: email,
                       subscriptionId: activeSub.id,
                       contactEmail: 'contactus@offgridmediagroup.com',
-                      message: `Your 3-day free trial period for ${email} has already ended. To request a cancellation or refund inquiry, please email support at contactus@offgridmediagroup.com.`
+                      message: `Your 3-day free trial period for ${email} has already ended. You can manage or cancel your account at any time using our 24/7 AI Support and Voice Assistant, or reach out to support at contactus@offgridmediagroup.com.`
                     }));
                     return;
                   }
@@ -342,7 +342,7 @@ const server = http.createServer((req, res) => {
             inStripe: false,
             customerEmail: email || licenseKey,
             licenseKey: licenseKey,
-            message: `Your 3-Day Free Trial for ${email || licenseKey} has been cancelled. Zero ($0.00) charges will occur. If you used a different email on Stripe, please provide that email or contact support at contactus@offgridmediagroup.com.`
+            message: `Your account/trial for ${email || licenseKey} has been cancelled ($0.00 charged). You can check status or cancel at any time using our AI Support and Voice Assistant.`
           }));
         }
       } catch (e) {
