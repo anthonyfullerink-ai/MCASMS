@@ -706,6 +706,23 @@
 
         .ai-widget-window.active { display: flex !important; }
 
+        @media (max-width: 480px) {
+            .ai-widget-window {
+                right: 12px;
+                left: 12px;
+                width: auto;
+                max-width: calc(100vw - 24px);
+                bottom: 80px;
+                height: 480px;
+            }
+            .ai-widget-trigger {
+                bottom: 16px;
+                right: 16px;
+                padding: 12px 18px;
+                font-size: 13px;
+            }
+        }
+
         .ai-widget-header {
             background: #1A202C;
             padding: 14px 18px;
@@ -882,7 +899,7 @@
         </div>
         <div style="display: flex; align-items: center; gap: 8px;">
             <button id="voiceToggleBtn" class="voice-btn" onclick="toggleVoiceOutput()" title="Toggle Voice Audio Response">🔊 Voice ON</button>
-            <button class="close-btn" onclick="toggleAiWidget()">✕</button>
+            <button class="close-btn" onclick="closeAiWidget(event)">✕</button>
         </div>
     </div>
 
@@ -1299,29 +1316,41 @@
     let recognition = null;
     let isRecording = false;
 
+    let lastToggleTime = 0;
+
+    function openAiWidget() {
+        const windowEl = document.getElementById('aiWidgetWindow');
+        if (!windowEl) return;
+        windowEl.style.display = 'flex';
+        windowEl.classList.add('active');
+        const inputEl = document.getElementById('aiInputText');
+        if (inputEl) inputEl.focus();
+    }
+
+    function closeAiWidget(e) {
+        if (e && e.preventDefault) e.preventDefault();
+        const windowEl = document.getElementById('aiWidgetWindow');
+        if (!windowEl) return;
+        windowEl.style.display = 'none';
+        windowEl.classList.remove('active');
+    }
+
     function toggleAiWidget(e) {
-        if (e && e.preventDefault) {
-            e.preventDefault();
-        }
+        if (e && e.preventDefault) e.preventDefault();
+        const now = Date.now();
+        if (now - lastToggleTime < 350) return;
+        lastToggleTime = now;
+
         const windowEl = document.getElementById('aiWidgetWindow');
         if (!windowEl) return;
 
         const isCurrentlyOpen = windowEl.classList.contains('active') || windowEl.style.display === 'flex';
         if (isCurrentlyOpen) {
-            windowEl.style.display = 'none';
-            windowEl.classList.remove('active');
+            closeAiWidget();
         } else {
-            windowEl.style.display = 'flex';
-            windowEl.classList.add('active');
+            openAiWidget();
         }
     }
-
-    document.addEventListener('DOMContentLoaded', function() {
-        const btn = document.getElementById('aiAgentTrigger');
-        if (btn) {
-            btn.addEventListener('click', toggleAiWidget);
-        }
-    });
 
     function toggleVoiceOutput() {
         voiceOutputEnabled = !voiceOutputEnabled;
