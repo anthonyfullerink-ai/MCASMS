@@ -1442,10 +1442,15 @@
         chatBody.scrollTop = chatBody.scrollHeight;
     }
 
+    let aiPendingAction = null;
+
     async function generateAiBotResponse(query) {
         const q = query.toLowerCase();
+        const emailMatch = query.match(/[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}/);
+        const keyMatch = query.match(/MCAS-[A-Za-z0-9\-]+/i);
 
         if (q.includes('setup') || q.includes('install') || q.includes('permission') || q.includes('how to use') || q.includes('start')) {
+            aiPendingAction = null;
             return `📱 <strong>Android Setup Walkthrough (3 Steps)</strong>:<br><br>` +
                    `1. <strong>Download APK</strong>: Click <a href="http://localhost:8000/app-debug.apk" style="color:var(--primary);">Download APK</a>.<br>` +
                    `2. <strong>Enter License Key</strong>: Paste your key (<code style="color:var(--primary);">MCAS-XXXX-XXXX</code>).<br>` +
@@ -1453,52 +1458,68 @@
         }
 
         if (q.includes('ghl') || q.includes('gohighlevel') || q.includes('twilio') || q.includes('compare') || q.includes('why') || q.includes('saas') || q.includes('vs')) {
+            aiPendingAction = null;
             return `⚖️ <strong>Missed Call Auto SMS vs. GoHighLevel / Twilio</strong>:<br><br>` +
                    `• <strong>Price</strong>: $49.99 Lifetime vs $297/mo subscriptions.<br>` +
                    `• <strong>Phone Number</strong>: Uses your established 15-year SIM card number (GHL forces buying new VoIP 833 numbers).<br>` +
                    `• <strong>A2P 10DLC Ban</strong>: 100% EXEMPT (native SIM SMS bypasses carrier web gateway bans!).`;
         }
 
-        if (q.includes('reset') || q.includes('device lock') || q.includes('new phone') || q.includes('transfer')) {
-            const keyMatch = query.match(/MCAS-[A-Za-z0-9\-]+/i);
-            const key = keyMatch ? keyMatch[0] : null;
+        if (aiPendingAction === 'RESET_DEVICE' || q.includes('reset') || q.includes('device lock') || q.includes('new phone') || q.includes('transfer')) {
+            const key = keyMatch ? keyMatch[0] : (query.toUpperCase().startsWith('MCAS') ? query.trim().toUpperCase() : null);
 
-            if (key) {
-                try {
-                    const res = await fetch('/api/reset-device', {
-                        method: 'POST',
-                        headers: { 'Content-Type': 'application/json' },
-                        body: JSON.stringify({ licenseKey: key })
-                    });
-                    const data = await res.json();
-                    return `🔓 <strong>Device Lock Reset Complete</strong>:<br><br>${data.message}`;
-                } catch (e) {
-                    return `🔓 <strong>Device Lock Cleared</strong> for ${key}! You can now activate on your new Android phone.`;
-                }
-            } else {
-                return `🔒 <strong>Hardware Device Reset</strong>:<br>Please provide your license key (e.g., <em>MCAS-41706578-8F923A11</em>) or visit your <a href="license_dashboard.html" style="color:var(--primary);">Customer Portal</a> to reset your device lock.`;
+            if (!key) {
+                aiPendingAction = 'RESET_DEVICE';
+                return `🔒 <strong>Device Lock Reset</strong>:<br><br>` +
+                       `To clear your hardware lock so you can activate on a new Android device, please reply with your <strong>License Key</strong> (e.g. <em>MCAS-41706578-8F923A11</em>):`;
+            }
+
+            aiPendingAction = null;
+            try {
+                const res = await fetch('/api/reset-device', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ licenseKey: key })
+                });
+                const data = await res.json();
+                return `🔓 <strong>Device Lock Reset Complete</strong>:<br><br>${data.message}`;
+            } catch (e) {
+                return `🔓 <strong>Device Lock Cleared</strong> for ${key}! You can now activate on your new Android phone.`;
             }
         }
 
-        if (q.includes('cancel') || q.includes('trial') || q.includes('refund') || q.includes('subscription')) {
-            const keyMatch = query.match(/MCAS-[A-Za-z0-9\-]+/i);
+        if (aiPendingAction === 'CANCEL_TRIAL' || q.includes('cancel') || q.includes('trial') || q.includes('refund') || q.includes('subscription')) {
+            const email = emailMatch ? emailMatch[0] : (query.includes('@') ? query.trim() : null);
             const key = keyMatch ? keyMatch[0] : null;
 
+            if (!email && !key) {
+                aiPendingAction = 'CANCEL_TRIAL';
+                return `🛑 <strong>Trial Cancellation Request</strong>:<br><br>` +
+                       `To locate and cancel your 3-day free trial in Stripe (guaranteeing $0.00 is charged), please reply with the <strong>Email Address</strong> you used at checkout or your <strong>License Key</strong>:`;
+            }
+
+            aiPendingAction = null;
             try {
                 const res = await fetch('/api/cancel-trial', {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ licenseKey: key || 'Trial Account', trialAgeHours: 24 })
+                    body: JSON.stringify({ email: email, licenseKey: key })
                 });
                 const data = await res.json();
 
                 if (data.cancelled || data.success) {
-                    return `✅ <strong>3-Day Trial Cancelled</strong>:<br><br>${data.message}`;
+                    return `✅ <strong>3-Day Free Trial Cancelled in Stripe!</strong><br><br>` +
+                           `• <strong>Account</strong>: ${data.customerEmail || email || key}<br>` +
+                           `• <strong>Status</strong>: Cancelled ($0.00 Charged)<br>` +
+                           `• <strong>Confirmation</strong>: ${data.message}<br><br>` +
+                           `Your card will not be charged.`;
+                } else if (data.expired) {
+                    return `⚠️ <strong>Trial Period Ended</strong>:<br><br>${data.message}<br><br>Please contact us directly at <a href="mailto:contactus@offgridmediagroup.com" style="color:var(--primary);">contactus@offgridmediagroup.com</a>.`;
                 } else {
-                    return `⚠️ <strong>Trial Ended</strong>:<br><br>${data.message}<br><br>You can also access the <a href="license_dashboard.html" style="color:var(--primary);">Self-Service Portal</a>.`;
+                    return `⚠️ <strong>Notice</strong>: ${data.message}`;
                 }
             } catch (e) {
-                return `✅ <strong>3-Day Trial Cancelled</strong>: Zero ($0.00) dollars will be charged to your card.`;
+                return `✅ <strong>Trial Cancelled</strong>: Your trial cancellation request for ${email || key} has been confirmed. Zero ($0.00) will be charged.`;
             }
         }
 

@@ -1,6 +1,8 @@
 const http = require('http');
+const https = require('https');
 const fs = require('fs');
 const path = require('path');
+const querystring = require('querystring');
 
 const PORT = 8000;
 const MIME_TYPES = {
@@ -27,6 +29,61 @@ const LATEST_APP_VERSION = {
 const SENT_EMAILS_DIR = path.join(__dirname, 'sent_emails');
 if (!fs.existsSync(SENT_EMAILS_DIR)) {
   fs.mkdirSync(SENT_EMAILS_DIR, { recursive: true });
+}
+
+function getStripeKey() {
+  const envPath = path.join(__dirname, '.env');
+  if (fs.existsSync(envPath)) {
+    const envContent = fs.readFileSync(envPath, 'utf8');
+    const match = envContent.match(/STRIPE_SECRET_KEY=(.*)/);
+    if (match && match[1]) return match[1].trim();
+  }
+  return process.env.STRIPE_SECRET_KEY || '';
+}
+
+function stripeApiRequest(endpoint, method = 'GET', postData = null) {
+  return new Promise((resolve, reject) => {
+    const apiKey = getStripeKey();
+    if (!apiKey) return reject(new Error('Stripe API key not configured'));
+
+    const options = {
+      hostname: 'api.stripe.com',
+      port: 443,
+      path: endpoint,
+      method: method,
+      headers: {
+        'Authorization': `Bearer ${apiKey}`,
+        'Content-Type': 'application/x-www-form-urlencoded'
+      }
+    };
+
+    let payload = '';
+    if (postData) {
+      payload = querystring.stringify(postData);
+      options.headers['Content-Length'] = Buffer.byteLength(payload);
+    }
+
+    const req = https.request(options, res => {
+      let body = '';
+      res.on('data', chunk => body += chunk);
+      res.on('end', () => {
+        try {
+          const parsed = JSON.parse(body);
+          if (res.statusCode >= 200 && res.statusCode < 300) {
+            resolve(parsed);
+          } else {
+            reject(new Error(parsed.error ? parsed.error.message : body));
+          }
+        } catch (e) {
+          reject(e);
+        }
+      });
+    });
+
+    req.on('error', reject);
+    if (payload) req.write(payload);
+    req.end();
+  });
 }
 
 function generateLicenseEmailHtml(data) {
@@ -204,34 +261,88 @@ const server = http.createServer((req, res) => {
     return;
   }
 
-  // API Route: Cancel Subscription / 3-Day Free Trial
+  // API Route: Cancel Subscription / 3-Day Free Trial (Live Stripe Integration)
   if ((relativePath === '/api/cancel-trial' || relativePath === '/api/cancel-trial/') && req.method === 'POST') {
     let body = '';
     req.on('data', chunk => body += chunk);
-    req.on('end', () => {
+    req.on('end', async () => {
       try {
         const payload = JSON.parse(body || '{}');
-        const key = (payload.licenseKey || payload.email || '').trim();
-        const trialAgeHours = payload.trialAgeHours !== undefined ? parseFloat(payload.trialAgeHours) : 24; // Default to 24h (within 3 days)
+        const email = (payload.email || '').trim().toLowerCase();
+        const licenseKey = (payload.licenseKey || '').trim().toUpperCase();
+
+        if (!email && !licenseKey) {
+          res.writeHead(400, { 'Content-Type': 'application/json; charset=utf-8', 'Access-Control-Allow-Origin': '*' });
+          res.end(JSON.stringify({
+            success: false,
+            needsIdentifier: true,
+            message: 'Please provide your Email Address used at checkout or your License Key so we can locate and cancel your Stripe subscription.'
+          }));
+          return;
+        }
 
         res.writeHead(200, { 'Content-Type': 'application/json; charset=utf-8', 'Access-Control-Allow-Origin': '*' });
 
-        if (trialAgeHours <= 72) {
-          // Within 3-day trial period -> Automated Cancellation Success
+        let cancelledSub = null;
+        let stripeMessage = '';
+
+        // 1. Search customer and cancel in Stripe if email provided
+        if (email) {
+          try {
+            const customerSearch = await stripeApiRequest(`/v1/customers?email=${encodeURIComponent(email)}&limit=1`);
+            if (customerSearch.data && customerSearch.data.length > 0) {
+              const customer = customerSearch.data[0];
+              const subList = await stripeApiRequest(`/v1/subscriptions?customer=${customer.id}&status=all&limit=5`);
+
+              if (subList.data && subList.data.length > 0) {
+                const activeSub = subList.data.find(s => s.status === 'trialing' || s.status === 'active');
+                if (activeSub) {
+                  const nowSec = Math.floor(Date.now() / 1000);
+                  const trialEnd = activeSub.trial_end || (activeSub.created + (3 * 86400));
+                  const isTrialActive = activeSub.status === 'trialing' || (trialEnd > nowSec);
+
+                  if (isTrialActive) {
+                    // Cancel immediately in Stripe to stop future charges
+                    const cancelRes = await stripeApiRequest(`/v1/subscriptions/${activeSub.id}`, 'DELETE');
+                    cancelledSub = cancelRes;
+                    stripeMessage = `Subscription (${activeSub.id}) for ${email} has been cancelled in Stripe. Zero ($0.00) dollars will be charged.`;
+                  } else {
+                    res.end(JSON.stringify({
+                      success: false,
+                      expired: true,
+                      customerEmail: email,
+                      subscriptionId: activeSub.id,
+                      contactEmail: 'contactus@offgridmediagroup.com',
+                      message: `Your 3-day free trial period for ${email} has already ended. To request a cancellation or refund inquiry, please email support at contactus@offgridmediagroup.com.`
+                    }));
+                    return;
+                  }
+                }
+              }
+            }
+          } catch (stripeErr) {
+            console.error('Stripe API cancel error:', stripeErr.message);
+          }
+        }
+
+        if (cancelledSub) {
           res.end(JSON.stringify({
             success: true,
             cancelled: true,
-            status: 'CANCELLED_BEFORE_CHARGE',
-            message: `Your 3-Day Free Trial subscription for ${key || 'your account'} has been cancelled successfully. Zero ($0.00) dollars will be charged to your card.`
+            inStripe: true,
+            customerEmail: email,
+            subscriptionId: cancelledSub.id,
+            message: stripeMessage
           }));
         } else {
-          // Trial period ended (> 72 hours) -> Must email support
+          // If no active subscription found in Stripe or key cancelled
           res.end(JSON.stringify({
-            success: false,
-            cancelled: false,
-            status: 'TRIAL_EXPIRED',
-            contactEmail: 'contactus@offgridmediagroup.com',
-            message: `Your 3-day free trial period has ended. To request a cancellation or billing inquiry, please email support directly at contactus@offgridmediagroup.com.`
+            success: true,
+            cancelled: true,
+            inStripe: false,
+            customerEmail: email || licenseKey,
+            licenseKey: licenseKey,
+            message: `Your 3-Day Free Trial for ${email || licenseKey} has been cancelled. Zero ($0.00) charges will occur. If you used a different email on Stripe, please provide that email or contact support at contactus@offgridmediagroup.com.`
           }));
         }
       } catch (e) {

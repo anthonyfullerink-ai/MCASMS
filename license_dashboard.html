@@ -337,11 +337,19 @@
 
         if (confirm(`Are you sure you want to cancel your 3-Day Free Trial for key ${currentRecord.key}?\n\nIf cancelled before Day 4, $0.00 will be charged to your card.`)) {
             try {
+                let email = (currentRecord.email && currentRecord.email !== "customer@domain.com") ? currentRecord.email : "";
+                if (!email) {
+                    email = prompt("Enter the Email Address you used at Stripe checkout to locate and cancel your subscription in Stripe:", "");
+                    if (!email) {
+                        alert("Cancellation was not submitted: Your checkout email address or license key is required to cancel your Stripe subscription.");
+                        return;
+                    }
+                }
                 const trialAgeHours = currentRecord.createdAt ? ((Date.now() - currentRecord.createdAt) / 3600000) : 24;
                 const res = await fetch('/api/cancel-trial', {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ licenseKey: currentRecord.key, trialAgeHours: trialAgeHours })
+                    body: JSON.stringify({ email: email.trim(), licenseKey: currentRecord.key, trialAgeHours: trialAgeHours })
                 });
                 const data = await res.json();
                 
@@ -352,13 +360,15 @@
                     const index = records.findIndex(r => r.key === currentRecord.key);
                     if (index !== -1) { records[index].status = "CANCELLED"; saveStore(records); }
 
-                    alert(`✅ Trial Cancelled Successfully!\n\n${data.message}`);
+                    alert(`✅ Trial Cancelled in Stripe Successfully!\n\n${data.message}`);
                     lookupLicense();
-                } else {
+                } else if (data.expired) {
                     alert(`⚠️ ${data.message}\n\nTo process a cancellation or billing inquiry after the 3-day trial period, please email support directly at contactus@offgridmediagroup.com.`);
+                } else {
+                    alert(`⚠️ ${data.message}`);
                 }
             } catch (e) {
-                alert(`✅ 3-Day Free Trial Cancelled! Zero ($0.00) dollars will be charged to your card.`);
+                alert(`Cancellation request submitted. If you do not receive an immediate confirmation, please email support at contactus@offgridmediagroup.com.`);
             }
         }
     }
