@@ -1,4 +1,4 @@
-﻿name: Daily Autonomous AI Blog Publisher
+name: Daily Autonomous AI Blog Publisher
 
 on:
   schedule:
@@ -44,6 +44,7 @@ jobs:
           node scripts/generate_daily_blog.js
 
       - name: Commit and Push New Article
+        id: commit_step
         run: |
           git config --global user.name "github-actions[bot]"
           git config --global user.email "github-actions[bot]@users.noreply.github.com"
@@ -55,6 +56,18 @@ jobs:
             git commit -m "feat(blog): publish autonomous daily AI blog article [skip ci]"
             git push origin main
             echo "✅ Successfully published to production website!"
+            echo "new_post=true" >> "$GITHUB_OUTPUT"
           else
             echo "ℹ️ No changes to commit (dry-run or no new article generated)."
+            echo "new_post=false" >> "$GITHUB_OUTPUT"
           fi
+
+      - name: Cross-Post to Facebook & Instagram
+        if: steps.commit_step.outputs.new_post == 'true' && secrets.META_PAGE_ACCESS_TOKEN != ''
+        env:
+          META_PAGE_ACCESS_TOKEN: ${{ secrets.META_PAGE_ACCESS_TOKEN }}
+          FB_PAGE_ID: ${{ secrets.FB_PAGE_ID || '1248332278370968' }}
+          IG_USER_ID: ${{ secrets.IG_USER_ID || '17841428781387416' }}
+        run: |
+          echo "📢 Publishing new article announcement to Facebook & Instagram..."
+          node scripts/publish_social_blog.js

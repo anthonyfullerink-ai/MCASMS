@@ -1,6 +1,7 @@
 const fs = require('fs');
 const path = require('path');
 const https = require('https');
+const { publishToSocial } = require('./publish_social_blog');
 
 // Load .env if present locally
 function loadEnv() {
@@ -235,6 +236,15 @@ Return your response strictly as a JSON object matching this schema:
     sitemapXml += `</urlset>\n`;
     fs.writeFileSync(sitemapPath, sitemapXml, 'utf8');
     console.log(`🗺️ Updated sitemap.xml with ${existingPosts.length + 2} total indexed URLs`);
+
+    // Cross-post to Facebook & Instagram if configured
+    if (process.env.AUTO_POST_SOCIAL === 'true') {
+      try {
+        await publishToSocial(newPostMeta);
+      } catch (socialErr) {
+        console.warn('⚠️ Social media publishing notice:', socialErr.message);
+      }
+    }
 
     console.log('====================================================');
     console.log('🎉 DAILY BLOG POST PUBLISHED SUCCESSFULLY!');
