@@ -14,7 +14,9 @@ const MIME_TYPES = {
   '.png': 'image/png',
   '.jpg': 'image/jpeg',
   '.svg': 'image/svg+xml',
-  '.apk': 'application/vnd.android.package-archive'
+  '.apk': 'application/vnd.android.package-archive',
+  '.ico': 'image/x-icon',
+  '.webmanifest': 'application/manifest+json'
 };
 
 const LATEST_APP_VERSION = {
