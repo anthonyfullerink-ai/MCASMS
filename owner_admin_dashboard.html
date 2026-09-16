@@ -703,6 +703,33 @@
                 </div>
             </div>
 
+            <!-- Gemini API Key Quick Connect Banner -->
+            <div style="background: rgba(22, 27, 34, 0.8); border: 1px solid var(--card-border); border-radius: 12px; padding: 16px; margin-bottom: 20px;">
+                <div style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 10px;">
+                    <div style="display: flex; align-items: center; gap: 12px;">
+                        <span id="geminiStatusDot" style="font-size: 18px;">🔑</span>
+                        <div>
+                            <div style="font-weight: 800; font-size: 14px; color: #FFF;">Google Gemini AI Key Status</div>
+                            <div id="geminiStatusDetail" style="font-size: 12px; color: var(--muted); margin-top: 2px;">
+                                Checked Netlify environment variables (<code>GEMINI_API_KEY</code>, <code>GOOGLE_GEMINI_API_KEY</code>, <code>GOOGLE_API_KEY</code>) and browser local storage.
+                            </div>
+                        </div>
+                    </div>
+                    <button class="btn-action" style="font-size: 12px;" onclick="toggleGeminiKeyInput()">⚡ Connect / Change Gemini Key</button>
+                </div>
+                <div id="geminiKeyInputBox" style="display: none; background: #0D1117; border: 1px solid var(--card-border); border-radius: 8px; padding: 12px; margin-top: 12px;">
+                    <div style="font-size: 13px; font-weight: bold; color: #FFF; margin-bottom: 6px;">🔑 Quick Connect Gemini API Key (saved in browser):</div>
+                    <div style="display: flex; gap: 8px; flex-wrap: wrap;">
+                        <input type="password" id="inputGeminiKeyInline" placeholder="Paste AIzaSy... API Key" style="flex: 1; min-width: 240px; background: #090B0E; border: 1px solid var(--card-border); color: #FFF; padding: 8px 12px; border-radius: 6px; font-family: monospace; font-size: 13px;">
+                        <button class="btn-action btn-primary-action" onclick="saveGeminiKeyInline()" style="font-size: 13px; padding: 8px 16px;">⚡ Save Key</button>
+                        <button class="btn-action" onclick="clearCustomGeminiKey()" style="font-size: 13px; padding: 8px 12px;">Clear Stored Key</button>
+                    </div>
+                    <div style="font-size: 11px; color: var(--muted); margin-top: 8px;">
+                        💡 <strong>Netlify Deploy Note:</strong> When you add environment variables in Netlify (e.g. <code>GEMINI_API_KEY</code>), Netlify requires a new site deployment before serverless functions can read them. Saving your key here sends it directly via HTTP header so on-demand generation works immediately without waiting for a re-deploy!
+                    </div>
+                </div>
+            </div>
+
             <div id="blogGenAlert" style="display: none; background: rgba(0, 230, 118, 0.15); border: 1px solid var(--primary); color: #FFF; padding: 14px 18px; border-radius: 10px; margin-bottom: 20px; font-size: 13px; line-height: 1.5;">
             </div>
 
@@ -997,6 +1024,10 @@
         const savedResendKey = localStorage.getItem('mcas_resend_key');
         if (savedResendKey && !options.headers['x-resend-key']) {
             options.headers['x-resend-key'] = savedResendKey;
+        }
+        const savedGeminiKey = localStorage.getItem('mcas_gemini_key');
+        if (savedGeminiKey && !options.headers['x-gemini-key']) {
+            options.headers['x-gemini-key'] = savedGeminiKey;
         }
 
         let res;
@@ -1722,8 +1753,44 @@ Quick 3-Step Setup:
         }
     }
 
+    function initGeminiKeyStatus() {
+        const detail = document.getElementById("geminiStatusDetail");
+        const dot = document.getElementById("geminiStatusDot");
+        const stored = localStorage.getItem('mcas_gemini_key');
+        if (stored) {
+            if (dot) dot.innerText = "🟢";
+            if (detail) detail.innerHTML = `Key Source: <strong>Browser LocalStorage (Active)</strong> | Key: <code>${escapeHtml(stored.substring(0, 6))}...${escapeHtml(stored.substring(stored.length - 4))}</code> <button onclick="clearCustomGeminiKey()" style="background:none;border:none;color:var(--muted);text-decoration:underline;cursor:pointer;font-size:11px;margin-left:8px;">(Clear custom key)</button>`;
+        } else {
+            if (dot) dot.innerText = "🔑";
+            if (detail) detail.innerHTML = `Using Netlify Site Environment Variables (<code>GEMINI_API_KEY</code> / <code>GOOGLE_GEMINI_API_KEY</code>). <span style="color: var(--primary); cursor: pointer; text-decoration: underline;" onclick="toggleGeminiKeyInput()">Click to connect directly</span>.`;
+        }
+    }
+
+    function toggleGeminiKeyInput() {
+        const box = document.getElementById("geminiKeyInputBox");
+        if (box) box.style.display = box.style.display === "none" ? "block" : "none";
+    }
+
+    function saveGeminiKeyInline() {
+        const input = document.getElementById("inputGeminiKeyInline");
+        if (!input || !input.value.trim()) {
+            alert("Please paste your Google Gemini API Key (starts with AIzaSy...).");
+            return;
+        }
+        localStorage.setItem('mcas_gemini_key', input.value.trim());
+        initGeminiKeyStatus();
+        alert("✅ Gemini API Key saved locally! You can now click 'Generate Article Now'.");
+    }
+
+    function clearCustomGeminiKey() {
+        localStorage.removeItem('mcas_gemini_key');
+        initGeminiKeyStatus();
+        alert("Cleared locally stored Gemini API key. System will use Netlify environment variables.");
+    }
+
     // AI Blog Engine Functions
     async function loadBlogDashboard() {
+        initGeminiKeyStatus();
         const tbody = document.getElementById("blogHistoryTableBody");
         const metricTotal = document.getElementById("blogMetricTotal");
         const countTabBlog = document.getElementById("countTabBlog");

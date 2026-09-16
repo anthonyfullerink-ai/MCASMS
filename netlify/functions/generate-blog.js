@@ -1,7 +1,5 @@
 const https = require('https');
 
-const GEMINI_API_KEY = process.env.GEMINI_API_KEY || process.env.GOOGLE_API_KEY || '';
-
 function callGeminiSingle(model, prompt, apiKey) {
   return new Promise((resolve, reject) => {
     const postData = JSON.stringify({
@@ -55,7 +53,7 @@ function callGeminiSingle(model, prompt, apiKey) {
 async function generateArticleWithGemini(apiKey) {
   const candidateModels = process.env.GEMINI_MODEL 
     ? [process.env.GEMINI_MODEL]
-    : ['gemini-2.5-flash', 'gemini-1.5-flash', 'gemini-flash-latest', 'gemini-2.5-pro'];
+    : ['gemini-2.0-flash', 'gemini-1.5-flash', 'gemini-1.5-flash-latest', 'gemini-1.5-pro'];
 
   const prompt = `
 You are the lead marketing strategist for "Missed Call Auto SMS".
@@ -98,7 +96,15 @@ exports.handler = async (event) => {
   }
 
   const reqHeaders = event.headers || {};
-  const activeKey = reqHeaders['x-gemini-key'] || GEMINI_API_KEY;
+  const activeKey = reqHeaders['x-gemini-key'] || 
+                    reqHeaders['X-Gemini-Key'] || 
+                    reqHeaders['x-gemini-api-key'] ||
+                    process.env.GEMINI_API_KEY || 
+                    process.env.GOOGLE_GEMINI_API_KEY || 
+                    process.env.GOOGLE_API_KEY || 
+                    process.env.GEMINI_KEY || 
+                    process.env.GEMINI_SECRET || 
+                    process.env.GEMINI_TOKEN || '';
 
   if (!activeKey) {
     return {
@@ -106,7 +112,7 @@ exports.handler = async (event) => {
       headers,
       body: JSON.stringify({
         success: false,
-        error: 'GEMINI_API_KEY is not configured in environment variables or request headers. Please add GEMINI_API_KEY in Netlify Site Configuration > Environment Variables.'
+        error: 'Gemini API key not detected in Netlify environment variables (checked GEMINI_API_KEY, GOOGLE_GEMINI_API_KEY, GOOGLE_API_KEY, GEMINI_KEY, GEMINI_SECRET, GEMINI_TOKEN) or request header. Note: Netlify requires a new site deployment after adding environment variables for functions to load them.'
       })
     };
   }
