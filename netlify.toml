@@ -13,6 +13,12 @@
   to = "/version.json"
   status = 200
 
+# API Route: Blog Posts JSON
+[[redirects]]
+  from = "/api/blog-posts"
+  to = "/blog/posts.json"
+  status = 200
+
 # API Route: Live Stripe Status Check
 [[redirects]]
   from = "/api/stripe-status"
