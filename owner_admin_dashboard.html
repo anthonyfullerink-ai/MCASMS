@@ -367,8 +367,9 @@
 <div id="dashboardContainer" class="container" style="display: none;">
     <div class="header">
         <h1><img src="/favicon.svg?v=2" alt="Logo" width="28" height="28" style="vertical-align: middle; border-radius: 6px; display: inline-block;"> MissedCallAutoSMS Master Owner Admin</h1>
-        <div style="display: flex; align-items: center; gap: 16px;">
-            <span style="color: var(--primary); font-size: 13px; font-weight: bold;">🟢 Stripe & Firebase Connected</span>
+        <div style="display: flex; align-items: center; gap: 12px; flex-wrap: wrap;">
+            <button class="btn-action btn-primary-action" style="margin: 0; font-size: 12px; padding: 7px 14px; box-shadow: 0 0 10px rgba(0,230,118,0.2);" onclick="switchTab(2); setTimeout(() => runFullSystemSimulation(), 300);">🧪 Run Pre-Flight Test</button>
+            <span style="color: var(--primary); font-size: 13px; font-weight: bold;">🟢 Stripe Live Connected</span>
             <button class="btn-logout" onclick="handleLogout()">Logout</button>
         </div>
     </div>
@@ -414,6 +415,7 @@
             <div style="display: flex; gap: 10px; flex-wrap: wrap;">
                 <button class="btn-action btn-free-action" onclick="promptFreeLicense()">🎁 + Issue Free License ($0.00)</button>
                 <button class="btn-action btn-primary-action" onclick="switchTab(1)">+ Issue New $49.99 License Key</button>
+                <button class="btn-action" style="border-color: var(--primary); color: var(--primary);" onclick="switchTab(2); setTimeout(() => runFullSystemSimulation(), 250);">🧪 Audit All Systems</button>
             </div>
         </div>
 
@@ -570,7 +572,10 @@
                     <h2>💳 Stripe Production Diagnostics & Live System Links</h2>
                     <div style="font-size: 13px; color: var(--muted); margin-top: 4px;">Live payment processing engine and checkout gateways</div>
                 </div>
-                <button class="btn-action" onclick="checkStripeConnectionLive()">⚡ Test Stripe Live API</button>
+                <div style="display: flex; gap: 10px; flex-wrap: wrap;">
+                    <button class="btn-action" onclick="checkStripeConnectionLive()">⚡ Test Stripe Live API</button>
+                    <button class="btn-action btn-primary-action" onclick="testStripeWebhookLive()">⚡ Send Test Webhook Event</button>
+                </div>
             </div>
 
             <div id="stripeStatusBanner" style="background: rgba(22, 27, 34, 0.8); border: 1px solid var(--card-border); border-radius: 12px; padding: 16px; margin-bottom: 20px;">
@@ -1179,6 +1184,43 @@
     function clearCustomStripeKey() {
         localStorage.removeItem('mcas_stripe_key');
         checkStripeConnectionLive();
+    }
+
+    async function testStripeWebhookLive() {
+        const title = document.getElementById("stripeStatusTitle");
+        const detail = document.getElementById("stripeStatusDetail");
+        if (title) title.innerText = "Sending test checkout.session.completed event to /api/stripe-webhook...";
+        try {
+            const base = getApiBaseUrl();
+            const res = await fetch(`${base}/api/stripe-webhook`, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                    id: 'evt_test_dashboard_' + Date.now(),
+                    type: 'checkout.session.completed',
+                    data: {
+                        object: {
+                            id: 'cs_test_dashboard_' + Date.now(),
+                            amount_total: 4999,
+                            customer_details: {
+                                email: 'contactus@offgridmediagroup.com',
+                                name: 'Owner Admin Test'
+                            }
+                        }
+                    }
+                })
+            });
+            const json = await res.json();
+            if (res.ok && json.received) {
+                alert(`🎉 Webhook Test Succeeded!\n\nStatus: HTTP ${res.status} OK\nLicense Key Generated: ${json.licenseKey}\nCustomer Email: ${json.customerEmail}\n\nThe Stripe Webhook pipeline is 100% operational!`);
+                if (title) title.innerText = "Stripe Webhook Verified & Responding 200 OK";
+                if (detail) detail.innerHTML = `Last Live Test: Generated <code>${json.licenseKey}</code> for ${json.customerEmail}`;
+            } else {
+                alert(`Webhook Test Response: HTTP ${res.status}\n${JSON.stringify(json, null, 2)}`);
+            }
+        } catch (e) {
+            alert(`Webhook Test Failed: ${e.message}`);
+        }
     }
 
     async function checkEmailConnectionLive() {
