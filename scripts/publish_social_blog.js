@@ -180,4 +180,4 @@ if (require.main === module) {
   }
 }
 
-module.exports = { publishToSocial };
+module.exports = { publishToSocial, getSocialImageUrl };
