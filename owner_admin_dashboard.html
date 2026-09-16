@@ -962,6 +962,12 @@
     async function safeFetchJson(endpoint, options = {}) {
         const base = getApiBaseUrl();
         const url = endpoint.startsWith('http') ? endpoint : `${base}${endpoint}`;
+        if (!options.headers) options.headers = {};
+        const savedStripeKey = localStorage.getItem('mcas_stripe_key');
+        if (savedStripeKey && !options.headers['x-stripe-key']) {
+            options.headers['x-stripe-key'] = savedStripeKey;
+        }
+
         let res;
         try {
             res = await fetch(url, options);
@@ -1082,7 +1088,8 @@
                 dot.innerText = "🟢";
                 title.innerText = "Stripe Live Production Connected & Active";
                 title.style.color = "var(--primary)";
-                detail.innerHTML = `Mode: <strong>LIVE PRODUCTION</strong> | Currency: <strong>${(data.currency || 'USD').toUpperCase()}</strong> | Account: Ready for real transactions`;
+                const storedNote = localStorage.getItem('mcas_stripe_key') ? ' <button onclick="clearCustomStripeKey()" style="background:none;border:none;color:var(--muted);text-decoration:underline;cursor:pointer;font-size:11px;margin-left:8px;">(Clear custom key)</button>' : '';
+                detail.innerHTML = `Mode: <strong>LIVE PRODUCTION</strong> | Currency: <strong>${(data.currency || 'USD').toUpperCase()}</strong> | Account: Ready for real transactions${storedNote}`;
                 latency.innerText = `${data.latencyMs || elapsed} ms`;
                 latency.style.color = "var(--primary)";
                 latency.style.borderColor = "var(--primary)";
@@ -1093,11 +1100,22 @@
                 latency.innerText = `${data.latencyMs || elapsed} ms`;
             } else {
                 dot.innerText = "🔴";
-                title.innerText = "Stripe Connection Failed";
+                title.innerText = "Stripe Live Connection Not Configured";
                 title.style.color = "var(--danger)";
-                detail.innerText = data.error || data.message || "Unable to reach Stripe API.";
-                latency.innerText = "Error";
+                latency.innerText = "Setup Key";
                 latency.style.color = "var(--danger)";
+                
+                detail.innerHTML = `
+                    <div style="color: var(--danger); margin-bottom: 8px;">${escapeHtml(data.error || data.message || "Unable to reach Stripe API.")}</div>
+                    <div style="background: #0D1117; border: 1px solid var(--card-border); border-radius: 8px; padding: 12px; margin-top: 8px;">
+                        <div style="font-size: 13px; font-weight: bold; color: #FFF; margin-bottom: 6px;">🔑 Connect Stripe Live Key on this device:</div>
+                        <div style="display: flex; gap: 8px; flex-wrap: wrap;">
+                            <input type="password" id="inputStripeKeyInline" placeholder="Paste sk_live_... or rk_live_..." style="flex: 1; min-width: 200px; background: #090B0E; border: 1px solid var(--card-border); color: #FFF; padding: 8px 12px; border-radius: 6px; font-family: monospace; font-size: 13px;">
+                            <button class="btn-action btn-primary-action" onclick="saveAndTestStripeKeyInline()" style="font-size: 13px; padding: 8px 16px;">⚡ Connect Key</button>
+                        </div>
+                        <div style="font-size: 11px; color: var(--muted); margin-top: 6px;">Stored privately in this browser's localStorage. Never sent to Git.</div>
+                    </div>
+                `;
             }
         } catch (e) {
             dot.innerText = "🔴";
@@ -1106,6 +1124,21 @@
             detail.innerHTML = `<span>${e.message}</span>`;
             latency.innerText = "Offline";
         }
+    }
+
+    function saveAndTestStripeKeyInline() {
+        const input = document.getElementById("inputStripeKeyInline");
+        if (!input || !input.value.trim()) {
+            alert("Please paste your Stripe Secret Key (sk_live_... or rk_live_...).");
+            return;
+        }
+        localStorage.setItem('mcas_stripe_key', input.value.trim());
+        checkStripeConnectionLive();
+    }
+
+    function clearCustomStripeKey() {
+        localStorage.removeItem('mcas_stripe_key');
+        checkStripeConnectionLive();
     }
 
     async function runFullSystemSimulation() {
