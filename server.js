@@ -282,8 +282,27 @@ const server = http.createServer((req, res) => {
   }
 
   // API Route: Send License Key & APK Email
-  if ((relativePath === '/api/send-license-email' || relativePath === '/api/send-license-email/') && req.method === 'POST') {
-    let body = '';
+  if ((relativePath === '/api/send-license-email' || relativePath === '/api/send-license-email/')) {
+    if (req.method === 'GET') {
+      const resendKey = req.headers['x-resend-key'] || process.env.RESEND_API_KEY || '';
+      res.writeHead(200, {
+        'Content-Type': 'application/json; charset=utf-8',
+        'Access-Control-Allow-Origin': '*',
+        'Access-Control-Allow-Headers': 'Content-Type, Authorization, x-resend-key'
+      });
+      res.end(JSON.stringify({
+        success: true,
+        configured: !!resendKey,
+        hasEnvKey: !!process.env.RESEND_API_KEY,
+        hasHeaderKey: !!req.headers['x-resend-key'],
+        provider: 'Resend Cloud API',
+        localFallback: 'sent_emails/ directory archive active'
+      }));
+      return;
+    }
+
+    if (req.method === 'POST') {
+      let body = '';
     req.on('data', chunk => body += chunk);
     req.on('end', () => {
       try {
@@ -325,6 +344,7 @@ const server = http.createServer((req, res) => {
     });
     return;
   }
+}
 
   // API Route: Verify License Key & Status
   if ((relativePath === '/api/verify-license' || relativePath === '/api/verify-license/') && req.method === 'POST') {

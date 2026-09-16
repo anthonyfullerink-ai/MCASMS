@@ -108,12 +108,29 @@ exports.handler = async (event) => {
   const headers = {
     'Content-Type': 'application/json; charset=utf-8',
     'Access-Control-Allow-Origin': '*',
-    'Access-Control-Allow-Methods': 'POST, OPTIONS',
+    'Access-Control-Allow-Methods': 'GET, POST, OPTIONS',
     'Access-Control-Allow-Headers': 'Content-Type, Authorization, x-resend-key'
   };
 
   if (event.httpMethod === 'OPTIONS') {
     return { statusCode: 204, headers, body: '' };
+  }
+
+  if (event.httpMethod === 'GET') {
+    const reqHeaders = event.headers || {};
+    const resendKey = reqHeaders['x-resend-key'] || RESEND_API_KEY;
+    return {
+      statusCode: 200,
+      headers,
+      body: JSON.stringify({
+        success: true,
+        configured: !!resendKey,
+        hasEnvKey: !!RESEND_API_KEY,
+        hasHeaderKey: !!reqHeaders['x-resend-key'],
+        fromEmail: FROM_EMAIL,
+        provider: 'Resend Cloud API'
+      })
+    };
   }
 
   try {

@@ -609,6 +609,41 @@
             </div>
         </div>
 
+        <!-- Resend Automated Email Diagnostics Card -->
+        <div class="card">
+            <div class="card-header">
+                <div>
+                    <h2>📧 Automated Email Dispatch Diagnostics (Resend API)</h2>
+                    <div style="font-size: 13px; color: var(--muted); margin-top: 4px;">Delivers License Key & APK download link automatically upon Stripe purchase or Free License issuance</div>
+                </div>
+                <button class="btn-action" onclick="checkEmailConnectionLive()">⚡ Test Email Service</button>
+            </div>
+
+            <div id="emailStatusBanner" style="background: rgba(22, 27, 34, 0.8); border: 1px solid var(--card-border); border-radius: 12px; padding: 16px; margin-bottom: 20px;">
+                <div style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 10px;">
+                    <div style="display: flex; align-items: center; gap: 12px;">
+                        <span id="emailStatusDot" style="font-size: 18px;">⚪</span>
+                        <div>
+                            <div id="emailStatusTitle" style="font-weight: 800; font-size: 15px; color: #FFF;">Checking Email Dispatch API status...</div>
+                            <div id="emailStatusDetail" style="font-size: 12px; color: var(--muted); margin-top: 2px;">Connecting to /api/send-license-email</div>
+                        </div>
+                    </div>
+                    <div id="emailLatencyBadge" class="badge" style="background: #21262D; color: var(--muted); font-size: 12px;">-- ms</div>
+                </div>
+            </div>
+
+            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 20px;">
+                <div>
+                    <label style="font-size: 13px; color: var(--muted); display: block; margin-bottom: 6px;">Sender Address (FROM_EMAIL):</label>
+                    <input type="text" id="emailSenderInput" value="Missed Call Auto SMS &lt;onboarding@resend.dev&gt;" readonly style="width: 100%; background: #090B0E; border: 1px solid var(--card-border); color: #FFF; padding: 10px; border-radius: 8px;">
+                </div>
+                <div>
+                    <label style="font-size: 13px; color: var(--muted); display: block; margin-bottom: 6px;">Owner Purchase Notification Email:</label>
+                    <input type="text" value="contactus@offgridmediagroup.com" readonly style="width: 100%; background: #090B0E; border: 1px solid var(--card-border); color: var(--primary); font-weight: bold; padding: 10px; border-radius: 8px;">
+                </div>
+            </div>
+        </div>
+
         <!-- End-to-End System Simulation & Audit Console -->
         <div class="card">
             <div class="card-header">
@@ -871,6 +906,7 @@
             initApiHostUi();
             loadLiveOtaVersion();
             checkStripeConnectionLive();
+            checkEmailConnectionLive();
         } else if (index === 3) {
             loadBlogDashboard();
         }
@@ -966,6 +1002,10 @@
         const savedStripeKey = localStorage.getItem('mcas_stripe_key');
         if (savedStripeKey && !options.headers['x-stripe-key']) {
             options.headers['x-stripe-key'] = savedStripeKey;
+        }
+        const savedResendKey = localStorage.getItem('mcas_resend_key');
+        if (savedResendKey && !options.headers['x-resend-key']) {
+            options.headers['x-resend-key'] = savedResendKey;
         }
 
         let res;
@@ -1141,6 +1181,80 @@
         checkStripeConnectionLive();
     }
 
+    async function checkEmailConnectionLive() {
+        const dot = document.getElementById("emailStatusDot");
+        const title = document.getElementById("emailStatusTitle");
+        const detail = document.getElementById("emailStatusDetail");
+        const latency = document.getElementById("emailLatencyBadge");
+        if (!dot) return;
+
+        dot.innerText = "⏳";
+        title.innerText = "Querying Automated Email Service...";
+        detail.innerText = "Checking Resend Cloud API configuration...";
+        latency.innerText = "-- ms";
+
+        const start = Date.now();
+        try {
+            const data = await safeFetchJson('/api/send-license-email');
+            const elapsed = Date.now() - start;
+
+            if (data.configured) {
+                dot.innerText = "🟢";
+                title.innerText = "Resend Automated Email Dispatch Active";
+                title.style.color = "var(--primary)";
+                const storedNote = localStorage.getItem('mcas_resend_key') ? ' <button onclick="clearCustomResendKey()" style="background:none;border:none;color:var(--muted);text-decoration:underline;cursor:pointer;font-size:11px;margin-left:8px;">(Clear custom key)</button>' : '';
+                const source = data.hasEnvKey ? 'Server Environment (Netlify / Node)' : 'Browser LocalStorage';
+                detail.innerHTML = `Provider: <strong>Resend Cloud API</strong> | Source: <strong>${source}</strong> | Sender: <strong>${escapeHtml(data.fromEmail || 'Missed Call Auto SMS <onboarding@resend.dev>')}</strong>${storedNote}`;
+                latency.innerText = `${elapsed} ms`;
+                latency.style.color = "var(--primary)";
+                latency.style.borderColor = "var(--primary)";
+            } else {
+                dot.innerText = "🟡";
+                title.innerText = "Automated Email API Not Configured";
+                title.style.color = "var(--warning)";
+                latency.innerText = "Setup Key";
+                latency.style.color = "var(--warning)";
+                
+                detail.innerHTML = `
+                    <div style="color: #CBD5E0; font-size: 13px; margin-bottom: 8px;">
+                        Automated delivery emails require a free Resend API key (from <a href="https://resend.com" target="_blank" style="color: var(--primary);">resend.com</a>).
+                    </div>
+                    <div style="background: #0D1117; border: 1px solid var(--card-border); border-radius: 8px; padding: 12px; margin-top: 8px;">
+                        <div style="font-size: 13px; font-weight: bold; color: #FFF; margin-bottom: 6px;">🔑 Quick Connect Resend Key in this browser:</div>
+                        <div style="display: flex; gap: 8px; flex-wrap: wrap;">
+                            <input type="password" id="inputResendKeyInline" placeholder="Paste re_... API Key" style="flex: 1; min-width: 200px; background: #090B0E; border: 1px solid var(--card-border); color: #FFF; padding: 8px 12px; border-radius: 6px; font-family: monospace; font-size: 13px;">
+                            <button class="btn-action btn-primary-action" onclick="saveAndTestResendKeyInline()" style="font-size: 13px; padding: 8px 16px;">⚡ Connect Key</button>
+                        </div>
+                        <div style="font-size: 11px; color: var(--muted); margin-top: 6px;">
+                            💡 To enable automated emails on Stripe purchases 24/7 without browser open, add <code>RESEND_API_KEY</code> into Netlify Dashboard &gt; Site configuration &gt; Environment variables.
+                        </div>
+                    </div>
+                `;
+            }
+        } catch (e) {
+            dot.innerText = "🔴";
+            title.innerText = "Email Service Unreachable";
+            title.style.color = "var(--danger)";
+            detail.innerHTML = `<span>${e.message}</span>`;
+            latency.innerText = "Offline";
+        }
+    }
+
+    function saveAndTestResendKeyInline() {
+        const input = document.getElementById("inputResendKeyInline");
+        if (!input || !input.value.trim()) {
+            alert("Please paste your Resend API Key (starts with re_...).");
+            return;
+        }
+        localStorage.setItem('mcas_resend_key', input.value.trim());
+        checkEmailConnectionLive();
+    }
+
+    function clearCustomResendKey() {
+        localStorage.removeItem('mcas_resend_key');
+        checkEmailConnectionLive();
+    }
+
     async function runFullSystemSimulation() {
         const btn = document.getElementById("btnRunSimulation");
         const consoleEl = document.getElementById("simConsole");
@@ -1228,7 +1342,8 @@
                 })
             });
             if (emailData.success) {
-                log(`   ✔ PASS: Email dispatch automation verified (APK: ${emailData.apkDownloadUrl})`, "pass");
+                const cloudTag = emailData.cloudSent ? " (Delivered via Resend Cloud API)" : " (Endpoint Active - On-Screen / Mailto Fallback Ready)";
+                log(`   ✔ PASS: Email dispatch automation verified${cloudTag} (APK: ${emailData.apkDownloadUrl})`, "pass");
                 passed++;
             } else {
                 log(`   ✖ FAIL: Email dispatch failed: ${emailData.error}`, "fail");
