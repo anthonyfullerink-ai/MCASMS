@@ -53,7 +53,7 @@ jobs:
           if [ -n "$(git status --porcelain blog sitemap.xml)" ]; then
             echo "📝 New blog post detected! Staging and committing..."
             git add blog/posts.json blog/posts/ sitemap.xml
-            git commit -m "feat(blog): publish autonomous daily AI blog article [skip ci]"
+            git commit -m "feat(blog): publish autonomous daily AI blog article"
             git push origin main
             echo "✅ Successfully published to production website!"
             echo "new_post=true" >> "$GITHUB_OUTPUT"
