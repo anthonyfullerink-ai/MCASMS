@@ -1,7 +1,7 @@
 const fs = require('fs');
 const path = require('path');
 const https = require('https');
-const { publishToSocial } = require('./publish_social_blog');
+const { publishToSocial, getSocialImageUrl } = require('./publish_social_blog');
 
 // Load .env if present locally
 function loadEnv() {
@@ -172,6 +172,9 @@ Return your response strictly as a JSON object matching this schema:
     const formattedDate = now.toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' });
     const isoDate = now.toISOString();
 
+    const imageUrl = getSocialImageUrl(article);
+    console.log(`🖼️ Assigned contextual visual: ${imageUrl}`);
+
     let postHtml = template;
     postHtml = postHtml.replace(/{{TITLE}}/g, article.title);
     postHtml = postHtml.replace(/{{SLUG}}/g, article.slug);
@@ -181,6 +184,7 @@ Return your response strictly as a JSON object matching this schema:
     postHtml = postHtml.replace(/{{ISO_DATE}}/g, isoDate);
     postHtml = postHtml.replace(/{{READ_TIME}}/g, article.readTime || 5);
     postHtml = postHtml.replace(/{{TAGS}}/g, (article.tags || []).join(', '));
+    postHtml = postHtml.replace(/{{IMAGE_URL}}/g, imageUrl);
 
     const takeawaysHtml = (article.takeaways || []).map(t => `<li>${t}</li>`).join('\n');
     postHtml = postHtml.replace(/{{TAKEAWAYS_HTML}}/g, takeawaysHtml);
@@ -201,7 +205,8 @@ Return your response strictly as a JSON object matching this schema:
       readTime: article.readTime || 5,
       tags: article.tags || [],
       excerpt: article.excerpt,
-      metaDescription: article.metaDescription
+      metaDescription: article.metaDescription,
+      imageUrl: imageUrl
     };
 
     existingPosts.unshift(newPostMeta);

@@ -23,11 +23,18 @@
     <meta property="og:description" content="{{DESCRIPTION}}">
     <meta property="og:site_name" content="Missed Call Auto SMS">
     <meta property="article:published_time" content="{{ISO_DATE}}">
+    <meta property="og:image" content="{{IMAGE_URL}}">
+    <meta property="og:image:secure_url" content="{{IMAGE_URL}}">
+    <meta property="og:image:width" content="1200">
+    <meta property="og:image:height" content="630">
+    <meta property="og:image:alt" content="{{TITLE}}">
 
     <!-- Twitter -->
     <meta name="twitter:card" content="summary_large_image">
     <meta name="twitter:title" content="{{TITLE}}">
     <meta name="twitter:description" content="{{DESCRIPTION}}">
+    <meta name="twitter:image" content="{{IMAGE_URL}}">
+    <meta name="twitter:image:alt" content="{{TITLE}}">
 
     <!-- Schema.org BlogPosting -->
     <script type="application/ld+json">
@@ -40,6 +47,7 @@
       },
       "headline": "{{TITLE}}",
       "description": "{{DESCRIPTION}}",
+      "image": "{{IMAGE_URL}}",
       "datePublished": "{{ISO_DATE}}",
       "dateModified": "{{ISO_DATE}}",
       "author": {
@@ -361,8 +369,12 @@
                     <span>?? {{READ_TIME}} min read</span>
                     <span>?? By Missed Call Auto SMS Team</span>
                     <span>??? {{TAGS}}</span>
-                </div>
             </header>
+
+            <!-- Featured Article Hero Visual -->
+            <div class="article-hero-wrap" style="margin: 28px 0 36px 0; border-radius: 16px; overflow: hidden; border: 1px solid rgba(0, 230, 118, 0.25); box-shadow: 0 12px 36px rgba(0, 0, 0, 0.5); text-align: center; background: #131720;">
+                <img src="{{IMAGE_URL}}" alt="{{TITLE}}" style="width: 100%; max-height: 520px; object-fit: cover; display: block;" loading="eager">
+            </div>
 
             <!-- Key Takeaways Box -->
             <div class="takeaways-box">
