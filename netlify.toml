@@ -25,6 +25,12 @@
   to = "/.netlify/functions/stripe-status"
   status = 200
 
+# API Route: Stripe Webhook for Automated Purchases & License Email
+[[redirects]]
+  from = "/api/stripe-webhook"
+  to = "/.netlify/functions/stripe-webhook"
+  status = 200
+
 # API Route: Cancel 3-Day Trial
 [[redirects]]
   from = "/api/cancel-trial"
