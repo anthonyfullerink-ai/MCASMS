@@ -1,22 +1,21 @@
 const https = require('https');
 
-function callGeminiSingle(model, prompt, apiKey) {
+function callGeminiSingle(apiVersion, model, prompt, apiKey) {
   return new Promise((resolve, reject) => {
     const postData = JSON.stringify({
       contents: [{
         parts: [{ text: prompt }]
       }],
       generationConfig: {
-        response_mime_type: 'application/json',
         temperature: 0.7,
-        max_output_tokens: 4096
+        maxOutputTokens: 4096
       }
     });
 
     const options = {
       hostname: 'generativelanguage.googleapis.com',
       port: 443,
-      path: `/v1beta/models/${model}:generateContent`,
+      path: `/${apiVersion}/models/${model}:generateContent`,
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
@@ -33,32 +32,38 @@ function callGeminiSingle(model, prompt, apiKey) {
           const json = JSON.parse(body);
           if (res.statusCode >= 200 && res.statusCode < 300) {
             const rawText = json.candidates[0].content.parts[0].text;
-            const parsedArticle = JSON.parse(rawText);
+            let cleaned = rawText.trim();
+            if (cleaned.startsWith('```')) {
+              cleaned = cleaned.replace(/^```(?:json)?\s*/i, '').replace(/\s*```$/i, '').trim();
+            }
+            const parsedArticle = JSON.parse(cleaned);
             resolve(parsedArticle);
           } else {
-            reject(new Error(`Gemini API Error (${res.statusCode}): ` + (json.error ? json.error.message : body)));
+            const msg = json.error ? json.error.message : body;
+            reject(new Error(`[${apiVersion}/${model}] HTTP ${res.statusCode}: ${msg}`));
           }
         } catch (e) {
-          reject(new Error('Failed to parse Gemini response: ' + e.message));
+          reject(new Error(`[${apiVersion}/${model}] JSON Parse Error: ${e.message}`));
         }
       });
     });
 
-    req.on('error', reject);
+    req.on('error', (err) => reject(new Error(`[${apiVersion}/${model}] Network: ${err.message}`)));
     req.write(postData);
     req.end();
   });
 }
 
 async function generateArticleWithGemini(apiKey) {
+  const versions = ['v1beta', 'v1'];
   const candidateModels = process.env.GEMINI_MODEL 
     ? [process.env.GEMINI_MODEL]
-    : ['gemini-2.0-flash', 'gemini-1.5-flash', 'gemini-1.5-flash-latest', 'gemini-1.5-pro'];
+    : ['gemini-1.5-flash', 'gemini-1.5-pro', 'gemini-2.0-flash-exp', 'gemini-2.0-flash', 'gemini-2.5-flash'];
 
   const prompt = `
 You are the lead marketing strategist for "Missed Call Auto SMS".
 Generate a brand new, highly authoritative, SEO-rich article for local service business owners and trade contractors.
-Return your response strictly as a JSON object matching this schema:
+Return your response STRICTLY as a raw JSON object (no extra commentary) matching this schema:
 {
   "title": "Compelling article headline (50-70 chars)",
   "slug": "url-friendly-slug-hyphens-only",
@@ -72,15 +77,18 @@ Return your response strictly as a JSON object matching this schema:
 }
 `;
 
-  let lastErr = null;
-  for (const model of candidateModels) {
-    try {
-      return await callGeminiSingle(model, prompt, apiKey);
-    } catch (err) {
-      lastErr = err;
+  const errors = [];
+  for (const ver of versions) {
+    for (const model of candidateModels) {
+      try {
+        return await callGeminiSingle(ver, model, prompt, apiKey);
+      } catch (err) {
+        errors.push(err.message);
+      }
     }
   }
-  throw lastErr || new Error('All Gemini models failed');
+
+  throw new Error('Gemini Model Fallback Report:\n' + errors.join('\n'));
 }
 
 exports.handler = async (event) => {
