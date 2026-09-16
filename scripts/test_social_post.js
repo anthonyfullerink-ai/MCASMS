@@ -96,7 +96,7 @@ async function runSocialTest() {
   try {
     console.log('Step 2a: Creating Instagram media container with graphic...');
     const containerRes = await postGraphApi(`/v20.0/${IG_USER_ID}/media`, {
-      image_url: 'https://misscallautosms.com/assets/og-preview.jpg',
+      image_url: 'https://raw.githubusercontent.com/anthonyfullerink-ai/MCASMS/main/assets/og-preview.jpg',
       caption: 'Never lose another client to a missed call. Missed Call Auto SMS automatically replies in 15 seconds using your existing SIM card. $49.99 lifetime license. 100% A2P exempt!\n\nLink in bio! #missedcallautosms #smallbusiness #contractorlife #speedtolead',
       access_token: TOKEN
     });
