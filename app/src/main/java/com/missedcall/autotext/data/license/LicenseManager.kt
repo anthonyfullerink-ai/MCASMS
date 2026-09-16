@@ -27,11 +27,33 @@ object LicenseManager {
 
     fun verifyLicenseKey(key: String): LicenseInfo {
         val trimmedKey = key.trim().uppercase()
-        if (!trimmedKey.startsWith(KEY_PREFIX) || trimmedKey.length < 15) {
+
+        // 1. Authorized Master Demo / Reviewer Keys
+        if (trimmedKey == "MCAS-DEMO-TRIAL-89F2" ||
+            trimmedKey == "MCAT-DEMO-TRIAL-89F2" ||
+            trimmedKey == "MCAS-DEMO-89F2" ||
+            trimmedKey == "MCAT-DEMO-89F2") {
+            return LicenseInfo(
+                status = LicenseStatus.ACTIVE_LIFETIME,
+                licenseKey = trimmedKey,
+                licensedTo = "Owner & Reviewer Master Demo",
+                expiryTimestamp = 0L,
+                checksum = "89F2"
+            )
+        }
+
+        // 2. Determine License Prefix (MCAS- or legacy MCAT-)
+        val prefix = when {
+            trimmedKey.startsWith("MCAS-") -> "MCAS-"
+            trimmedKey.startsWith("MCAT-") -> "MCAT-"
+            else -> return LicenseInfo(status = LicenseStatus.UNLICENSED, licenseKey = trimmedKey)
+        }
+
+        if (trimmedKey.length < 15) {
             return LicenseInfo(status = LicenseStatus.UNLICENSED, licenseKey = trimmedKey)
         }
 
-        val parts = trimmedKey.substring(KEY_PREFIX.length).split("-")
+        val parts = trimmedKey.substring(prefix.length).split("-")
         if (parts.size < 2) {
             return LicenseInfo(status = LicenseStatus.UNLICENSED, licenseKey = trimmedKey)
         }

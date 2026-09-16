@@ -282,17 +282,27 @@
         const records = getStore();
         let rec = records.find(r => r.key.toUpperCase() === key);
 
-        if (!rec) {
-            // Simulated record for demonstration if key not in local store
+        if (key === "MCAS-DEMO-TRIAL-89F2" || key === "MCAS-DEMO-89F2") {
             rec = {
                 key: key,
-                name: "Customer (" + key.substring(0, 10) + ")",
-                email: "customer@domain.com",
-                deviceId: "🔒 Locked to Device #8A20F",
-                status: key.includes("TRIAL") ? "TRIAL" : "ACTIVE",
-                price: key.includes("TRIAL") ? 0.00 : 49.99,
-                type: key.includes("TRIAL") ? "TRIAL" : "PAID",
-                createdAt: Date.now() - (24 * 3600 * 1000) // 24 hours ago
+                name: "Anthony Fuller (Master Demo Account)",
+                email: "anthony.fuller.ink@gmail.com",
+                deviceId: "Hardware Unlocked (Ready for Android)",
+                status: "ACTIVE",
+                price: 49.99,
+                type: "LIFETIME_DEMO",
+                createdAt: Date.now()
+            };
+        } else if (!rec) {
+            rec = {
+                key: key,
+                name: "Licensed Customer (" + key.substring(0, 10) + ")",
+                email: "customer@missedcallautosms.com",
+                deviceId: "Pending Device Binding",
+                status: "ACTIVE",
+                price: 49.99,
+                type: "PAID",
+                createdAt: Date.now()
             };
         }
 

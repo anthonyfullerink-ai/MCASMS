@@ -731,54 +731,39 @@
     const SECRET_KEY = "MCAT_SECRET_PROD_KEY_2026";
     const KEY_PREFIX = "MCAS-";
 
-    // Initial Database Records
+    // Initial Database Records (Production)
     const INITIAL_RECORDS = [
         {
-            id: "1",
-            date: "Sep 15, 2026",
-            name: "Apex Plumbing",
-            email: "john@apexplumbing.com",
-            key: "MCAS-41706578-8F923A11",
-            deviceId: "a8b9c7d6e5f41234",
-            status: "ACTIVE",
-            price: 49.99,
-            type: "PAID"
-        },
-        {
-            id: "2",
-            date: "Sep 14, 2026",
-            name: "Metro Auto Care",
-            email: "info@metroauto.com",
-            key: "MCAS-4D6574726F41-A5B6C7D8",
+            id: "mcas-master-demo",
+            date: "Sep 16, 2026",
+            name: "Master Demo / Reviewer Account",
+            email: "anthony.fuller.ink@gmail.com",
+            key: "MCAS-DEMO-TRIAL-89F2",
             deviceId: null,
             status: "ACTIVE",
-            price: 49.99,
-            type: "PAID"
-        },
-        {
-            id: "3",
-            date: "Sep 12, 2026",
-            name: "Dave (Testing Colleague)",
-            email: "dave@friend.com",
-            key: "MCAS-446176654672-99887766",
-            deviceId: "7f8e9d0c1b2a",
-            status: "ACTIVE",
             price: 0.00,
-            type: "FREE"
+            type: "MASTER_DEMO"
         }
     ];
 
     function getStore() {
         const stored = localStorage.getItem("mcas_master_licenses");
-        if (!stored) {
-            localStorage.setItem("mcas_master_licenses", JSON.stringify(INITIAL_RECORDS));
-            return INITIAL_RECORDS;
+        let list = INITIAL_RECORDS;
+        if (stored) {
+            try {
+                list = JSON.parse(stored);
+                // Clean up obsolete testing samples
+                list = list.filter(r => !r.name.includes("Apex Plumbing") && !r.name.includes("Metro Auto Care") && !r.name.includes("Dave (Testing Colleague)"));
+            } catch (e) {
+                list = INITIAL_RECORDS;
+            }
         }
-        try {
-            return JSON.parse(stored);
-        } catch (e) {
-            return INITIAL_RECORDS;
+        // Ensure Master Demo Key is always present and ACTIVE
+        if (!list.some(r => r.key === "MCAS-DEMO-TRIAL-89F2")) {
+            list.unshift(INITIAL_RECORDS[0]);
         }
+        localStorage.setItem("mcas_master_licenses", JSON.stringify(list));
+        return list;
     }
 
     function saveStore(records) {
@@ -1533,13 +1518,23 @@ Quick 3-Step Setup:
     }
 
     async function promptFreeLicense() {
-        const name = prompt("Enter Family Member / Colleague / Business Name for FREE License:");
-        if (!name) return;
-        const email = prompt("Enter Email Address:", `${name.toLowerCase().replace(/[^a-z0-9]/g, '')}@test.com`);
-        if (!email) return;
+        const name = prompt("Enter Colleague, Client, or Business Name for FREE License:");
+        if (!name || !name.trim()) return;
+        
+        const email = prompt(`Enter REAL Email Address for ${name.trim()} (e.g. user@gmail.com):`, "");
+        if (!email || !email.trim()) {
+            alert("Email address is required to deliver the license key.");
+            return;
+        }
+
+        const cleanEmail = email.trim().toLowerCase();
+        if (!cleanEmail.includes("@") || !cleanEmail.includes(".") || cleanEmail.endsWith("@test.com") || cleanEmail.endsWith("@example.com")) {
+            alert("Please enter a valid, real recipient email address (cannot end in @test.com or @example.com).");
+            return;
+        }
 
         const nowSec = Math.floor(Date.now() / 1000);
-        const payloadStr = `${name}|0|${nowSec}`;
+        const payloadStr = `${name.trim()}|0|${nowSec}`;
         const payloadHex = stringToHex(payloadStr);
 
         const sigFull = await generateHmacSha256(payloadHex, SECRET_KEY);
@@ -1552,8 +1547,8 @@ Quick 3-Step Setup:
         const newRecord = {
             id: Date.now().toString(),
             date: nowFormatted,
-            name: `${name} (Free License)`,
-            email: email,
+            name: `${name.trim()} (Free License)`,
+            email: cleanEmail,
             key: formattedKey,
             deviceId: null,
             status: "ACTIVE",
@@ -1588,7 +1583,7 @@ Quick 3-Step Setup:
         if (confirm(`${newStatus === 'REVOKED' ? 'Revoke' : 'Reactivate'} license key ${key}?`)) {
             rec.status = newStatus;
             saveStore(records);
-            alert(`License ${key} status updated to ${newStatus}.`);
+            renderDashboard();
         }
     }
 

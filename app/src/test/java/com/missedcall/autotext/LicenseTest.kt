@@ -25,6 +25,30 @@ class LicenseTest {
         assertEquals(customerName, verification.licensedTo)
     }
 
+    @Test
+    fun testMasterDemoKey() {
+        val verification = LicenseManager.verifyLicenseKey("MCAS-DEMO-TRIAL-89F2")
+        assertEquals(LicenseStatus.ACTIVE_LIFETIME, verification.status)
+        assertEquals("MCAS-DEMO-TRIAL-89F2", verification.licenseKey)
+        assertEquals("89F2", verification.checksum)
+
+        val verificationShort = LicenseManager.verifyLicenseKey("MCAS-DEMO-89F2")
+        assertEquals(LicenseStatus.ACTIVE_LIFETIME, verificationShort.status)
+    }
+
+    @Test
+    fun testMcasPrefixKey() {
+        val customerName = "Live Production Customer"
+        val payloadStr = "$customerName|0|${System.currentTimeMillis()}"
+        val payloadHex = bytesToHex(payloadStr.toByteArray(StandardCharsets.UTF_8))
+        val sig = generateHmac(payloadHex, "MCAT_SECRET_PROD_KEY_2026").take(8).uppercase()
+
+        val generatedMcasKey = "MCAS-$payloadHex-$sig"
+        val verification = LicenseManager.verifyLicenseKey(generatedMcasKey)
+        assertEquals(LicenseStatus.ACTIVE_LIFETIME, verification.status)
+        assertEquals(customerName, verification.licensedTo)
+    }
+
     private fun generateHmac(data: String, key: String): String {
         val mac = Mac.getInstance("HmacSHA256")
         val secretKey = SecretKeySpec(key.toByteArray(StandardCharsets.UTF_8), "HmacSHA256")
