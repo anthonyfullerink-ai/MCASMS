@@ -237,8 +237,9 @@ Return your response strictly as a JSON object matching this schema:
     fs.writeFileSync(sitemapPath, sitemapXml, 'utf8');
     console.log(`🗺️ Updated sitemap.xml with ${existingPosts.length + 2} total indexed URLs`);
 
-    // Cross-post to Facebook & Instagram if configured
-    if (process.env.AUTO_POST_SOCIAL === 'true') {
+    // Cross-post to Facebook & Instagram if token is present and not explicitly disabled
+    const hasMetaToken = !!(process.env.META_PAGE_ACCESS_TOKEN || '');
+    if (process.env.AUTO_POST_SOCIAL !== 'false' && hasMetaToken) {
       try {
         await publishToSocial(newPostMeta);
       } catch (socialErr) {

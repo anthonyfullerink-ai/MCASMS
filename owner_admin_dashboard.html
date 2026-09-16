@@ -677,6 +677,7 @@
                 </div>
                 <div style="display: flex; gap: 10px; flex-wrap: wrap;">
                     <button class="btn-action btn-primary-action" id="btnGenBlogNow" onclick="generateNewBlogArticle()">⚡ Generate Article Now (On-Demand)</button>
+                    <button class="btn-action" style="background: rgba(0, 149, 246, 0.15); border-color: #0095F6; color: #0095F6;" onclick="publishSocialOnDemand()">📢 Cross-Post to Meta (FB & IG)</button>
                     <a href="/blog" target="_blank" class="btn-action" style="text-decoration: none; display: inline-flex; align-items: center; color: var(--primary);">Open Public Blog (/blog) ↗</a>
                     <button class="btn-action" onclick="loadBlogDashboard()">🔄 Refresh History</button>
                 </div>
@@ -1796,6 +1797,9 @@ Quick 3-Step Setup:
                             <button class="btn-action" onclick="copyBlogLink('${post.slug}')">
                                 📋 Copy Link
                             </button>
+                            <button class="btn-action" style="background: rgba(0, 149, 246, 0.15); border-color: #0095F6; color: #0095F6;" onclick="publishSocialOnDemand({ title: '${escapeHtml(post.title).replace(/'/g, "\\'")}', slug: '${post.slug}', excerpt: '${escapeHtml(post.excerpt || '').replace(/'/g, "\\'")}' })">
+                                📢 Share to Meta
+                            </button>
                         </td>
                     </tr>
                 `;
@@ -1882,6 +1886,50 @@ Quick 3-Step Setup:
         } finally {
             btn.disabled = false;
             btn.innerText = "⚡ Generate Article Now (On-Demand)";
+        }
+    }
+
+    async function publishSocialOnDemand(articleData = null) {
+        if (!confirm("Cross-post the article to your Facebook Page and Instagram Feed now?")) return;
+        const alertBox = document.getElementById("blogGenAlert");
+        if (alertBox) {
+            alertBox.style.display = "block";
+            alertBox.style.background = "rgba(0, 149, 246, 0.15)";
+            alertBox.style.borderColor = "#0095F6";
+            alertBox.innerHTML = `📢 <strong>Cross-Posting to Meta Active</strong>: Sending to Facebook Page and Instagram Feed via Meta Graph API...`;
+        }
+
+        try {
+            const apiBase = getApiBaseUrl();
+            const res = await fetch(`${apiBase}/api/publish-social`, {
+                method: "POST",
+                headers: { 'Content-Type': 'application/json' },
+                body: articleData ? JSON.stringify(articleData) : '{}'
+            });
+            const data = await res.json();
+
+            if (data.success) {
+                if (alertBox) {
+                    alertBox.style.background = "rgba(0, 230, 118, 0.15)";
+                    alertBox.style.borderColor = "var(--primary)";
+                    alertBox.innerHTML = `🎉 <strong>Successfully Posted to Facebook & Instagram!</strong><br><span style="font-size:12px;color:var(--muted);">${escapeHtml(data.message || 'Posts are live on Meta.')}</span>`;
+                }
+                alert("🎉 Social Posts Published Successfully to Facebook & Instagram!");
+            } else {
+                if (alertBox) {
+                    alertBox.style.background = "rgba(248, 81, 73, 0.15)";
+                    alertBox.style.borderColor = "var(--danger)";
+                    alertBox.innerHTML = `⚠️ <strong>Social Posting Notice:</strong> ${escapeHtml(data.error || 'Check Meta token')}`;
+                }
+                alert(`⚠️ Social Posting Notice: ${data.error || 'Check Meta token'}`);
+            }
+        } catch (e) {
+            if (alertBox) {
+                alertBox.style.background = "rgba(248, 81, 73, 0.15)";
+                alertBox.style.borderColor = "var(--danger)";
+                alertBox.innerHTML = `❌ <strong>Error:</strong> ${escapeHtml(e.message)}`;
+            }
+            alert(`❌ Error: ${e.message}`);
         }
     }
 

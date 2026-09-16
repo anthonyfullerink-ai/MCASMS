@@ -555,6 +555,33 @@ const server = http.createServer((req, res) => {
     return;
   }
 
+  // API Route: Trigger Social Media Cross-Posting On-Demand
+  if ((relativePath === '/api/publish-social' || relativePath === '/api/publish-social/') && req.method === 'POST') {
+    const scriptPath = path.join(__dirname, 'scripts', 'publish_social_blog.js');
+    console.log('📢 [SOCIAL PUBLISHER] Manually triggered from owner dashboard...');
+    exec(`node "${scriptPath}"`, { cwd: __dirname }, (error, stdout, stderr) => {
+      res.writeHead(200, {
+        'Content-Type': 'application/json; charset=utf-8',
+        'Access-Control-Allow-Origin': '*'
+      });
+      if (error) {
+        res.end(JSON.stringify({
+          success: false,
+          error: error.message,
+          stdout: stdout,
+          stderr: stderr
+        }));
+        return;
+      }
+      res.end(JSON.stringify({
+        success: true,
+        message: 'Cross-posted latest article to Facebook and Instagram successfully!',
+        output: stdout
+      }));
+    });
+    return;
+  }
+
   // Clean URL Routing
   if (relativePath === '/') {
     relativePath = '/sales_landing_page.html';

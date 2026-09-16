@@ -49,6 +49,12 @@
   to = "/.netlify/functions/send-license-email"
   status = 200
 
+# API Route: Publish Social Blog Post
+[[redirects]]
+  from = "/api/publish-social"
+  to = "/.netlify/functions/publish-social"
+  status = 200
+
 # API Route: Update OTA Version
 [[redirects]]
   from = "/api/update-version"
