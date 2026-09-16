@@ -331,10 +331,149 @@
         }
         .footer a { color: var(--primary); text-decoration: none; }
 
-        @media (max-width: 600px) {
-            .article-title { font-size: 26px; }
-            .container { padding: 24px 16px 60px 16px; }
+        
+        /* === MOBILE RESPONSIVE OPTIMIZATIONS === */
+        img { max-width: 100%; height: auto; }
+        pre, code { max-width: 100%; overflow-x: auto; }
+
+        .mobile-menu-btn {
+            display: none;
+            background: transparent;
+            border: 1px solid var(--border);
+            border-radius: 10px;
+            cursor: pointer;
+            padding: 8px 10px;
+            z-index: 1001;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            gap: 5px;
+            width: 42px;
+            height: 42px;
+            transition: all 0.2s;
         }
+        .mobile-menu-btn:hover, .mobile-menu-btn:active {
+            background: rgba(255,255,255,0.05);
+            border-color: var(--primary);
+        }
+        .mobile-menu-btn span {
+            display: block;
+            width: 22px;
+            height: 2px;
+            background: #FFF;
+            border-radius: 2px;
+            transition: all 0.3s ease;
+        }
+        .mobile-menu-btn.active span:nth-child(1) { transform: translateY(7px) rotate(45deg); }
+        .mobile-menu-btn.active span:nth-child(2) { opacity: 0; }
+        .mobile-menu-btn.active span:nth-child(3) { transform: translateY(-7px) rotate(-45deg); }
+
+        .mobile-nav-drawer {
+            display: none;
+            position: fixed;
+            top: 73px;
+            left: 0;
+            right: 0;
+            background: rgba(13, 16, 22, 0.98);
+            backdrop-filter: blur(16px);
+            -webkit-backdrop-filter: blur(16px);
+            border-bottom: 1px solid var(--border);
+            padding: 16px 20px 24px 20px;
+            z-index: 9999;
+            flex-direction: column;
+            gap: 6px;
+            box-shadow: 0 20px 40px rgba(0,0,0,0.8);
+            transform: translateY(-8px);
+            opacity: 0;
+            transition: transform 0.25s ease, opacity 0.25s ease;
+        }
+        .mobile-nav-drawer.open {
+            display: flex;
+            transform: translateY(0);
+            opacity: 1;
+        }
+        .mobile-nav-link {
+            color: #E2E8F0;
+            text-decoration: none;
+            font-size: 15px;
+            font-weight: 600;
+            padding: 12px 14px;
+            border-radius: 10px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            transition: background 0.2s;
+            min-height: 46px;
+        }
+        .mobile-nav-link:active {
+            background: rgba(0, 230, 118, 0.1);
+            color: var(--primary);
+        }
+
+        /* Responsive Table Wrapper */
+        .comparison-table-wrapper {
+            width: 100%;
+            overflow-x: auto;
+            -webkit-overflow-scrolling: touch;
+            margin: 24px 0;
+            border-radius: 12px;
+            border: 1px solid var(--border);
+        }
+        .comparison-table {
+            min-width: 480px;
+            margin: 0;
+        }
+
+        @media (max-width: 768px) {
+            .mobile-menu-btn { display: flex; }
+            .nav-links { display: none !important; }
+            
+            .container { padding: 20px 16px 50px 16px; }
+            .article-header { margin-bottom: 24px; }
+            .article-title {
+                font-size: clamp(23px, 6.2vw, 32px);
+                line-height: 1.25;
+            }
+            .article-hero-wrap {
+                margin: 20px 0 28px 0;
+                border-radius: 12px;
+            }
+            .article-hero-img {
+                max-height: 260px;
+            }
+            .article-body {
+                font-size: 15.5px;
+            }
+            .article-body h2 {
+                font-size: 21px;
+                margin-top: 32px;
+            }
+            .article-body h3 {
+                font-size: 18px;
+            }
+            .article-body p, .article-body ul, .article-body ol {
+                font-size: 15.5px;
+                line-height: 1.75;
+            }
+            .takeaways-box {
+                padding: 16px;
+                margin: 20px 0;
+            }
+            .cta-banner {
+                padding: 24px 16px;
+                margin: 36px 0;
+            }
+            .cta-banner h3 {
+                font-size: 20px;
+            }
+            .btn-cta {
+                display: block;
+                width: 100%;
+                padding: 14px 20px;
+                font-size: 15.5px;
+            }
+        }
+
     </style>
 </head>
 <body>
@@ -350,6 +489,22 @@
                 <a href="/#features" class="nav-link">Features</a>
                 <a href="/#pricing" class="nav-link">Pricing</a>
                 <a href="https://buy.stripe.com/3cI9AT49g2X07Q41ux2go0a?trial_period_days=3" class="btn-nav-trial">Free 3-Day Trial</a>
+            </div>
+            <button id="mobileMenuBtn" class="mobile-menu-btn" onclick="toggleMobileMenu()" aria-label="Open Navigation Menu">
+                <span></span>
+                <span></span>
+                <span></span>
+            </button>
+        </div>
+        <!-- Mobile Drawer -->
+        <div id="mobileNavDrawer" class="mobile-nav-drawer">
+            <a href="/" class="mobile-nav-link">🏠 Home Landing Page <span>&rsaquo;</span></a>
+            <a href="/blog" class="mobile-nav-link" style="color: var(--primary);">📚 Blog Articles & Playbooks <span>&rsaquo;</span></a>
+            <a href="/#features" class="mobile-nav-link">⚡ App Features <span>&rsaquo;</span></a>
+            <a href="/#comparison" class="mobile-nav-link">🆚 Appliance vs SaaS <span>&rsaquo;</span></a>
+            <a href="/#pricing" class="mobile-nav-link">💰 Pricing ($49.99 Lifetime) <span>&rsaquo;</span></a>
+            <div style="margin-top: 10px;">
+                <a href="https://buy.stripe.com/3cI9AT49g2X07Q41ux2go0a?trial_period_days=3" class="btn-nav-trial" style="display: block; text-align: center; width: 100%; padding: 12px; font-size: 15px;">🎁 Start 3-Day Free Trial ($0 Today)</a>
             </div>
         </div>
     </nav>
@@ -417,7 +572,8 @@
       <h2>The Real Math: How Much Is A Missed Call Costing You?</h2>
       <p>Let's look at real numbers for a typical trade business running Google Ads:</p>
 
-      <table class="comparison-table">
+      <div class="comparison-table-wrapper">
+<table class="comparison-table">
         <thead>
           <tr>
             <th>Metric</th>
@@ -458,6 +614,7 @@
           </tr>
         </tbody>
       </table>
+</div>
 
       <p>By simply texting the caller back within 15 seconds, you stop them in their tracks before they click the next listing on Google.</p>
 
@@ -497,6 +654,27 @@
             <a href="/">Home</a> &bull; <a href="/blog">Blog</a> &bull; <a href="/owner_admin_dashboard.html">Admin Portal</a>
         </div>
     </footer>
+
+
+<script>
+function toggleMobileMenu() {
+    const btn = document.getElementById('mobileMenuBtn');
+    const drawer = document.getElementById('mobileNavDrawer');
+    if (!btn || !drawer) return;
+    btn.classList.toggle('active');
+    drawer.classList.toggle('open');
+}
+document.addEventListener('click', function(e) {
+    const btn = document.getElementById('mobileMenuBtn');
+    const drawer = document.getElementById('mobileNavDrawer');
+    if (drawer && drawer.classList.contains('open')) {
+        if (!drawer.contains(e.target) && !btn.contains(e.target)) {
+            btn.classList.remove('active');
+            drawer.classList.remove('open');
+        }
+    }
+});
+</script>
 
 </body>
 </html>
