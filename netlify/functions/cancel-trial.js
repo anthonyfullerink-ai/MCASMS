@@ -47,6 +47,17 @@ exports.handler = async (event) => {
     return { statusCode: 204, headers, body: '' };
   }
 
+  if (!STRIPE_SECRET_KEY) {
+    return {
+      statusCode: 500,
+      headers,
+      body: JSON.stringify({
+        success: false,
+        error: 'STRIPE_SECRET_KEY is not configured in Netlify environment variables.'
+      })
+    };
+  }
+
   try {
     let payload = {};
     try {

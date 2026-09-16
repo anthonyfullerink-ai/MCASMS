@@ -47,6 +47,19 @@ exports.handler = async (event) => {
     return { statusCode: 204, headers, body: '' };
   }
 
+  if (!STRIPE_SECRET_KEY) {
+    return {
+      statusCode: 200,
+      headers,
+      body: JSON.stringify({
+        success: false,
+        connected: false,
+        error: "STRIPE_SECRET_KEY is not set in Netlify environment variables.",
+        message: "Please add STRIPE_SECRET_KEY to your Netlify dashboard under Site configuration > Environment variables."
+      })
+    };
+  }
+
   const start = Date.now();
   try {
     const balance = await stripeApiRequest('/v1/balance');
