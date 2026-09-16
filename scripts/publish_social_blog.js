@@ -24,7 +24,28 @@ loadEnv();
 const TOKEN = process.env.META_PAGE_ACCESS_TOKEN || '';
 const FB_PAGE_ID = process.env.FB_PAGE_ID || '1248332278370968';
 const IG_USER_ID = process.env.IG_USER_ID || '17841428781387416';
-const IMAGE_URL = 'https://raw.githubusercontent.com/anthonyfullerink-ai/MCASMS/main/assets/og-preview.jpg';
+
+function getSocialImageUrl(article = {}) {
+  if (article.imageUrl && article.imageUrl.startsWith('http')) {
+    return article.imageUrl;
+  }
+  
+  const titleAndTags = `${article.title || ''} ${(article.tags || []).join(' ')} ${article.category || ''}`.toLowerCase();
+  
+  if (titleAndTags.includes('contractor') || titleAndTags.includes('job') || titleAndTags.includes('plumb') || titleAndTags.includes('roof') || titleAndTags.includes('hvac') || titleAndTags.includes('solo') || titleAndTags.includes('ladder') || titleAndTags.includes('sink')) {
+    return 'https://raw.githubusercontent.com/anthonyfullerink-ai/MCASMS/main/assets/social/contractor-jobsite.jpg';
+  }
+  
+  if (titleAndTags.includes('speed') || titleAndTags.includes('lead') || titleAndTags.includes('ad') || titleAndTags.includes('google') || titleAndTags.includes('competitor') || titleAndTags.includes('roi') || titleAndTags.includes('decay')) {
+    return 'https://raw.githubusercontent.com/anthonyfullerink-ai/MCASMS/main/assets/social/speed-to-lead.jpg';
+  }
+  
+  if (titleAndTags.includes('saas') || titleAndTags.includes('a2p') || titleAndTags.includes('carrier') || titleAndTags.includes('appliance') || titleAndTags.includes('hardware') || titleAndTags.includes('fee') || titleAndTags.includes('twilio') || titleAndTags.includes('filter')) {
+    return 'https://raw.githubusercontent.com/anthonyfullerink-ai/MCASMS/main/assets/social/appliance-vs-saas.jpg';
+  }
+  
+  return 'https://raw.githubusercontent.com/anthonyfullerink-ai/MCASMS/main/assets/facebook-banner.jpg';
+}
 
 function postGraphApi(endpoint, postData) {
   return new Promise((resolve, reject) => {
@@ -108,9 +129,12 @@ async function publishToSocial(article) {
 
     const igCaption = `🚀 ${article.title}\n\n${article.excerpt || ''}\n\nRead the full guide at missedcallautosms.com/blog/${article.slug} (Link in bio!)\n\n#missedcallautosms #speedtolead #contractors #smallbusiness ${hashTags}`.trim();
 
+    const activeImageUrl = getSocialImageUrl(article);
+    console.log(`🖼️ Using contextual social image: ${activeImageUrl}`);
+
     console.log('Step 2a: Creating media container...');
     const containerRes = await postGraphApi(`/v20.0/${IG_USER_ID}/media`, {
-      image_url: IMAGE_URL,
+      image_url: activeImageUrl,
       caption: igCaption,
       access_token: TOKEN
     });
