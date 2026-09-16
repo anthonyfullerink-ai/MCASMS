@@ -131,11 +131,12 @@ exports.handler = async (event) => {
       };
     }
 
-    const host = event.headers.host || 'missedcallautosms.com';
+    const reqHeaders = event.headers || {};
+    const host = reqHeaders.host || 'missedcallautosms.com';
+    const proto = reqHeaders['x-forwarded-proto'] || 'https';
     const apkDownloadUrl = `https://${host}/MissedCallAutoSMS.apk`;
     const isFree = licenseType === 'FREE' || price === 0 || price === '0' || price === '0.00';
 
-    const reqHeaders = event.headers || {};
     const resendKey = reqHeaders['x-resend-key'] || RESEND_API_KEY;
 
     const emailSubject = `Your Missed Call Auto SMS License Key & Setup Guide`;
