@@ -1294,15 +1294,77 @@
                     price: record.price
                 })
             });
-            if (data.success) {
-                alert(`📧 License Key & APK Link successfully dispatched to ${record.email}!\n\nKey: ${record.key}\nAPK Link: ${data.apkDownloadUrl}`);
-            } else {
-                alert(`⚠️ Error sending email: ${data.error}`);
-            }
+            openLicenseDeliveryModal(record, data);
         } catch (e) {
             console.error('Email send error:', e);
-            alert(`📧 Email dispatched to ${record.email}! (Notice: ${e.message})`);
+            openLicenseDeliveryModal(record, { success: false, error: e.message });
         }
+    }
+
+    function openLicenseDeliveryModal(record, data = {}) {
+        const modal = document.getElementById("licenseDeliveryModal");
+        if (!modal) return;
+
+        const email = record.email || '';
+        const name = record.name ? record.name.replace(/\s*\(Free License\)/i, '') : 'Valued Customer';
+        const key = record.key;
+        const apkUrl = data.apkDownloadUrl || 'https://missedcallautosms.com/MissedCallAutoSMS.apk';
+
+        const subjectText = "Your Missed Call Auto SMS License Key & Setup Guide";
+        const bodyText = `Hi ${name},
+
+Thank you for using Missed Call Auto SMS! Here is your license key and quick setup guide:
+
+🔑 YOUR HARDWARE LICENSE KEY:
+${key}
+
+📥 DOWNLOAD THE ANDROID APP (.APK):
+${apkUrl}
+
+🚀 3-STEP ACTIVATION:
+1. Download and install the APK on your Android phone.
+2. Open the app and paste your License Key (${key}).
+3. Grant standard SMS & Call Log permissions, then toggle Master Appliance ON!
+
+If you need any help, reply directly to this message.`;
+
+        const mailtoLink = `mailto:${encodeURIComponent(email)}?subject=${encodeURIComponent(subjectText)}&body=${encodeURIComponent(bodyText)}`;
+
+        const copyText = `Hi ${name}! Here are your Missed Call Auto SMS activation details:
+
+🔑 License Key: ${key}
+📥 Download Android App: ${apkUrl}
+
+Quick 3-Step Setup:
+1. Install the APK on your Android phone.
+2. Paste key (${key}).
+3. Toggle Master Appliance ON!`;
+
+        document.getElementById("modalRecipient").innerText = email;
+        document.getElementById("modalKey").innerText = key;
+        
+        const mailtoBtn = document.getElementById("modalMailtoBtn");
+        mailtoBtn.href = mailtoLink;
+
+        const copyBtn = document.getElementById("modalCopyBtn");
+        copyBtn.onclick = () => {
+            navigator.clipboard.writeText(copyText).then(() => {
+                alert("📋 Copied license & setup instructions to clipboard! You can now paste into an SMS, WhatsApp, or email.");
+            });
+        };
+
+        const statusBanner = document.getElementById("modalStatusBanner");
+        if (data.cloudSent) {
+            statusBanner.style.background = "rgba(0, 230, 118, 0.15)";
+            statusBanner.style.borderColor = "var(--primary)";
+            statusBanner.innerHTML = `🟢 <strong>Delivered!</strong> Email dispatched to <strong>${escapeHtml(email)}</strong> via Cloud Email API.`;
+        } else {
+            statusBanner.style.background = "rgba(255, 179, 0, 0.15)";
+            statusBanner.style.borderColor = "var(--warning)";
+            statusBanner.innerHTML = `ℹ️ <strong>License Created!</strong> Choose how to send the setup guide to <strong>${escapeHtml(email)}</strong> below:`;
+        }
+
+        modal.style.display = "flex";
     }
 
     function triggerEmailForKey(key) {
@@ -1668,5 +1730,37 @@
 
     checkAuth();
 </script>
+
+<!-- License Delivery Action Modal -->
+<div id="licenseDeliveryModal" style="display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.85); backdrop-filter: blur(6px); z-index: 99999; justify-content: center; align-items: center; padding: 20px;">
+    <div style="background: #131720; border: 1px solid var(--card-border); border-radius: 16px; max-width: 520px; width: 100%; padding: 24px; box-shadow: 0 12px 48px rgba(0,0,0,0.7);">
+        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 16px;">
+            <h3 style="margin: 0; color: #FFF; font-size: 18px; display: flex; align-items: center; gap: 8px;">
+                <span>📧</span> License Key Delivery Hub
+            </h3>
+            <button onclick="document.getElementById('licenseDeliveryModal').style.display='none'" style="background: none; border: none; color: var(--muted); font-size: 24px; cursor: pointer; padding: 4px;">✕</button>
+        </div>
+        
+        <div id="modalStatusBanner" style="padding: 14px; border-radius: 10px; border: 1px solid; margin-bottom: 16px; font-size: 13px; color: #FFF; line-height: 1.5;"></div>
+
+        <div style="background: #090B0E; border: 1px solid var(--card-border); border-radius: 10px; padding: 14px; margin-bottom: 20px;">
+            <div style="font-size: 13px; color: var(--muted); margin-bottom: 6px;">Customer / Recipient: <strong id="modalRecipient" style="color: #FFF;"></strong></div>
+            <div style="font-size: 13px; color: var(--muted); margin-bottom: 4px;">License Key:</div>
+            <div style="background: #161B22; padding: 8px 12px; border-radius: 6px; border: 1px dashed var(--primary); font-family: monospace; font-size: 15px; color: var(--primary); font-weight: bold; word-break: break-all;" id="modalKey"></div>
+        </div>
+
+        <div style="display: flex; flex-direction: column; gap: 12px;">
+            <a id="modalMailtoBtn" href="#" class="btn-action btn-primary-action" style="text-align: center; text-decoration: none; padding: 14px; font-size: 15px; font-weight: bold; border-radius: 8px; display: block;">
+                🚀 Open in Email App (Gmail / Outlook / Mail)
+            </a>
+            <button id="modalCopyBtn" class="btn-action" style="padding: 13px; font-size: 14px; font-weight: bold; border-radius: 8px;">
+                📋 Copy Full Message (To Text via SMS / WhatsApp)
+            </button>
+            <button onclick="document.getElementById('licenseDeliveryModal').style.display='none'" class="btn-action" style="background: #21262D; color: var(--muted); border: none; padding: 10px; font-size: 13px; border-radius: 8px;">
+                Close
+            </button>
+        </div>
+    </div>
+</div>
 </body>
 </html>
