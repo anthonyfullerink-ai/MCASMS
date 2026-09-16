@@ -6,7 +6,8 @@
 /api/cancel-trial  /.netlify/functions/cancel-trial  200
 /api/reset-device  /.netlify/functions/reset-device  200
 /api/send-license-email /.netlify/functions/send-license-email 200
-/api/publish-social /.netlify/functions/publish-social 200
+/api/generate-blog     /.netlify/functions/generate-blog 200
+/api/publish-social    /.netlify/functions/publish-social 200
 /api/update-version /.netlify/functions/update-version 200
 /app-debug.apk /MissedCallAutoSMS.apk 301
 /blog               /blog.html                  200

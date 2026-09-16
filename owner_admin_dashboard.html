@@ -1852,9 +1852,7 @@ Quick 3-Step Setup:
         alertBox.innerHTML = `🤖 <strong>Google Gemini Engine Active</strong>: Brainstorming unique angle, writing long-form SEO copy, formatting JSON-LD Schema, and saving static HTML...`;
 
         try {
-            const apiBase = getApiBaseUrl();
-            const res = await fetch(`${apiBase}/api/generate-blog`, { method: "POST" });
-            const data = await res.json();
+            const data = await safeFetchJson('/api/generate-blog', { method: "POST" });
 
             if (data.success) {
                 alertBox.style.background = "rgba(0, 230, 118, 0.15)";
@@ -1895,13 +1893,11 @@ Quick 3-Step Setup:
         }
 
         try {
-            const apiBase = getApiBaseUrl();
-            const res = await fetch(`${apiBase}/api/publish-social`, {
+            const data = await safeFetchJson('/api/publish-social', {
                 method: "POST",
                 headers: { 'Content-Type': 'application/json' },
                 body: articleData ? JSON.stringify(articleData) : '{}'
             });
-            const data = await res.json();
 
             if (data.success) {
                 if (alertBox) {
