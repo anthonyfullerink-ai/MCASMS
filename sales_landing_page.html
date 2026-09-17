@@ -895,7 +895,7 @@
 
         @media (max-width: 768px) {
             body {
-                padding-bottom: 80px; /* Space for sticky bar */
+                padding-bottom: 125px; /* Space for sticky bar + floating AI button */
             }
             .mobile-menu-btn {
                 display: flex;
@@ -1042,24 +1042,27 @@
             right: 24px;
             background: var(--primary);
             color: #000;
-            border: none;
+            border: 1px solid rgba(255, 255, 255, 0.2);
             border-radius: 30px;
-            padding: 14px 22px;
+            padding: 13px 20px;
             font-weight: 900;
             font-size: 14px;
             cursor: pointer;
-            box-shadow: 0 10px 30px rgba(0, 230, 118, 0.5);
+            box-shadow: 0 10px 30px rgba(0, 230, 118, 0.45);
             z-index: 999999;
             display: flex;
             align-items: center;
             gap: 8px;
-            transition: transform 0.2s, background 0.2s;
+            transition: transform 0.2s, background 0.2s, bottom 0.2s, right 0.2s;
             touch-action: manipulation;
             -webkit-tap-highlight-color: transparent;
         }
 
         .ai-widget-trigger:hover { transform: scale(1.05); background: var(--primary-hover); }
         .ai-widget-trigger * { pointer-events: none; }
+
+        .ai-trigger-label-mobile { display: none; }
+        .ai-trigger-label-desktop { display: inline; }
 
         .ai-widget-window {
             position: fixed;
@@ -1082,20 +1085,43 @@
 
         .ai-widget-window.active { display: flex !important; }
 
-        @media (max-width: 480px) {
-            .ai-widget-window {
-                right: 12px;
-                left: 12px;
-                width: auto;
-                max-width: calc(100vw - 24px);
-                bottom: 80px;
-                height: 480px;
-            }
+        @media (max-width: 768px) {
+            .ai-trigger-label-desktop { display: none; }
+            .ai-trigger-label-mobile { display: inline; }
             .ai-widget-trigger {
-                bottom: 16px;
-                right: 16px;
-                padding: 12px 18px;
-                font-size: 13px;
+                /* Float strictly above the sticky bottom conversion bar */
+                bottom: calc(72px + env(safe-area-inset-bottom, 8px));
+                right: 14px;
+                padding: 10px 16px;
+                font-size: 12.5px;
+                border-radius: 24px;
+                box-shadow: 0 4px 20px rgba(0,0,0,0.8), 0 0 15px rgba(0, 230, 118, 0.45);
+            }
+            .ai-widget-window {
+                bottom: calc(74px + env(safe-area-inset-bottom, 8px)) !important;
+                right: 12px !important;
+                left: 12px !important;
+                width: auto !important;
+                max-width: calc(100vw - 24px) !important;
+                height: 480px !important;
+                max-height: calc(100vh - 160px) !important;
+            }
+        }
+
+        @media (max-width: 480px) {
+            .ai-widget-trigger {
+                bottom: calc(70px + env(safe-area-inset-bottom, 6px));
+                right: 10px;
+                padding: 8px 14px;
+                font-size: 12px;
+                gap: 6px;
+            }
+            .ai-widget-window {
+                bottom: calc(68px + env(safe-area-inset-bottom, 6px)) !important;
+                right: 8px !important;
+                left: 8px !important;
+                max-width: calc(100vw - 16px) !important;
+                max-height: calc(100vh - 145px) !important;
             }
         }
 
@@ -1263,8 +1289,10 @@
 </div>
 
 <!-- Floating AI Support Agent Trigger Button -->
-<button type="button" id="aiAgentTrigger" class="ai-widget-trigger" onclick="toggleAiWidget(event)">
-    💬 <span>AI Support & Voice Assistant</span>
+<button type="button" id="aiAgentTrigger" class="ai-widget-trigger" onclick="toggleAiWidget(event)" aria-label="Open AI Support & Voice Assistant">
+    <span style="font-size: 16px;">💬</span>
+    <span class="ai-trigger-label-desktop">AI Support & Voice Assistant</span>
+    <span class="ai-trigger-label-mobile">AI Support</span>
 </button>
 
 <!-- AI Support Agent Chat & Voice Window -->
