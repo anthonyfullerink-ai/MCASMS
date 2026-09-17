@@ -39,6 +39,10 @@ class SettingsRepository(private val context: Context) {
         val WEBHOOK_API_SECRET = stringPreferencesKey("webhook_api_secret")
         val FCM_DEVICE_TOKEN = stringPreferencesKey("fcm_device_token")
         val PREFERRED_SIM_SLOT = intPreferencesKey("preferred_sim_slot")
+        val OUTBOUND_WEBHOOK_ENABLED = booleanPreferencesKey("outbound_webhook_enabled")
+        val MUTE_NATIVE_AUTO_REPLY = booleanPreferencesKey("mute_native_auto_reply")
+        val SELECTED_OUTBOUND_WEBHOOK_URL = stringPreferencesKey("selected_outbound_webhook_url")
+        val SAVED_OUTBOUND_WEBHOOKS_JSON = stringPreferencesKey("saved_outbound_webhooks_json")
     }
 
     val settingsFlow: Flow<AppSettings> = context.dataStore.data.map { preferences ->
@@ -51,6 +55,17 @@ class SettingsRepository(private val context: Context) {
             }
         } else {
             AppSchedule()
+        }
+
+        val savedWebhooksJson = preferences[SAVED_OUTBOUND_WEBHOOKS_JSON]
+        val savedWebhooks = if (!savedWebhooksJson.isNullOrEmpty()) {
+            try {
+                gson.fromJson(savedWebhooksJson, Array<String>::class.java)?.toList() ?: emptyList()
+            } catch (e: Exception) {
+                emptyList()
+            }
+        } else {
+            emptyList()
         }
 
         AppSettings(
@@ -73,7 +88,11 @@ class SettingsRepository(private val context: Context) {
             webhookEnabled = preferences[WEBHOOK_ENABLED] ?: true,
             webhookApiSecret = preferences[WEBHOOK_API_SECRET] ?: "",
             fcmDeviceToken = preferences[FCM_DEVICE_TOKEN] ?: "",
-            preferredSimSlot = preferences[PREFERRED_SIM_SLOT] ?: 0
+            preferredSimSlot = preferences[PREFERRED_SIM_SLOT] ?: 0,
+            outboundWebhookEnabled = preferences[OUTBOUND_WEBHOOK_ENABLED] ?: false,
+            muteNativeAutoReply = preferences[MUTE_NATIVE_AUTO_REPLY] ?: false,
+            selectedOutboundWebhookUrl = preferences[SELECTED_OUTBOUND_WEBHOOK_URL] ?: "",
+            savedOutboundWebhooks = savedWebhooks
         )
     }
 
@@ -137,6 +156,10 @@ class SettingsRepository(private val context: Context) {
             }
             preferences[FCM_DEVICE_TOKEN] = settings.fcmDeviceToken
             preferences[PREFERRED_SIM_SLOT] = settings.preferredSimSlot
+            preferences[OUTBOUND_WEBHOOK_ENABLED] = settings.outboundWebhookEnabled
+            preferences[MUTE_NATIVE_AUTO_REPLY] = settings.muteNativeAutoReply
+            preferences[SELECTED_OUTBOUND_WEBHOOK_URL] = settings.selectedOutboundWebhookUrl
+            preferences[SAVED_OUTBOUND_WEBHOOKS_JSON] = gson.toJson(settings.savedOutboundWebhooks)
         }
     }
 }

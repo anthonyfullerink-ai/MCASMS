@@ -3,9 +3,9 @@
   "nodes": [
     {
       "parameters": {
-        "content": "## 🚀 Missed Call Auto-SMS (Pro Automation)\n### Android Hardware Carrier Gateway\n\nThis ready-to-import workflow connects your CRM, forms, and webhooks directly to your physical Android business phone.\n\n**Option 1: Central Cloud Relay (n8n Cloud & Make - Zero Config):**\n1. Paste your Pro License Key into the `Configure SMS & Device Target` node.\n2. n8n Cloud dispatches to `https://missedcallautosms.com/.netlify/functions/dispatch-sms`.\n3. The message arrives at your phone anywhere in the world on 5G or Wi-Fi without VPNs or port forwarding!\n\n**Option 2: Local Wi-Fi / LAN:**\n- If running self-hosted n8n on the same Wi-Fi, you can dispatch directly to `http://192.168.1.x:8080/api/send-sms`.",
-        "height": 380,
-        "width": 440,
+        "content": "## 🚀 Missed Call Auto-SMS (Pro Automation)\n### Android Hardware Carrier Gateway\n\nThis ready-to-import workflow connects your CRM, forms, and webhooks directly to your physical Android business phone.\n\n**Option 1: Central Cloud Relay (n8n Cloud & Make - Zero Config):**\n1. Paste your Pro License Key into the `Configure SMS & Device Target` node.\n2. n8n Cloud dispatches to `https://missedcallautosms.com/.netlify/functions/dispatch-sms`.\n3. The message arrives at your phone anywhere in the world on 5G or Wi-Fi without VPNs or port forwarding!\n\n**Option 2: Local Wi-Fi / LAN:**\n- If running self-hosted n8n on the same Wi-Fi, you can dispatch directly to `http://192.168.1.x:8080/api/send-sms`.\n\n**Option 3: Outbound Missed Call Forwarder (Zero Double-Sends):**\n- In Android App -> Settings -> Outbound Event Forwarder, select or add: `https://YOUR-N8N-DOMAIN/webhook/mcas-missed-call`.\n- Enable 'Mute Native Auto-Reply'. When a customer calls and hangs up, n8n receives the caller data and triggers your customized AI or CRM text-back!",
+        "height": 420,
+        "width": 460,
         "color": 4
       },
       "id": "note-quickstart",
@@ -31,6 +31,70 @@
       "position": [
         680,
         180
+      ]
+    },
+    {
+      "parameters": {
+        "httpMethod": "POST",
+        "path": "mcas-missed-call",
+        "responseMode": "onReceived",
+        "options": {}
+      },
+      "id": "node-webhook-missed-call",
+      "name": "Webhook: Android Missed Call Forwarder",
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 2,
+      "position": [
+        200,
+        320
+      ],
+      "webhookId": "mcas-missed-call"
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "mc-phone",
+              "name": "phone",
+              "value": "={{ $json.body.phone }}",
+              "type": "string"
+            },
+            {
+              "id": "mc-msg",
+              "name": "message",
+              "value": "={{ 'Hi ' + ($json.body.caller_name ? $json.body.caller_name : 'there') + ', sorry I missed your call! I am currently assisting another client. How can I help you today?' }}",
+              "type": "string"
+            },
+            {
+              "id": "mc-key",
+              "name": "license_key",
+              "value": "REPLACE_WITH_YOUR_MCAS_PRO_LICENSE_KEY",
+              "type": "string"
+            },
+            {
+              "id": "mc-sim",
+              "name": "sim_slot",
+              "value": "={{ $json.body.sim_slot || 1 }}",
+              "type": "number"
+            },
+            {
+              "id": "mc-callback",
+              "name": "callback_url",
+              "value": "https://YOUR-N8N-DOMAIN.com/webhook/sms-delivery-callback",
+              "type": "string"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "id": "node-prepare-missed-call-reply",
+      "name": "Configure Missed Call AI / Auto-Reply",
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        440,
+        320
       ]
     },
     {
@@ -278,6 +342,28 @@
     }
   ],
   "connections": {
+    "Webhook: Android Missed Call Forwarder": {
+      "main": [
+        [
+          {
+            "node": "Configure Missed Call AI / Auto-Reply",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Configure Missed Call AI / Auto-Reply": {
+      "main": [
+        [
+          {
+            "node": "HTTP Request: Dispatch to Android Phone",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
     "Webhook: Inbound CRM / Lead Trigger": {
       "main": [
         [

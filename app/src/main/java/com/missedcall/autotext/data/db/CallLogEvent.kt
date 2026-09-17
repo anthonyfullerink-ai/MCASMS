@@ -12,7 +12,8 @@ enum class LogStatus {
     SKIPPED_UNLICENSED,
     FAILED_SIM_ERROR,
     REMOTE_SENT,
-    REMOTE_REJECTED
+    REMOTE_REJECTED,
+    FORWARDED_TO_WEBHOOK
 }
 
 @Entity(tableName = "call_log_events")

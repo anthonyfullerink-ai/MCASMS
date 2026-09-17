@@ -124,6 +124,33 @@ class SendAutoTextWorker(
             return Result.success()
         }
 
+        val effectiveSimSlot = if (requestedSimSlot > 0) requestedSimSlot else settings.preferredSimSlot
+
+        // 5. Outbound Missed Call Forwarding (e.g. to n8n Webhook)
+        if (!isRemoteTrigger && settings.outboundWebhookEnabled && settings.selectedOutboundWebhookUrl.isNotBlank()) {
+            Log.i(TAG, "Forwarding missed call from $targetNumber to n8n webhook: ${settings.selectedOutboundWebhookUrl}")
+            sendOutboundMissedCallWebhook(
+                webhookUrl = settings.selectedOutboundWebhookUrl,
+                phoneNumber = targetNumber,
+                callerName = contactName ?: "Unknown",
+                simSlot = effectiveSimSlot,
+                deviceId = LicenseManager.getDeviceId(applicationContext)
+            )
+        }
+
+        // 6. Check Mute Native Auto-Reply (If user uses n8n to respond, avoid double-texting)
+        if (!isRemoteTrigger && settings.muteNativeAutoReply) {
+            Log.i(TAG, "Native auto-reply template is MUTED (n8n automation active). Skipping local SMS for $targetNumber")
+            dao.insertLog(
+                CallLogEvent(
+                    phoneNumber = targetNumber,
+                    status = LogStatus.FORWARDED_TO_WEBHOOK,
+                    messageSent = "[Muted - Forwarded to n8n Webhook]"
+                )
+            )
+            return Result.success()
+        }
+
         // Determine message body
         val displayName = contactName ?: "there"
         val messageBody = if (!overrideMessage.isNullOrBlank()) {
@@ -140,8 +167,6 @@ class SendAutoTextWorker(
             Log.d(TAG, "Applying jitter delay of ${settings.jitterDelaySeconds} seconds...")
             delay(delayMillis)
         }
-
-        val effectiveSimSlot = if (requestedSimSlot > 0) requestedSimSlot else settings.preferredSimSlot
 
         // Carrier Anti-Spam & SIM Burn Safeguard™ (Minimum 3.5s pacing + burst protection)
         com.missedcall.autotext.util.SmsRateLimiter.acquireSendSlot(isRemoteTrigger)
@@ -266,6 +291,46 @@ class SendAutoTextWorker(
             } catch (e: Exception) {
                 Log.w(TAG, "Failed to send delivery callback to $callbackUrl: ${e.localizedMessage}")
             }
+        }
+    }
+
+    private suspend fun sendOutboundMissedCallWebhook(
+        webhookUrl: String,
+        phoneNumber: String,
+        callerName: String,
+        simSlot: Int,
+        deviceId: String
+    ) = withContext(Dispatchers.IO) {
+        try {
+            val url = URL(webhookUrl)
+            val conn = url.openConnection() as HttpURLConnection
+            conn.requestMethod = "POST"
+            conn.setRequestProperty("Content-Type", "application/json; utf-8")
+            conn.setRequestProperty("Accept", "application/json")
+            conn.doOutput = true
+            conn.connectTimeout = 8000
+            conn.readTimeout = 8000
+
+            val payloadMap = mutableMapOf<String, Any>(
+                "event" to "MISSED_CALL",
+                "phone" to phoneNumber,
+                "caller_name" to callerName,
+                "timestamp" to System.currentTimeMillis(),
+                "device_id" to deviceId
+            )
+            if (simSlot > 0) payloadMap["sim_slot"] = simSlot
+
+            val jsonBody = Gson().toJson(payloadMap)
+            conn.outputStream.use { os ->
+                val input = jsonBody.toByteArray(StandardCharsets.UTF_8)
+                os.write(input, 0, input.size)
+            }
+
+            val responseCode = conn.responseCode
+            Log.i(TAG, "Outbound missed call event forwarded to $webhookUrl. HTTP response: $responseCode")
+            conn.disconnect()
+        } catch (e: Exception) {
+            Log.w(TAG, "Failed to forward missed call to $webhookUrl: ${e.localizedMessage}")
         }
     }
 }

@@ -26,5 +26,9 @@ data class AppSettings(
     val webhookEnabled: Boolean = true,
     val webhookApiSecret: String = "",
     val fcmDeviceToken: String = "",
-    val preferredSimSlot: Int = 0
+    val preferredSimSlot: Int = 0,
+    val outboundWebhookEnabled: Boolean = false,
+    val muteNativeAutoReply: Boolean = false,
+    val selectedOutboundWebhookUrl: String = "",
+    val savedOutboundWebhooks: List<String> = emptyList()
 )

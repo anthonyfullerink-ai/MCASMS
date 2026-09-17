@@ -239,6 +239,7 @@ fun StatusBadge(status: LogStatus) {
         LogStatus.FAILED_SIM_ERROR -> Triple("Failed (SIM)", RedError.copy(alpha = 0.2f), RedError)
         LogStatus.REMOTE_SENT -> Triple("n8n Sent", ActiveGreenContainer, ActiveGreenText)
         LogStatus.REMOTE_REJECTED -> Triple("n8n Unauthorized", RedError.copy(alpha = 0.2f), RedError)
+        LogStatus.FORWARDED_TO_WEBHOOK -> Triple("Forwarded to n8n", PurpleVariant.copy(alpha = 0.2f), PurpleVariant)
     }
 
     Surface(

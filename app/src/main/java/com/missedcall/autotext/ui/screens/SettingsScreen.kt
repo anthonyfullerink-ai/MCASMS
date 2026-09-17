@@ -20,8 +20,18 @@ import androidx.compose.material.icons.filled.PhoneAndroid
 import androidx.compose.material.icons.filled.Schedule
 import androidx.compose.material.icons.filled.Security
 import androidx.compose.material.icons.filled.VerifiedUser
+import androidx.compose.material.icons.filled.Add
+import androidx.compose.material.icons.filled.ArrowDropDown
+import androidx.compose.material.icons.filled.Delete
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
+import com.google.gson.Gson
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.launch
+import kotlinx.coroutines.withContext
+import java.net.HttpURLConnection
+import java.net.URL
+import java.nio.charset.StandardCharsets
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
@@ -54,6 +64,11 @@ fun SettingsScreen(
     var testWebhookPhone by remember { mutableStateOf("") }
     var testWebhookMsg by remember { mutableStateOf("🚀 End-to-End™ Test: n8n automation SMS dispatched via phone SIM!") }
     var testSimSlot by remember { mutableStateOf(settings.preferredSimSlot) }
+    val coroutineScope = rememberCoroutineScope()
+    var isDropdownExpanded by remember { mutableStateOf(false) }
+    var newWebhookUrlInput by remember { mutableStateOf("") }
+    var isPingingWebhook by remember { mutableStateOf(false) }
+    var pingStatusMessage by remember { mutableStateOf<String?>(null) }
     val activeSimInfoList = remember {
         try {
             val sm = context.getSystemService(android.telephony.SubscriptionManager::class.java)
@@ -805,6 +820,332 @@ fun SettingsScreen(
                         colors = ButtonDefaults.buttonColors(containerColor = MaterialTheme.colorScheme.primary)
                     ) {
                         Text("Simulate Webhook Dispatch ➔", fontWeight = FontWeight.Bold)
+                    }
+                }
+            }
+        }
+
+        // 8.1 Outbound Missed Call Forwarding (n8n Automations)
+        Card(
+            shape = RoundedCornerShape(16.dp),
+            modifier = Modifier.fillMaxWidth()
+        ) {
+            Column(modifier = Modifier.padding(16.dp)) {
+                Row(
+                    modifier = Modifier.fillMaxWidth(),
+                    horizontalArrangement = Arrangement.SpaceBetween,
+                    verticalAlignment = Alignment.CenterVertically
+                ) {
+                    Row(verticalAlignment = Alignment.CenterVertically) {
+                        Icon(
+                            imageVector = Icons.Default.Call,
+                            contentDescription = "Outbound Webhook Icon",
+                            tint = MaterialTheme.colorScheme.primary
+                        )
+                        Spacer(modifier = Modifier.width(8.dp))
+                        Text(
+                            text = "Missed Call n8n Forwarder",
+                            style = MaterialTheme.typography.titleMedium,
+                            fontWeight = FontWeight.Bold
+                        )
+                    }
+                    Switch(
+                        checked = settings.outboundWebhookEnabled,
+                        onCheckedChange = { onSettingsChanged(settings.copy(outboundWebhookEnabled = it)) }
+                    )
+                }
+
+                Spacer(modifier = Modifier.height(8.dp))
+                Text(
+                    text = "When a call is missed on this phone, instantly forward the event to your n8n workflow URL so your automated sequences can take over.",
+                    style = MaterialTheme.typography.bodySmall,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant
+                )
+
+                if (settings.outboundWebhookEnabled) {
+                    Spacer(modifier = Modifier.height(14.dp))
+
+                    // Anti-Double-Send / Mute Native Template Switch
+                    Surface(
+                        shape = RoundedCornerShape(12.dp),
+                        color = if (settings.muteNativeAutoReply) ActiveGreenContainer.copy(alpha = 0.35f) else MaterialTheme.colorScheme.surfaceVariant,
+                        border = androidx.compose.foundation.BorderStroke(
+                            1.dp,
+                            if (settings.muteNativeAutoReply) ActiveGreenText else MaterialTheme.colorScheme.outline.copy(alpha = 0.3f)
+                        ),
+                        modifier = Modifier.fillMaxWidth()
+                    ) {
+                        Row(
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .padding(12.dp),
+                            horizontalArrangement = Arrangement.SpaceBetween,
+                            verticalAlignment = Alignment.CenterVertically
+                        ) {
+                            Column(modifier = Modifier.weight(1f).padding(end = 12.dp)) {
+                                Text(
+                                    text = "Mute Native Auto-Reply (No Double-Sends)",
+                                    style = MaterialTheme.typography.titleSmall,
+                                    fontWeight = FontWeight.Bold,
+                                    color = if (settings.muteNativeAutoReply) ActiveGreenText else MaterialTheme.colorScheme.onSurface
+                                )
+                                Spacer(modifier = Modifier.height(2.dp))
+                                Text(
+                                    text = if (settings.muteNativeAutoReply)
+                                        "✅ Active: Local SMS template is silenced. Only your n8n workflow will send messages to the caller."
+                                    else
+                                        "⚠️ Inactive: Both this app's template AND n8n will send a text (potential double text).",
+                                    style = MaterialTheme.typography.bodySmall,
+                                    color = MaterialTheme.colorScheme.onSurfaceVariant
+                                )
+                            }
+                            Switch(
+                                checked = settings.muteNativeAutoReply,
+                                onCheckedChange = { onSettingsChanged(settings.copy(muteNativeAutoReply = it)) },
+                                colors = SwitchDefaults.colors(
+                                    checkedThumbColor = ActiveGreenText,
+                                    checkedTrackColor = ActiveGreenContainer
+                                )
+                            )
+                        }
+                    }
+
+                    Spacer(modifier = Modifier.height(16.dp))
+
+                    // Webhook Selector Dropdown
+                    Text(
+                        text = "Active n8n Webhook Target",
+                        fontWeight = FontWeight.Bold,
+                        style = MaterialTheme.typography.titleSmall
+                    )
+                    Spacer(modifier = Modifier.height(6.dp))
+
+                    Box(modifier = Modifier.fillMaxWidth()) {
+                        OutlinedCard(
+                            onClick = { isDropdownExpanded = true },
+                            shape = RoundedCornerShape(10.dp),
+                            modifier = Modifier.fillMaxWidth()
+                        ) {
+                            Row(
+                                modifier = Modifier
+                                    .fillMaxWidth()
+                                    .padding(horizontal = 14.dp, vertical = 12.dp),
+                                horizontalArrangement = Arrangement.SpaceBetween,
+                                verticalAlignment = Alignment.CenterVertically
+                            ) {
+                                Text(
+                                    text = if (settings.selectedOutboundWebhookUrl.isNotBlank())
+                                        settings.selectedOutboundWebhookUrl
+                                    else if (settings.savedOutboundWebhooks.isNotEmpty())
+                                        "Select an integrated webhook..."
+                                    else
+                                        "No webhooks saved yet (Add below)",
+                                    style = MaterialTheme.typography.bodyMedium,
+                                    color = if (settings.selectedOutboundWebhookUrl.isNotBlank())
+                                        MaterialTheme.colorScheme.onSurface
+                                    else
+                                        MaterialTheme.colorScheme.onSurfaceVariant,
+                                    maxLines = 1,
+                                    modifier = Modifier.weight(1f)
+                                )
+                                Icon(
+                                    imageVector = Icons.Default.ArrowDropDown,
+                                    contentDescription = "Open Webhook Dropdown"
+                                )
+                            }
+                        }
+
+                        DropdownMenu(
+                            expanded = isDropdownExpanded,
+                            onDismissRequest = { isDropdownExpanded = false },
+                            modifier = Modifier.fillMaxWidth(0.9f)
+                        ) {
+                            if (settings.savedOutboundWebhooks.isNotEmpty()) {
+                                settings.savedOutboundWebhooks.forEach { url ->
+                                    val isSelected = settings.selectedOutboundWebhookUrl == url
+                                    DropdownMenuItem(
+                                        text = {
+                                            Row(
+                                                modifier = Modifier.fillMaxWidth(),
+                                                horizontalArrangement = Arrangement.SpaceBetween,
+                                                verticalAlignment = Alignment.CenterVertically
+                                            ) {
+                                                Text(
+                                                    text = url,
+                                                    style = MaterialTheme.typography.bodySmall,
+                                                    fontWeight = if (isSelected) FontWeight.Bold else FontWeight.Normal,
+                                                    color = if (isSelected) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.onSurface,
+                                                    modifier = Modifier.weight(1f),
+                                                    maxLines = 1
+                                                )
+                                                if (isSelected) {
+                                                    Spacer(modifier = Modifier.width(8.dp))
+                                                    Icon(
+                                                        imageVector = Icons.Default.CheckCircle,
+                                                        contentDescription = "Selected",
+                                                        tint = DarkGreenPrimary,
+                                                        modifier = Modifier.size(16.dp)
+                                                    )
+                                                }
+                                                IconButton(
+                                                    onClick = {
+                                                        val updatedList = settings.savedOutboundWebhooks - url
+                                                        val updatedSelected = if (settings.selectedOutboundWebhookUrl == url) {
+                                                            updatedList.firstOrNull() ?: ""
+                                                        } else {
+                                                            settings.selectedOutboundWebhookUrl
+                                                        }
+                                                        onSettingsChanged(
+                                                            settings.copy(
+                                                                savedOutboundWebhooks = updatedList,
+                                                                selectedOutboundWebhookUrl = updatedSelected
+                                                            )
+                                                        )
+                                                    },
+                                                    modifier = Modifier.size(24.dp)
+                                                ) {
+                                                    Icon(
+                                                        imageVector = Icons.Default.Delete,
+                                                        contentDescription = "Remove Webhook",
+                                                        tint = MaterialTheme.colorScheme.error,
+                                                        modifier = Modifier.size(16.dp)
+                                                    )
+                                                }
+                                            }
+                                        },
+                                        onClick = {
+                                            onSettingsChanged(settings.copy(selectedOutboundWebhookUrl = url))
+                                            isDropdownExpanded = false
+                                        }
+                                    )
+                                }
+                                HorizontalDivider()
+                            }
+
+                            DropdownMenuItem(
+                                text = {
+                                    Row(verticalAlignment = Alignment.CenterVertically) {
+                                        Icon(Icons.Default.Add, contentDescription = null, tint = MaterialTheme.colorScheme.primary)
+                                        Spacer(modifier = Modifier.width(8.dp))
+                                        Text("+ Add Webhook", color = MaterialTheme.colorScheme.primary, fontWeight = FontWeight.Bold)
+                                    }
+                                },
+                                onClick = {
+                                    isDropdownExpanded = false
+                                }
+                            )
+                        }
+                    }
+
+                    Spacer(modifier = Modifier.height(12.dp))
+
+                    // Add Webhook Input Box
+                    Text(
+                        text = "Add Webhook URL",
+                        style = MaterialTheme.typography.labelMedium,
+                        fontWeight = FontWeight.Bold
+                    )
+                    Spacer(modifier = Modifier.height(4.dp))
+                    OutlinedTextField(
+                        value = newWebhookUrlInput,
+                        onValueChange = { newWebhookUrlInput = it },
+                        label = { Text("https://your-n8n-instance.com/webhook/missed-call") },
+                        singleLine = true,
+                        modifier = Modifier.fillMaxWidth()
+                    )
+
+                    Spacer(modifier = Modifier.height(8.dp))
+                    Row(
+                        modifier = Modifier.fillMaxWidth(),
+                        horizontalArrangement = Arrangement.spacedBy(8.dp)
+                    ) {
+                        Button(
+                            onClick = {
+                                val trimmed = newWebhookUrlInput.trim()
+                                if (!trimmed.startsWith("http://") && !trimmed.startsWith("https://")) {
+                                    Toast.makeText(context, "Please enter a valid URL starting with http:// or https://", Toast.LENGTH_SHORT).show()
+                                    return@Button
+                                }
+                                val updatedList = if (!settings.savedOutboundWebhooks.contains(trimmed)) {
+                                    settings.savedOutboundWebhooks + trimmed
+                                } else {
+                                    settings.savedOutboundWebhooks
+                                }
+                                onSettingsChanged(
+                                    settings.copy(
+                                        savedOutboundWebhooks = updatedList,
+                                        selectedOutboundWebhookUrl = trimmed
+                                    )
+                                )
+                                newWebhookUrlInput = ""
+                                Toast.makeText(context, "✅ Webhook saved and selected as active target!", Toast.LENGTH_SHORT).show()
+                            },
+                            modifier = Modifier.weight(1f)
+                        ) {
+                            Text("Save Webhook")
+                        }
+
+                        OutlinedButton(
+                            enabled = settings.selectedOutboundWebhookUrl.isNotBlank() && !isPingingWebhook,
+                            onClick = {
+                                isPingingWebhook = true
+                                pingStatusMessage = null
+                                coroutineScope.launch(Dispatchers.IO) {
+                                    try {
+                                        val url = URL(settings.selectedOutboundWebhookUrl)
+                                        val conn = url.openConnection() as HttpURLConnection
+                                        conn.requestMethod = "POST"
+                                        conn.setRequestProperty("Content-Type", "application/json; utf-8")
+                                        conn.doOutput = true
+                                        conn.connectTimeout = 6000
+                                        conn.readTimeout = 6000
+
+                                        val testBody = Gson().toJson(
+                                            mapOf(
+                                                "event" to "TEST_PING",
+                                                "message" to "Missed Call Auto SMS Forwarder Test Ping",
+                                                "phone" to "+15551234567",
+                                                "caller_name" to "Test Caller",
+                                                "timestamp" to System.currentTimeMillis()
+                                            )
+                                        )
+                                        conn.outputStream.use { it.write(testBody.toByteArray(StandardCharsets.UTF_8)) }
+                                        val code = conn.responseCode
+                                        conn.disconnect()
+
+                                        withContext(Dispatchers.Main) {
+                                            isPingingWebhook = false
+                                            pingStatusMessage = if (code in 200..299) {
+                                                "✅ Ping Success! (HTTP $code - Connected to n8n)"
+                                            } else {
+                                                "⚠️ Webhook responded with HTTP $code"
+                                            }
+                                        }
+                                    } catch (err: Exception) {
+                                        withContext(Dispatchers.Main) {
+                                            isPingingWebhook = false
+                                            pingStatusMessage = "❌ Ping failed: ${err.localizedMessage ?: "Connection error"}"
+                                        }
+                                    }
+                                }
+                            }
+                        ) {
+                            if (isPingingWebhook) {
+                                CircularProgressIndicator(modifier = Modifier.size(16.dp), strokeWidth = 2.dp)
+                            } else {
+                                Text("Test Ping")
+                            }
+                        }
+                    }
+
+                    pingStatusMessage?.let { status ->
+                        Spacer(modifier = Modifier.height(8.dp))
+                        Text(
+                            text = status,
+                            style = MaterialTheme.typography.bodySmall,
+                            fontWeight = FontWeight.Bold,
+                            color = if (status.startsWith("✅")) DarkGreenPrimary else MaterialTheme.colorScheme.error
+                        )
                     }
                 }
             }

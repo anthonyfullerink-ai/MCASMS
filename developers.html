@@ -442,6 +442,7 @@
             <a href="#quickstart">Quickstart</a>
             <a href="#relay-api">Cloud Relay</a>
             <a href="#local-api">Local Appliance</a>
+            <a href="#missed-call-webhook">n8n Forwarder</a>
             <a href="#stability">Stability & SLA</a>
             <a href="/support" style="color: var(--primary);">Support Desk</a>
             <a href="https://buy.stripe.com/cNi5kDdJQ558c6k2yB2go0b" class="btn-pro-nav">Get Pro ($149.99)</a>
@@ -697,9 +698,102 @@ Request content:
         </div>
     </div>
 
-    <!-- SECTION 4: Platform Stability, SLA & Resilience -->
+    <!-- SECTION 4: Outbound Missed Call Forwarding (n8n & Webhooks) -->
+    <div id="missed-call-webhook" class="section-card">
+        <h2>⚡ 4. Outbound Missed Call Forwarding (n8n, Make & Custom Webhooks)</h2>
+        <div class="section-sub">Notify your n8n workflows instantly whenever a call is missed, with zero double-texting.</div>
+
+        <p style="color: var(--muted); font-size: 14px; line-height: 1.6;">
+            Want your n8n automation or AI agent to handle missed-call text-backs instead of the Android app's built-in SMS template? The Pro Edition includes an <strong>Outbound Event Forwarder</strong> that transmits callers directly to your custom webhook.
+        </p>
+
+        <div class="grid-2" style="margin-top: 20px;">
+            <div class="feat-box" style="border-left: 3px solid #A855F7;">
+                <h3>🔕 Mute Native Auto-Reply (Zero Double-Sends)</h3>
+                <p>
+                    Enable <strong>"Mute Native Auto-Reply"</strong> in the Android app's Outbound Forwarder settings. When a call is missed, the phone will forward the caller payload to your n8n webhook and suppress its native SMS template. Your n8n automation can then formulate a personalized AI response and send it back through your phone's SIM via Cloud Relay or Local Gateway—guaranteeing <strong>exactly one text is delivered</strong>.
+                </p>
+            </div>
+            <div class="feat-box" style="border-left: 3px solid var(--primary);">
+                <h3>📋 Saved Webhooks Dropdown & Switcher</h3>
+                <p>
+                    Store multiple production and staging endpoints right in the app. Easily switch active endpoints from a dropdown menu, add new webhook URLs on the fly, and run instant <strong>"Test Ping"</strong> verifications with live status code and latency indicators.
+                </p>
+            </div>
+        </div>
+
+        <h3 style="margin-top: 24px; font-size: 16px;">Outbound Missed Call Webhook Payload (Sent from Android)</h3>
+        <p style="color: var(--muted); font-size: 14px;">
+            When an incoming call goes unanswered, the phone immediately dispatches an HTTP POST request to your selected webhook URL:
+        </p>
+
+        <div class="code-container">
+            <pre class="code-snippet active" style="display:block;"><code>{
+  "event": "MISSED_CALL",
+  "phone": "+15551234567",
+  "caller_name": "John Doe",
+  "sim_slot": 1,
+  "timestamp": 1789658400000,
+  "device_id": "DEVICE-ANDROID-UUID"
+}</code></pre>
+        </div>
+
+        <h3 style="margin-top: 24px; font-size: 16px;">Payload Fields</h3>
+        <table>
+            <thead>
+                <tr>
+                    <th>Field</th>
+                    <th>Type</th>
+                    <th>Description</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr>
+                    <td><code>event</code></td>
+                    <td>string</td>
+                    <td>Constant <code>MISSED_CALL</code> indicating an unanswered incoming call.</td>
+                </tr>
+                <tr>
+                    <td><code>phone</code></td>
+                    <td>string</td>
+                    <td>E.164 phone number of the missed caller.</td>
+                </tr>
+                <tr>
+                    <td><code>caller_name</code></td>
+                    <td>string</td>
+                    <td>Caller ID name resolved from phone contacts or network, if available.</td>
+                </tr>
+                <tr>
+                    <td><code>sim_slot</code></td>
+                    <td>integer</td>
+                    <td>Physical SIM slot (<code>1</code> or <code>2</code>) that received the missed call.</td>
+                </tr>
+                <tr>
+                    <td><code>timestamp</code></td>
+                    <td>long</td>
+                    <td>Unix epoch timestamp in milliseconds when the call was missed.</td>
+                </tr>
+                <tr>
+                    <td><code>device_id</code></td>
+                    <td>string</td>
+                    <td>Hardware device identifier running Missed Call Auto SMS.</td>
+                </tr>
+            </tbody>
+        </table>
+
+        <h3 style="margin-top: 24px; font-size: 16px;">Recommended n8n Flow Architecture</h3>
+        <div style="background: #0E131C; border: 1px solid var(--card-border); border-radius: 10px; padding: 18px; color: #CBD5E0; font-size: 13px; line-height: 1.7;">
+            <strong>Step 1:</strong> <code>Webhook Node</code> receives the <code>MISSED_CALL</code> payload.<br>
+            <strong>Step 2:</strong> <code>CRM / Airtable / HubSpot Node</code> checks if the contact is an existing client or hot lead.<br>
+            <strong>Step 3:</strong> <code>OpenAI / Claude Node</code> drafts a customized, context-aware reply.<br>
+            <strong>Step 4:</strong> <code>HTTP Request Node</code> calls <code>https://missedcallautosms.com/api/dispatch-sms</code> with the drafted message.<br>
+            <strong>Result:</strong> Your physical Android phone fires the text message over your cellular carrier plan, keeping conversations 100% natural and never double-sent!
+        </div>
+    </div>
+
+    <!-- SECTION 5: Platform Stability, SLA & Resilience -->
     <div id="stability" class="section-card">
-        <h2>🛡️ 4. Platform Stability, SLA & Resilience Specification</h2>
+        <h2>🛡️ 5. Platform Stability, SLA & Resilience Specification</h2>
         <div class="section-sub">Engineered from the kernel up to run 24/7/365 without sleep drops, memory kills, or carrier flags.</div>
 
         <div class="grid-2">
@@ -740,9 +834,9 @@ Request content:
         </div>
     </div>
 
-    <!-- SECTION 5: HTTP Status Codes & Error Handling -->
+    <!-- SECTION 6: HTTP Status Codes & Error Handling -->
     <div class="section-card">
-        <h2>🚦 5. Response Status Codes & Troubleshooting</h2>
+        <h2>🚦 6. Response Status Codes & Troubleshooting</h2>
         <div class="section-sub">Standard HTTP status codes returned by the Central Cloud Relay and Local Gateways.</div>
 
         <table>
