@@ -1,0 +1,592 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Agency & Reseller Fleet Pack | Missed Call Auto SMS</title>
+
+    <meta name="description" content="Deploy 100% A2P-exempt Android SMS appliances for your marketing agency clients. Zero Twilio markups, zero carrier bans, and high-margin recurring retainers.">
+    
+    <link rel="icon" type="image/svg+xml" href="/favicon.svg?v=2">
+    <link rel="icon" type="image/png" sizes="32x32" href="/favicon-32x32.png?v=2">
+    <link rel="icon" type="image/png" sizes="16x16" href="/favicon-16x16.png?v=2">
+    <meta name="theme-color" content="#090B0E">
+
+    <style>
+        :root {
+            --bg: #090B0E;
+            --card-bg: #131720;
+            --card-border: #222836;
+            --primary: #00E676;
+            --agency-accent: #38BDF8;
+            --agency-gradient: linear-gradient(135deg, #0284C7, #38BDF8);
+            --purple: #A855F7;
+            --text: #FFFFFF;
+            --muted: #949BAE;
+            --warning: #FFB300;
+        }
+
+        * { box-sizing: border-box; }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+            background-color: var(--bg);
+            color: var(--text);
+            margin: 0;
+            padding: 0;
+            line-height: 1.6;
+        }
+
+        .container {
+            max-width: 1140px;
+            margin: 0 auto;
+            padding: 0 24px;
+        }
+
+        /* Navbar */
+        nav {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 16px 24px;
+            background: rgba(9, 11, 14, 0.95);
+            border-bottom: 1px solid var(--card-border);
+            position: sticky;
+            top: 0;
+            z-index: 100;
+            backdrop-filter: blur(10px);
+        }
+
+        .logo {
+            font-size: 18px;
+            font-weight: 900;
+            color: #FFF;
+            text-decoration: none;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .logo span { color: var(--agency-accent); }
+
+        .nav-links {
+            display: flex;
+            gap: 20px;
+            align-items: center;
+        }
+
+        .nav-links a {
+            color: var(--muted);
+            text-decoration: none;
+            font-size: 14px;
+            font-weight: 600;
+            transition: color 0.2s;
+        }
+
+        .nav-links a:hover { color: #FFF; }
+
+        .btn-nav-portal {
+            background: rgba(56, 189, 248, 0.15);
+            color: var(--agency-accent);
+            border: 1px solid rgba(56, 189, 248, 0.35);
+            padding: 7px 16px;
+            border-radius: 20px;
+            font-size: 12px;
+            font-weight: 700;
+            text-decoration: none;
+            transition: all 0.2s;
+        }
+
+        .btn-nav-portal:hover {
+            background: var(--agency-accent);
+            color: #000;
+        }
+
+        /* Hero */
+        .hero {
+            padding: 70px 0 50px 0;
+            text-align: center;
+        }
+
+        .agency-pill {
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            background: rgba(56, 189, 248, 0.12);
+            color: var(--agency-accent);
+            border: 1px solid rgba(56, 189, 248, 0.35);
+            padding: 6px 16px;
+            border-radius: 25px;
+            font-size: 12px;
+            font-weight: 800;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            margin-bottom: 20px;
+        }
+
+        .hero h1 {
+            font-size: clamp(32px, 5vw, 54px);
+            font-weight: 900;
+            line-height: 1.15;
+            margin: 0 0 20px 0;
+            max-width: 960px;
+            margin-left: auto;
+            margin-right: auto;
+        }
+
+        .hero h1 span {
+            background: var(--agency-gradient);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+
+        .hero p {
+            font-size: clamp(16px, 3.5vw, 20px);
+            color: var(--muted);
+            max-width: 780px;
+            margin: 0 auto 36px auto;
+        }
+
+        .hero-ctas {
+            display: flex;
+            gap: 16px;
+            justify-content: center;
+            flex-wrap: wrap;
+        }
+
+        .btn-primary {
+            background: var(--agency-gradient);
+            color: #FFF;
+            padding: 14px 34px;
+            border-radius: 30px;
+            font-weight: 800;
+            font-size: 16px;
+            text-decoration: none;
+            box-shadow: 0 6px 25px rgba(14, 165, 233, 0.4);
+            transition: transform 0.15s;
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .btn-primary:hover { transform: translateY(-2px); }
+
+        .btn-secondary {
+            background: transparent;
+            color: #FFF;
+            border: 1px solid var(--card-border);
+            padding: 14px 28px;
+            border-radius: 30px;
+            font-weight: 700;
+            font-size: 15px;
+            text-decoration: none;
+            transition: background 0.2s;
+        }
+
+        .btn-secondary:hover { background: #1F2937; }
+
+        /* Problem vs Solution */
+        .grid-2 {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));
+            gap: 24px;
+            margin: 50px 0;
+        }
+
+        .card {
+            background: var(--card-bg);
+            border: 1px solid var(--card-border);
+            border-radius: 18px;
+            padding: 32px;
+        }
+
+        .card-bad {
+            border-left: 4px solid var(--warning);
+        }
+
+        .card-good {
+            border-left: 4px solid var(--agency-accent);
+        }
+
+        .card-title {
+            font-size: 20px;
+            font-weight: 800;
+            margin: 0 0 14px 0;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .list-items {
+            list-style: none;
+            padding: 0;
+            margin: 0;
+            font-size: 14px;
+        }
+
+        .list-items li {
+            margin-bottom: 12px;
+            display: flex;
+            align-items: flex-start;
+            gap: 10px;
+            color: #CBD5E0;
+        }
+
+        /* 4-Step Playbook */
+        .section-header {
+            text-align: center;
+            margin: 60px 0 36px 0;
+        }
+
+        .section-header h2 {
+            font-size: clamp(26px, 4vw, 36px);
+            font-weight: 900;
+            margin: 0 0 10px 0;
+        }
+
+        .section-header p {
+            color: var(--muted);
+            font-size: 16px;
+            max-width: 650px;
+            margin: 0 auto;
+        }
+
+        .steps-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+            gap: 18px;
+            margin-bottom: 50px;
+        }
+
+        .step-box {
+            background: var(--card-bg);
+            border: 1px solid var(--card-border);
+            border-radius: 14px;
+            padding: 24px;
+            position: relative;
+        }
+
+        .step-number {
+            font-size: 32px;
+            font-weight: 900;
+            color: var(--agency-accent);
+            opacity: 0.8;
+            margin-bottom: 8px;
+        }
+
+        .step-heading {
+            font-size: 17px;
+            font-weight: 800;
+            margin: 0 0 8px 0;
+            color: #FFF;
+        }
+
+        .step-desc {
+            font-size: 13px;
+            color: var(--muted);
+            line-height: 1.5;
+            margin: 0;
+        }
+
+        /* Pricing Bundles */
+        .pricing-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));
+            gap: 24px;
+            max-width: 860px;
+            margin: 0 auto 60px auto;
+        }
+
+        .price-card {
+            background: var(--card-bg);
+            border: 1px solid var(--card-border);
+            border-radius: 20px;
+            padding: 36px 30px;
+            text-align: center;
+            display: flex;
+            flex-direction: column;
+            position: relative;
+        }
+
+        .price-card.featured {
+            border: 2px solid var(--agency-accent);
+            box-shadow: 0 8px 32px rgba(56, 189, 248, 0.2);
+            background: linear-gradient(180deg, #101726 0%, #131720 100%);
+        }
+
+        .badge-popular {
+            position: absolute;
+            top: -12px;
+            left: 50%;
+            transform: translateX(-50%);
+            background: var(--agency-gradient);
+            color: #FFF;
+            padding: 3px 14px;
+            border-radius: 20px;
+            font-size: 11px;
+            font-weight: 900;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+
+        .plan-name {
+            font-size: 22px;
+            font-weight: 900;
+            margin: 0 0 6px 0;
+        }
+
+        .plan-price {
+            font-size: 42px;
+            font-weight: 900;
+            color: #FFF;
+            margin-bottom: 4px;
+        }
+
+        .plan-price span {
+            font-size: 14px;
+            color: var(--muted);
+            font-weight: normal;
+        }
+
+        .plan-sub {
+            font-size: 13px;
+            color: var(--muted);
+            margin-bottom: 24px;
+        }
+
+        .plan-features {
+            text-align: left;
+            font-size: 13px;
+            color: #E2E8F0;
+            margin-bottom: 28px;
+            flex-grow: 1;
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+        }
+
+        /* FAQ */
+        .faq-box {
+            background: var(--card-bg);
+            border: 1px solid var(--card-border);
+            border-radius: 14px;
+            padding: 24px;
+            margin-bottom: 14px;
+        }
+
+        .faq-q {
+            font-size: 16px;
+            font-weight: 800;
+            margin: 0 0 6px 0;
+            color: #FFF;
+        }
+
+        .faq-a {
+            font-size: 14px;
+            color: var(--muted);
+            margin: 0;
+            line-height: 1.6;
+        }
+
+        /* Footer */
+        footer {
+            border-top: 1px solid var(--card-border);
+            padding: 40px 24px;
+            text-align: center;
+            color: var(--muted);
+            font-size: 13px;
+        }
+
+        footer a { color: var(--muted); text-decoration: none; margin: 0 10px; }
+        footer a:hover { color: #FFF; }
+    </style>
+</head>
+<body>
+
+<!-- Navbar -->
+<nav>
+    <a href="/" class="logo">
+        <span>⚡</span> Missed Call Auto SMS <small style="font-size: 11px; color: var(--muted); font-weight: normal; margin-left: 4px;">AGENCY FLEET</small>
+    </a>
+    <div class="nav-links">
+        <a href="/">Home</a>
+        <a href="#playbook">The Playbook</a>
+        <a href="#pricing">Pricing</a>
+        <a href="#faq">Agency FAQ</a>
+        <a href="/agency_dashboard.html" class="btn-nav-portal">Agency Fleet Login →</a>
+    </div>
+</nav>
+
+<div class="container">
+
+    <!-- Hero -->
+    <div class="hero">
+        <div class="agency-pill">
+            <span>🏢</span> The High-Ticket Agency SMS Appliance Playbook
+        </div>
+        <h1>Deploy <span>100% A2P-Exempt SMS Appliances</span> for Your Clients</h1>
+        <p>
+            Stop fighting 4-week A2P 10DLC rejections and paying Twilio markups for every client text. Deploy dedicated Android carrier appliances in your clients' back offices, connect to GoHighLevel/n8n via webhooks, and pocket \$150–\$300/mo management retainers.
+        </p>
+        <div class="hero-ctas">
+            <a href="#pricing" class="btn-primary">View Agency Bundles ($399 – $799) ➔</a>
+            <a href="/agency_dashboard.html" class="btn-secondary">Access Agency Fleet Portal →</a>
+        </div>
+    </div>
+
+    <!-- The Problem vs Appliance Solution -->
+    <div class="grid-2">
+        <div class="card card-bad">
+            <h3 class="card-title" style="color: var(--warning);">
+                <span>❌</span> The SaaS & A2P Nightmare for Agencies
+            </h3>
+            <ul class="list-items">
+                <li><strong>A2P 10DLC Rejection Hell:</strong> Registering campaigns for local plumbers or roofers takes weeks, requires EIN verification, and still gets rejected by TCR.</li>
+                <li><strong>Twilio Surcharges:</strong> Cloud VoIP gateways bill \$0.0079/SMS plus carrier pass-through fees that eat your agency margins.</li>
+                <li><strong>Carrier Spam Blocking:</strong> Virtual VoIP numbers are flagged as "Spam Likely" by AT&T and Verizon.</li>
+                <li><strong>Client Frustration:</strong> Missed call texts fail to deliver, making your agency look unreliable.</li>
+            </ul>
+        </div>
+
+        <div class="card card-good">
+            <h3 class="card-title" style="color: var(--agency-accent);">
+                <span>✅</span> The Hardware Appliance Advantage
+            </h3>
+            <ul class="list-items">
+                <li><strong>100% A2P 10DLC Exempt:</strong> Real physical SIM cards (Verizon, AT&T, T-Mobile) send direct cellular signals. Zero forms, zero approvals.</li>
+                <li><strong>Unlimited Texts via Client SIM:</strong> Runs on a cheap \$10–\$15/mo prepaid SIM (Tello, Mint). Zero per-message software fees.</li>
+                <li><strong>n8n, Make & GHL Webhooks:</strong> Transmits missed-call leads straight into your agency workflows with zero double-texts.</li>
+                <li><strong>High Recurring Retainers:</strong> Charge clients \$199/mo for automated speed-to-lead response while your software cost is \$0/month forever.</li>
+            </ul>
+        </div>
+    </div>
+
+    <!-- 4-Step Agency Playbook -->
+    <section id="playbook">
+        <div class="section-header">
+            <h2>The 15-Minute Client Deployment Playbook</h2>
+            <p>How top automation consultants turn spare phones into automated revenue engines.</p>
+        </div>
+
+        <div class="steps-grid">
+            <div class="step-box">
+                <div class="step-number">01</div>
+                <h4 class="step-heading">Buy Agency Pack</h4>
+                <p class="step-desc">Purchase a 5-Pack or 10-Pack bundle. Gain instant access to your unified Agency Fleet Management Portal.</p>
+            </div>
+            <div class="step-box">
+                <div class="step-number">02</div>
+                <h4 class="step-heading">Source \$40 Phone</h4>
+                <p class="step-desc">Grab an affordable Android phone (e.g. Motorola Moto G or Samsung A-series) and a \$10/mo unlimited text SIM card.</p>
+            </div>
+            <div class="step-box">
+                <div class="step-number">03</div>
+                <h4 class="step-heading">Sideload & Issue Key</h4>
+                <p class="step-desc">Generate a client key in your Agency Portal. Paste into the phone, grant permissions, and enable Outbound Forwarder.</p>
+            </div>
+            <div class="step-box">
+                <div class="step-number">04</div>
+                <h4 class="step-heading">Dock in Client Office</h4>
+                <p class="step-desc">Dock the phone on office Wi-Fi. Missed calls automatically trigger instant SMS and route into their CRM!</p>
+            </div>
+        </div>
+    </section>
+
+    <!-- Pricing Bundles -->
+    <section id="pricing">
+        <div class="section-header">
+            <h2>High-Ticket Agency Fleet Bundles</h2>
+            <p>One-time purchase. Lifetime ownership. Zero recurring software fees to your agency.</p>
+        </div>
+
+        <div class="pricing-grid">
+            <!-- 5-Pack ($399) -->
+            <div class="price-card">
+                <h3 class="plan-name">Agency 5-Pack</h3>
+                <div class="plan-price">$399 <span>One-Time</span></div>
+                <div class="plan-sub">$79.80 / Client Appliance (Saves $350 vs Single Pro)</div>
+
+                <div class="plan-features">
+                    <div>✓ <strong>5 Pro Appliance Seats</strong> for client deployments</div>
+                    <div>✓ <strong>Agency Fleet Management Portal</strong></div>
+                    <div>✓ <strong>1-Click Client Key Generator</strong></div>
+                    <div>✓ <strong>Hardware Reset & Rebind</strong> (Switch client phones anytime)</div>
+                    <div>✓ <strong>n8n & Make.com Webhook Forwarder</strong></div>
+                    <div>✓ <strong>Mute Native Auto-Reply</strong> (Zero double-sends)</div>
+                    <div>✓ <strong>Dual SIM Outbound Line Selector</strong></div>
+                    <div>✓ <strong>SIM Burn Safeguard™</strong> Anti-Spam pacing</div>
+                    <div>✓ <strong>Client 1-Page Setup Sheet Generator</strong></div>
+                </div>
+
+                <a href="https://buy.stripe.com/9B6aEX8pw2X03zOddf2go0d" class="btn-primary" style="justify-content: center; width: 100%;">
+                    Get Agency 5-Pack ($399) ➔
+                </a>
+            </div>
+
+            <!-- 10-Pack ($799) -->
+            <div class="price-card featured">
+                <div class="badge-popular">⚡ MOST POPULAR AGENCY BUNDLE</div>
+                <h3 class="plan-name">Agency 10-Pack</h3>
+                <div class="plan-price">$799 <span>One-Time</span></div>
+                <div class="plan-sub">$79.90 / Client Appliance (Saves $700 vs Single Pro)</div>
+
+                <div class="plan-features">
+                    <div>✓ <strong>10 Pro Appliance Seats</strong> for client deployments</div>
+                    <div>✓ <strong>Everything in Agency 5-Pack</strong></div>
+                    <div>✓ <strong>Priority Engineer Onboarding & Setup Call</strong></div>
+                    <div>✓ <strong>Direct Slack/WhatsApp Channel with Developers</strong></div>
+                    <div>✓ <strong>White-Label Client PDF Onboarding Pack</strong></div>
+                    <div>✓ <strong>Turnkey n8n AI Lead Qualification Templates</strong></div>
+                    <div>✓ <strong>Free Lifetime OTA Updates for All Devices</strong></div>
+                </div>
+
+                <a href="https://buy.stripe.com/9B6bJ15dk5582vK1ux2go0e" class="btn-primary" style="justify-content: center; width: 100%; background: linear-gradient(135deg, #0284C7, #00E676);">
+                    Get Agency 10-Pack ($799) ➔
+                </a>
+            </div>
+        </div>
+    </section>
+
+    <!-- Agency FAQ -->
+    <section id="faq" style="max-width: 860px; margin: 0 auto 70px auto;">
+        <div class="section-header">
+            <h2>Frequently Asked Questions for Agencies</h2>
+        </div>
+
+        <div class="faq-box">
+            <div class="faq-q">Can I reassign or transfer a license if a client cancels?</div>
+            <p class="faq-a">Yes! Inside your Agency Fleet Dashboard, simply click "Revoke Seat" or "Reset Lock". The seat returns to your available quota immediately, allowing you to deploy it to a new client or new Android phone.</p>
+        </div>
+
+        <div class="faq-box">
+            <div class="faq-q">Do my clients see my Master Agency Key or Stripe account?</div>
+            <p class="faq-a">No. You hold the Master Agency Key. For each client, you generate a dedicated child Pro License Key (e.g. <code>MCAS-PRO-...</code>). The client only sees their own business name and activation status on their phone.</p>
+        </div>
+
+        <div class="faq-box">
+            <div class="faq-q">How does the phone connect to GoHighLevel or n8n?</div>
+            <p class="faq-a">Whenever an incoming call goes unanswered, the phone dispatches an HTTP POST payload with caller data to your n8n or webhook endpoint. With "Mute Native Auto-Reply" turned on, the phone stays silent and lets your n8n workflow draft an AI reply and fire it back through the phone's SIM via Cloud Relay!</p>
+        </div>
+
+        <div class="faq-box">
+            <div class="faq-q">What SIM cards and phone models work best?</div>
+            <p class="faq-a">Any budget Android 8.0+ smartphone (such as a Motorola Moto G Pure, Samsung Galaxy A03s, or BLU device) works flawlessly. For cellular plans, prepaid unlimited talk/text SIMs like Tello (\$10/mo), Mint Mobile (\$15/mo), or US Mobile work out of the box with zero A2P paperwork.</p>
+        </div>
+    </section>
+
+</div>
+
+<!-- Footer -->
+<footer>
+    <div style="margin-bottom: 12px;">
+        <a href="/">Home</a> • 
+        <a href="/developers">Developer API</a> • 
+        <a href="/support">Support Desk</a> • 
+        <a href="/agency_dashboard.html">Agency Fleet Portal</a> • 
+        <a href="/terms.html">Terms of Service</a>
+    </div>
+    <p>© 2026 MissedCallAutoSMS.com. All rights reserved. Missed Call Auto SMS is an independent telecommunications hardware appliance utility.</p>
+</footer>
+
+</body>
+</html>

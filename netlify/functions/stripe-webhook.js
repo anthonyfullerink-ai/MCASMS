@@ -108,6 +108,84 @@ function generateEmailHtml(customerName, licenseKey, apkDownloadUrl, amountPaid,
 </html>`;
 }
 
+function generateAgencyKey(agencyName, quota = 5) {
+  const timestamp = Math.floor(Date.now() / 1000);
+  const payloadStr = `${agencyName || 'Agency Partner'}|${quota}|${timestamp}`;
+  const payloadHex = Buffer.from(payloadStr, 'utf-8').toString('hex').toUpperCase();
+
+  const hmac = crypto.createHmac('sha256', LICENSE_SECRET);
+  hmac.update(payloadHex);
+  const sigShort = hmac.digest('hex').substring(0, 8).toUpperCase();
+
+  return `MCAS-AGENCY-${quota}-${payloadHex}-${sigShort}`;
+}
+
+function generateAgencyEmailHtml(agencyName, masterAgencyKey, quota, amountPaid, dashboardUrl) {
+  const is10 = quota >= 10;
+  const planTitle = is10 ? "Agency 10-Pack Fleet Bundle" : "Agency 5-Pack Fleet Bundle";
+  const badgeText = is10 ? "AGENCY 10-PACK • 10 CLIENT APPLIANCES" : "AGENCY 5-PACK • 5 CLIENT APPLIANCES";
+  const themeBorderColor = "#38BDF8";
+  const themeTextColor = "#38BDF8";
+
+  return `<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="utf-8">
+    <title>Welcome to Missed Call Auto SMS Agency Fleet</title>
+</head>
+<body style="font-family: -apple-system, BlinkMacSystemFont, Arial, sans-serif; background-color: #090B0E; color: #FFFFFF; margin: 0; padding: 24px;">
+    <div style="max-width: 640px; margin: 0 auto; background: #131720; border: 1px solid #222836; border-radius: 16px; padding: 32px;">
+        <div style="text-align: center; margin-bottom: 24px;">
+            <div style="font-size: 44px; margin-bottom: 8px;">🏢</div>
+            <h1 style="color: ${themeTextColor}; margin: 0; font-size: 24px; font-weight: 900;">${planTitle}</h1>
+            <div style="display: inline-block; margin-top: 6px; padding: 4px 14px; border-radius: 20px; font-size: 11px; font-weight: 800; background: rgba(56, 189, 248, 0.15); color: ${themeTextColor}; border: 1px solid rgba(56, 189, 248, 0.35);">
+                ${badgeText}
+            </div>
+        </div>
+
+        <div style="background: #1A202C; border-left: 4px solid ${themeBorderColor}; padding: 16px; border-radius: 8px; margin-bottom: 24px;">
+            <h2 style="margin: 0 0 6px 0; font-size: 18px; color: #FFF;">Welcome, ${agencyName}!</h2>
+            <p style="margin: 0; color: #CBD5E0; font-size: 14px; line-height: 1.5;">
+                Your Agency Fleet bundle ($${amountPaid}) has been activated. You can now deploy up to <strong>${quota} dedicated Android SMS appliances</strong> for your local business clients with 100% A2P 10DLC exemption.
+            </p>
+        </div>
+
+        <!-- Master Agency Key Box -->
+        <div style="background: #090B0E; border: 1px dashed ${themeBorderColor}; border-radius: 12px; padding: 20px; text-align: center; margin-bottom: 24px;">
+            <div style="font-size: 12px; color: #949BAE; text-transform: uppercase; font-weight: bold; margin-bottom: 8px;">Your Master Agency Fleet Key</div>
+            <div style="font-family: monospace; font-size: 20px; color: ${themeTextColor}; font-weight: bold; word-break: break-all; letter-spacing: 1px; margin-bottom: 8px;">
+                ${masterAgencyKey}
+            </div>
+            <div style="font-size: 12px; color: #A0AEC0;">Authorized for ${quota} Client Appliance Deployments • Lifetime Access</div>
+        </div>
+
+        <!-- Agency Dashboard CTA -->
+        <div style="text-align: center; margin-bottom: 28px;">
+            <a href="${dashboardUrl}" style="display: inline-block; background: linear-gradient(135deg, #0284C7, #0EA5E9); color: #FFFFFF; font-weight: 800; font-size: 16px; padding: 14px 36px; border-radius: 30px; text-decoration: none; box-shadow: 0 6px 20px rgba(14, 165, 233, 0.35);">
+                🚀 Open Agency Fleet Dashboard →
+            </a>
+            <div style="font-size: 12px; color: #949BAE; margin-top: 8px;">Direct Portal URL: <a href="${dashboardUrl}" style="color:${themeTextColor};">${dashboardUrl}</a></div>
+        </div>
+
+        <!-- Agency 4-Step Playbook -->
+        <div style="border-top: 1px solid #222836; padding-top: 20px; margin-bottom: 24px;">
+            <h3 style="color: #FFF; font-size: 16px; margin: 0 0 12px 0;">📋 Agency Deployment Playbook</h3>
+            <ol style="color: #CBD5E0; font-size: 14px; padding-left: 20px; line-height: 1.8;">
+                <li><strong>Log into your Fleet Dashboard:</strong> Enter your Master Key above to view and manage your ${quota} appliance seats.</li>
+                <li><strong>Deploy a Client Key:</strong> Click "Deploy New Appliance", enter your client's business name (e.g. <em>Joe's Plumbing</em>), and copy their dedicated setup sheet.</li>
+                <li><strong>Install on Office Phone:</strong> Sideload the Pro APK on an office phone with a $10/mo SIM. Toggle Master Appliance ON.</li>
+                <li><strong>Connect CRM / n8n:</strong> Hook your client's missed calls directly to GoHighLevel or n8n without filing a single A2P form.</li>
+            </ol>
+        </div>
+
+        <div style="border-top: 1px solid #222836; padding-top: 18px; text-align: center; font-size: 12px; color: #718096;">
+            Need assistance or priority agency support? Visit <a href="https://missedcallautosms.com/support" style="color: ${themeTextColor};">Agency Helpdesk</a> or reply directly to this email.
+        </div>
+    </div>
+</body>
+</html>`;
+}
+
 function generateTrialEmailHtml(customerName, licenseKey, apkDownloadUrl) {
   const brandTitle = "Missed Call Auto SMS • 3-Day Free Trial";
   const badgeText = "3-DAY FREE TRIAL ($0.00 CHARGED TODAY)";
@@ -322,8 +400,12 @@ exports.handler = async (event) => {
       return { statusCode: 200, body: JSON.stringify({ received: true, warning: 'No email found' }) };
     }
 
-    // Determine Tier: Pro ($149.99+) vs Standard ($49.99) vs Free Trial ($0.00)
-    const isPro = !isTrial && (amountTotal >= 10000 ||
+    // Determine Tier: Agency 10-Pack ($799+) vs Agency 5-Pack ($399+) vs Pro ($149.99+) vs Standard ($49.99) vs Free Trial ($0.00)
+    const isAgency10 = !isTrial && ((amountTotal >= 70000) || (session.metadata && session.metadata.tier === 'agency_10'));
+    const isAgency5 = !isTrial && !isAgency10 && ((amountTotal >= 30000 && amountTotal < 70000) || (session.metadata && session.metadata.tier === 'agency_5'));
+    const isAgency = isAgency5 || isAgency10;
+
+    const isPro = !isTrial && !isAgency && (amountTotal >= 10000 ||
                   (session.metadata && (session.metadata.tier === 'pro' || session.metadata.tier === 'pro_automation')) ||
                   (session.client_reference_id && session.client_reference_id.toLowerCase().includes('pro')));
 
@@ -373,6 +455,73 @@ exports.handler = async (event) => {
           amountPaid: '0.00',
           licenseKey: trialLicenseKey,
           apkUrl: apkDownloadUrl,
+          customerEmail: customerEmail
+        })
+      };
+    }
+
+    // Agency Fleet Bundle ($399 for 5-Pack or $799 for 10-Pack)
+    if (isAgency) {
+      const quota = isAgency10 ? 10 : 5;
+      const agencyMasterKey = generateAgencyKey(customerName, quota);
+      const dashboardUrl = `https://${host}/agency_dashboard.html`;
+      console.log(`🏢 [AGENCY ${quota}-PACK ACTIVATED] ${agencyMasterKey} for ${customerEmail} ($${amountPaid})`);
+
+      try {
+        const fleetCachePath = path.join(__dirname, '../../.agency_fleet_cache.json');
+        let cache = {};
+        if (fs.existsSync(fleetCachePath)) {
+          cache = JSON.parse(fs.readFileSync(fleetCachePath, 'utf8'));
+        }
+        cache[agencyMasterKey] = {
+          agencyName: customerName,
+          customerEmail: customerEmail,
+          quota: quota,
+          tier: isAgency10 ? 'agency_10' : 'agency_5',
+          createdAt: new Date().toISOString(),
+          clients: []
+        };
+        fs.writeFileSync(fleetCachePath, JSON.stringify(cache, null, 2), 'utf8');
+      } catch (cacheErr) {
+        console.warn('Could not update agency fleet cache in webhook:', cacheErr.message);
+      }
+
+      if (RESEND_API_KEY) {
+        const emailSubject = `🏢 Your Missed Call Auto SMS Agency ${quota}-Pack Fleet Key & Dashboard Access`;
+        const emailHtml = generateAgencyEmailHtml(customerName, agencyMasterKey, quota, amountPaid, dashboardUrl);
+
+        try {
+          const sendResult = await sendEmail(RESEND_API_KEY, customerEmail, emailSubject, emailHtml);
+          console.log(`📧 [AGENCY EMAIL DELIVERED] Dispatched to ${customerEmail} (ID: ${sendResult.id})`);
+
+          if (OWNER_NOTIFY_EMAIL && OWNER_NOTIFY_EMAIL !== customerEmail) {
+            sendEmail(
+              RESEND_API_KEY,
+              OWNER_NOTIFY_EMAIL,
+              `🎉 New Agency ${quota}-Pack Purchase ($${amountPaid}): ${customerName}`,
+              `<p>A new Agency partner has purchased an Agency ${quota}-Pack bundle!</p>
+               <p><strong>Agency:</strong> ${customerName} (${customerEmail})</p>
+               <p><strong>Amount Paid:</strong> $${amountPaid}</p>
+               <p><strong>Master Agency Key:</strong> <code>${agencyMasterKey}</code></p>
+               <p><strong>Quota:</strong> ${quota} Appliance Seats</p>
+               <p><strong>Dashboard:</strong> ${dashboardUrl}</p>`
+            ).catch(() => {});
+          }
+        } catch (emailErr) {
+          console.error(`❌ [AGENCY EMAIL FAILED] for ${customerEmail}:`, emailErr.message);
+        }
+      }
+
+      return {
+        statusCode: 200,
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          received: true,
+          tier: isAgency10 ? 'agency_10' : 'agency_5',
+          quota: quota,
+          amountPaid: amountPaid,
+          masterAgencyKey: agencyMasterKey,
+          dashboardUrl: dashboardUrl,
           customerEmail: customerEmail
         })
       };

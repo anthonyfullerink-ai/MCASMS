@@ -1,0 +1,14 @@
+{
+  "agency5": {
+    "productId": "prod_VHNoF0YZ62dVap",
+    "priceId": "price_1UGp3LHTAeWgMAo2lZdivdPJ",
+    "url": "https://buy.stripe.com/9B6aEX8pw2X03zOddf2go0d",
+    "amount": 399
+  },
+  "agency10": {
+    "productId": "prod_VHNpQuulhTvGl1",
+    "priceId": "price_1UGp3MHTAeWgMAo2RjSBS5Gx",
+    "url": "https://buy.stripe.com/9B6bJ15dk5582vK1ux2go0e",
+    "amount": 799
+  }
+}

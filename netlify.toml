@@ -83,6 +83,29 @@
   to = "/.netlify/functions/dispatch-sms"
   status = 200
 
+# API Route: Agency Fleet Management API
+[[redirects]]
+  from = "/api/agency/*"
+  to = "/.netlify/functions/agency-fleet"
+  status = 200
+
+[[redirects]]
+  from = "/api/agency"
+  to = "/.netlify/functions/agency-fleet"
+  status = 200
+
+# Direct access to Agency Fleet Dashboard
+[[redirects]]
+  from = "/agency/dashboard"
+  to = "/agency_dashboard.html"
+  status = 200
+
+# Direct access to Agency Landing Page
+[[redirects]]
+  from = "/agency"
+  to = "/agency.html"
+  status = 200
+
 # Direct access to owner dashboard
 [[redirects]]
   from = "/owner"

@@ -1,0 +1,837 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Missed Call Auto SMS | Agency Fleet Management</title>
+
+    <link rel="icon" type="image/svg+xml" href="/favicon.svg?v=2">
+    <link rel="icon" type="image/png" sizes="32x32" href="/favicon-32x32.png?v=2">
+    <link rel="icon" type="image/png" sizes="16x16" href="/favicon-16x16.png?v=2">
+    <meta name="theme-color" content="#090B0E">
+
+    <style>
+        :root {
+            --bg: #090B0E;
+            --card-bg: #131720;
+            --card-border: #222836;
+            --primary: #00E676;
+            --agency-accent: #38BDF8;
+            --agency-gradient: linear-gradient(135deg, #0284C7, #38BDF8);
+            --text: #FFFFFF;
+            --muted: #949BAE;
+            --danger: #EF4444;
+            --warning: #FFB300;
+        }
+
+        * { box-sizing: border-box; }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+            background-color: var(--bg);
+            color: var(--text);
+            margin: 0;
+            padding: 0;
+            min-height: 100vh;
+        }
+
+        .container {
+            max-width: 1180px;
+            margin: 0 auto;
+            padding: 24px 20px 80px 20px;
+        }
+
+        /* Navbar */
+        nav {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 16px 24px;
+            background: rgba(9, 11, 14, 0.95);
+            border-bottom: 1px solid var(--card-border);
+            position: sticky;
+            top: 0;
+            z-index: 100;
+            backdrop-filter: blur(10px);
+        }
+
+        .logo {
+            font-size: 18px;
+            font-weight: 900;
+            color: #FFF;
+            text-decoration: none;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .logo span { color: var(--agency-accent); }
+
+        .nav-links {
+            display: flex;
+            gap: 18px;
+            align-items: center;
+        }
+
+        .nav-links a {
+            color: var(--muted);
+            text-decoration: none;
+            font-size: 13px;
+            font-weight: 600;
+            transition: color 0.2s;
+        }
+
+        .nav-links a:hover { color: #FFF; }
+
+        .btn-logout {
+            background: #1F2937;
+            color: #E5E7EB;
+            border: 1px solid var(--card-border);
+            padding: 6px 14px;
+            border-radius: 20px;
+            font-size: 12px;
+            font-weight: 700;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+
+        .btn-logout:hover { background: #374151; color: #FFF; }
+
+        /* Auth Screen */
+        .auth-card {
+            max-width: 480px;
+            margin: 80px auto;
+            background: var(--card-bg);
+            border: 1px solid var(--card-border);
+            border-radius: 20px;
+            padding: 36px 28px;
+            text-align: center;
+            box-shadow: 0 10px 40px rgba(0,0,0,0.5);
+        }
+
+        .auth-icon {
+            font-size: 48px;
+            margin-bottom: 12px;
+        }
+
+        .auth-title {
+            font-size: 24px;
+            font-weight: 900;
+            margin: 0 0 8px 0;
+        }
+
+        .auth-desc {
+            color: var(--muted);
+            font-size: 14px;
+            line-height: 1.5;
+            margin-bottom: 24px;
+        }
+
+        .input-group {
+            text-align: left;
+            margin-bottom: 18px;
+        }
+
+        .input-group label {
+            display: block;
+            font-size: 12px;
+            font-weight: 700;
+            color: var(--muted);
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            margin-bottom: 6px;
+        }
+
+        .input-field {
+            width: 100%;
+            background: #090B0E;
+            border: 1px solid var(--card-border);
+            color: #FFF;
+            padding: 12px 14px;
+            border-radius: 10px;
+            font-size: 14px;
+            font-family: inherit;
+            outline: none;
+            transition: border-color 0.2s;
+        }
+
+        .input-field:focus { border-color: var(--agency-accent); }
+
+        .btn-agency-primary {
+            width: 100%;
+            background: var(--agency-gradient);
+            color: #FFF;
+            border: none;
+            padding: 13px;
+            border-radius: 12px;
+            font-weight: 800;
+            font-size: 15px;
+            cursor: pointer;
+            box-shadow: 0 4px 16px rgba(14, 165, 233, 0.35);
+            transition: transform 0.15s;
+        }
+
+        .btn-agency-primary:hover { transform: translateY(-1px); }
+
+        /* Dashboard View */
+        .dash-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 28px;
+            flex-wrap: wrap;
+            gap: 16px;
+        }
+
+        .agency-badge {
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+            background: rgba(56, 189, 248, 0.12);
+            color: var(--agency-accent);
+            border: 1px solid rgba(56, 189, 248, 0.35);
+            padding: 4px 12px;
+            border-radius: 20px;
+            font-size: 11px;
+            font-weight: 800;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            margin-bottom: 6px;
+        }
+
+        .agency-title {
+            font-size: 28px;
+            font-weight: 900;
+            margin: 0;
+        }
+
+        .metrics-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+            gap: 16px;
+            margin-bottom: 28px;
+        }
+
+        .metric-card {
+            background: var(--card-bg);
+            border: 1px solid var(--card-border);
+            border-radius: 14px;
+            padding: 20px;
+        }
+
+        .metric-label {
+            font-size: 12px;
+            color: var(--muted);
+            text-transform: uppercase;
+            font-weight: 700;
+            letter-spacing: 0.5px;
+            margin-bottom: 6px;
+        }
+
+        .metric-value {
+            font-size: 26px;
+            font-weight: 900;
+            color: #FFF;
+        }
+
+        .metric-sub {
+            font-size: 12px;
+            color: var(--muted);
+            margin-top: 4px;
+        }
+
+        /* Fleet Section */
+        .fleet-card {
+            background: var(--card-bg);
+            border: 1px solid var(--card-border);
+            border-radius: 16px;
+            padding: 24px;
+            margin-bottom: 28px;
+        }
+
+        .fleet-top {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 20px;
+            flex-wrap: wrap;
+            gap: 12px;
+        }
+
+        .fleet-title {
+            font-size: 18px;
+            font-weight: 800;
+            margin: 0;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .table-wrap {
+            overflow-x: auto;
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            font-size: 13px;
+        }
+
+        th {
+            text-align: left;
+            padding: 12px;
+            color: var(--muted);
+            font-size: 11px;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            border-bottom: 1px solid var(--card-border);
+        }
+
+        td {
+            padding: 14px 12px;
+            border-bottom: 1px solid rgba(255,255,255,0.05);
+            color: #E5E7EB;
+        }
+
+        .key-tag {
+            font-family: monospace;
+            background: #090B0E;
+            padding: 4px 8px;
+            border-radius: 6px;
+            border: 1px solid var(--card-border);
+            font-size: 12px;
+            color: var(--agency-accent);
+        }
+
+        .status-pill {
+            display: inline-block;
+            padding: 3px 10px;
+            border-radius: 12px;
+            font-size: 11px;
+            font-weight: 700;
+        }
+
+        .status-active {
+            background: rgba(0, 230, 118, 0.15);
+            color: var(--primary);
+            border: 1px solid rgba(0, 230, 118, 0.3);
+        }
+
+        .status-pending {
+            background: rgba(255, 179, 0, 0.15);
+            color: var(--warning);
+            border: 1px solid rgba(255, 179, 0, 0.3);
+        }
+
+        .action-btns {
+            display: flex;
+            gap: 6px;
+        }
+
+        .btn-sm {
+            background: #1F2937;
+            color: #FFF;
+            border: 1px solid var(--card-border);
+            padding: 5px 10px;
+            border-radius: 6px;
+            font-size: 11px;
+            font-weight: 700;
+            cursor: pointer;
+            transition: background 0.15s;
+        }
+
+        .btn-sm:hover { background: #374151; }
+        .btn-sm.danger { color: var(--danger); border-color: rgba(239, 68, 68, 0.4); }
+        .btn-sm.danger:hover { background: rgba(239, 68, 68, 0.15); }
+
+        /* Modal */
+        .modal-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: rgba(0,0,0,0.75);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            z-index: 200;
+            padding: 20px;
+            visibility: hidden;
+            opacity: 0;
+            transition: all 0.2s;
+        }
+
+        .modal-overlay.active {
+            visibility: visible;
+            opacity: 1;
+        }
+
+        .modal-box {
+            background: var(--card-bg);
+            border: 1px solid var(--card-border);
+            border-radius: 18px;
+            max-width: 540px;
+            width: 100%;
+            padding: 28px;
+            box-shadow: 0 16px 40px rgba(0,0,0,0.6);
+        }
+
+        .modal-title {
+            font-size: 20px;
+            font-weight: 800;
+            margin: 0 0 8px 0;
+        }
+
+        .modal-desc {
+            font-size: 13px;
+            color: var(--muted);
+            margin-bottom: 20px;
+            line-height: 1.5;
+        }
+
+        pre {
+            background: #090B0E;
+            border: 1px solid var(--card-border);
+            padding: 14px;
+            border-radius: 8px;
+            font-size: 12px;
+            color: #CBD5E0;
+            overflow-x: auto;
+            white-space: pre-wrap;
+        }
+    </style>
+</head>
+<body>
+
+<!-- Navbar -->
+<nav>
+    <a href="/" class="logo">
+        <span>⚡</span> Missed Call Auto SMS <small style="font-size: 11px; color: var(--muted); font-weight: normal; margin-left: 4px;">AGENCY FLEET</small>
+    </a>
+    <div class="nav-links">
+        <a href="/agency">Agency Playbook</a>
+        <a href="/developers">Developer API</a>
+        <a href="/support">Support</a>
+        <button id="navLogoutBtn" class="btn-logout" style="display:none;" onclick="logoutAgency()">Sign Out</button>
+    </div>
+</nav>
+
+<div class="container">
+
+    <!-- 1. AUTH / LOGIN VIEW -->
+    <div id="authSection" class="auth-card">
+        <div class="auth-icon">🏢</div>
+        <h1 class="auth-title">Agency Fleet Portal</h1>
+        <p class="auth-desc">Enter your Master Agency License Key to manage client Android SMS appliances and generate new keys.</p>
+
+        <div class="input-group">
+            <label>Master Agency License Key</label>
+            <input type="text" id="inputAgencyKey" class="input-field" placeholder="MCAS-AGENCY-5-..." spellcheck="false">
+        </div>
+
+        <button class="btn-agency-primary" onclick="loginAgency()">Authenticate Fleet ➔</button>
+
+        <div style="margin-top: 18px; font-size: 12px; color: var(--muted);">
+            Don't have an Agency Pack? <a href="/agency#pricing" style="color: var(--agency-accent); text-decoration: none; font-weight: 700;">Get Agency 5-Pack ($399)</a>
+        </div>
+        <div style="margin-top: 10px;">
+            <a href="javascript:void(0)" onclick="loadDemoAgency()" style="font-size: 11px; color: var(--muted); text-decoration: underline;">Load Demo Agency (Test Mode)</a>
+        </div>
+    </div>
+
+    <!-- 2. FLEET DASHBOARD VIEW -->
+    <div id="dashboardSection" style="display: none;">
+
+        <div class="dash-header">
+            <div>
+                <div class="agency-badge" id="badgePlan">AGENCY FLEET</div>
+                <h1 class="agency-title" id="textAgencyName">Agency Dashboard</h1>
+                <div style="color: var(--muted); font-size: 13px; margin-top: 4px;">
+                    Master Key: <code id="textMasterKey" class="key-tag" style="cursor: pointer;" onclick="copyMasterKey()">MCAS-AGENCY-...</code>
+                </div>
+            </div>
+            <div>
+                <button class="btn-agency-primary" style="padding: 10px 20px; font-size: 13px;" onclick="openDeployModal()">
+                    + Deploy New Appliance
+                </button>
+            </div>
+        </div>
+
+        <!-- Metrics Grid -->
+        <div class="metrics-grid">
+            <div class="metric-card">
+                <div class="metric-label">Deployed Appliances</div>
+                <div class="metric-value" id="metricUsed">0 / 5</div>
+                <div class="metric-sub" id="metricUsedSub">0% of fleet capacity</div>
+            </div>
+            <div class="metric-card">
+                <div class="metric-label">Available Seats</div>
+                <div class="metric-value" id="metricAvailable" style="color: var(--agency-accent);">5</div>
+                <div class="metric-sub">Ready to deploy to clients</div>
+            </div>
+            <div class="metric-card">
+                <div class="metric-label">Estimated Retainer Value</div>
+                <div class="metric-value" id="metricRetainer" style="color: var(--primary);">$0 / mo</div>
+                <div class="metric-sub">Based on $199/mo client retainer</div>
+            </div>
+            <div class="metric-card">
+                <div class="metric-label">Carrier Compliance</div>
+                <div class="metric-value" style="color: var(--primary); font-size: 22px;">100% EXEMPT</div>
+                <div class="metric-sub">Real cellular SIM dispatch</div>
+            </div>
+        </div>
+
+        <!-- Fleet Table -->
+        <div class="fleet-card">
+            <div class="fleet-top">
+                <h2 class="fleet-title">
+                    <span>📱</span> Client Appliance Fleet
+                </h2>
+                <div style="font-size: 12px; color: var(--muted);">
+                    All child appliances are automatically unlocked with Pro Automation Edition (n8n & webhooks).
+                </div>
+            </div>
+
+            <div class="table-wrap">
+                <table>
+                    <thead>
+                        <tr>
+                            <th>Client Business</th>
+                            <th>Contact / Notes</th>
+                            <th>Pro License Key</th>
+                            <th>Status</th>
+                            <th>Issued Date</th>
+                            <th>Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody id="fleetTableBody">
+                        <tr>
+                            <td colspan="6" style="text-align: center; color: var(--muted); padding: 30px;">
+                                No client appliances deployed yet. Click "+ Deploy New Appliance" to issue your first client key.
+                            </td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+
+        <!-- Agency Quickstart Blueprint -->
+        <div class="fleet-card" style="border-left: 4px solid var(--agency-accent);">
+            <h3 style="margin: 0 0 8px 0; font-size: 16px;">🚀 Agency Rapid Deployment Blueprint</h3>
+            <p style="margin: 0 0 14px 0; color: var(--muted); font-size: 13px; line-height: 1.6;">
+                How to deploy an appliance in 15 minutes for your client and bill them a monthly automation retainer:
+            </p>
+            <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(240px, 1fr)); gap: 14px; font-size: 13px; color: #CBD5E0;">
+                <div style="background: #090B0E; padding: 14px; border-radius: 8px; border: 1px solid var(--card-border);">
+                    <strong style="color: #FFF;">Step 1: Hardware</strong><br>
+                    Order any $40–$60 Android smartphone (Motorola Moto G, Samsung A-series) and a $10/mo unlimited talk/text SIM (Tello, Mint).
+                </div>
+                <div style="background: #090B0E; padding: 14px; border-radius: 8px; border: 1px solid var(--card-border);">
+                    <strong style="color: #FFF;">Step 2: Sideload APK</strong><br>
+                    Install <a href="/MissedCallAutoSMS-Pro.apk" style="color: var(--agency-accent);">MissedCallAutoSMS-Pro.apk</a> on the phone and paste the client's Pro License Key.
+                </div>
+                <div style="background: #090B0E; padding: 14px; border-radius: 8px; border: 1px solid var(--card-border);">
+                    <strong style="color: #FFF;">Step 3: Connect CRM / n8n</strong><br>
+                    In Settings -> Outbound Forwarder, paste your agency's n8n webhook URL. Enable "Mute Native Auto-Reply" to eliminate double-sends.
+                </div>
+                <div style="background: #090B0E; padding: 14px; border-radius: 8px; border: 1px solid var(--card-border);">
+                    <strong style="color: #FFF;">Step 4: Dock & Bill</strong><br>
+                    Dock the phone in the client's back office on office Wi-Fi. Charge the client $199–$299/mo for automated missed-call lead capture!
+                </div>
+            </div>
+        </div>
+
+    </div>
+
+</div>
+
+<!-- Deploy Modal -->
+<div id="deployModal" class="modal-overlay">
+    <div class="modal-box">
+        <h2 class="modal-title">Deploy Client Appliance</h2>
+        <p class="modal-desc">Generate a dedicated, cryptographically signed Pro License Key for your client's office Android phone.</p>
+
+        <div class="input-group">
+            <label>Client Business Name *</label>
+            <input type="text" id="inputClientName" class="input-field" placeholder="e.g. Apex Plumbing, Joe's Roofing">
+        </div>
+
+        <div class="input-group">
+            <label>Client Contact / Phone</label>
+            <input type="text" id="inputClientContact" class="input-field" placeholder="e.g. +1 (555) 234-5678">
+        </div>
+
+        <div class="input-group">
+            <label>Internal Notes / CRM</label>
+            <input type="text" id="inputClientNotes" class="input-field" placeholder="e.g. Connected to GoHighLevel sub-account">
+        </div>
+
+        <div style="display: flex; gap: 10px; margin-top: 24px;">
+            <button class="btn-agency-primary" onclick="submitDeployClient()">Generate Client Key ➔</button>
+            <button class="btn-sm" style="padding: 12px 18px;" onclick="closeDeployModal()">Cancel</button>
+        </div>
+    </div>
+</div>
+
+<!-- Setup Sheet Modal -->
+<div id="sheetModal" class="modal-overlay">
+    <div class="modal-box" style="max-width: 600px;">
+        <h2 class="modal-title">Client Appliance Setup Sheet</h2>
+        <p class="modal-desc">Forward this 1-page guide directly to your client or technician to activate the office smartphone.</p>
+
+        <pre id="setupSheetContent"></pre>
+
+        <div style="display: flex; gap: 10px; margin-top: 20px;">
+            <button class="btn-agency-primary" onclick="copySetupSheet()">📋 Copy Setup Sheet</button>
+            <button class="btn-sm" style="padding: 12px 18px;" onclick="closeSheetModal()">Close</button>
+        </div>
+    </div>
+</div>
+
+<script>
+    let currentAgencyKey = localStorage.getItem('mcas_agency_key') || '';
+    let currentFleetData = null;
+
+    window.addEventListener('DOMContentLoaded', () => {
+        if (currentAgencyKey) {
+            fetchFleetData();
+        }
+    });
+
+    async function loginAgency() {
+        const key = document.getElementById('inputAgencyKey').value.trim();
+        if (!key) {
+            alert('Please enter your Master Agency Key.');
+            return;
+        }
+
+        currentAgencyKey = key;
+        await fetchFleetData();
+    }
+
+    function loadDemoAgency() {
+        document.getElementById('inputAgencyKey').value = 'MCAS-AGENCY-DEMO-89F2';
+        loginAgency();
+    }
+
+    async function fetchFleetData() {
+        try {
+            const res = await fetch('/.netlify/functions/agency-fleet', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ action: 'auth', agencyKey: currentAgencyKey })
+            });
+
+            const data = await res.json();
+            if (!res.ok || !data.success) {
+                alert(data.error || 'Invalid Agency Key');
+                return;
+            }
+
+            localStorage.setItem('mcas_agency_key', currentAgencyKey);
+            currentFleetData = data;
+            renderDashboard();
+        } catch (e) {
+            alert('Error connecting to fleet server: ' + e.message);
+        }
+    }
+
+    function renderDashboard() {
+        document.getElementById('authSection').style.display = 'none';
+        document.getElementById('dashboardSection').style.display = 'block';
+        document.getElementById('navLogoutBtn').style.display = 'block';
+
+        document.getElementById('textAgencyName').innerText = currentFleetData.agencyName || 'Agency Partner';
+        document.getElementById('badgePlan').innerText = currentFleetData.tier === 'agency_10' ? 'AGENCY 10-PACK' : 'AGENCY 5-PACK';
+        document.getElementById('textMasterKey').innerText = currentAgencyKey;
+
+        const used = currentFleetData.usedSeats || 0;
+        const total = currentFleetData.quota || 5;
+        const remaining = currentFleetData.remainingSeats || 0;
+        const pct = Math.round((used / total) * 100);
+
+        document.getElementById('metricUsed').innerText = `${used} / ${total}`;
+        document.getElementById('metricUsedSub').innerText = `${pct}% of fleet capacity`;
+        document.getElementById('metricAvailable').innerText = remaining;
+        document.getElementById('metricRetainer').innerText = `$${(used * 199).toLocaleString()} / mo`;
+
+        const tbody = document.getElementById('fleetTableBody');
+        if (!currentFleetData.clients || currentFleetData.clients.length === 0) {
+            tbody.innerHTML = `<tr><td colspan="6" style="text-align: center; color: var(--muted); padding: 30px;">No client appliances deployed yet. Click "+ Deploy New Appliance" to issue your first key.</td></tr>`;
+            return;
+        }
+
+        tbody.innerHTML = currentFleetData.clients.map(c => {
+            const isBound = !!c.hardwareId;
+            const statusBadge = isBound
+                ? `<span class="status-pill status-active">🟢 BOUND (#${c.hardwareId.substring(0, 8)})</span>`
+                : `<span class="status-pill status-pending">🟡 PENDING ACTIVATION</span>`;
+
+            const dateStr = c.issuedAt ? new Date(c.issuedAt).toLocaleDateString() : 'Recent';
+
+            return `
+                <tr>
+                    <td><strong>${escapeHtml(c.clientName)}</strong></td>
+                    <td style="color: var(--muted); font-size: 12px;">${escapeHtml(c.clientContact || '—')}<br><small>${escapeHtml(c.clientNotes || '')}</small></td>
+                    <td><code class="key-tag">${escapeHtml(c.licenseKey)}</code></td>
+                    <td>${statusBadge}</td>
+                    <td style="color: var(--muted);">${dateStr}</td>
+                    <td>
+                        <div class="action-btns">
+                            <button class="btn-sm" onclick="showClientSheet('${escapeHtml(c.licenseKey)}')">Setup Sheet</button>
+                            <button class="btn-sm" onclick="resetClientDevice('${escapeHtml(c.licenseKey)}')">Reset Lock</button>
+                            <button class="btn-sm danger" onclick="revokeClientKey('${escapeHtml(c.licenseKey)}')">Revoke</button>
+                        </div>
+                    </td>
+                </tr>
+            `;
+        }).join('');
+    }
+
+    function openDeployModal() {
+        document.getElementById('inputClientName').value = '';
+        document.getElementById('inputClientContact').value = '';
+        document.getElementById('inputClientNotes').value = '';
+        document.getElementById('deployModal').classList.add('active');
+    }
+
+    function closeDeployModal() {
+        document.getElementById('deployModal').classList.remove('active');
+    }
+
+    async function submitDeployClient() {
+        const clientName = document.getElementById('inputClientName').value.trim();
+        const clientContact = document.getElementById('inputClientContact').value.trim();
+        const clientNotes = document.getElementById('inputClientNotes').value.trim();
+
+        if (!clientName) {
+            alert('Please enter a client business name.');
+            return;
+        }
+
+        try {
+            const res = await fetch('/.netlify/functions/agency-fleet', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                    action: 'issue_key',
+                    agencyKey: currentAgencyKey,
+                    clientName,
+                    clientContact,
+                    clientNotes
+                })
+            });
+
+            const data = await res.json();
+            if (!res.ok || !data.success) {
+                alert(data.error || 'Failed to issue client key');
+                return;
+            }
+
+            closeDeployModal();
+            await fetchFleetData();
+
+            // Show setup sheet immediately
+            document.getElementById('setupSheetContent').innerText = data.setupSheet;
+            document.getElementById('sheetModal').classList.add('active');
+        } catch (e) {
+            alert('Error issuing key: ' + e.message);
+        }
+    }
+
+    function showClientSheet(licenseKey) {
+        const client = currentFleetData.clients.find(c => c.licenseKey === licenseKey);
+        if (!client) return;
+
+        const sheet = `=====================================================
+MISSED CALL AUTO SMS - CLIENT APPLIANCE SETUP SHEET
+Client: ${client.clientName}
+Assigned Pro License Key: ${client.licenseKey}
+=====================================================
+
+1. Download the Android APK to the dedicated office phone:
+   https://missedcallautosms.com/MissedCallAutoSMS-Pro.apk
+
+2. Open the app, paste the Pro License Key above, and grant permissions.
+
+3. Turn ON "Master Appliance". Your phone is now an automated SMS Gateway!
+   • 100% Cellular Delivery via physical SIM
+   • Zero A2P 10DLC registration required
+   • Connects to your CRM or n8n workflows
+=====================================================`;
+
+        document.getElementById('setupSheetContent').innerText = sheet;
+        document.getElementById('sheetModal').classList.add('active');
+    }
+
+    function closeSheetModal() {
+        document.getElementById('sheetModal').classList.remove('active');
+    }
+
+    function copySetupSheet() {
+        const text = document.getElementById('setupSheetContent').innerText;
+        navigator.clipboard.writeText(text);
+        alert('Copied client setup sheet to clipboard!');
+    }
+
+    async function resetClientDevice(licenseKey) {
+        if (!confirm('Are you sure you want to reset this client hardware lock? This will unbind their current phone so the key can be activated on a new handset.')) return;
+
+        try {
+            const res = await fetch('/.netlify/functions/agency-fleet', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ action: 'reset_device', agencyKey: currentAgencyKey, licenseKey })
+            });
+            const data = await res.json();
+            alert(data.message || 'Hardware lock reset');
+            await fetchFleetData();
+        } catch (e) {
+            alert('Error resetting device: ' + e.message);
+        }
+    }
+
+    async function revokeClientKey(licenseKey) {
+        if (!confirm('Are you sure you want to revoke this seat? The client key will become invalid and the seat will be returned to your available quota.')) return;
+
+        try {
+            const res = await fetch('/.netlify/functions/agency-fleet', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ action: 'revoke_key', agencyKey: currentAgencyKey, licenseKey })
+            });
+            const data = await res.json();
+            alert(data.message || 'Seat revoked');
+            await fetchFleetData();
+        } catch (e) {
+            alert('Error revoking seat: ' + e.message);
+        }
+    }
+
+    function copyMasterKey() {
+        navigator.clipboard.writeText(currentAgencyKey);
+        alert('Master Agency Key copied to clipboard!');
+    }
+
+    function logoutAgency() {
+        localStorage.removeItem('mcas_agency_key');
+        currentAgencyKey = '';
+        document.getElementById('authSection').style.display = 'block';
+        document.getElementById('dashboardSection').style.display = 'none';
+        document.getElementById('navLogoutBtn').style.display = 'none';
+    }
+
+    function escapeHtml(str) {
+        if (!str) return '';
+        return String(str)
+            .replace(/&/g, '&amp;')
+            .replace(/</g, '&lt;')
+            .replace(/>/g, '&gt;')
+            .replace(/"/g, '&quot;')
+            .replace(/'/g, '&#039;');
+    }
+</script>
+
+</body>
+</html>
