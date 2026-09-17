@@ -3,7 +3,11 @@ package com.missedcall.autotext.remote
 import android.content.Context
 import android.content.Intent
 import android.net.Uri
+import android.os.Build
+import android.os.Environment
+import android.provider.Settings
 import android.util.Log
+import android.widget.Toast
 import androidx.core.content.FileProvider
 import com.google.gson.Gson
 import com.google.gson.annotations.SerializedName
@@ -180,7 +184,8 @@ class RemoteUpdateManager(private val context: Context) {
             )
 
             val fileLength = connection.contentLength
-            val apkFile = File(context.cacheDir, "update.apk")
+            val externalDir = context.getExternalFilesDir(Environment.DIRECTORY_DOWNLOADS) ?: context.cacheDir
+            val apkFile = File(externalDir, "update.apk")
             if (apkFile.exists()) apkFile.delete()
 
             connection.inputStream.use { input ->
@@ -198,11 +203,22 @@ class RemoteUpdateManager(private val context: Context) {
                 }
             }
 
+            if (!apkFile.exists() || apkFile.length() == 0L) {
+                Log.e(TAG, "Downloaded APK is missing or 0 bytes")
+                withContext(Dispatchers.Main) {
+                    Toast.makeText(context, "Downloaded update APK is invalid.", Toast.LENGTH_LONG).show()
+                }
+                return@withContext false
+            }
+
             Log.i(TAG, "APK downloaded successfully (${apkFile.length()} bytes). Launching package installer...")
             installApk(apkFile)
             true
         } catch (e: Exception) {
             Log.e(TAG, "Error downloading APK update from $apkUrl", e)
+            withContext(Dispatchers.Main) {
+                Toast.makeText(context, "Download Error: ${e.localizedMessage}", Toast.LENGTH_LONG).show()
+            }
             false
         }
     }
@@ -251,15 +267,43 @@ class RemoteUpdateManager(private val context: Context) {
         return finalConn
     }
 
-    private fun installApk(apkFile: File) {
-        val authority = "${context.packageName}.fileprovider"
-        val apkUri: Uri = FileProvider.getUriForFile(context, authority, apkFile)
-
-        val intent = Intent(Intent.ACTION_VIEW).apply {
-            setDataAndType(apkUri, "application/vnd.android.package-archive")
-            flags = Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_GRANT_READ_URI_PERMISSION
+    private suspend fun installApk(apkFile: File) {
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O && !context.packageManager.canRequestPackageInstalls()) {
+            Log.w(TAG, "Install Unknown Apps permission not granted. Prompting user...")
+            withContext(Dispatchers.Main) {
+                Toast.makeText(
+                    context,
+                    "Please enable 'Allow from this source' for Missed Call Text-Back to complete update.",
+                    Toast.LENGTH_LONG
+                ).show()
+                try {
+                    val settingsIntent = Intent(Settings.ACTION_MANAGE_UNKNOWN_APP_SOURCES).apply {
+                        data = Uri.parse("package:${context.packageName}")
+                        flags = Intent.FLAG_ACTIVITY_NEW_TASK
+                    }
+                    context.startActivity(settingsIntent)
+                } catch (e: Exception) {
+                    Log.e(TAG, "Failed to launch unknown app sources settings", e)
+                }
+            }
+            return
         }
 
-        context.startActivity(intent)
+        withContext(Dispatchers.Main) {
+            try {
+                val authority = "${context.packageName}.fileprovider"
+                val apkUri: Uri = FileProvider.getUriForFile(context, authority, apkFile)
+
+                val intent = Intent(Intent.ACTION_VIEW).apply {
+                    setDataAndType(apkUri, "application/vnd.android.package-archive")
+                    flags = Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_GRANT_READ_URI_PERMISSION
+                }
+
+                context.startActivity(intent)
+            } catch (e: Exception) {
+                Log.e(TAG, "Failed to launch package installer", e)
+                Toast.makeText(context, "Installation Error: ${e.localizedMessage}", Toast.LENGTH_LONG).show()
+            }
+        }
     }
 }
