@@ -41,7 +41,7 @@ exports.stripeWebhook = functions.https.onRequest(async (req, res) => {
         event = stripe.webhooks.constructEvent(
             req.rawBody,
             sig,
-            process.env.STRIPE_WEBHOOK_SECRET || "whsec_placeholder"
+            process.env.STRIPE_WEBHOOK_SECRET || ""
         );
     } catch (err) {
         console.error("Stripe Webhook Signature Verification Failed:", err.message);

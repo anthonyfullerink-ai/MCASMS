@@ -1820,8 +1820,6 @@ Quick 3-Step Setup:
         alert("Cleared locally stored Gemini API key. System will use Netlify environment variables.");
     }
 
-    const DEFAULT_META_TOKEN = "EAAPZAZBqk8RwYBSQmp6WEQvWD5gu0r7Y3QskTrZC1OlwANZA11SaP3o0jtt42JcYmy66A6TBhXh9Rr1VdmZAqaPZC9o9xOXyqtZBGmi3iBbHNgIcLSZCZBwHKnoG83jkOwxdqeZBhN3B1n1CX9VKGpe1hfuzod48P3KrlIMmJaWyTFp5yCYvaTKsZCd3Q3YvJDRjZCXZCewpj";
-
     function initMetaTokenStatus() {
         const stored = localStorage.getItem('mcas_meta_token');
         const dot = document.getElementById("metaStatusDot");
@@ -1830,12 +1828,12 @@ Quick 3-Step Setup:
 
         if (stored) {
             if (dot) dot.innerText = "🟢";
-            if (detail) detail.innerHTML = `Custom Meta Token Active (ends in <code>...${escapeHtml(stored.slice(-6))}</code>). Ready to post to Facebook Page & Instagram Feed.`;
+            if (detail) detail.innerHTML = `Custom Meta Token Active in Browser (ends in <code>...${escapeHtml(stored.slice(-6))}</code>). <span style="color: var(--primary); cursor: pointer; text-decoration: underline;" onclick="toggleMetaTokenInput()">Change Token</span>`;
             if (input) input.value = stored;
         } else {
-            if (dot) dot.innerText = "🟢";
-            if (detail) detail.innerHTML = `Production Meta Page Access Token Connected. Ready to post to Facebook Page (<code>1248332278370968</code>) & Instagram Feed (<code>17841428781387416</code>).`;
-            if (input) input.value = DEFAULT_META_TOKEN;
+            if (dot) dot.innerText = "📱";
+            if (detail) detail.innerHTML = `Using Netlify Site Environment Variables (<code>META_PAGE_ACCESS_TOKEN</code>). <span style="color: var(--primary); cursor: pointer; text-decoration: underline;" onclick="toggleMetaTokenInput()">Click to connect directly via browser</span>.`;
+            if (input) input.value = "";
         }
     }
 
@@ -1858,7 +1856,7 @@ Quick 3-Step Setup:
     function clearCustomMetaToken() {
         localStorage.removeItem('mcas_meta_token');
         initMetaTokenStatus();
-        alert("Reset to default production Meta Access Token.");
+        alert("Cleared locally stored Meta token. System will use Netlify environment variables.");
     }
 
     // AI Blog Engine Functions
@@ -2033,14 +2031,15 @@ Quick 3-Step Setup:
             alertBox.innerHTML = `📢 <strong>Cross-Posting to Meta Active</strong>: Sending to Facebook Page and Instagram Feed via Meta Graph API...`;
         }
 
-        const metaToken = localStorage.getItem('mcas_meta_token') || DEFAULT_META_TOKEN;
+        const metaToken = localStorage.getItem('mcas_meta_token') || '';
         try {
+            const reqHeaders = { 'Content-Type': 'application/json' };
+            if (metaToken) {
+                reqHeaders['x-meta-token'] = metaToken;
+            }
             const data = await safeFetchJson('/api/publish-social', {
                 method: "POST",
-                headers: { 
-                    'Content-Type': 'application/json',
-                    'x-meta-token': metaToken
-                },
+                headers: reqHeaders,
                 body: articleData ? JSON.stringify(articleData) : '{}'
             });
 

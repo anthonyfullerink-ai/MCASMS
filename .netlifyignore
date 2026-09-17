@@ -1,0 +1,10 @@
+﻿# Exclude Android native project, gradle, docs, and helper scripts from Netlify builds
+app/
+gradle/
+keystore/
+docs/
+firebase/
+tools/
+scripts/
+sent_emails/
+.env*

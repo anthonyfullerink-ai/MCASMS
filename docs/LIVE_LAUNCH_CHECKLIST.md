@@ -1,4 +1,4 @@
-﻿# Missed Call Auto-SMS & Pro Automation — Live Launch Checklist
+# Missed Call Auto-SMS & Pro Automation — Live Launch Checklist
 
 This master checklist covers everything needed to take the website, Stripe billing, Resend email automation, and the Android APK live.
 
@@ -9,9 +9,9 @@ In your **Netlify Dashboard** ➔ Select Site ➔ **Site configuration** ➔ **E
 
 | Variable Name | Value Description | Example |
 |---|---|---|
-| STRIPE_SECRET_KEY | Secret key from Stripe Dashboard | sk_live_51... |
-| STRIPE_WEBHOOK_SECRET | Signing secret from Stripe Webhook endpoint | whsec_... |
-| RESEND_API_KEY | API Key from Resend.com | e_... |
+| STRIPE_SECRET_KEY | Secret key from Stripe Dashboard | (Your Stripe Secret Key) |
+| STRIPE_WEBHOOK_SECRET | Signing secret from Stripe Webhook endpoint | (Your Stripe Webhook Secret) |
+| RESEND_API_KEY | API Key from Resend.com | (Your Resend API Key) |
 | FROM_EMAIL | Branded sender address | Missed Call Auto SMS <support@missedcallautosms.com> |
 | OWNER_EMAIL | Your alert address for new purchase pings | contactus@offgridmediagroup.com |
 
@@ -21,9 +21,9 @@ In your **Netlify Dashboard** ➔ Select Site ➔ **Site configuration** ➔ **E
 
 ### Option A: One-Command Automated Setup
 If you want Stripe products and payment links automatically created and wired into index.html and sales_landing_page.html, run:
-`ash
-node tools/setup_stripe.js sk_live_YOUR_STRIPE_KEY
-`
+```bash
+node tools/setup_stripe.js <STRIPE_SECRET_KEY>
+```
 This script will:
 1. Create the **.99 Standard Lifetime** Product & Payment Link.
 2. Create the **.99 Pro Automation Lifetime** Product & Payment Link.
@@ -43,8 +43,8 @@ If setting up manually in your Stripe Dashboard:
    - Endpoint URL: https://missedcallautosms.com/api/stripe-webhook (or https://<YOUR-NETLIFY-SUBDOMAIN>.netlify.app/api/stripe-webhook)
    - Select events to listen to:
      - checkout.session.completed
-   - Click **Add endpoint**, then click **Reveal** under **Signing secret** (whsec_...).
-   - Add this whsec_... value to your Netlify STRIPE_WEBHOOK_SECRET.
+   - Click **Add endpoint**, then click **Reveal** under **Signing secret**.
+   - Add this signing secret value to your Netlify STRIPE_WEBHOOK_SECRET.
 
 ---
 
