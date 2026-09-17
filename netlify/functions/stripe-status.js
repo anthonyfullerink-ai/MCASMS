@@ -82,7 +82,7 @@ exports.handler = async (event) => {
         mode: isLive ? 'LIVE PRODUCTION' : 'TEST MODE',
         currency: currency,
         latencyMs: latencyMs,
-        checkoutTrialUrl: 'https://buy.stripe.com/3cI9AT49g2X07Q41ux2go0a?trial_period_days=3',
+        checkoutTrialUrl: 'https://buy.stripe.com/5kQ5kDbBI8hkdao8WZ2go0c',
         checkoutLifetimeUrl: 'https://buy.stripe.com/3cI9AT49g2X07Q41ux2go0a',
         checkoutProUrl: 'https://buy.stripe.com/cNi5kDdJQ558c6k2yB2go0b',
         message: 'Stripe API connection verified and active'

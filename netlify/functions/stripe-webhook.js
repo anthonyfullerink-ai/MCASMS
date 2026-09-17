@@ -108,6 +108,108 @@ function generateEmailHtml(customerName, licenseKey, apkDownloadUrl, amountPaid,
 </html>`;
 }
 
+function generateTrialEmailHtml(customerName, licenseKey, apkDownloadUrl) {
+  const brandTitle = "Missed Call Auto SMS • 3-Day Free Trial";
+  const badgeText = "3-DAY FREE TRIAL ($0.00 CHARGED TODAY)";
+  const themeBorderColor = "#FFB300";
+  const themeTextColor = "#FFB300";
+  const editionSummary = "3-Day Full-Access Free Trial • Standard Edition • 100% A2P 10DLC Exempt";
+
+  return `<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="utf-8">
+    <title>Your Missed Call Auto SMS Free Trial Key & Setup Guide</title>
+</head>
+<body style="font-family: -apple-system, BlinkMacSystemFont, Arial, sans-serif; background-color: #090B0E; color: #FFFFFF; margin: 0; padding: 24px;">
+    <div style="max-width: 600px; margin: 0 auto; background: #131720; border: 1px solid #222836; border-radius: 16px; padding: 32px;">
+        <div style="text-align: center; margin-bottom: 24px;">
+            <div style="font-size: 44px; margin-bottom: 8px;">🎁</div>
+            <h1 style="color: ${themeTextColor}; margin: 0; font-size: 24px; font-weight: 900;">${brandTitle}</h1>
+            <div style="display: inline-block; margin-top: 6px; padding: 4px 12px; border-radius: 20px; font-size: 11px; font-weight: 800; background: ${themeBorderColor}22; color: ${themeTextColor}; border: 1px solid ${themeBorderColor}44;">
+                ${badgeText}
+            </div>
+        </div>
+
+        <div style="background: #1A202C; border-left: 4px solid ${themeBorderColor}; padding: 16px; border-radius: 8px; margin-bottom: 24px;">
+            <h2 style="margin: 0 0 6px 0; font-size: 18px; color: #FFF;">Welcome, ${customerName}!</h2>
+            <p style="margin: 0; color: #CBD5E0; font-size: 14px; line-height: 1.5;">
+                Your <strong>3-Day Free Trial</strong> has started. You were charged <strong>$0.00 today</strong>. Your trial activation key is ready to activate on your Android business phone.
+            </p>
+        </div>
+
+        <!-- License Key Box -->
+        <div style="background: #090B0E; border: 1px dashed ${themeBorderColor}; border-radius: 12px; padding: 20px; text-align: center; margin-bottom: 24px;">
+            <div style="font-size: 12px; color: #949BAE; text-transform: uppercase; font-weight: bold; margin-bottom: 8px;">Your 3-Day Trial License Key</div>
+            <div style="font-family: monospace; font-size: 22px; color: ${themeTextColor}; font-weight: bold; word-break: break-all; letter-spacing: 1px; margin-bottom: 8px;">
+                ${licenseKey}
+            </div>
+            <div style="font-size: 12px; color: #A0AEC0;">${editionSummary}</div>
+        </div>
+
+        <!-- APK Download Button -->
+        <div style="text-align: center; margin-bottom: 24px;">
+            <a href="${apkDownloadUrl}" style="display: inline-block; background: ${themeBorderColor}; color: #000000; font-weight: 800; font-size: 16px; padding: 14px 36px; border-radius: 30px; text-decoration: none; box-shadow: 0 6px 20px rgba(255,179,0,0.3);">
+                📥 Download Android App (.APK)
+            </a>
+            <div style="font-size: 12px; color: #949BAE; margin-top: 8px;">Direct Link: <a href="${apkDownloadUrl}" style="color:${themeTextColor};">${apkDownloadUrl}</a></div>
+        </div>
+
+        <!-- 3-Step Quick Start -->
+        <div style="border-top: 1px solid #222836; padding-top: 20px; margin-bottom: 24px;">
+            <h3 style="color: #FFF; font-size: 16px; margin: 0 0 12px 0;">🚀 3-Step Instant Activation</h3>
+            <ol style="color: #CBD5E0; font-size: 14px; padding-left: 20px; line-height: 1.8;">
+                <li><strong>Download and install</strong> the APK file on your Android business phone.</li>
+                <li>Open the app and <strong>paste your Trial License Key</strong> above.</li>
+                <li>Grant standard SMS and Call Log permissions, then <strong>Toggle Master Appliance ON</strong>.</li>
+            </ol>
+        </div>
+
+        <div style="background: rgba(255, 179, 0, 0.08); border: 1px solid rgba(255, 179, 0, 0.25); border-radius: 8px; padding: 14px; margin-bottom: 20px; font-size: 12px; color: #E2E8F0; line-height: 1.5;">
+            ⏰ <strong>Trial & Renewal Terms:</strong> You have 3 full days of unrestricted access. After 3 days, your card on file will be charged $49.99 for your permanent lifetime license unless you cancel beforehand. You can cancel anytime in 1 click at <a href="https://missedcallautosms.com/cancel_trial.html" style="color: ${themeTextColor};">missedcallautosms.com/cancel_trial.html</a> or through our 24/7 AI Voice Assistant.
+        </div>
+
+        <div style="border-top: 1px solid #222836; padding-top: 18px; text-align: center; font-size: 12px; color: #718096;">
+            Need help or device transfer? Visit <a href="https://missedcallautosms.com/license_dashboard.html" style="color: ${themeTextColor};">Customer License Portal</a> or reply directly to this email.
+        </div>
+    </div>
+</body>
+</html>`;
+}
+
+function stripeApiRequest(endpoint, method = 'GET') {
+  return new Promise((resolve, reject) => {
+    const options = {
+      hostname: 'api.stripe.com',
+      port: 443,
+      path: endpoint,
+      method: method,
+      headers: {
+        'Authorization': `Bearer ${STRIPE_SECRET_KEY}`,
+        'Content-Type': 'application/x-www-form-urlencoded'
+      }
+    };
+    const req = https.request(options, (res) => {
+      let body = '';
+      res.on('data', chunk => body += chunk);
+      res.on('end', () => {
+        try {
+          const parsed = JSON.parse(body);
+          if (res.statusCode >= 200 && res.statusCode < 300) {
+            resolve(parsed);
+          } else {
+            reject(new Error(parsed.error ? parsed.error.message : body));
+          }
+        } catch (e) {
+          reject(e);
+        }
+      });
+    });
+    req.on('error', reject);
+    req.end();
+  });
+}
+
 function sendEmail(apiKey, toEmail, subject, htmlContent) {
   return new Promise((resolve, reject) => {
     const payload = JSON.stringify({
@@ -209,7 +311,10 @@ exports.handler = async (event) => {
     const customerDetails = session.customer_details || {};
     const customerEmail = customerDetails.email || session.customer_email;
     const customerName = customerDetails.name || 'Valued Customer';
-    const amountTotal = session.amount_total || 4999;
+    const amountTotal = (session.amount_total !== undefined && session.amount_total !== null) ? session.amount_total : 4999;
+    const isTrial = (amountTotal === 0) ||
+                    (session.subscription && amountTotal === 0) ||
+                    (session.metadata && session.metadata.tier === 'standard_trial');
     const amountPaid = (amountTotal / 100).toFixed(2);
 
     if (!customerEmail) {
@@ -217,18 +322,66 @@ exports.handler = async (event) => {
       return { statusCode: 200, body: JSON.stringify({ received: true, warning: 'No email found' }) };
     }
 
-    // Determine Tier: Pro ($149.99+) vs Standard ($49.99)
-    const isPro = amountTotal >= 10000 ||
+    // Determine Tier: Pro ($149.99+) vs Standard ($49.99) vs Free Trial ($0.00)
+    const isPro = !isTrial && (amountTotal >= 10000 ||
                   (session.metadata && (session.metadata.tier === 'pro' || session.metadata.tier === 'pro_automation')) ||
-                  (session.client_reference_id && session.client_reference_id.toLowerCase().includes('pro'));
+                  (session.client_reference_id && session.client_reference_id.toLowerCase().includes('pro')));
 
     const host = (event.headers && event.headers.host) || 'missedcallautosms.com';
     const apkFileName = isPro ? 'MissedCallAutoSMS-Pro.apk' : 'MissedCallAutoSMS.apk';
     const apkDownloadUrl = `https://${host}/${apkFileName}`;
 
-    // 1. Generate Signed License Key (MCAS-PRO- for Pro, MCAS- for Standard)
+    if (isTrial) {
+      // 1. Generate 3-Day Free Trial License Key (valid 4 days for timezone buffer)
+      const trialLicenseKey = generateKey(customerName, 4, false);
+      console.log(`🎁 [3-DAY TRIAL ACTIVATED] ${trialLicenseKey} for ${customerEmail} ($0.00 Charged)`);
+
+      // 2. Automatically Dispatch Free Trial Delivery Email
+      if (RESEND_API_KEY) {
+        const emailSubject = `🎁 Your Missed Call Auto SMS 3-Day Free Trial Key & Setup Guide ($0 Today)`;
+        const emailHtml = generateTrialEmailHtml(customerName, trialLicenseKey, apkDownloadUrl);
+
+        try {
+          const sendResult = await sendEmail(RESEND_API_KEY, customerEmail, emailSubject, emailHtml);
+          console.log(`📧 [TRIAL EMAIL DELIVERED] Dispatched to ${customerEmail} (ID: ${sendResult.id})`);
+
+          // Notify owner of new free trial signup
+          if (OWNER_NOTIFY_EMAIL && OWNER_NOTIFY_EMAIL !== customerEmail) {
+            sendEmail(
+              RESEND_API_KEY,
+              OWNER_NOTIFY_EMAIL,
+              `🎁 New 3-Day Free Trial Signup: ${customerName}`,
+              `<p>A new customer has started their 3-day free trial ($0 charged today)!</p>
+               <p><strong>Customer:</strong> ${customerName} (${customerEmail})</p>
+               <p><strong>Trial License Key:</strong> <code>${trialLicenseKey}</code></p>
+               <p><strong>Stripe Session:</strong> ${session.id}</p>
+               <p><strong>Subscription ID:</strong> ${session.subscription || 'N/A'}</p>`
+            ).catch(() => {});
+          }
+        } catch (emailErr) {
+          console.error(`❌ [TRIAL EMAIL FAILED] for ${customerEmail}:`, emailErr.message);
+        }
+      }
+
+      return {
+        statusCode: 200,
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          received: true,
+          tier: 'standard_trial',
+          trialDays: 3,
+          amountPaid: '0.00',
+          licenseKey: trialLicenseKey,
+          apkUrl: apkDownloadUrl,
+          customerEmail: customerEmail
+        })
+      };
+    }
+
+    // Direct Purchase (Standard $49.99 or Pro $149.99)
+    // 1. Generate Signed Lifetime License Key
     const licenseKey = generateKey(customerName, 0, isPro);
-    console.log(`🔑 [${isPro ? 'PRO ' : 'STANDARD '}LICENSE GENERATED] ${licenseKey} for ${customerEmail} ($${amountPaid})`);
+    console.log(`🔑 [${isPro ? 'PRO ' : 'STANDARD '}LIFETIME LICENSE GENERATED] ${licenseKey} for ${customerEmail} ($${amountPaid})`);
 
     // 2. Automatically Dispatch Delivery Email
     if (RESEND_API_KEY) {
@@ -273,6 +426,74 @@ exports.handler = async (event) => {
         customerEmail: customerEmail
       })
     };
+  }
+
+  // Handle Trial Conversion Payment (3 days after trial start, first real invoice succeeds)
+  if (eventObj.type === 'invoice.payment_succeeded') {
+    const invoice = eventObj.data.object;
+    const amountPaidCents = invoice.amount_paid || 0;
+    const amountPaid = (amountPaidCents / 100).toFixed(2);
+    const customerEmail = invoice.customer_email;
+    const customerName = invoice.customer_name || 'Valued Customer';
+
+    // Only process real conversion payments (ignore $0 initial trial setup invoice)
+    if (amountPaidCents >= 4900 && customerEmail) {
+      const host = (event.headers && event.headers.host) || 'missedcallautosms.com';
+      const apkDownloadUrl = `https://${host}/MissedCallAutoSMS.apk`;
+
+      // 1. Generate Permanent Lifetime License Key
+      const lifetimeKey = generateKey(customerName, 0, false);
+      console.log(`🎉 [TRIAL CONVERTED TO LIFETIME] ${lifetimeKey} for ${customerEmail} ($${amountPaid})`);
+
+      // 2. Dispatch Lifetime Key Delivery Email via Resend
+      if (RESEND_API_KEY) {
+        const emailSubject = `🎉 Your Missed Call Auto SMS Lifetime License Key ($49.99)`;
+        const emailHtml = generateEmailHtml(customerName, lifetimeKey, apkDownloadUrl, amountPaid, false);
+
+        try {
+          const sendResult = await sendEmail(RESEND_API_KEY, customerEmail, emailSubject, emailHtml);
+          console.log(`📧 [CONVERSION EMAIL DELIVERED] to ${customerEmail} (ID: ${sendResult.id})`);
+
+          if (OWNER_NOTIFY_EMAIL && OWNER_NOTIFY_EMAIL !== customerEmail) {
+            sendEmail(
+              RESEND_API_KEY,
+              OWNER_NOTIFY_EMAIL,
+              `💰 Trial Converted to Lifetime ($${amountPaid}): ${customerName}`,
+              `<p>Customer 3-day trial has converted to a permanent lifetime license!</p>
+               <p><strong>Customer:</strong> ${customerName} (${customerEmail})</p>
+               <p><strong>Amount:</strong> $${amountPaid}</p>
+               <p><strong>Lifetime License Key:</strong> <code>${lifetimeKey}</code></p>
+               <p><strong>APK Delivered:</strong> ${apkDownloadUrl}</p>`
+            ).catch(() => {});
+          }
+        } catch (err) {
+          console.error(`❌ [CONVERSION EMAIL ERROR] for ${customerEmail}:`, err.message);
+        }
+      }
+
+      // 3. Terminate the recurring subscription in Stripe so customer has permanent lifetime access with no further recurring charges
+      if (invoice.subscription && STRIPE_SECRET_KEY) {
+        try {
+          await stripeApiRequest(`/v1/subscriptions/${invoice.subscription}`, 'DELETE');
+          console.log(`✅ [LIFETIME CONVERSION COMPLETE] Subscription ${invoice.subscription} terminated. User converted to lifetime access.`);
+        } catch (subErr) {
+          console.error(`⚠️ [STRIPE SUB CANCEL ERROR] Failed to terminate sub ${invoice.subscription}:`, subErr.message);
+        }
+      }
+
+      return {
+        statusCode: 200,
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          received: true,
+          converted: true,
+          licenseKey: lifetimeKey,
+          customerEmail: customerEmail
+        })
+      };
+    }
+
+    return { statusCode: 200, body: JSON.stringify({ received: true, note: 'Non-conversion invoice recorded' }) };
   }
 
   return { statusCode: 200, body: JSON.stringify({ received: true }) };
