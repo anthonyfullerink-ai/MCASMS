@@ -67,6 +67,18 @@
   to = "/.netlify/functions/update-version"
   status = 200
 
+# API Route: Central Webhook Relay - Register Device
+[[redirects]]
+  from = "/api/register-device"
+  to = "/.netlify/functions/register-device"
+  status = 200
+
+# API Route: Central Webhook Relay - Dispatch SMS
+[[redirects]]
+  from = "/api/dispatch-sms"
+  to = "/.netlify/functions/dispatch-sms"
+  status = 200
+
 # Direct access to owner dashboard
 [[redirects]]
   from = "/owner"
