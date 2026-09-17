@@ -8,7 +8,8 @@ function callGeminiSingle(apiVersion, model, prompt, apiKey) {
       }],
       generationConfig: {
         temperature: 0.7,
-        maxOutputTokens: 4096
+        maxOutputTokens: 2048,
+        responseMimeType: 'application/json'
       }
     });
 

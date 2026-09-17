@@ -1975,6 +1975,47 @@ Quick 3-Step Setup:
         });
     }
 
+    async function callGeminiDirectClient(apiKey) {
+        const prompt = `You are the lead marketing strategist for "Missed Call Auto SMS".
+Generate a brand new, highly authoritative, SEO-rich article for local service business owners and trade contractors.
+Return your response STRICTLY as a raw JSON object (no extra commentary) matching this schema:
+{
+  "title": "Compelling article headline (50-70 chars)",
+  "slug": "url-friendly-slug-hyphens-only",
+  "category": "One of: Paid Ads & ROI, Appliance vs. SaaS, Contractor Playbooks, Speed-to-Lead",
+  "readTime": 5,
+  "tags": ["Keyword1", "Keyword2"],
+  "excerpt": "Compelling 2-sentence summary hook.",
+  "metaDescription": "SEO description under 160 chars.",
+  "takeaways": ["Takeaway 1", "Takeaway 2", "Takeaway 3"],
+  "contentHtml": "Full article HTML with <h2>, <h3>, <p>, <ul>, <li>, <strong>, <blockquote>."
+}`;
+
+        const res = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-3.6-flash:generateContent?key=${encodeURIComponent(apiKey)}`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+                contents: [{ parts: [{ text: prompt }] }],
+                generationConfig: {
+                    temperature: 0.7,
+                    maxOutputTokens: 2048,
+                    responseMimeType: 'application/json'
+                }
+            })
+        });
+        if (!res.ok) {
+            const errText = await res.text();
+            throw new Error(`Google API (${res.status}): ${errText}`);
+        }
+        const data = await res.json();
+        const rawText = data.candidates[0].content.parts[0].text;
+        let cleaned = rawText.trim();
+        if (cleaned.startsWith('```')) {
+            cleaned = cleaned.replace(/^```(?:json)?\s*/i, '').replace(/\s*```$/i, '').trim();
+        }
+        return JSON.parse(cleaned);
+    }
+
     async function generateNewBlogArticle() {
         const btn = document.getElementById("btnGenBlogNow");
         const alertBox = document.getElementById("blogGenAlert");
@@ -1984,14 +2025,30 @@ Quick 3-Step Setup:
         }
 
         btn.disabled = true;
-        btn.innerText = "⏳ Generating Article with Gemini...";
+        btn.innerText = "⏳ Generating Article with Gemini 3.6 Flash...";
         alertBox.style.display = "block";
         alertBox.style.background = "rgba(41, 182, 246, 0.15)";
         alertBox.style.borderColor = "var(--accent)";
         alertBox.innerHTML = `🤖 <strong>Google Gemini Engine Active</strong>: Brainstorming unique angle, writing long-form SEO copy, formatting JSON-LD Schema, and saving static HTML...`;
 
         try {
-            const data = await safeFetchJson('/api/generate-blog', { method: "POST" });
+            let data;
+            try {
+                data = await safeFetchJson('/api/generate-blog', { method: "POST" });
+            } catch (fetchErr) {
+                const clientKey = localStorage.getItem('mcas_gemini_key');
+                if (clientKey) {
+                    alertBox.innerHTML = `⚡ <strong>Serverless timed out, switching to Direct Gemini 3.6 Flash API...</strong>`;
+                    const directArticle = await callGeminiDirectClient(clientKey);
+                    data = {
+                        success: true,
+                        latestPost: directArticle,
+                        message: 'Article generated directly via Gemini 3.6 Flash client!'
+                    };
+                } else {
+                    throw fetchErr;
+                }
+            }
 
             if (data.success) {
                 alertBox.style.background = "rgba(0, 230, 118, 0.15)";
@@ -2009,7 +2066,7 @@ Quick 3-Step Setup:
             } else {
                 alertBox.style.background = "rgba(248, 81, 73, 0.15)";
                 alertBox.style.borderColor = "var(--danger)";
-                alertBox.innerHTML = `⚠️ <strong>Generation Note:</strong> ${escapeHtml(data.error || 'Check console or GEMINI_API_KEY')}`;
+                alertBox.innerHTML = `⚠️ <strong>Generation Note:</strong> ${escapeHtml(data.error || 'Check console or Gemini API key')}`;
             }
         } catch (err) {
             alertBox.style.background = "rgba(248, 81, 73, 0.15)";
