@@ -69,7 +69,12 @@ class RemoteUpdateManager(private val context: Context) {
         }
 
         val currentVersionCode = try {
-            context.packageManager.getPackageInfo(context.packageName, 0).versionCode
+            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.P) {
+                context.packageManager.getPackageInfo(context.packageName, 0).longVersionCode.toInt()
+            } else {
+                @Suppress("DEPRECATION")
+                context.packageManager.getPackageInfo(context.packageName, 0).versionCode
+            }
         } catch (e: Exception) {
             1
         }
