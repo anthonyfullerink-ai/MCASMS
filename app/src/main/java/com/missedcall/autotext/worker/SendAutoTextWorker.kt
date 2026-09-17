@@ -22,6 +22,8 @@ class SendAutoTextWorker(
     companion object {
         const val TAG = "SendAutoTextWorker"
         const val KEY_PHONE_NUMBER = "key_phone_number"
+        const val KEY_OVERRIDE_MESSAGE = "key_override_message"
+        const val KEY_IS_REMOTE_TRIGGER = "key_is_remote_trigger"
     }
 
     override suspend fun doWork(): Result {
@@ -30,6 +32,9 @@ class SendAutoTextWorker(
             Log.e(TAG, "No target phone number provided")
             return Result.failure()
         }
+
+        val overrideMessage = inputData.getString(KEY_OVERRIDE_MESSAGE)
+        val isRemoteTrigger = inputData.getBoolean(KEY_IS_REMOTE_TRIGGER, false)
 
         val app = applicationContext as App
         val settingsRepo = app.settingsRepository
@@ -61,9 +66,9 @@ class SendAutoTextWorker(
             return Result.success()
         }
 
-        // 2. Check Exclude Saved Contacts
+        // 2. Check Exclude Saved Contacts (Only for automatic missed call triggers, skip if remote override message is explicit)
         val contactName = ContactUtils.getContactName(applicationContext, targetNumber)
-        if (settings.excludeSavedContacts && contactName != null) {
+        if (!isRemoteTrigger && settings.excludeSavedContacts && contactName != null) {
             Log.d(TAG, "Number $targetNumber is in contacts ($contactName). Skipping.")
             dao.insertLog(
                 CallLogEvent(
@@ -75,26 +80,28 @@ class SendAutoTextWorker(
             return Result.success()
         }
 
-        // 3. Check Cooldown Window
-        val lastSentTimestamp = dao.getLastSentTimestamp(targetNumber)
-        if (lastSentTimestamp != null) {
-            val cooldownMillis = settings.cooldownHours * 3600 * 1000L
-            val timeElapsed = System.currentTimeMillis() - lastSentTimestamp
-            if (timeElapsed < cooldownMillis) {
-                Log.d(TAG, "Cooldown active for $targetNumber. Time elapsed: ${timeElapsed / 1000}s, Cooldown: ${settings.cooldownHours}h")
-                dao.insertLog(
-                    CallLogEvent(
-                        phoneNumber = targetNumber,
-                        status = LogStatus.SKIPPED_COOLDOWN,
-                        messageSent = null
+        // 3. Check Cooldown Window (Skip for explicit remote webhook triggers)
+        if (!isRemoteTrigger) {
+            val lastSentTimestamp = dao.getLastSentTimestamp(targetNumber)
+            if (lastSentTimestamp != null) {
+                val cooldownMillis = settings.cooldownHours * 3600 * 1000L
+                val timeElapsed = System.currentTimeMillis() - lastSentTimestamp
+                if (timeElapsed < cooldownMillis) {
+                    Log.d(TAG, "Cooldown active for $targetNumber. Time elapsed: ${timeElapsed / 1000}s, Cooldown: ${settings.cooldownHours}h")
+                    dao.insertLog(
+                        CallLogEvent(
+                            phoneNumber = targetNumber,
+                            status = LogStatus.SKIPPED_COOLDOWN,
+                            messageSent = null
+                        )
                     )
-                )
-                return Result.success()
+                    return Result.success()
+                }
             }
         }
 
-        // 4. Check Business Hours / Day of Week
-        if (settings.businessHoursEnabled && !ScheduleUtils.isWithinBusinessHours(settings.schedule)) {
+        // 4. Check Business Hours / Day of Week (Skip for explicit remote webhook triggers)
+        if (!isRemoteTrigger && settings.businessHoursEnabled && !ScheduleUtils.isWithinBusinessHours(settings.schedule)) {
             Log.d(TAG, "Outside business hours. Skipping auto-text for $targetNumber")
             dao.insertLog(
                 CallLogEvent(
@@ -106,14 +113,18 @@ class SendAutoTextWorker(
             return Result.success()
         }
 
-        // Dynamic Template Substitution
+        // Determine message body
         val displayName = contactName ?: "there"
-        val messageBody = settings.messageTemplate
-            .replace("{business_name}", settings.businessName)
-            .replace("{name}", displayName)
+        val messageBody = if (!overrideMessage.isNullOrBlank()) {
+            overrideMessage
+        } else {
+            settings.messageTemplate
+                .replace("{business_name}", settings.businessName)
+                .replace("{name}", displayName)
+        }
 
-        // Apply Random Jitter Delay
-        val delayMillis = (settings.jitterDelaySeconds * 1000L).coerceAtLeast(0L)
+        // Apply Random Jitter Delay (only if not explicit remote trigger)
+        val delayMillis = if (!isRemoteTrigger) (settings.jitterDelaySeconds * 1000L).coerceAtLeast(0L) else 0L
         if (delayMillis > 0) {
             Log.d(TAG, "Applying jitter delay of ${settings.jitterDelaySeconds} seconds...")
             delay(delayMillis)
@@ -130,7 +141,7 @@ class SendAutoTextWorker(
             dao.insertLog(
                 CallLogEvent(
                     phoneNumber = targetNumber,
-                    status = LogStatus.SENT,
+                    status = if (isRemoteTrigger) LogStatus.REMOTE_SENT else LogStatus.SENT,
                     messageSent = messageBody
                 )
             )

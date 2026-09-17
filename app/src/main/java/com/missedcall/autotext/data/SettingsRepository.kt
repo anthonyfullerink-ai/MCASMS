@@ -35,6 +35,9 @@ class SettingsRepository(private val context: Context) {
         val REVOCATION_MANIFEST_URL = stringPreferencesKey("revocation_manifest_url")
         val CUSTOMER_EMAIL = stringPreferencesKey("customer_email")
         val SUBSCRIPTION_STATUS = stringPreferencesKey("subscription_status")
+        val WEBHOOK_ENABLED = booleanPreferencesKey("webhook_enabled")
+        val WEBHOOK_API_SECRET = stringPreferencesKey("webhook_api_secret")
+        val FCM_DEVICE_TOKEN = stringPreferencesKey("fcm_device_token")
     }
 
     val settingsFlow: Flow<AppSettings> = context.dataStore.data.map { preferences ->
@@ -65,18 +68,48 @@ class SettingsRepository(private val context: Context) {
             remoteUpdateUrl = preferences[REMOTE_UPDATE_URL] ?: "",
             licenseKey = preferences[LICENSE_KEY] ?: "",
             revocationManifestUrl = preferences[REVOCATION_MANIFEST_URL] ?: "",
-            subscriptionStatus = preferences[SUBSCRIPTION_STATUS] ?: "ACTIVE"
+            subscriptionStatus = preferences[SUBSCRIPTION_STATUS] ?: "ACTIVE",
+            webhookEnabled = preferences[WEBHOOK_ENABLED] ?: true,
+            webhookApiSecret = preferences[WEBHOOK_API_SECRET] ?: "",
+            fcmDeviceToken = preferences[FCM_DEVICE_TOKEN] ?: ""
         )
     }
 
     suspend fun getSettings(): AppSettings {
-        return settingsFlow.first()
+        val settings = settingsFlow.first()
+        if (settings.webhookApiSecret.isBlank()) {
+            val newSecret = generateRandomSecret()
+            context.dataStore.edit { preferences ->
+                preferences[WEBHOOK_API_SECRET] = newSecret
+            }
+            return settings.copy(webhookApiSecret = newSecret)
+        }
+        return settings
+    }
+
+    private fun generateRandomSecret(): String {
+        val chars = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789"
+        return (1..16).map { chars.random() }.joinToString("")
     }
 
     suspend fun setMasterEnabled(enabled: Boolean) {
         context.dataStore.edit { preferences ->
             preferences[MASTER_ENABLED] = enabled
         }
+    }
+
+    suspend fun saveFcmToken(token: String) {
+        context.dataStore.edit { preferences ->
+            preferences[FCM_DEVICE_TOKEN] = token
+        }
+    }
+
+    suspend fun regenerateWebhookSecret(): String {
+        val newSecret = generateRandomSecret()
+        context.dataStore.edit { preferences ->
+            preferences[WEBHOOK_API_SECRET] = newSecret
+        }
+        return newSecret
     }
 
     suspend fun updateSettings(settings: AppSettings) {
@@ -96,6 +129,11 @@ class SettingsRepository(private val context: Context) {
             preferences[LICENSE_KEY] = settings.licenseKey
             preferences[REVOCATION_MANIFEST_URL] = settings.revocationManifestUrl
             preferences[SUBSCRIPTION_STATUS] = settings.subscriptionStatus
+            preferences[WEBHOOK_ENABLED] = settings.webhookEnabled
+            if (settings.webhookApiSecret.isNotBlank()) {
+                preferences[WEBHOOK_API_SECRET] = settings.webhookApiSecret
+            }
+            preferences[FCM_DEVICE_TOKEN] = settings.fcmDeviceToken
         }
     }
 }

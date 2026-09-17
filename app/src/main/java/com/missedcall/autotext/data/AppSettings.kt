@@ -22,5 +22,8 @@ data class AppSettings(
     val remoteUpdateUrl: String = "https://raw.githubusercontent.com/anthonyfullerink-ai/MCASMS/main/version.json",
     val licenseKey: String = "",
     val revocationManifestUrl: String = "",
-    val subscriptionStatus: String = "ACTIVE"
+    val subscriptionStatus: String = "ACTIVE",
+    val webhookEnabled: Boolean = true,
+    val webhookApiSecret: String = "",
+    val fcmDeviceToken: String = ""
 )

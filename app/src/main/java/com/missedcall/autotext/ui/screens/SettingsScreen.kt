@@ -505,6 +505,115 @@ fun SettingsScreen(
                 }
             }
         }
+
+        // 8. n8n & Remote Webhook Integration Card
+        Card(
+            shape = RoundedCornerShape(16.dp),
+            modifier = Modifier.fillMaxWidth()
+        ) {
+            Column(modifier = Modifier.padding(16.dp)) {
+                Row(
+                    modifier = Modifier.fillMaxWidth(),
+                    horizontalArrangement = Arrangement.SpaceBetween,
+                    verticalAlignment = Alignment.CenterVertically
+                ) {
+                    Row(verticalAlignment = Alignment.CenterVertically) {
+                        Icon(
+                            imageVector = Icons.Default.Security,
+                            contentDescription = "n8n Webhook Icon",
+                            tint = MaterialTheme.colorScheme.primary
+                        )
+                        Spacer(modifier = Modifier.width(8.dp))
+                        Text(
+                            text = "n8n Webhook SMS Engine",
+                            style = MaterialTheme.typography.titleMedium,
+                            fontWeight = FontWeight.Bold
+                        )
+                    }
+                    Switch(
+                        checked = settings.webhookEnabled,
+                        onCheckedChange = { onSettingsChanged(settings.copy(webhookEnabled = it)) }
+                    )
+                }
+
+                if (settings.webhookEnabled) {
+                    Spacer(modifier = Modifier.height(12.dp))
+                    Text(
+                        text = "Trigger custom SMS texts directly from n8n workflows through this phone's SIM card using Firebase Cloud Messaging (FCM).",
+                        style = MaterialTheme.typography.bodySmall,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant
+                    )
+
+                    Spacer(modifier = Modifier.height(16.dp))
+                    Text(text = "FCM Device Token (n8n Target)", fontWeight = FontWeight.Bold)
+                    Spacer(modifier = Modifier.height(4.dp))
+                    OutlinedTextField(
+                        value = if (settings.fcmDeviceToken.isNotBlank()) settings.fcmDeviceToken else "Token pending registration (starts on launch)",
+                        onValueChange = {},
+                        readOnly = true,
+                        singleLine = true,
+                        modifier = Modifier.fillMaxWidth(),
+                        trailingIcon = {
+                            if (settings.fcmDeviceToken.isNotBlank()) {
+                                TextButton(onClick = {
+                                    val clipboard = context.getSystemService(Context.CLIPBOARD_SERVICE) as android.content.ClipboardManager
+                                    val clip = android.content.ClipData.newPlainText("FCM Token", settings.fcmDeviceToken)
+                                    clipboard.setPrimaryClip(clip)
+                                    Toast.makeText(context, "Copied FCM Token to Clipboard!", Toast.LENGTH_SHORT).show()
+                                }) {
+                                    Text("Copy")
+                                }
+                            }
+                        }
+                    )
+
+                    Spacer(modifier = Modifier.height(16.dp))
+                    Text(text = "Webhook Security Secret Key", fontWeight = FontWeight.Bold)
+                    Spacer(modifier = Modifier.height(4.dp))
+                    OutlinedTextField(
+                        value = settings.webhookApiSecret,
+                        onValueChange = { onSettingsChanged(settings.copy(webhookApiSecret = it)) },
+                        singleLine = true,
+                        modifier = Modifier.fillMaxWidth(),
+                        trailingIcon = {
+                            TextButton(onClick = {
+                                val clipboard = context.getSystemService(Context.CLIPBOARD_SERVICE) as android.content.ClipboardManager
+                                val clip = android.content.ClipData.newPlainText("Webhook Secret", settings.webhookApiSecret)
+                                clipboard.setPrimaryClip(clip)
+                                Toast.makeText(context, "Copied Webhook Secret to Clipboard!", Toast.LENGTH_SHORT).show()
+                            }) {
+                                Text("Copy")
+                            }
+                        }
+                    )
+
+                    Spacer(modifier = Modifier.height(12.dp))
+                    Surface(
+                        shape = RoundedCornerShape(8.dp),
+                        color = MaterialTheme.colorScheme.surfaceVariant,
+                        modifier = Modifier.fillMaxWidth()
+                    ) {
+                        Column(modifier = Modifier.padding(12.dp)) {
+                            Text(
+                                text = "n8n Webhook JSON Payload Spec:",
+                                fontWeight = FontWeight.Bold,
+                                style = MaterialTheme.typography.labelMedium
+                            )
+                            Spacer(modifier = Modifier.height(4.dp))
+                            Text(
+                                text = "{\n" +
+                                       "  \"secret\": \"${if (settings.webhookApiSecret.isNotBlank()) settings.webhookApiSecret else "YOUR_SECRET_KEY"}\",\n" +
+                                       "  \"phone\": \"+15551234567\",\n" +
+                                       "  \"message\": \"Hi John, your request was received!\"\n" +
+                                       "}",
+                                style = MaterialTheme.typography.bodySmall,
+                                fontFamily = androidx.compose.ui.text.font.FontFamily.Monospace
+                            )
+                        }
+                    }
+                }
+            }
+        }
     }
 }
 
