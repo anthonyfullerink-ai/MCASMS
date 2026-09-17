@@ -591,14 +591,18 @@
                 </div>
             </div>
 
-            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 20px;">
+            <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 16px;">
                 <div>
-                    <label style="font-size: 13px; color: var(--muted); display: block; margin-bottom: 6px;">Stripe 3-Day Free Trial Checkout Link:</label>
-                    <input type="text" value="https://buy.stripe.com/3cI9AT49g2X07Q41ux2go0a?trial_period_days=3" readonly onclick="this.select()" style="width: 100%; background: #090B0E; border: 1px solid var(--card-border); color: #FFF; padding: 10px; border-radius: 8px;">
+                    <label style="font-size: 13px; color: var(--muted); display: block; margin-bottom: 6px;">Stripe 3-Day Free Trial Checkout Link ($0):</label>
+                    <input type="text" value="https://buy.stripe.com/3cI9AT49g2X07Q41ux2go0a?trial_period_days=3" readonly onclick="this.select()" style="width: 100%; background: #090B0E; border: 1px solid var(--card-border); color: #FFF; padding: 10px; border-radius: 8px; font-size: 12px; font-family: monospace;">
                 </div>
                 <div>
-                    <label style="font-size: 13px; color: var(--muted); display: block; margin-bottom: 6px;">Stripe Lifetime $49.99 Direct Link:</label>
-                    <input type="text" value="https://buy.stripe.com/3cI9AT49g2X07Q41ux2go0a" readonly onclick="this.select()" style="width: 100%; background: #090B0E; border: 1px solid var(--card-border); color: #FFF; padding: 10px; border-radius: 8px;">
+                    <label style="font-size: 13px; color: var(--muted); display: block; margin-bottom: 6px;">Stripe Flagship Lifetime Direct Link ($49.99):</label>
+                    <input type="text" value="https://buy.stripe.com/3cI9AT49g2X07Q41ux2go0a" readonly onclick="this.select()" style="width: 100%; background: #090B0E; border: 1px solid var(--card-border); color: #FFF; padding: 10px; border-radius: 8px; font-size: 12px; font-family: monospace;">
+                </div>
+                <div>
+                    <label style="font-size: 13px; color: #D8B4FE; display: block; margin-bottom: 6px;">⚡ Stripe Pro Automation Direct Link ($149.99):</label>
+                    <input type="text" value="https://buy.stripe.com/cNi5kDdJQ558c6k2yB2go0b" readonly onclick="this.select()" style="width: 100%; background: #090B0E; border: 1px solid #A855F7; color: #D8B4FE; padding: 10px; border-radius: 8px; font-size: 12px; font-family: monospace;">
                 </div>
             </div>
 

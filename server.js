@@ -263,6 +263,7 @@ const server = http.createServer((req, res) => {
           latencyMs: latencyMs,
           checkoutTrialUrl: 'https://buy.stripe.com/3cI9AT49g2X07Q41ux2go0a?trial_period_days=3',
           checkoutLifetimeUrl: 'https://buy.stripe.com/3cI9AT49g2X07Q41ux2go0a',
+          checkoutProUrl: 'https://buy.stripe.com/cNi5kDdJQ558c6k2yB2go0b',
           message: 'Stripe API connection verified and active'
         }));
       })
