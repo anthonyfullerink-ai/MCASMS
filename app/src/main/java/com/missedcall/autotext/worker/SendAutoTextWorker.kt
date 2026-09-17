@@ -10,9 +10,15 @@ import com.missedcall.autotext.data.db.CallLogEvent
 import com.missedcall.autotext.data.db.LogStatus
 import com.missedcall.autotext.data.license.LicenseManager
 import com.missedcall.autotext.data.license.LicenseStatus
+import com.google.gson.Gson
 import com.missedcall.autotext.util.ContactUtils
 import com.missedcall.autotext.util.ScheduleUtils
+import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.delay
+import kotlinx.coroutines.withContext
+import java.net.HttpURLConnection
+import java.net.URL
+import java.nio.charset.StandardCharsets
 
 class SendAutoTextWorker(
     context: Context,
@@ -24,6 +30,7 @@ class SendAutoTextWorker(
         const val KEY_PHONE_NUMBER = "key_phone_number"
         const val KEY_OVERRIDE_MESSAGE = "key_override_message"
         const val KEY_IS_REMOTE_TRIGGER = "key_is_remote_trigger"
+        const val KEY_CALLBACK_URL = "key_callback_url"
     }
 
     override suspend fun doWork(): Result {
@@ -35,6 +42,7 @@ class SendAutoTextWorker(
 
         val overrideMessage = inputData.getString(KEY_OVERRIDE_MESSAGE)
         val isRemoteTrigger = inputData.getBoolean(KEY_IS_REMOTE_TRIGGER, false)
+        val callbackUrl = inputData.getString(KEY_CALLBACK_URL)
 
         val app = applicationContext as App
         val settingsRepo = app.settingsRepository
@@ -151,6 +159,11 @@ class SendAutoTextWorker(
                     messageSent = messageBody
                 )
             )
+
+            if (!callbackUrl.isNullOrBlank()) {
+                sendDeliveryCallback(callbackUrl, "SENT", targetNumber, messageBody, null)
+            }
+
             Result.success()
         } catch (e: Exception) {
             Log.e(TAG, "Failed to send SMS to $targetNumber", e)
@@ -162,7 +175,48 @@ class SendAutoTextWorker(
                     messageSent = messageBody
                 )
             )
+
+            if (!callbackUrl.isNullOrBlank()) {
+                sendDeliveryCallback(callbackUrl, "FAILED", targetNumber, messageBody, e.localizedMessage)
+            }
+
             Result.failure()
+        }
+    }
+
+    private suspend fun sendDeliveryCallback(callbackUrl: String, status: String, phone: String, message: String?, reason: String?) {
+        withContext(Dispatchers.IO) {
+            try {
+                Log.d(TAG, "Posting delivery callback to $callbackUrl with status $status...")
+                val url = URL(callbackUrl)
+                val conn = url.openConnection() as HttpURLConnection
+                conn.requestMethod = "POST"
+                conn.setRequestProperty("Content-Type", "application/json; utf-8")
+                conn.setRequestProperty("Accept", "application/json")
+                conn.doOutput = true
+                conn.connectTimeout = 8000
+                conn.readTimeout = 8000
+
+                val payloadMap = mutableMapOf<String, Any>(
+                    "status" to status,
+                    "phone" to phone,
+                    "timestamp" to System.currentTimeMillis()
+                )
+                if (!message.isNullOrBlank()) payloadMap["message"] = message
+                if (!reason.isNullOrBlank()) payloadMap["reason"] = reason
+
+                val jsonBody = Gson().toJson(payloadMap)
+                conn.outputStream.use { os ->
+                    val input = jsonBody.toByteArray(StandardCharsets.UTF_8)
+                    os.write(input, 0, input.size)
+                }
+
+                val responseCode = conn.responseCode
+                Log.i(TAG, "Delivery callback sent to $callbackUrl. HTTP response: $responseCode")
+                conn.disconnect()
+            } catch (e: Exception) {
+                Log.w(TAG, "Failed to send delivery callback to $callbackUrl: ${e.localizedMessage}")
+            }
         }
     }
 }

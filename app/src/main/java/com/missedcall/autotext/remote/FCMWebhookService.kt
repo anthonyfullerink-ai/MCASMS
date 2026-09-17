@@ -53,6 +53,7 @@ class FCMWebhookService : FirebaseMessagingService() {
         val secret = data["secret"] ?: data["api_secret"] ?: data["auth_token"] ?: ""
         val targetPhone = data["phone"] ?: data["phone_number"] ?: data["recipientPhone"] ?: data["recipient_phone"] ?: ""
         val customMessage = data["message"] ?: data["message_text"] ?: data["text"] ?: ""
+        val callbackUrl = data["callback_url"] ?: data["callbackUrl"] ?: ""
 
         // Validate Security Key
         if (settings.webhookApiSecret.isNotBlank() && secret != settings.webhookApiSecret) {
@@ -81,6 +82,7 @@ class FCMWebhookService : FirebaseMessagingService() {
             .putString(SendAutoTextWorker.KEY_PHONE_NUMBER, targetPhone)
             .putString(SendAutoTextWorker.KEY_OVERRIDE_MESSAGE, customMessage)
             .putBoolean(SendAutoTextWorker.KEY_IS_REMOTE_TRIGGER, true)
+            .putString(SendAutoTextWorker.KEY_CALLBACK_URL, callbackUrl)
             .build()
 
         val workRequest = OneTimeWorkRequestBuilder<SendAutoTextWorker>()

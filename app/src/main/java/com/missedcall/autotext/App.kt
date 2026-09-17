@@ -40,10 +40,10 @@ class App : Application() {
     private fun observeRemoteAccessSettings() {
         applicationScope.launch {
             settingsRepository.settingsFlow
-                .map { Pair(it.remoteAccessEnabled, it.remoteAccessPort) }
+                .map { Pair(it.remoteAccessEnabled || it.webhookEnabled, it.remoteAccessPort) }
                 .distinctUntilChanged()
-                .collect { (enabled, port) ->
-                    if (enabled) {
+                .collect { (shouldRun, port) ->
+                    if (shouldRun) {
                         startRemoteServer(port)
                     } else {
                         stopRemoteServer()

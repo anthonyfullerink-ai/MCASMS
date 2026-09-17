@@ -589,6 +589,29 @@ fun SettingsScreen(
                         }
                     )
 
+                    Spacer(modifier = Modifier.height(16.dp))
+                    val localIp = remember { com.missedcall.autotext.util.NetworkUtils.getLocalIpAddress() }
+                    val localWebhookUrl = "http://${localIp ?: "PHONE_IP"}:${settings.remoteAccessPort}/api/send-sms"
+                    Text(text = "Local Wi-Fi / VPN Webhook (No Firebase Required)", fontWeight = FontWeight.Bold)
+                    Spacer(modifier = Modifier.height(4.dp))
+                    OutlinedTextField(
+                        value = localWebhookUrl,
+                        onValueChange = {},
+                        readOnly = true,
+                        singleLine = true,
+                        modifier = Modifier.fillMaxWidth(),
+                        trailingIcon = {
+                            TextButton(onClick = {
+                                val clipboard = context.getSystemService(Context.CLIPBOARD_SERVICE) as android.content.ClipboardManager
+                                val clip = android.content.ClipData.newPlainText("Local Webhook", localWebhookUrl)
+                                clipboard.setPrimaryClip(clip)
+                                Toast.makeText(context, "Copied Local Webhook URL to Clipboard!", Toast.LENGTH_SHORT).show()
+                            }) {
+                                Text("Copy")
+                            }
+                        }
+                    )
+
                     Spacer(modifier = Modifier.height(12.dp))
                     Surface(
                         shape = RoundedCornerShape(8.dp),
@@ -606,7 +629,8 @@ fun SettingsScreen(
                                 text = "{\n" +
                                        "  \"secret\": \"${if (settings.webhookApiSecret.isNotBlank()) settings.webhookApiSecret else "YOUR_SECRET_KEY"}\",\n" +
                                        "  \"phone\": \"+15551234567\",\n" +
-                                       "  \"message\": \"Hi John, your request was received!\"\n" +
+                                       "  \"message\": \"Hi John, quote confirmed!\",\n" +
+                                       "  \"callback_url\": \"https://your-n8n.com/webhook/status\"\n" +
                                        "}",
                                 style = MaterialTheme.typography.bodySmall,
                                 fontFamily = androidx.compose.ui.text.font.FontFamily.Monospace
