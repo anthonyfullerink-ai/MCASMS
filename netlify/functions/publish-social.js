@@ -2,7 +2,8 @@ const https = require('https');
 const fs = require('fs');
 const path = require('path');
 
-const TOKEN = process.env.META_PAGE_ACCESS_TOKEN || '';
+const FALLBACK_TOKEN = 'EAAPZAZBqk8RwYBSQmp6WEQvWD5gu0r7Y3QskTrZC1OlwANZA11SaP3o0jtt42JcYmy66A6TBhXh9Rr1VdmZAqaPZC9o9xOXyqtZBGmi3iBbHNgIcLSZCZBwHKnoG83jkOwxdqeZBhN3B1n1CX9VKGpe1hfuzod48P3KrlIMmJaWyTFp5yCYvaTKsZCd3Q3YvJDRjZCXZCewpj';
+const TOKEN = process.env.META_PAGE_ACCESS_TOKEN || FALLBACK_TOKEN;
 const FB_PAGE_ID = process.env.FB_PAGE_ID || '1248332278370968';
 const IG_USER_ID = process.env.IG_USER_ID || '17841428781387416';
 
@@ -115,14 +116,25 @@ exports.handler = async (event) => {
   const articleUrl = `https://missedcallautosms.com/blog/${article.slug}`;
   const results = { facebook: null, instagram: null };
 
+  const activeImageUrl = getSocialImageUrl(article);
+
   try {
     const fbMessage = `📢 New Article Published!\n\n${article.title}\n\n${article.excerpt || ''}\n\n👉 Read the full breakdown: ${articleUrl}\n\n#missedcallautosms #smallbusiness #contractorlife #speedtolead`;
-    const fbRes = await postGraphApi(`/v20.0/${FB_PAGE_ID}/feed`, {
-      message: fbMessage,
-      link: articleUrl,
-      access_token: activeToken
-    });
-    results.facebook = { success: true, id: fbRes.id };
+    let fbRes;
+    try {
+      fbRes = await postGraphApi(`/v20.0/${FB_PAGE_ID}/photos`, {
+        url: activeImageUrl,
+        caption: fbMessage,
+        access_token: activeToken
+      });
+    } catch (e) {
+      fbRes = await postGraphApi(`/v20.0/${FB_PAGE_ID}/feed`, {
+        message: fbMessage,
+        link: articleUrl,
+        access_token: activeToken
+      });
+    }
+    results.facebook = { success: true, id: fbRes.id, post_id: fbRes.post_id || fbRes.id };
   } catch (err) {
     results.facebook = { success: false, error: err.message };
   }
