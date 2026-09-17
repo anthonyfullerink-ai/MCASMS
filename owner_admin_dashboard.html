@@ -724,7 +724,7 @@
                 <div id="geminiKeyInputBox" style="display: none; background: #0D1117; border: 1px solid var(--card-border); border-radius: 8px; padding: 12px; margin-top: 12px;">
                     <div style="font-size: 13px; font-weight: bold; color: #FFF; margin-bottom: 6px;">🔑 Quick Connect Gemini API Key (saved in browser):</div>
                     <div style="display: flex; gap: 8px; flex-wrap: wrap;">
-                        <input type="password" id="inputGeminiKeyInline" placeholder="Paste AIzaSy... API Key" style="flex: 1; min-width: 240px; background: #090B0E; border: 1px solid var(--card-border); color: #FFF; padding: 8px 12px; border-radius: 6px; font-family: monospace; font-size: 13px;">
+                        <input type="password" id="inputGeminiKeyInline" placeholder="Paste Gemini API Key" style="flex: 1; min-width: 240px; background: #090B0E; border: 1px solid var(--card-border); color: #FFF; padding: 8px 12px; border-radius: 6px; font-family: monospace; font-size: 13px;">
                         <button class="btn-action btn-primary-action" onclick="saveGeminiKeyInline()" style="font-size: 13px; padding: 8px 16px;">⚡ Save Key</button>
                         <button class="btn-action" onclick="clearCustomGeminiKey()" style="font-size: 13px; padding: 8px 12px;">Clear Stored Key</button>
                     </div>
@@ -751,7 +751,7 @@
                 <div id="metaTokenInputBox" style="display: none; background: #0D1117; border: 1px solid var(--card-border); border-radius: 8px; padding: 12px; margin-top: 12px;">
                     <div style="font-size: 13px; font-weight: bold; color: #FFF; margin-bottom: 6px;">🔑 Meta Page Access Token (saved in browser):</div>
                     <div style="display: flex; gap: 8px; flex-wrap: wrap;">
-                        <input type="password" id="inputMetaTokenInline" placeholder="Paste EAAP... Page Access Token" style="flex: 1; min-width: 240px; background: #090B0E; border: 1px solid var(--card-border); color: #FFF; padding: 8px 12px; border-radius: 6px; font-family: monospace; font-size: 13px;">
+                        <input type="password" id="inputMetaTokenInline" placeholder="Paste Meta Page Access Token" style="flex: 1; min-width: 240px; background: #090B0E; border: 1px solid var(--card-border); color: #FFF; padding: 8px 12px; border-radius: 6px; font-family: monospace; font-size: 13px;">
                         <button class="btn-action btn-primary-action" onclick="saveMetaTokenInline()" style="font-size: 13px; padding: 8px 16px;">⚡ Save Token</button>
                         <button class="btn-action" onclick="clearCustomMetaToken()" style="font-size: 13px; padding: 8px 12px;">Reset to Default</button>
                     </div>
@@ -1203,7 +1203,7 @@
                     <div style="background: #0D1117; border: 1px solid var(--card-border); border-radius: 8px; padding: 12px; margin-top: 8px;">
                         <div style="font-size: 13px; font-weight: bold; color: #FFF; margin-bottom: 6px;">🔑 Connect Stripe Live Key on this device:</div>
                         <div style="display: flex; gap: 8px; flex-wrap: wrap;">
-                            <input type="password" id="inputStripeKeyInline" placeholder="Paste sk_live_... or rk_live_..." style="flex: 1; min-width: 200px; background: #090B0E; border: 1px solid var(--card-border); color: #FFF; padding: 8px 12px; border-radius: 6px; font-family: monospace; font-size: 13px;">
+                            <input type="password" id="inputStripeKeyInline" placeholder="Paste Stripe Secret Key" style="flex: 1; min-width: 200px; background: #090B0E; border: 1px solid var(--card-border); color: #FFF; padding: 8px 12px; border-radius: 6px; font-family: monospace; font-size: 13px;">
                             <button class="btn-action btn-primary-action" onclick="saveAndTestStripeKeyInline()" style="font-size: 13px; padding: 8px 16px;">⚡ Connect Key</button>
                         </div>
                         <div style="font-size: 11px; color: var(--muted); margin-top: 6px;">Stored privately in this browser's localStorage. Never sent to Git.</div>
@@ -1222,7 +1222,7 @@
     function saveAndTestStripeKeyInline() {
         const input = document.getElementById("inputStripeKeyInline");
         if (!input || !input.value.trim()) {
-            alert("Please paste your Stripe Secret Key (sk_live_... or rk_live_...).");
+            alert("Please paste your Stripe Secret Key.");
             return;
         }
         localStorage.setItem('mcas_stripe_key', input.value.trim());
@@ -1312,7 +1312,7 @@
                     <div style="background: #0D1117; border: 1px solid var(--card-border); border-radius: 8px; padding: 12px; margin-top: 8px;">
                         <div style="font-size: 13px; font-weight: bold; color: #FFF; margin-bottom: 6px;">🔑 Quick Connect Resend Key in this browser:</div>
                         <div style="display: flex; gap: 8px; flex-wrap: wrap;">
-                            <input type="password" id="inputResendKeyInline" placeholder="Paste re_... API Key" style="flex: 1; min-width: 200px; background: #090B0E; border: 1px solid var(--card-border); color: #FFF; padding: 8px 12px; border-radius: 6px; font-family: monospace; font-size: 13px;">
+                            <input type="password" id="inputResendKeyInline" placeholder="Paste Resend API Key" style="flex: 1; min-width: 200px; background: #090B0E; border: 1px solid var(--card-border); color: #FFF; padding: 8px 12px; border-radius: 6px; font-family: monospace; font-size: 13px;">
                             <button class="btn-action btn-primary-action" onclick="saveAndTestResendKeyInline()" style="font-size: 13px; padding: 8px 16px;">⚡ Connect Key</button>
                         </div>
                         <div style="font-size: 11px; color: var(--muted); margin-top: 6px;">
@@ -1333,7 +1333,7 @@
     function saveAndTestResendKeyInline() {
         const input = document.getElementById("inputResendKeyInline");
         if (!input || !input.value.trim()) {
-            alert("Please paste your Resend API Key (starts with re_...).");
+            alert("Please paste your Resend API Key.");
             return;
         }
         localStorage.setItem('mcas_resend_key', input.value.trim());
@@ -1806,7 +1806,7 @@ Quick 3-Step Setup:
     function saveGeminiKeyInline() {
         const input = document.getElementById("inputGeminiKeyInline");
         if (!input || !input.value.trim()) {
-            alert("Please paste your Google Gemini API Key (starts with AIzaSy...).");
+            alert("Please paste your Google Gemini API Key.");
             return;
         }
         localStorage.setItem('mcas_gemini_key', input.value.trim());
@@ -1845,7 +1845,7 @@ Quick 3-Step Setup:
     function saveMetaTokenInline() {
         const input = document.getElementById("inputMetaTokenInline");
         if (!input || !input.value.trim()) {
-            alert("Please paste your Meta Page Access Token (starts with EAA...).");
+            alert("Please paste your Meta Page Access Token.");
             return;
         }
         localStorage.setItem('mcas_meta_token', input.value.trim());

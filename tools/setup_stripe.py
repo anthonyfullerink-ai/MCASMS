@@ -26,8 +26,8 @@ def create_stripe_product_and_link(secret_key):
     """
     secret_key = secret_key.strip()
     if not secret_key.startswith("sk_"):
-        print("❌ Error: Invalid Stripe Secret Key. Must start with 'sk_live_' or 'sk_test_'.")
-        print("   Please edit your .env file and set STRIPE_SECRET_KEY=sk_test_...")
+        print("❌ Error: Invalid Stripe Secret Key. Must start with 'sk_'.")
+        print("   Please edit your .env file and set STRIPE_SECRET_KEY")
         return
 
     print(f"⚡ Connecting to Stripe API with key ({secret_key[:7]}...)...")
@@ -182,6 +182,6 @@ if __name__ == "__main__":
     
     if not key or "your_secret_key_here" in key:
         print("📁 Reading from .env file...")
-        key = input("Enter your Stripe Secret Key (sk_live_... or sk_test_...): ")
+        key = input("Enter your Stripe Secret Key: ")
 
     create_stripe_product_and_link(key)

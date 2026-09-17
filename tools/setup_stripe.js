@@ -66,7 +66,7 @@ async function run() {
 
   if (!apiKey || apiKey.includes('your_secret_key_here')) {
     console.error('❌ Error: Missing STRIPE_SECRET_KEY in .env file.');
-    console.error('👉 Open .env and set: STRIPE_SECRET_KEY=sk_live_...');
+    console.error('👉 Open .env and set: STRIPE_SECRET_KEY=<your_stripe_secret_key>');
     process.exit(1);
   }
 
