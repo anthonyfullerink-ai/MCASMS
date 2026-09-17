@@ -14,8 +14,8 @@ android {
         applicationId = "com.missedcall.autotext"
         minSdk = 26
         targetSdk = 35
-        versionCode = 8
-        versionName = "1.2.3"
+        versionCode = 9
+        versionName = "1.3.0"
 
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
         manifestPlaceholders["appName"] = "Missed Call Auto SMS"

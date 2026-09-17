@@ -1,9 +1,9 @@
 {
-  "versionCode": 8,
-  "versionName": "1.2.3",
+  "versionCode": 9,
+  "versionName": "1.3.0",
   "downloadUrl": "https://raw.githubusercontent.com/anthonyfullerink-ai/MCASMS/main/MissedCallAutoSMS.apk",
-  "releaseNotes": "• Dual v1 + v2 APK signature scheme enabled for complete Samsung & Android 14/15 compatibility\n• Pro Automation Edition with Dual SIM routing & n8n support\n• SIM Burn Safeguard™ carrier queue pacing",
+  "releaseNotes": "• n8n Outbound Missed Call Forwarder with Saved Webhooks Dropdown\n• Mute Native Auto-Reply Switch to eliminate duplicate messages\n• Live Webhook 'Test Ping' button with latency and status feedback\n• SIM Burn Safeguard™ carrier queue pacing",
   "mandatory": false,
   "minSupportedVersion": 1,
-  "updatedAt": "2026-09-17T16:05:00.000Z"
+  "updatedAt": "2026-09-17T18:20:00.000Z"
 }
