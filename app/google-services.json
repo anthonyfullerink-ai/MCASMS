@@ -1,0 +1,39 @@
+{
+  "project_info": {
+    "project_number": "26082096048",
+    "project_id": "offgrid-saas-core-1e97a9",
+    "storage_bucket": "offgrid-saas-core-1e97a9.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:26082096048:android:28c20b1a20775d50af9c75",
+        "android_client_info": {
+          "package_name": "com.missedcall.autotext"
+        }
+      },
+      "oauth_client": [
+        {
+          "client_id": "26082096048-tuaa7eqgs4cfk4kbi291f2rihltr5nvo.apps.googleusercontent.com",
+          "client_type": 3
+        }
+      ],
+      "api_key": [
+        {
+          "current_key": "AIzaSyBBIF3ybd1zKAQUv631KiTixPpL-DZ4qLo"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": [
+            {
+              "client_id": "26082096048-tuaa7eqgs4cfk4kbi291f2rihltr5nvo.apps.googleusercontent.com",
+              "client_type": 3
+            }
+          ]
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}

@@ -3,9 +3,9 @@
   "nodes": [
     {
       "parameters": {
-        "content": "## 🚀 Missed Call Auto-SMS (Pro Automation)\n### Android Hardware Carrier Gateway\n\nThis ready-to-import workflow connects your CRM, forms, and webhooks directly to your physical Android business phone.\n\n**Quick Setup:**\n1. Open **MissedCallAuto-SMS Pro** on your phone.\n2. Tap **Settings (⚙️) ➔ Integrations ➔ Webhooks & n8n**.\n3. Enable Webhooks and copy your **Webhook Secret**.\n4. Note your Phone's **Local IP** (e.g. 192.168.1.150) or your **Tailscale / VPN IP** for anywhere-access.\n5. Paste your Phone IP and Secret into the nodes below!",
-        "height": 340,
-        "width": 420,
+        "content": "## 🚀 Missed Call Auto-SMS (Pro Automation)\n### Android Hardware Carrier Gateway\n\nThis ready-to-import workflow connects your CRM, forms, and webhooks directly to your physical Android business phone.\n\n**Option 1: Central Cloud Relay (n8n Cloud & Make - Zero Config):**\n1. Paste your Pro License Key into the `Configure SMS & Device Target` node.\n2. n8n Cloud dispatches to `https://missedcallautosms.com/.netlify/functions/dispatch-sms`.\n3. The message arrives at your phone anywhere in the world on 5G or Wi-Fi without VPNs or port forwarding!\n\n**Option 2: Local Wi-Fi / LAN:**\n- If running self-hosted n8n on the same Wi-Fi, you can dispatch directly to `http://192.168.1.x:8080/api/send-sms`.",
+        "height": 380,
+        "width": 440,
         "color": 4
       },
       "id": "note-quickstart",
@@ -14,7 +14,7 @@
       "typeVersion": 1,
       "position": [
         200,
-        80
+        60
       ]
     },
     {
@@ -29,7 +29,7 @@
       "type": "n8n-nodes-base.stickyNote",
       "typeVersion": 1,
       "position": [
-        660,
+        680,
         180
       ]
     },
@@ -67,9 +67,9 @@
               "type": "string"
             },
             {
-              "id": "assign-secret",
-              "name": "secret",
-              "value": "REPLACE_WITH_YOUR_APP_API_SECRET",
+              "id": "assign-key",
+              "name": "license_key",
+              "value": "REPLACE_WITH_YOUR_MCAS_PRO_LICENSE_KEY",
               "type": "string"
             },
             {
@@ -82,12 +82,6 @@
               "id": "assign-callback",
               "name": "callback_url",
               "value": "https://YOUR-N8N-DOMAIN.com/webhook/sms-delivery-callback",
-              "type": "string"
-            },
-            {
-              "id": "assign-phone-ip",
-              "name": "device_ip_or_host",
-              "value": "192.168.1.150:8080",
               "type": "string"
             }
           ]
@@ -106,16 +100,29 @@
     {
       "parameters": {
         "method": "POST",
-        "url": "=http://{{ .device_ip_or_host }}/api/send-sms",
+        "url": "https://missedcallautosms.com/.netlify/functions/dispatch-sms",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "X-License-Key",
+              "value": "={{ .license_key }}"
+            },
+            {
+              "name": "Content-Type",
+              "value": "application/json"
+            }
+          ]
+        },
         "sendBody": true,
         "specifyBody": "json",
-        "jsonBody": "={\n  \"secret\": \"{{ .secret }}\",\n  \"phone\": \"{{ .phone }}\",\n  \"message\": \"{{ .message }}\",\n  \"sim_slot\": {{ .sim_slot }},\n  \"callback_url\": \"{{ .callback_url }}\"\n}",
+        "jsonBody": "={\n  \"to\": \"{{ .phone }}\",\n  \"message\": \"{{ .message }}\",\n  \"sim_slot\": {{ .sim_slot }},\n  \"callback_url\": \"{{ .callback_url }}\"\n}",
         "options": {
-          "timeout": 10000
+          "timeout": 15000
         }
       },
       "id": "node-http-send",
-      "name": "HTTP Request: Dispatch to Android Phone",
+      "name": "HTTP Request: Central Cloud Relay to Android SIM",
       "type": "n8n-nodes-base.httpRequest",
       "typeVersion": 4.2,
       "position": [

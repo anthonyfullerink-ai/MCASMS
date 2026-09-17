@@ -34,3 +34,6 @@ yarn-error.log*
 
 # Simulated sent emails
 sent_emails/
+
+# Runtime token cache
+.device_tokens_cache.json

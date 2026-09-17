@@ -33,6 +33,7 @@ import com.missedcall.autotext.data.license.LicenseStatus
 import com.missedcall.autotext.ui.theme.ActiveGreenContainer
 import com.missedcall.autotext.ui.theme.ActiveGreenText
 import com.missedcall.autotext.ui.theme.AmberWarning
+import com.missedcall.autotext.ui.theme.DarkGreenPrimary
 import kotlin.math.roundToInt
 
 @OptIn(ExperimentalMaterial3Api::class, ExperimentalLayoutApi::class)
@@ -560,6 +561,67 @@ fun SettingsScreen(
                         style = MaterialTheme.typography.bodySmall,
                         color = MaterialTheme.colorScheme.onSurfaceVariant
                     )
+
+                    // Central Cloud Relay Card (Option C for n8n Cloud / Make.com)
+                    Spacer(modifier = Modifier.height(14.dp))
+                    Surface(
+                        shape = RoundedCornerShape(12.dp),
+                        color = MaterialTheme.colorScheme.primaryContainer.copy(alpha = 0.35f),
+                        border = androidx.compose.foundation.BorderStroke(1.dp, MaterialTheme.colorScheme.primary.copy(alpha = 0.5f)),
+                        modifier = Modifier.fillMaxWidth()
+                    ) {
+                        Column(modifier = Modifier.padding(14.dp)) {
+                            Row(verticalAlignment = Alignment.CenterVertically) {
+                                Text(text = "☁️", style = MaterialTheme.typography.titleMedium)
+                                Spacer(modifier = Modifier.width(8.dp))
+                                Text(
+                                    text = "Central Cloud Relay (n8n Cloud & Make)",
+                                    fontWeight = FontWeight.Bold,
+                                    style = MaterialTheme.typography.titleSmall,
+                                    color = MaterialTheme.colorScheme.primary
+                                )
+                            }
+                            Spacer(modifier = Modifier.height(4.dp))
+                            Text(
+                                text = "Zero setup required. Dispatches SMS to this phone anywhere in the world across cellular data or Wi-Fi without port forwarding or VPNs.",
+                                style = MaterialTheme.typography.bodySmall,
+                                color = MaterialTheme.colorScheme.onSurfaceVariant
+                            )
+
+                            Spacer(modifier = Modifier.height(10.dp))
+                            val cloudRelayUrl = "https://missedcallautosms.com/.netlify/functions/dispatch-sms"
+                            Text(text = "Cloud Relay Webhook URL:", fontWeight = FontWeight.SemiBold, style = MaterialTheme.typography.labelMedium)
+                            Spacer(modifier = Modifier.height(4.dp))
+                            OutlinedTextField(
+                                value = cloudRelayUrl,
+                                onValueChange = {},
+                                readOnly = true,
+                                singleLine = true,
+                                modifier = Modifier.fillMaxWidth(),
+                                trailingIcon = {
+                                    TextButton(onClick = {
+                                        val clipboard = context.getSystemService(Context.CLIPBOARD_SERVICE) as android.content.ClipboardManager
+                                        val clip = android.content.ClipData.newPlainText("Cloud Relay URL", cloudRelayUrl)
+                                        clipboard.setPrimaryClip(clip)
+                                        Toast.makeText(context, "Copied Cloud Relay URL!", Toast.LENGTH_SHORT).show()
+                                    }) {
+                                        Text("Copy")
+                                    }
+                                }
+                            )
+
+                            Spacer(modifier = Modifier.height(8.dp))
+                            val isRelayActive = settings.licenseKey.isNotBlank() && settings.fcmDeviceToken.isNotBlank()
+                            Row(verticalAlignment = Alignment.CenterVertically) {
+                                Text(
+                                    text = if (isRelayActive) "🟢 Central Relay Status: Active (Device Paired)" else "🟡 Central Relay Status: Awaiting License / Token",
+                                    style = MaterialTheme.typography.labelSmall,
+                                    fontWeight = FontWeight.Bold,
+                                    color = if (isRelayActive) DarkGreenPrimary else AmberWarning
+                                )
+                            }
+                        }
+                    }
 
                     Spacer(modifier = Modifier.height(16.dp))
                     Text(text = "FCM Device Token (n8n Target)", fontWeight = FontWeight.Bold)

@@ -59,6 +59,29 @@ class MainActivity : ComponentActivity() {
         val devRegistry = app.developerLicenseRegistry
         val dao = app.database.callLogDao()
 
+        // Sync FCM token with Central Webhook Bridge
+        try {
+            com.google.firebase.messaging.FirebaseMessaging.getInstance().token
+                .addOnCompleteListener { task ->
+                    if (task.isSuccessful) {
+                        val token = task.result
+                        lifecycleScope.launch(kotlinx.coroutines.Dispatchers.IO) {
+                            settingsRepo.saveFcmToken(token)
+                            val currentSettings = settingsRepo.getSettings()
+                            if (currentSettings.licenseKey.isNotBlank()) {
+                                com.missedcall.autotext.remote.FCMWebhookService.registerDeviceToken(
+                                    this@MainActivity,
+                                    token,
+                                    currentSettings.licenseKey
+                                )
+                            }
+                        }
+                    }
+                }
+        } catch (e: Exception) {
+            android.util.Log.w("MainActivity", "Firebase FCM init warning", e)
+        }
+
         setContent {
             MissedCallAutoTextTheme {
                 Surface(
@@ -72,8 +95,16 @@ class MainActivity : ComponentActivity() {
                     MainScreen(
                         settings = settings,
                         onSettingsChanged = { updatedSettings ->
+                            val oldKey = settings.licenseKey
                             lifecycleScope.launch {
                                 settingsRepo.updateSettings(updatedSettings)
+                                if (updatedSettings.licenseKey.isNotBlank() && (updatedSettings.licenseKey != oldKey || updatedSettings.fcmDeviceToken.isNotBlank())) {
+                                    com.missedcall.autotext.remote.FCMWebhookService.registerDeviceToken(
+                                        this@MainActivity,
+                                        updatedSettings.fcmDeviceToken,
+                                        updatedSettings.licenseKey
+                                    )
+                                }
                             }
                         },
                         logs = logs,
