@@ -130,12 +130,18 @@ class SendAutoTextWorker(
             delay(delayMillis)
         }
 
-        // Dispatch SMS using SmsManager
+        // Dispatch SMS using SmsManager with multi-part support
         return try {
             val smsManager = applicationContext.getSystemService(SmsManager::class.java)
                 ?: @Suppress("DEPRECATION") SmsManager.getDefault()
 
-            smsManager.sendTextMessage(targetNumber, null, messageBody, null, null)
+            val parts = smsManager.divideMessage(messageBody)
+            if (parts.size > 1) {
+                Log.d(TAG, "Message exceeds single SMS limit, sending ${parts.size} multipart segments to $targetNumber")
+                smsManager.sendMultipartTextMessage(targetNumber, null, parts, null, null)
+            } else {
+                smsManager.sendTextMessage(targetNumber, null, messageBody, null, null)
+            }
 
             Log.i(TAG, "SMS successfully dispatched to $targetNumber")
             dao.insertLog(

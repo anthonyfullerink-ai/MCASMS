@@ -47,6 +47,8 @@ fun SettingsScreen(
     var isIgnoringBattery by remember { mutableStateOf(checkBatteryOptimization(context)) }
     var inputLicenseKey by remember { mutableStateOf(settings.licenseKey) }
     val licenseInfo = remember(settings.licenseKey) { LicenseManager.verifyLicenseKey(settings.licenseKey) }
+    var testWebhookPhone by remember { mutableStateOf("") }
+    var testWebhookMsg by remember { mutableStateOf("🚀 End-to-End™ Test: n8n automation SMS dispatched via phone SIM!") }
 
     Column(
         modifier = Modifier
@@ -610,6 +612,62 @@ fun SettingsScreen(
                                 fontFamily = androidx.compose.ui.text.font.FontFamily.Monospace
                             )
                         }
+                    }
+
+                    Spacer(modifier = Modifier.height(16.dp))
+                    HorizontalDivider()
+                    Spacer(modifier = Modifier.height(12.dp))
+
+                    Text(text = "⚡ In-App Webhook Simulator (Test Dispatch)", fontWeight = FontWeight.Bold)
+                    Spacer(modifier = Modifier.height(4.dp))
+                    Text(
+                        text = "Simulate an incoming n8n webhook right on your device to test SIM dispatch & log status.",
+                        style = MaterialTheme.typography.bodySmall,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant
+                    )
+                    Spacer(modifier = Modifier.height(8.dp))
+
+                    OutlinedTextField(
+                        value = testWebhookPhone,
+                        onValueChange = { testWebhookPhone = it },
+                        label = { Text("Target Phone Number (e.g. +15551234567)") },
+                        singleLine = true,
+                        modifier = Modifier.fillMaxWidth()
+                    )
+                    Spacer(modifier = Modifier.height(8.dp))
+
+                    OutlinedTextField(
+                        value = testWebhookMsg,
+                        onValueChange = { testWebhookMsg = it },
+                        label = { Text("Simulated Payload Message") },
+                        maxLines = 3,
+                        modifier = Modifier.fillMaxWidth()
+                    )
+                    Spacer(modifier = Modifier.height(10.dp))
+
+                    Button(
+                        onClick = {
+                            if (testWebhookPhone.isBlank()) {
+                                Toast.makeText(context, "Please enter a phone number to test", Toast.LENGTH_SHORT).show()
+                            } else {
+                                val workData = androidx.work.Data.Builder()
+                                    .putString(com.missedcall.autotext.worker.SendAutoTextWorker.KEY_PHONE_NUMBER, testWebhookPhone.trim())
+                                    .putString(com.missedcall.autotext.worker.SendAutoTextWorker.KEY_OVERRIDE_MESSAGE, testWebhookMsg.trim())
+                                    .putBoolean(com.missedcall.autotext.worker.SendAutoTextWorker.KEY_IS_REMOTE_TRIGGER, true)
+                                    .build()
+
+                                val workRequest = androidx.work.OneTimeWorkRequestBuilder<com.missedcall.autotext.worker.SendAutoTextWorker>()
+                                    .setInputData(workData)
+                                    .build()
+
+                                androidx.work.WorkManager.getInstance(context).enqueue(workRequest)
+                                Toast.makeText(context, "⚡ Webhook Simulated! SMS queued for ${testWebhookPhone.trim()}", Toast.LENGTH_LONG).show()
+                            }
+                        },
+                        modifier = Modifier.fillMaxWidth(),
+                        colors = ButtonDefaults.buttonColors(containerColor = MaterialTheme.colorScheme.primary)
+                    ) {
+                        Text("Simulate Webhook Dispatch ➔", fontWeight = FontWeight.Bold)
                     }
                 }
             }
