@@ -1,9 +1,9 @@
 {
-  "versionCode": 4,
-  "versionName": "1.1.2",
+  "versionCode": 5,
+  "versionName": "1.2.0",
   "downloadUrl": "https://raw.githubusercontent.com/anthonyfullerink-ai/MCASMS/main/MissedCallAutoSMS.apk",
-  "releaseNotes": "• Fixed socket timeout during update checks\n• High-speed GitHub CDN live OTA updates\n• Seamless in-app download and installation\n• Enhanced reliability across all mobile networks",
+  "releaseNotes": "• Fixed license key verification & epoch timestamp scaling for newly issued keys\n• Improved trial & lifetime license activation\n• Instant background OTA update mechanism",
   "mandatory": true,
   "minSupportedVersion": 1,
-  "updatedAt": "2026-09-15T22:00:00.000Z"
+  "updatedAt": "2026-09-17T00:10:00.000Z"
 }

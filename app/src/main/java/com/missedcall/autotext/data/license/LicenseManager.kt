@@ -26,7 +26,7 @@ object LicenseManager {
     }
 
     fun verifyLicenseKey(key: String): LicenseInfo {
-        val trimmedKey = key.trim().uppercase()
+        val trimmedKey = key.trim().replace(" ", "").uppercase()
 
         // 1. Authorized Master Demo / Reviewer Keys
         if (trimmedKey == "MCAS-DEMO-TRIAL-89F2" ||
@@ -70,21 +70,28 @@ object LicenseManager {
         return try {
             val payloadStr = String(hexToBytes(payloadHex), StandardCharsets.UTF_8)
             val fields = payloadStr.split("|")
-            val customerName = fields.getOrNull(0) ?: "Valued Customer"
-            val expiryTime = fields.getOrNull(1)?.toLongOrNull() ?: 0L
-
-            val isExpired = expiryTime in 1..<System.currentTimeMillis()
-            val status = if (isExpired) {
-                LicenseStatus.EXPIRED
+            val customerName = fields.getOrNull(0)?.ifBlank { "Valued Customer" } ?: "Valued Customer"
+            val expiryTimeRaw = fields.getOrNull(1)?.toLongOrNull() ?: 0L
+            
+            // Normalize epoch timestamp: if <= 10 billion, it's in seconds -> convert to ms
+            val expiryTimeMs = if (expiryTimeRaw in 1..<10_000_000_000L) {
+                expiryTimeRaw * 1000L
             } else {
-                LicenseStatus.ACTIVE_LIFETIME
+                expiryTimeRaw
+            }
+
+            val isExpired = expiryTimeMs in 1..<System.currentTimeMillis()
+            val status = when {
+                isExpired -> LicenseStatus.EXPIRED
+                expiryTimeMs > 0 -> LicenseStatus.ACTIVE_SUBSCRIPTION
+                else -> LicenseStatus.ACTIVE_LIFETIME
             }
 
             LicenseInfo(
                 status = status,
                 licenseKey = trimmedKey,
                 licensedTo = customerName,
-                expiryTimestamp = expiryTime,
+                expiryTimestamp = expiryTimeMs,
                 checksum = expectedSig
             )
         } catch (e: Exception) {

@@ -57,10 +57,11 @@ fun SettingsScreen(
     ) {
 
         // 1. App Appliance License Card
+        val isLicenseActive = licenseInfo.status == LicenseStatus.ACTIVE_LIFETIME || licenseInfo.status == LicenseStatus.ACTIVE_SUBSCRIPTION
         Card(
             shape = RoundedCornerShape(16.dp),
             colors = CardDefaults.cardColors(
-                containerColor = if (licenseInfo.status == LicenseStatus.ACTIVE_LIFETIME) ActiveGreenContainer else MaterialTheme.colorScheme.surfaceVariant
+                containerColor = if (isLicenseActive) ActiveGreenContainer else MaterialTheme.colorScheme.surfaceVariant
             ),
             modifier = Modifier.fillMaxWidth()
         ) {
@@ -72,21 +73,22 @@ fun SettingsScreen(
                 ) {
                     Row(verticalAlignment = Alignment.CenterVertically) {
                         Icon(
-                            imageVector = if (licenseInfo.status == LicenseStatus.ACTIVE_LIFETIME) Icons.Default.VerifiedUser else Icons.Default.Key,
+                            imageVector = if (isLicenseActive) Icons.Default.VerifiedUser else Icons.Default.Key,
                             contentDescription = "License Icon",
-                            tint = if (licenseInfo.status == LicenseStatus.ACTIVE_LIFETIME) ActiveGreenText else MaterialTheme.colorScheme.primary
+                            tint = if (isLicenseActive) ActiveGreenText else MaterialTheme.colorScheme.primary
                         )
                         Spacer(modifier = Modifier.width(8.dp))
                         Text(
                             text = "Appliance License",
                             style = MaterialTheme.typography.titleMedium,
                             fontWeight = FontWeight.Bold,
-                            color = if (licenseInfo.status == LicenseStatus.ACTIVE_LIFETIME) ActiveGreenText else MaterialTheme.colorScheme.onSurfaceVariant
+                            color = if (isLicenseActive) ActiveGreenText else MaterialTheme.colorScheme.onSurfaceVariant
                         )
                     }
 
                     val badgeText = when (licenseInfo.status) {
                         LicenseStatus.ACTIVE_LIFETIME -> "ACTIVE"
+                        LicenseStatus.ACTIVE_SUBSCRIPTION -> "TRIAL ACTIVE"
                         LicenseStatus.EXPIRED -> "EXPIRED"
                         LicenseStatus.REVOKED -> "REVOKED"
                         else -> "UNLICENSED"
@@ -94,7 +96,7 @@ fun SettingsScreen(
 
                     Surface(
                         shape = RoundedCornerShape(12.dp),
-                        color = if (licenseInfo.status == LicenseStatus.ACTIVE_LIFETIME) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.error
+                        color = if (isLicenseActive) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.error
                     ) {
                         Text(
                             text = badgeText,
@@ -108,7 +110,7 @@ fun SettingsScreen(
 
                 Spacer(modifier = Modifier.height(12.dp))
 
-                if (licenseInfo.status == LicenseStatus.ACTIVE_LIFETIME) {
+                if (isLicenseActive) {
                     Text(
                         text = "Licensed to: ${licenseInfo.licensedTo}",
                         style = MaterialTheme.typography.bodyMedium,
@@ -123,7 +125,7 @@ fun SettingsScreen(
                     )
                 } else {
                     Text(
-                        text = "Enter your 16-character License Key ($49.99 purchase) to activate auto-text appliance features.",
+                        text = "Enter your License Key to activate auto-text appliance features.",
                         style = MaterialTheme.typography.bodySmall
                     )
                     Spacer(modifier = Modifier.height(8.dp))
@@ -131,7 +133,7 @@ fun SettingsScreen(
                     OutlinedTextField(
                         value = inputLicenseKey,
                         onValueChange = { inputLicenseKey = it.uppercase() },
-                        label = { Text("License Key (e.g. MCAT-XXXX-XXXX-XXXX)") },
+                        label = { Text("License Key (e.g. MCAS-XXXX-XXXX)") },
                         singleLine = true,
                         modifier = Modifier.fillMaxWidth()
                     )
@@ -141,11 +143,13 @@ fun SettingsScreen(
                     Button(
                         onClick = {
                             val verification = LicenseManager.verifyLicenseKey(inputLicenseKey)
-                            if (verification.status == LicenseStatus.ACTIVE_LIFETIME) {
-                                onSettingsChanged(settings.copy(licenseKey = inputLicenseKey))
-                                Toast.makeText(context, "License Activated! Thank you.", Toast.LENGTH_LONG).show()
+                            if (verification.status == LicenseStatus.ACTIVE_LIFETIME || verification.status == LicenseStatus.ACTIVE_SUBSCRIPTION) {
+                                onSettingsChanged(settings.copy(licenseKey = inputLicenseKey.trim()))
+                                Toast.makeText(context, "✅ License Activated for ${verification.licensedTo}!", Toast.LENGTH_LONG).show()
+                            } else if (verification.status == LicenseStatus.EXPIRED) {
+                                Toast.makeText(context, "⚠️ License Expired. Please issue a new key.", Toast.LENGTH_LONG).show()
                             } else {
-                                Toast.makeText(context, "Invalid License Key format or checksum.", Toast.LENGTH_LONG).show()
+                                Toast.makeText(context, "❌ Invalid License Key format or checksum.", Toast.LENGTH_LONG).show()
                             }
                         },
                         modifier = Modifier.fillMaxWidth()

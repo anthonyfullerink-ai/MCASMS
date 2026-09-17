@@ -1661,7 +1661,7 @@ Quick 3-Step Setup:
         const days = parseInt(daysStr);
 
         const nowSec = Math.floor(Date.now() / 1000);
-        const expiryTs = days === 0 ? 0 : Date.now() + (days * 86400 * 1000);
+        const expiryTs = days === 0 ? 0 : nowSec + (days * 86400);
 
         const payloadStr = `${name}|${expiryTs}|${nowSec}`;
         const payloadHex = stringToHex(payloadStr);
@@ -1727,16 +1727,17 @@ Quick 3-Step Setup:
             const payloadStr = hexToString(payloadHex);
             const fields = payloadStr.split('|');
             const customerName = fields[0] || 'Customer';
-            const expiryTs = parseInt(fields[1] || '0');
+            const expiryTsRaw = parseInt(fields[1] || '0');
+            const expiryTsMs = (expiryTsRaw > 0 && expiryTsRaw < 10000000000) ? expiryTsRaw * 1000 : expiryTsRaw;
 
-            const isExpired = expiryTs > 0 && expiryTs < Date.now();
+            const isExpired = expiryTsMs > 0 && expiryTsMs < Date.now();
             
             // Check if key exists in master store
             const records = getStore();
             const rec = records.find(r => r.key === key);
             const statusDetail = rec ? ` (Status: <strong>${rec.status}</strong>, Price: <strong>$${(rec.price || 0).toFixed(2)}</strong>, Device: <strong>${rec.deviceId || 'Unbound'}</strong>)` : '';
 
-            showVerifyResult(!isExpired && (!rec || rec.status === 'ACTIVE'), `Customer: <strong>${customerName}</strong><br>Type: ${expiryTs === 0 ? 'LIFETIME' : 'TRIAL/LIMITED'}${statusDetail}`);
+            showVerifyResult(!isExpired && (!rec || rec.status === 'ACTIVE'), `Customer: <strong>${escapeHtml(customerName)}</strong><br>Type: ${expiryTsMs === 0 ? 'LIFETIME' : 'TRIAL/LIMITED'}${statusDetail}`);
         } catch (e) {
             showVerifyResult(false, 'Malformed Payload');
         }

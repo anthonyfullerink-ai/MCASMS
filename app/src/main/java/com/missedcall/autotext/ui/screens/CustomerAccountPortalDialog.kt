@@ -283,13 +283,20 @@ fun CustomerAccountPortalDialog(
                                             Text("Cancel")
                                         }
                                         Spacer(modifier = Modifier.width(8.dp))
-                                        Button(onClick = {
-                                            onSettingsChanged(settings.copy(licenseKey = licenseKeyInput.trim()))
-                                            isEditingKey = false
-                                            Toast.makeText(context, "License Key Saved!", Toast.LENGTH_SHORT).show()
-                                        }) {
-                                            Text("Save Key")
-                                        }
+                                         Button(onClick = {
+                                             val verification = com.missedcall.autotext.data.license.LicenseManager.verifyLicenseKey(licenseKeyInput)
+                                             if (verification.status == com.missedcall.autotext.data.license.LicenseStatus.ACTIVE_LIFETIME || verification.status == com.missedcall.autotext.data.license.LicenseStatus.ACTIVE_SUBSCRIPTION) {
+                                                 onSettingsChanged(settings.copy(licenseKey = licenseKeyInput.trim()))
+                                                 isEditingKey = false
+                                                 Toast.makeText(context, "✅ License Activated for ${verification.licensedTo}!", Toast.LENGTH_SHORT).show()
+                                             } else if (verification.status == com.missedcall.autotext.data.license.LicenseStatus.EXPIRED) {
+                                                 Toast.makeText(context, "⚠️ License Expired.", Toast.LENGTH_LONG).show()
+                                             } else {
+                                                 Toast.makeText(context, "❌ Invalid License Key checksum or format.", Toast.LENGTH_LONG).show()
+                                             }
+                                         }) {
+                                             Text("Save Key")
+                                         }
                                     }
                                 } else {
                                     Surface(
