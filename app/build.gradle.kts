@@ -13,8 +13,8 @@ android {
         applicationId = "com.missedcall.autotext"
         minSdk = 26
         targetSdk = 35
-        versionCode = 7
-        versionName = "1.2.2"
+        versionCode = 8
+        versionName = "1.2.3"
 
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
         manifestPlaceholders["appName"] = "Missed Call Auto SMS"
@@ -26,6 +26,8 @@ android {
             storePassword = "MissedCallAutoText2026!"
             keyAlias = "missedcallkey"
             keyPassword = "MissedCallAutoText2026!"
+            enableV1Signing = true
+            enableV2Signing = true
         }
     }
 

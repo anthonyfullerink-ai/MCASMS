@@ -1,9 +1,9 @@
 {
-  "versionCode": 7,
-  "versionName": "1.2.2",
+  "versionCode": 8,
+  "versionName": "1.2.3",
   "downloadUrl": "https://raw.githubusercontent.com/anthonyfullerink-ai/MCASMS/main/MissedCallAutoSMS.apk",
-  "releaseNotes": "• Enforced signed release certificate matching for seamless in-app upgrades\n• Fixed 'App not installed' signature conflict on Android OS\n• Seamless background OTA update mechanism",
+  "releaseNotes": "• Dual v1 + v2 APK signature scheme enabled for complete Samsung & Android 14/15 compatibility\n• Pro Automation Edition with Dual SIM routing & n8n support\n• SIM Burn Safeguard™ carrier queue pacing",
   "mandatory": false,
   "minSupportedVersion": 1,
-  "updatedAt": "2026-09-17T13:37:00.000Z"
+  "updatedAt": "2026-09-17T16:05:00.000Z"
 }
