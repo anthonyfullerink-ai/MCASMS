@@ -11,21 +11,7 @@ function getSocialImageUrl(article = {}) {
     return article.imageUrl;
   }
   
-  const titleAndTags = `${article.title || ''} ${(article.tags || []).join(' ')} ${article.category || ''}`.toLowerCase();
-  
-  if (titleAndTags.includes('contractor') || titleAndTags.includes('job') || titleAndTags.includes('plumb') || titleAndTags.includes('roof') || titleAndTags.includes('hvac') || titleAndTags.includes('solo') || titleAndTags.includes('ladder') || titleAndTags.includes('sink')) {
-    return 'https://raw.githubusercontent.com/anthonyfullerink-ai/MCASMS/main/assets/social/contractor-jobsite.jpg';
-  }
-  
-  if (titleAndTags.includes('speed') || titleAndTags.includes('lead') || titleAndTags.includes('ad') || titleAndTags.includes('google') || titleAndTags.includes('competitor') || titleAndTags.includes('roi') || titleAndTags.includes('decay')) {
-    return 'https://raw.githubusercontent.com/anthonyfullerink-ai/MCASMS/main/assets/social/speed-to-lead.jpg';
-  }
-  
-  if (titleAndTags.includes('saas') || titleAndTags.includes('a2p') || titleAndTags.includes('carrier') || titleAndTags.includes('appliance') || titleAndTags.includes('hardware') || titleAndTags.includes('fee') || titleAndTags.includes('twilio') || titleAndTags.includes('filter')) {
-    return 'https://raw.githubusercontent.com/anthonyfullerink-ai/MCASMS/main/assets/social/appliance-vs-saas.jpg';
-  }
-  
-  return 'https://raw.githubusercontent.com/anthonyfullerink-ai/MCASMS/main/assets/facebook-banner.jpg';
+  throw new Error(`Content Uniqueness Error: Every article must provide a dedicated unique imageUrl. Reusing images across posts is prohibited.`);
 }
 
 function postGraphApi(endpoint, postData) {

@@ -14,7 +14,7 @@
     ],
     "excerpt": "Live answering services cost hundreds per month while annoying frantic callers with long scripts. Discover how hardware-based auto SMS captures high-ticket emergency leads instantly for a one-time fee.",
     "metaDescription": "Discover why live answering services burn contractor profits and how hardware auto-SMS captures emergency leads instantly without monthly fees.",
-    "imageUrl": "https://raw.githubusercontent.com/anthonyfullerink-ai/MCASMS/main/assets/social/contractor-jobsite.jpg"
+    "imageUrl": "https://raw.githubusercontent.com/anthonyfullerink-ai/MCASMS/main/assets/social/answering-service-cost.jpg"
   },
   {
     "slug": "how-solo-contractors-win-jobs-without-answering-phone",
@@ -49,7 +49,7 @@
     ],
     "excerpt": "Discover how recent carrier enforcement of A2P 10DLC regulations is causing cloud SMS platforms to drop contractor text messages silently. Learn how physical Android hardware bypasses carrier compliance nightmares while saving thousands in recurring software fees.",
     "metaDescription": "Are carrier A2P 10DLC rules blocking your missed call auto-replies? Learn how hardware-based auto SMS bypasses filters and protects your contractor leads.",
-    "imageUrl": "https://raw.githubusercontent.com/anthonyfullerink-ai/MCASMS/main/assets/social/appliance-vs-saas.jpg"
+    "imageUrl": "https://raw.githubusercontent.com/anthonyfullerink-ai/MCASMS/main/assets/social/carrier-spam-filter-bypass.jpg"
   },
   {
     "slug": "why-67-percent-of-paid-ad-leads-never-call-back",
@@ -122,6 +122,6 @@
       "Business hours scheduling ensures you do not auto-text late-night callers while sleeping."
     ],
     "contentHtml": "\n      <p>In the home services industry—whether you're an electrician, HVAC technician, mobile detailer, or roofer—you face a constant dilemma:</p>\n\n      <p><strong>You can either do the work, or you can answer the phone. You cannot do both at the same second.</strong></p>\n\n      <p>If you're under a crawl space or on top of a two-story roof, stopping everything to pull out your phone and take a 7-minute consultation call is dangerous and inefficient. But letting it ring out means throwing away a $450 or $1,200 ticket.</p>\n\n      <h2>The Speed-to-Lead Decay Curve</h2>\n      <p>A landmark study by LeadResponseManagement.org analyzed thousands of inbound leads across service industries. Their findings should shock every business owner:</p>\n\n      <ul>\n        <li>The odds of qualifying a lead drop by <strong>400%</strong> between minute 5 and minute 10.</li>\n        <li>Waiting just 30 minutes to call someone back makes you <strong>21 times less likely</strong> to ever close that customer compared to responding in 5 minutes.</li>\n      </ul>\n\n      <p>Why? Because in 2026, people don't wait. They search, they tap, and if no one answers, they move down the list until someone does.</p>\n\n      <h2>Automating The First Touchpoint</h2>\n      <p>Missed Call Auto SMS solves the contractor dilemma permanently. The moment your phone finishes ringing and registers a missed call, the background engine waits 15 seconds and automatically fires a personalized SMS:</p>\n\n      <blockquote>\n        \"Hey! Sorry I missed your call—I'm currently on a service call. What can we help you with today? - Dave at Apex Plumbing\"\n      </blockquote>\n\n      <p>The caller instantly stops searching. They reply with their problem and address. When you climb down from the ladder or finish your service call 20 minutes later, you don't have a cold missed call—<strong>you have an open conversation ready to be scheduled and invoiced.</strong></p>\n\n      <h2>Built for Hardworking Field Operators</h2>\n      <p>Missed Call Auto SMS was specifically built around the real-world schedule of working contractors:</p>\n      <ul>\n        <li><strong>Saved Contacts Exclusion</strong>: Your spouse, kids, and suppliers won't get auto-replies when they call.</li>\n        <li><strong>Cooldown Safeguards</strong>: If the same person calls twice in an hour, they only receive one message.</li>\n        <li><strong>Business Hours Schedules</strong>: Set auto-replies to only fire Monday–Friday 8 AM–6 PM, or customize weekend behavior.</li>\n      </ul>\n    ",
-    "imageUrl": "https://raw.githubusercontent.com/anthonyfullerink-ai/MCASMS/main/assets/social/contractor-jobsite.jpg"
+    "imageUrl": "https://raw.githubusercontent.com/anthonyfullerink-ai/MCASMS/main/assets/social/contractor-speed-rule.jpg"
   }
 ]
