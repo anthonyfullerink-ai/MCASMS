@@ -39,3 +39,5 @@ sent_emails/
 
 # Runtime token cache
 .device_tokens_cache.json
+.support_tickets_cache.json
+.*cache.json

@@ -1,0 +1,568 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Customer Helpdesk & Technical Support | Missed Call Auto SMS</title>
+    <meta name="description" content="Technical support, self-service diagnostics, and ticketing helpdesk for Missed Call Auto SMS and Missed Call Auto SMS Pro users.">
+    <link rel="canonical" href="https://missedcallautosms.com/support">
+
+    <!-- Favicon & Mobile App Icons -->
+    <link rel="icon" type="image/svg+xml" href="/favicon.svg?v=2">
+    <link rel="icon" type="image/png" sizes="32x32" href="/favicon-32x32.png?v=2">
+    <link rel="icon" type="image/png" sizes="16x16" href="/favicon-16x16.png?v=2">
+    <link rel="shortcut icon" href="/favicon.ico?v=2">
+    <link rel="apple-touch-icon" sizes="180x180" href="/apple-touch-icon.png?v=2">
+    <link rel="manifest" href="/site.webmanifest">
+    <meta name="theme-color" content="#090B0E">
+
+    <style>
+        :root {
+            --bg: #090B0E;
+            --card-bg: #131720;
+            --card-border: #222836;
+            --primary: #00E676;
+            --primary-hover: #00C853;
+            --primary-glow: rgba(0, 230, 118, 0.2);
+            --text: #FFFFFF;
+            --muted: #949BAE;
+            --danger: #FF5252;
+            --warning: #FFB300;
+            --accent: #A855F7;
+        }
+
+        * { box-sizing: border-box; }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+            background-color: var(--bg);
+            color: var(--text);
+            margin: 0;
+            padding: 0;
+            line-height: 1.7;
+            -webkit-font-smoothing: antialiased;
+        }
+
+        /* Top Navbar */
+        nav {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 16px 24px;
+            background: rgba(9, 11, 14, 0.95);
+            backdrop-filter: blur(12px);
+            border-bottom: 1px solid var(--card-border);
+            position: sticky;
+            top: 0;
+            z-index: 1000;
+        }
+
+        .nav-inner {
+            width: 100%;
+            max-width: 1200px;
+            margin: 0 auto;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .logo {
+            font-size: 18px;
+            font-weight: 900;
+            color: #FFF;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            text-decoration: none;
+        }
+
+        .logo span { color: var(--primary); }
+
+        .nav-links {
+            display: flex;
+            gap: 20px;
+            align-items: center;
+        }
+
+        .nav-links a {
+            color: var(--muted);
+            text-decoration: none;
+            font-size: 14px;
+            font-weight: 600;
+            transition: color 0.2s;
+        }
+
+        .nav-links a:hover { color: #FFF; }
+
+        .btn-home-nav {
+            background: rgba(255,255,255,0.08);
+            color: #FFF;
+            border: 1px solid var(--card-border);
+            padding: 8px 16px;
+            border-radius: 20px;
+            font-weight: 700;
+            font-size: 13px;
+            text-decoration: none;
+            transition: all 0.2s;
+        }
+
+        .btn-home-nav:hover { background: rgba(255,255,255,0.15); }
+
+        /* Container */
+        .container {
+            max-width: 1080px;
+            margin: 0 auto;
+            padding: 40px 24px 80px 24px;
+        }
+
+        /* Header */
+        .support-header {
+            text-align: center;
+            max-width: 760px;
+            margin: 0 auto 40px auto;
+        }
+
+        .support-header h1 {
+            font-size: clamp(28px, 4vw, 42px);
+            font-weight: 900;
+            margin: 0 0 12px 0;
+        }
+
+        .support-header p {
+            color: var(--muted);
+            font-size: 16px;
+            line-height: 1.6;
+        }
+
+        /* Diagnostic Wizard */
+        .diag-section {
+            margin-bottom: 40px;
+        }
+
+        .diag-grid {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 18px;
+            margin-top: 18px;
+        }
+
+        @media (max-width: 860px) {
+            .diag-grid { grid-template-columns: 1fr; }
+        }
+
+        .diag-card {
+            background: var(--card-bg);
+            border: 1px solid var(--card-border);
+            border-radius: 12px;
+            padding: 20px;
+            transition: transform 0.2s, border-color 0.2s;
+        }
+
+        .diag-card:hover {
+            border-color: #38BDF8;
+            transform: translateY(-2px);
+        }
+
+        .diag-card h3 {
+            margin: 0 0 8px 0;
+            font-size: 16px;
+            color: #FFF;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .diag-card p {
+            margin: 0;
+            color: var(--muted);
+            font-size: 13px;
+            line-height: 1.5;
+        }
+
+        /* Main Form Container */
+        .form-card {
+            background: var(--card-bg);
+            border: 1px solid var(--card-border);
+            border-radius: 16px;
+            padding: 36px;
+            max-width: 760px;
+            margin: 0 auto;
+            box-shadow: 0 20px 40px rgba(0,0,0,0.5);
+        }
+
+        .form-card h2 {
+            font-size: 22px;
+            font-weight: 800;
+            margin: 0 0 8px 0;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .form-card-sub {
+            color: var(--muted);
+            font-size: 14px;
+            margin-bottom: 24px;
+        }
+
+        .form-row {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 16px;
+            margin-bottom: 16px;
+        }
+
+        @media (max-width: 600px) {
+            .form-row { grid-template-columns: 1fr; }
+            .form-card { padding: 24px 18px; }
+        }
+
+        .form-group {
+            margin-bottom: 16px;
+        }
+
+        .form-group label {
+            display: block;
+            font-size: 13px;
+            font-weight: 700;
+            color: #CBD5E0;
+            margin-bottom: 6px;
+        }
+
+        .form-group input, 
+        .form-group select, 
+        .form-group textarea {
+            width: 100%;
+            background: #090B0E;
+            border: 1px solid var(--card-border);
+            border-radius: 8px;
+            padding: 12px 14px;
+            color: #FFF;
+            font-size: 14px;
+            font-family: inherit;
+            outline: none;
+            transition: border-color 0.2s, box-shadow 0.2s;
+        }
+
+        .form-group input:focus, 
+        .form-group select:focus, 
+        .form-group textarea:focus {
+            border-color: var(--primary);
+            box-shadow: 0 0 0 3px rgba(0, 230, 118, 0.15);
+        }
+
+        .form-group textarea {
+            resize: vertical;
+            min-height: 120px;
+        }
+
+        .btn-submit {
+            width: 100%;
+            background: var(--primary);
+            color: #000;
+            font-weight: 800;
+            font-size: 16px;
+            padding: 14px;
+            border: none;
+            border-radius: 30px;
+            cursor: pointer;
+            transition: background 0.2s, transform 0.2s;
+            margin-top: 10px;
+        }
+
+        .btn-submit:hover {
+            background: var(--primary-hover);
+            transform: translateY(-1px);
+        }
+
+        .btn-submit:disabled {
+            background: #2A313C;
+            color: #718096;
+            cursor: not-allowed;
+            transform: none;
+        }
+
+        /* Success Box */
+        .ticket-success {
+            display: none;
+            background: #090B0E;
+            border: 2px solid var(--primary);
+            border-radius: 14px;
+            padding: 30px;
+            text-align: center;
+            animation: fadeIn 0.3s ease-in-out;
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; transform: scale(0.98); }
+            to { opacity: 1; transform: scale(1); }
+        }
+
+        .ticket-id-pill {
+            display: inline-block;
+            background: rgba(0, 230, 118, 0.15);
+            color: var(--primary);
+            font-family: monospace;
+            font-size: 24px;
+            font-weight: bold;
+            padding: 8px 20px;
+            border-radius: 10px;
+            margin: 14px 0;
+            border: 1px dashed var(--primary);
+        }
+
+        /* Footer */
+        footer {
+            border-top: 1px solid var(--card-border);
+            padding: 40px 24px;
+            text-align: center;
+            color: var(--muted);
+            font-size: 13px;
+            margin-top: 60px;
+        }
+
+        footer a { color: var(--muted); text-decoration: none; margin: 0 10px; }
+        footer a:hover { color: #FFF; }
+    </style>
+</head>
+<body>
+
+<!-- Navbar -->
+<nav>
+    <div class="nav-inner">
+        <a href="/" class="logo">
+            <span>🛡️</span> Missed Call Auto SMS <small style="font-size: 11px; color: var(--muted); margin-left: 4px; font-weight: normal;">SUPPORT DESK</small>
+        </a>
+        <div class="nav-links">
+            <a href="/">Home</a>
+            <a href="/developers">Developer Docs</a>
+            <a href="/terms.html">Terms & TCPA</a>
+            <a href="/" class="btn-home-nav">Return to Main Site</a>
+        </div>
+    </div>
+</nav>
+
+<div class="container">
+
+    <!-- Header -->
+    <div class="support-header">
+        <h1>Official Customer Support & Helpdesk</h1>
+        <p>
+            Have a question about your license, Android appliance setup, or webhook automations? Browse our self-service diagnostics below or submit an official support ticket directly to our engineering team.
+        </p>
+    </div>
+
+    <!-- Self-Service Diagnostic Checklist -->
+    <div class="diag-section">
+        <h2 style="font-size: 20px; margin: 0 0 4px 0;">⚡ Self-Service Diagnostic Quick-Checks</h2>
+        <div style="color: var(--muted); font-size: 13px;">Most common questions can be resolved in under 60 seconds with these checks:</div>
+
+        <div class="diag-grid">
+            <div class="diag-card">
+                <h3>🔋 1. Battery Optimization</h3>
+                <p>
+                    Ensure your phone is set to <strong>Unrestricted</strong> battery usage for Missed Call Auto SMS (Settings ➔ Apps ➔ Missed Call Auto SMS ➔ Battery). This prevents Android from sleeping the background listener.
+                </p>
+            </div>
+
+            <div class="diag-card">
+                <h3>📱 2. Device Permissions</h3>
+                <p>
+                    Verify that standard Android permissions (SMS, Phone, Call Logs, and Notification Access) are fully granted in your app settings so missed calls trigger immediately.
+                </p>
+            </div>
+
+            <div class="diag-card">
+                <h3>🔄 3. Phone Upgrades & Reset</h3>
+                <p>
+                    Upgraded to a new phone? You can reset your hardware device binding via the <a href="/#checkout" style="color: var(--primary); text-decoration: underline;">Self-Service Portal</a> or request an automatic hardware reset ticket below.
+                </p>
+            </div>
+        </div>
+    </div>
+
+    <!-- Support Ticket Form Card -->
+    <div class="form-card">
+        <div id="formSection">
+            <h2>🎫 Submit a Support Ticket</h2>
+            <div class="form-card-sub">Average response time: under 4 business hours. Direct reply sent straight to your email.</div>
+
+            <form id="supportForm" onsubmit="handleTicketSubmit(event)">
+                <div class="form-row">
+                    <div class="form-group">
+                        <label for="name">Your Name *</label>
+                        <input type="text" id="name" name="name" placeholder="e.g. Sarah Jenkins" required>
+                    </div>
+                    <div class="form-group">
+                        <label for="email">Your Email Address *</label>
+                        <input type="email" id="email" name="email" placeholder="sarah@example.com" required>
+                    </div>
+                </div>
+
+                <div class="form-row">
+                    <div class="form-group">
+                        <label for="category">Inquiry Category *</label>
+                        <select id="category" name="category" required>
+                            <option value="Webhook / API Integration">Webhook & Cloud Relay Integration (n8n / Make)</option>
+                            <option value="License Key & Device Reset">License Key & Device Hardware Reset</option>
+                            <option value="SMS Delivery / Carrier Issue">SMS Delivery & Carrier Troubleshooting</option>
+                            <option value="App Setup & Permissions">App Setup & Android Permissions</option>
+                            <option value="Billing & Free Trial">Billing, Receipt, or 3-Day Trial</option>
+                            <option value="Bug Report / Feature Request">Bug Report or Feature Suggestion</option>
+                            <option value="Other">Other Question</option>
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label for="priority">Priority Level *</label>
+                        <select id="priority" name="priority" required>
+                            <option value="Normal">Normal — Standard Inquiry</option>
+                            <option value="High">High — Setup assistance needed today</option>
+                            <option value="Urgent">Urgent — Production system down</option>
+                        </select>
+                    </div>
+                </div>
+
+                <div class="form-row">
+                    <div class="form-group">
+                        <label for="licenseKey">License Key <small style="color: var(--muted); font-weight: normal;">(Optional)</small></label>
+                        <input type="text" id="licenseKey" name="licenseKey" placeholder="MCAS-XXXX-XXXX-XXXX">
+                    </div>
+                    <div class="form-group">
+                        <label for="deviceInfo">Phone Model & OS <small style="color: var(--muted); font-weight: normal;">(Optional)</small></label>
+                        <input type="text" id="deviceInfo" name="deviceInfo" placeholder="e.g. Samsung Galaxy S23 / Android 14">
+                    </div>
+                </div>
+
+                <div class="form-group">
+                    <label for="subject">Subject *</label>
+                    <input type="text" id="subject" name="subject" placeholder="Brief summary of your question" required>
+                </div>
+
+                <div class="form-group">
+                    <label for="message">Detailed Description *</label>
+                    <textarea id="message" name="message" placeholder="Please provide any relevant details, error messages, or context so our engineers can assist you as quickly as possible." required></textarea>
+                </div>
+
+                <div id="formError" style="display:none; color: var(--danger); font-size: 13px; font-weight: bold; margin-bottom: 12px;"></div>
+
+                <button type="submit" id="submitBtn" class="btn-submit">
+                    🚀 Submit Support Ticket
+                </button>
+            </form>
+        </div>
+
+        <!-- Success Confirmation View -->
+        <div id="ticketSuccess" class="ticket-success">
+            <div style="font-size: 40px; margin-bottom: 8px;">✅</div>
+            <h2 style="color: var(--primary); margin: 0 0 6px 0;">Support Ticket Logged!</h2>
+            <p style="color: #CBD5E0; font-size: 15px; margin: 0;">
+                Your inquiry has been routed to our technical support team and an instant email confirmation has been sent to your inbox.
+            </p>
+
+            <div class="ticket-id-pill" id="displayTicketId">MCAS-TICK-XXXX</div>
+
+            <div style="background: #131720; border: 1px solid var(--card-border); border-radius: 10px; padding: 16px; margin: 20px 0; text-align: left; font-size: 13px; color: var(--muted);">
+                <div style="color: #FFF; font-weight: bold; margin-bottom: 4px;">Next Steps:</div>
+                • Check your email inbox for your automated ticket confirmation receipt.<br>
+                • If you have log files or screenshots to share, simply reply directly to that confirmation email.<br>
+                • Expected response time: <strong>under 4 business hours</strong>.
+            </div>
+
+            <button class="btn-submit" style="width: auto; padding: 10px 24px;" onclick="resetForm()">
+                + Submit Another Ticket
+            </button>
+        </div>
+    </div>
+
+</div>
+
+<!-- Footer -->
+<footer>
+    <p style="margin-bottom: 8px;">
+        <a href="/">Home</a> • 
+        <a href="/developers">Developer Docs</a> • 
+        <a href="/support" style="color: var(--primary); font-weight: bold;">Support Helpdesk</a> • 
+        <a href="/terms.html">Terms of Service & TCPA</a> • 
+        <a href="/blog">Educational Blog</a> • 
+        <a href="/owner">Owner Admin</a>
+    </p>
+    <p>© 2026 <a href="https://missedcallautosms.com/">MissedCallAutoSMS.com</a> (Missed Call Auto SMS). All rights reserved.</p>
+</footer>
+
+<script>
+// Pre-populate license key from URL query if present (e.g. /support?key=MCAS-...)
+window.addEventListener('DOMContentLoaded', () => {
+    const params = new URLSearchParams(window.location.search);
+    const keyParam = params.get('key') || params.get('license');
+    if (keyParam) {
+        const input = document.getElementById('licenseKey');
+        if (input) input.value = keyParam.trim().toUpperCase();
+    }
+});
+
+async function handleTicketSubmit(e) {
+    e.preventDefault();
+    const btn = document.getElementById('submitBtn');
+    const errDiv = document.getElementById('formError');
+    errDiv.style.display = 'none';
+
+    const name = document.getElementById('name').value.trim();
+    const email = document.getElementById('email').value.trim();
+    const category = document.getElementById('category').value;
+    const priority = document.getElementById('priority').value;
+    const licenseKey = document.getElementById('licenseKey').value.trim();
+    const deviceInfo = document.getElementById('deviceInfo').value.trim();
+    const subject = document.getElementById('subject').value.trim();
+    const message = document.getElementById('message').value.trim();
+
+    btn.disabled = true;
+    btn.innerText = 'Submitting Ticket...';
+
+    try {
+        const res = await fetch('/api/submit-ticket', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+                name,
+                email,
+                category,
+                priority,
+                licenseKey,
+                deviceInfo,
+                subject,
+                message
+            })
+        });
+
+        const data = await res.json();
+
+        if (res.ok && data.success) {
+            document.getElementById('formSection').style.display = 'none';
+            document.getElementById('ticketSuccess').style.display = 'block';
+            document.getElementById('displayTicketId').innerText = data.ticketId;
+        } else {
+            errDiv.innerText = data.message || data.error || 'Failed to submit ticket. Please try again.';
+            errDiv.style.display = 'block';
+            btn.disabled = false;
+            btn.innerText = '🚀 Submit Support Ticket';
+        }
+    } catch (err) {
+        errDiv.innerText = 'Network error contacting support server. Please check your connection.';
+        errDiv.style.display = 'block';
+        btn.disabled = false;
+        btn.innerText = '🚀 Submit Support Ticket';
+    }
+}
+
+function resetForm() {
+    document.getElementById('supportForm').reset();
+    document.getElementById('formSection').style.display = 'block';
+    document.getElementById('ticketSuccess').style.display = 'none';
+    const btn = document.getElementById('submitBtn');
+    btn.disabled = false;
+    btn.innerText = '🚀 Submit Support Ticket';
+}
+</script>
+
+</body>
+</html>

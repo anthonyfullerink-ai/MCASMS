@@ -406,6 +406,7 @@
         <button id="tabBtn1" class="tab-btn" onclick="switchTab(1)">🔑 Key Issuer & Verifier</button>
         <button id="tabBtn2" class="tab-btn" onclick="switchTab(2)">⚙️ Developer OTA & System Controls</button>
         <button id="tabBtn3" class="tab-btn" onclick="switchTab(3)">📰 AI Blog Engine (<span id="countTabBlog">0</span>)</button>
+        <button id="tabBtn4" class="tab-btn" onclick="switchTab(4)">🎫 Support Tickets (<span id="countTabTickets">0</span>)</button>
     </div>
 
     <!-- TAB 0: Sales & License Directory -->
@@ -781,6 +782,57 @@
             </table>
         </div>
     </div>
+
+    <!-- TAB 4: Customer Support Tickets Queue -->
+    <div id="tab4" class="tab-content card" style="display: none;">
+        <div class="card-header">
+            <div>
+                <h2>🎫 Customer Support Tickets & Inquiries Queue</h2>
+                <div style="font-size: 13px; color: var(--muted); margin-top: 4px;">
+                    Real-time tickets submitted from /support. Synchronized with Firestore and Resend email alerts.
+                </div>
+            </div>
+            <div style="display: flex; gap: 10px; flex-wrap: wrap;">
+                <button class="btn-action btn-primary-action" onclick="loadSupportTickets()">🔄 Refresh Tickets</button>
+                <a href="/support" target="_blank" class="btn-action" style="text-decoration: none; display: inline-flex; align-items: center; color: var(--primary);">Open Public Helpdesk (/support) ↗</a>
+            </div>
+        </div>
+
+        <div style="display: grid; grid-template-columns: repeat(4, 1fr); gap: 14px; margin-bottom: 20px;">
+            <div style="background: #090B0E; border: 1px solid var(--card-border); border-radius: 10px; padding: 14px;">
+                <div style="font-size: 11px; color: var(--muted); font-weight: 700; text-transform: uppercase;">Total Tickets</div>
+                <div id="ticketMetricTotal" style="font-size: 26px; font-weight: 900; color: #FFF; margin-top: 4px;">0</div>
+            </div>
+            <div style="background: #090B0E; border: 1px solid var(--card-border); border-radius: 10px; padding: 14px;">
+                <div style="font-size: 11px; color: var(--muted); font-weight: 700; text-transform: uppercase;">Open / Pending</div>
+                <div id="ticketMetricOpen" style="font-size: 26px; font-weight: 900; color: var(--primary); margin-top: 4px;">0</div>
+            </div>
+            <div style="background: #090B0E; border: 1px solid var(--card-border); border-radius: 10px; padding: 14px;">
+                <div style="font-size: 11px; color: var(--muted); font-weight: 700; text-transform: uppercase;">Urgent Priority</div>
+                <div id="ticketMetricUrgent" style="font-size: 26px; font-weight: 900; color: var(--danger); margin-top: 4px;">0</div>
+            </div>
+            <div style="background: #090B0E; border: 1px solid var(--card-border); border-radius: 10px; padding: 14px;">
+                <div style="font-size: 11px; color: var(--muted); font-weight: 700; text-transform: uppercase;">Target Response SLA</div>
+                <div style="font-size: 14px; font-weight: 800; color: #38BDF8; margin-top: 8px;">&lt; 4 Hours</div>
+            </div>
+        </div>
+
+        <table>
+            <thead>
+                <tr>
+                    <th>Date / Ticket ID</th>
+                    <th>Customer Details</th>
+                    <th>Category & Priority</th>
+                    <th>Subject & Message</th>
+                    <th>Status</th>
+                    <th>Actions</th>
+                </tr>
+            </thead>
+            <tbody id="ticketsTableBody">
+                <tr><td colspan="6" style="text-align: center; color: var(--muted); padding: 24px;">Click "Refresh Tickets" or open this tab to fetch tickets.</td></tr>
+            </tbody>
+        </table>
+    </div>
 </div>
 
 <script>
@@ -912,6 +964,7 @@
             document.getElementById("dashboardContainer").style.display = "block";
             renderDashboard();
             loadBlogCount();
+            loadTicketCount();
         } else {
             document.getElementById("loginContainer").style.display = "flex";
             document.getElementById("dashboardContainer").style.display = "none";
@@ -958,6 +1011,8 @@
             checkEmailConnectionLive();
         } else if (index === 3) {
             loadBlogDashboard();
+        } else if (index === 4) {
+            loadSupportTickets();
         }
     }
 
@@ -2122,6 +2177,96 @@ Return your response STRICTLY as a raw JSON object (no extra commentary) matchin
                 alertBox.innerHTML = `❌ <strong>Error:</strong> ${escapeHtml(e.message)}`;
             }
             alert(`❌ Error: ${e.message}`);
+        }
+    }
+
+    // ==========================================
+    // SUPPORT TICKETS QUEUE HANDLERS
+    // ==========================================
+    async function loadTicketCount() {
+        try {
+            const data = await safeFetchJson('/api/submit-ticket');
+            const count = data.count || (data.tickets ? data.tickets.length : 0);
+            const badge = document.getElementById('countTabTickets');
+            if (badge) badge.innerText = count;
+        } catch (e) {
+            console.warn('Failed to fetch ticket count:', e);
+        }
+    }
+
+    async function loadSupportTickets() {
+        const tbody = document.getElementById('ticketsTableBody');
+        if (!tbody) return;
+        tbody.innerHTML = '<tr><td colspan="6" style="text-align: center; color: var(--muted); padding: 24px;">Loading tickets from server...</td></tr>';
+
+        try {
+            const data = await safeFetchJson('/api/submit-ticket');
+            const tickets = data.tickets || [];
+
+            const totalEl = document.getElementById('ticketMetricTotal');
+            const openEl = document.getElementById('ticketMetricOpen');
+            const urgentEl = document.getElementById('ticketMetricUrgent');
+            const countBadge = document.getElementById('countTabTickets');
+
+            if (totalEl) totalEl.innerText = tickets.length;
+            if (countBadge) countBadge.innerText = tickets.length;
+
+            let openCount = 0;
+            let urgentCount = 0;
+
+            tickets.forEach(t => {
+                if (t.status !== 'Resolved') openCount++;
+                if (t.priority === 'Urgent') urgentCount++;
+            });
+
+            if (openEl) openEl.innerText = openCount;
+            if (urgentEl) urgentEl.innerText = urgentCount;
+
+            if (tickets.length === 0) {
+                tbody.innerHTML = '<tr><td colspan="6" style="text-align: center; color: var(--muted); padding: 24px;">No support tickets logged yet.</td></tr>';
+                return;
+            }
+
+            tbody.innerHTML = tickets.map(t => {
+                const dateStr = new Date(t.createdAt).toLocaleDateString('en-US', { month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit' });
+                const isUrgent = t.priority === 'Urgent';
+                const priorityBadge = isUrgent 
+                    ? '<span class="badge badge-revoked" style="font-size:10px;">URGENT</span>' 
+                    : `<span class="badge" style="background: rgba(255,179,0,0.15); color: #FFB300; border: 1px solid #FFB300; font-size:10px;">${escapeHtml(t.priority)}</span>`;
+
+                return `
+                    <tr>
+                        <td>
+                            <strong style="font-family: monospace; color: var(--primary);">${escapeHtml(t.ticketId)}</strong><br>
+                            <small style="color: var(--muted);">${dateStr}</small>
+                        </td>
+                        <td>
+                            <strong>${escapeHtml(t.name)}</strong><br>
+                            <small><a href="mailto:${escapeHtml(t.email)}" style="color: #38BDF8;">${escapeHtml(t.email)}</a></small>
+                            ${t.licenseKey ? `<br><small style="font-family: monospace; color: var(--accent);">🔑 ${escapeHtml(t.licenseKey)}</small>` : ''}
+                            ${t.deviceInfo ? `<br><small style="color: var(--muted);">📱 ${escapeHtml(t.deviceInfo)}</small>` : ''}
+                        </td>
+                        <td>
+                            <span style="font-size: 12px; font-weight: 700; color: #FFF;">${escapeHtml(t.category)}</span><br>
+                            ${priorityBadge}
+                        </td>
+                        <td style="max-width: 320px;">
+                            <strong style="color: #FFF; font-size: 13px;">${escapeHtml(t.subject)}</strong>
+                            <div style="font-size: 12px; color: var(--muted); margin-top: 4px; white-space: pre-wrap; max-height: 80px; overflow-y: auto;">${escapeHtml(t.message)}</div>
+                        </td>
+                        <td>
+                            <span class="badge badge-active">${escapeHtml(t.status || 'Open')}</span>
+                        </td>
+                        <td>
+                            <a href="mailto:${escapeHtml(t.email)}?subject=Re: [${escapeHtml(t.ticketId)}] ${encodeURIComponent(t.subject)}" class="btn-action btn-primary-action" style="text-decoration: none; display: inline-block; font-size: 11px; padding: 6px 12px;">
+                                📧 Reply
+                            </a>
+                        </td>
+                    </tr>
+                `;
+            }).join('');
+        } catch (e) {
+            tbody.innerHTML = `<tr><td colspan="6" style="text-align: center; color: var(--danger); padding: 24px;">Failed to load tickets: ${escapeHtml(e.message)}</td></tr>`;
         }
     }
 

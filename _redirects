@@ -9,9 +9,15 @@
 /api/generate-blog     /.netlify/functions/generate-blog 200
 /api/publish-social    /.netlify/functions/publish-social 200
 /api/update-version /.netlify/functions/update-version 200
+/api/submit-ticket  /.netlify/functions/submit-ticket 200
+/api/dispatch-sms   /.netlify/functions/dispatch-sms 200
+/api/register-device /.netlify/functions/register-device 200
 /app-debug.apk /MissedCallAutoSMS.apk 301
 /blog               /blog.html                  200
 /blog/              /blog.html                  200
 /blog/:slug         /blog/posts/:slug.html      200
+/developers         /developers.html            200
+/docs               /developers.html            200
+/support            /support.html               200
 /owner   /owner_admin_dashboard.html   200
 /   /sales_landing_page.html   200

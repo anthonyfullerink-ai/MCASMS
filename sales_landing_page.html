@@ -1316,6 +1316,8 @@
         <div class="nav-links">
             <a href="#features">Features</a>
             <a href="#pro-edition" style="color: #C084FC; font-weight: 800;">⚡ Pro Edition ($149.99)</a>
+            <a href="/developers" style="color: #38BDF8; font-weight: 700;">API & Docs</a>
+            <a href="/support" style="color: var(--primary); font-weight: 700;">Support</a>
             <a href="#comparison">Why Us</a>
             <a href="#calculator">ROI Calculator</a>
             <a href="#faq">FAQ</a>
@@ -1332,6 +1334,8 @@
     <div id="mobileNavDrawer" class="mobile-nav-drawer">
         <a href="#features" class="mobile-nav-link" onclick="closeMobileMenu()">⚡ Flagship App Features <span>&rsaquo;</span></a>
         <a href="#pro-edition" class="mobile-nav-link" onclick="closeMobileMenu()" style="color: #D8B4FE; font-weight: bold;">🚀 NEW: Pro Automation Edition ($149.99) <span>&rsaquo;</span></a>
+        <a href="/developers" class="mobile-nav-link" onclick="closeMobileMenu()" style="color: #38BDF8; font-weight: bold;">⚡ Developer API & Webhook Docs <span>&rsaquo;</span></a>
+        <a href="/support" class="mobile-nav-link" onclick="closeMobileMenu()" style="color: var(--primary); font-weight: bold;">🎫 Customer Support & Helpdesk <span>&rsaquo;</span></a>
         <a href="#comparison" class="mobile-nav-link" onclick="closeMobileMenu()">🆚 Appliance vs. Cloud SaaS <span>&rsaquo;</span></a>
         <a href="#calculator" class="mobile-nav-link" onclick="closeMobileMenu()">💰 Missed Call ROI Calculator <span>&rsaquo;</span></a>
         <a href="#faq" class="mobile-nav-link" onclick="closeMobileMenu()">❓ Frequently Asked Questions <span>&rsaquo;</span></a>
@@ -1619,6 +1623,54 @@
             <div style="color: var(--muted); font-size: 12px; margin-top: 8px;">
                 0 Monthly Fees • Unlimited Automations™ • 30-Day Money-Back Guarantee
             </div>
+        </div>
+    </section>
+
+    <!-- Developer & Automation Engineering Section -->
+    <section id="developer-platform" style="background: #0E131C; border: 1px solid var(--card-border); border-radius: 20px; padding: 40px 24px; margin: 40px 0;">
+        <div style="text-align: center; max-width: 800px; margin: 0 auto 32px auto;">
+            <div style="display: inline-flex; align-items: center; gap: 6px; background: rgba(56, 189, 248, 0.12); color: #38BDF8; border: 1px solid rgba(56, 189, 248, 0.3); padding: 5px 14px; border-radius: 20px; font-size: 11px; font-weight: 800; text-transform: uppercase; letter-spacing: 0.5px; margin-bottom: 12px;">
+                ⚡ DEVELOPER PLATFORM & API GATEWAY
+            </div>
+            <h2 style="font-size: clamp(24px, 4vw, 34px); font-weight: 900; margin: 0 0 10px 0;">Built for Automation Engineers & CRM Integrators</h2>
+            <p style="color: var(--muted); font-size: 15px; margin: 0; line-height: 1.6;">
+                Turn standard Android hardware into a dedicated, high-speed, direct-carrier SMS appliance. Integrate <strong>Make.com</strong>, <strong>n8n</strong>, <strong>Zapier</strong>, or custom HTTP clients with 100% A2P 10DLC exemption and two-way delivery receipts.
+            </p>
+        </div>
+
+        <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 20px; margin-bottom: 30px;">
+            <div style="background: #131720; border: 1px solid var(--card-border); border-radius: 12px; padding: 22px;">
+                <div style="font-size: 26px; margin-bottom: 8px;">☁️</div>
+                <h3 style="font-size: 16px; margin: 0 0 6px 0; color: #FFF;">Central Cloud Relay</h3>
+                <p style="color: var(--muted); font-size: 13px; margin: 0; line-height: 1.5;">
+                    Dispatch SMS via <code>POST /api/dispatch-sms</code> directly from cloud-hosted n8n or Make. Zero port forwarding, dynamic DNS, or static IP required.
+                </p>
+            </div>
+
+            <div style="background: #131720; border: 1px solid var(--card-border); border-radius: 12px; padding: 22px;">
+                <div style="font-size: 26px; margin-bottom: 8px;">🛡️</div>
+                <h3 style="font-size: 16px; margin: 0 0 6px 0; color: #FFF;">SIM Burn Safeguard™</h3>
+                <p style="color: var(--muted); font-size: 13px; margin: 0; line-height: 1.5;">
+                    Enforces strict 3.5s sequential pacing and 20 SMS/minute ceiling across all workers, keeping your business SIM line 100% protected from carrier spam flags.
+                </p>
+            </div>
+
+            <div style="background: #131720; border: 1px solid var(--card-border); border-radius: 12px; padding: 22px;">
+                <div style="font-size: 26px; margin-bottom: 8px;">🎫</div>
+                <h3 style="font-size: 16px; margin: 0 0 6px 0; color: #FFF;">Direct Helpdesk & Diagnostics</h3>
+                <p style="color: var(--muted); font-size: 13px; margin: 0; line-height: 1.5;">
+                    Self-service diagnostic guides for Android battery optimization and hardware binding, plus a dedicated ticketing system with &lt; 4-hour engineer response.
+                </p>
+            </div>
+        </div>
+
+        <div style="display: flex; justify-content: center; gap: 14px; flex-wrap: wrap;">
+            <a href="/developers" style="background: #38BDF8; color: #000; font-weight: 800; font-size: 14px; padding: 12px 26px; border-radius: 25px; text-decoration: none; transition: all 0.2s;">
+                ⚡ View Developer Docs & API →
+            </a>
+            <a href="/support" style="background: transparent; color: #FFF; border: 1px solid var(--card-border); font-weight: 700; font-size: 14px; padding: 12px 24px; border-radius: 25px; text-decoration: none; transition: all 0.2s;">
+                🎫 Customer Support & Diagnostics →
+            </a>
         </div>
     </section>
 
@@ -1915,7 +1967,9 @@
 
     <footer>
         <p style="margin-bottom: 8px;">
-            <a href="/blog" style="color: var(--primary); margin: 0 10px; text-decoration: none; font-weight: 600;">📰 Educational Blog</a> • 
+            <a href="/developers" style="color: #38BDF8; margin: 0 10px; font-weight: 600;">⚡ Developer & API Docs</a> • 
+            <a href="/support" style="color: var(--primary); margin: 0 10px; font-weight: 600;">🎫 Support Desk</a> • 
+            <a href="/blog" style="color: #FFF; margin: 0 10px; text-decoration: none; font-weight: 600;">📰 Educational Blog</a> • 
             <a href="/terms.html" style="margin: 0 10px; color: #FFF; font-weight: 600;">Terms of Service & TCPA</a> • 
             <a href="#features" style="margin: 0 10px;">Features</a> • 
             <a href="#comparison" style="margin: 0 10px;">Comparison</a> • 

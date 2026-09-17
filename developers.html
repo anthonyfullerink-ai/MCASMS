@@ -1,0 +1,851 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Developer Docs & Webhook API Reference | Missed Call Auto SMS Pro</title>
+    <meta name="description" content="Official API documentation and integration guides for Missed Call Auto SMS Pro. Connect n8n, Make.com, Zapier, and custom webhooks directly to Android carrier SMS gateways.">
+    <link rel="canonical" href="https://missedcallautosms.com/developers">
+
+    <!-- Favicon & Mobile App Icons -->
+    <link rel="icon" type="image/svg+xml" href="/favicon.svg?v=2">
+    <link rel="icon" type="image/png" sizes="32x32" href="/favicon-32x32.png?v=2">
+    <link rel="icon" type="image/png" sizes="16x16" href="/favicon-16x16.png?v=2">
+    <link rel="shortcut icon" href="/favicon.ico?v=2">
+    <link rel="apple-touch-icon" sizes="180x180" href="/apple-touch-icon.png?v=2">
+    <link rel="manifest" href="/site.webmanifest">
+    <meta name="theme-color" content="#090B0E">
+
+    <style>
+        :root {
+            --bg: #090B0E;
+            --card-bg: #131720;
+            --card-border: #222836;
+            --primary: #00E676;
+            --primary-hover: #00C853;
+            --primary-glow: rgba(0, 230, 118, 0.2);
+            --text: #FFFFFF;
+            --muted: #949BAE;
+            --danger: #FF5252;
+            --accent: #A855F7;
+            --accent-glow: rgba(168, 85, 247, 0.2);
+            --code-bg: #0A0E17;
+        }
+
+        * { box-sizing: border-box; }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+            background-color: var(--bg);
+            color: var(--text);
+            margin: 0;
+            padding: 0;
+            line-height: 1.7;
+            -webkit-font-smoothing: antialiased;
+        }
+
+        /* Top Navbar */
+        nav {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 16px 24px;
+            background: rgba(9, 11, 14, 0.95);
+            backdrop-filter: blur(12px);
+            border-bottom: 1px solid var(--card-border);
+            position: sticky;
+            top: 0;
+            z-index: 1000;
+        }
+
+        .nav-inner {
+            width: 100%;
+            max-width: 1200px;
+            margin: 0 auto;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .logo {
+            font-size: 18px;
+            font-weight: 900;
+            color: #FFF;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            text-decoration: none;
+        }
+
+        .logo span { color: var(--primary); }
+
+        .nav-links {
+            display: flex;
+            gap: 20px;
+            align-items: center;
+        }
+
+        .nav-links a {
+            color: var(--muted);
+            text-decoration: none;
+            font-size: 14px;
+            font-weight: 600;
+            transition: color 0.2s;
+        }
+
+        .nav-links a:hover { color: #FFF; }
+
+        .btn-pro-nav {
+            background: linear-gradient(135deg, #7E22CE, #9333EA);
+            color: #FFF;
+            border: 1px solid #C084FC;
+            padding: 8px 18px;
+            border-radius: 20px;
+            font-weight: 800;
+            font-size: 13px;
+            text-decoration: none;
+            transition: all 0.2s;
+        }
+
+        .btn-pro-nav:hover {
+            transform: translateY(-1px);
+            box-shadow: 0 4px 15px rgba(147, 51, 234, 0.4);
+        }
+
+        /* Layout */
+        .container {
+            max-width: 1160px;
+            margin: 0 auto;
+            padding: 40px 24px 80px 24px;
+        }
+
+        /* Hero Header */
+        .hero-docs {
+            text-align: center;
+            max-width: 840px;
+            margin: 0 auto 50px auto;
+        }
+
+        .badge-dev {
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+            background: rgba(168, 85, 247, 0.15);
+            color: #C084FC;
+            border: 1px solid rgba(168, 85, 247, 0.4);
+            padding: 6px 14px;
+            border-radius: 20px;
+            font-size: 12px;
+            font-weight: 800;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            margin-bottom: 18px;
+        }
+
+        .hero-docs h1 {
+            font-size: clamp(30px, 4.5vw, 46px);
+            font-weight: 900;
+            line-height: 1.2;
+            margin: 0 0 16px 0;
+        }
+
+        .hero-docs p {
+            color: var(--muted);
+            font-size: 17px;
+            line-height: 1.6;
+            margin-bottom: 28px;
+        }
+
+        .hero-cta-row {
+            display: flex;
+            justify-content: center;
+            gap: 16px;
+            flex-wrap: wrap;
+        }
+
+        .btn-primary {
+            background: var(--primary);
+            color: #000;
+            font-weight: 800;
+            padding: 12px 26px;
+            border-radius: 30px;
+            text-decoration: none;
+            font-size: 15px;
+            transition: background 0.2s, transform 0.2s;
+        }
+
+        .btn-primary:hover {
+            background: var(--primary-hover);
+            transform: translateY(-1px);
+        }
+
+        .btn-outline {
+            background: transparent;
+            color: #FFF;
+            border: 1px solid var(--card-border);
+            font-weight: 700;
+            padding: 12px 24px;
+            border-radius: 30px;
+            text-decoration: none;
+            font-size: 15px;
+            transition: all 0.2s;
+        }
+
+        .btn-outline:hover {
+            border-color: #FFF;
+            background: rgba(255,255,255,0.05);
+        }
+
+        /* Section Cards */
+        .section-card {
+            background: var(--card-bg);
+            border: 1px solid var(--card-border);
+            border-radius: 16px;
+            padding: 36px;
+            margin-bottom: 40px;
+        }
+
+        .section-card h2 {
+            font-size: 24px;
+            font-weight: 800;
+            margin: 0 0 10px 0;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .section-sub {
+            color: var(--muted);
+            font-size: 15px;
+            margin-bottom: 26px;
+        }
+
+        /* Grid */
+        .grid-2 {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 24px;
+        }
+
+        .grid-3 {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 20px;
+        }
+
+        @media (max-width: 840px) {
+            .grid-2, .grid-3 { grid-template-columns: 1fr; }
+            .section-card { padding: 24px 18px; }
+        }
+
+        /* Feature Box */
+        .feat-box {
+            background: #0D1117;
+            border: 1px solid var(--card-border);
+            border-radius: 12px;
+            padding: 22px;
+        }
+
+        .feat-box h3 {
+            margin: 0 0 8px 0;
+            font-size: 17px;
+            color: #FFF;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .feat-box p {
+            margin: 0;
+            color: var(--muted);
+            font-size: 14px;
+            line-height: 1.5;
+        }
+
+        /* Code Tabs & Snippets */
+        .code-container {
+            background: var(--code-bg);
+            border: 1px solid var(--card-border);
+            border-radius: 12px;
+            overflow: hidden;
+            margin-top: 18px;
+        }
+
+        .code-tabs {
+            display: flex;
+            background: #111622;
+            border-bottom: 1px solid var(--card-border);
+            overflow-x: auto;
+        }
+
+        .code-tab {
+            padding: 10px 20px;
+            font-size: 13px;
+            font-weight: 700;
+            color: var(--muted);
+            background: transparent;
+            border: none;
+            border-bottom: 2px solid transparent;
+            cursor: pointer;
+            white-space: nowrap;
+            transition: all 0.2s;
+        }
+
+        .code-tab:hover { color: #FFF; }
+        .code-tab.active {
+            color: var(--primary);
+            border-bottom-color: var(--primary);
+            background: rgba(0, 230, 118, 0.05);
+        }
+
+        .code-snippet {
+            position: relative;
+            padding: 20px;
+            margin: 0;
+            font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+            font-size: 13px;
+            color: #E6EDF3;
+            overflow-x: auto;
+            white-space: pre;
+            line-height: 1.5;
+            display: none;
+        }
+
+        .code-snippet.active { display: block; }
+
+        .btn-copy {
+            position: absolute;
+            top: 14px;
+            right: 14px;
+            background: #21262D;
+            color: var(--muted);
+            border: 1px solid var(--card-border);
+            padding: 6px 12px;
+            border-radius: 6px;
+            font-size: 11px;
+            font-weight: 700;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+
+        .btn-copy:hover { color: #FFF; border-color: #8B949E; }
+
+        /* API Endpoint Callout */
+        .endpoint-badge {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            background: #0A0E17;
+            border: 1px solid var(--card-border);
+            border-left: 4px solid var(--accent);
+            border-radius: 8px;
+            padding: 14px 18px;
+            margin-bottom: 16px;
+            font-family: monospace;
+            font-size: 14px;
+        }
+
+        .method-post {
+            background: #7E22CE;
+            color: #FFF;
+            font-weight: bold;
+            font-size: 11px;
+            padding: 4px 8px;
+            border-radius: 4px;
+        }
+
+        .endpoint-url {
+            color: #FFF;
+            word-break: break-all;
+        }
+
+        /* Tables */
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            font-size: 13px;
+            margin-top: 16px;
+        }
+
+        th {
+            text-align: left;
+            padding: 12px;
+            background: #0E131C;
+            color: var(--muted);
+            border-bottom: 1px solid var(--card-border);
+            font-weight: 700;
+            text-transform: uppercase;
+            font-size: 11px;
+        }
+
+        td {
+            padding: 12px;
+            border-bottom: 1px solid rgba(255,255,255,0.05);
+            color: #CBD5E0;
+        }
+
+        td code {
+            color: var(--primary);
+            background: #0A0E17;
+            padding: 2px 6px;
+            border-radius: 4px;
+            font-size: 12px;
+        }
+
+        /* Metric SLA Cards */
+        .metric-card {
+            background: #0E131C;
+            border: 1px solid var(--card-border);
+            border-radius: 12px;
+            padding: 20px;
+            text-align: center;
+        }
+
+        .metric-val {
+            font-size: 30px;
+            font-weight: 900;
+            color: var(--primary);
+            margin-bottom: 4px;
+        }
+
+        .metric-lbl {
+            font-size: 12px;
+            color: var(--muted);
+            text-transform: uppercase;
+            font-weight: 700;
+            letter-spacing: 0.5px;
+        }
+
+        /* Footer */
+        footer {
+            border-top: 1px solid var(--card-border);
+            padding: 40px 24px;
+            text-align: center;
+            color: var(--muted);
+            font-size: 13px;
+        }
+
+        footer a { color: var(--muted); text-decoration: none; margin: 0 10px; }
+        footer a:hover { color: #FFF; }
+    </style>
+</head>
+<body>
+
+<!-- Navbar -->
+<nav>
+    <div class="nav-inner">
+        <a href="/" class="logo">
+            <span>⚡</span> Missed Call Auto SMS <small style="font-size: 11px; color: var(--muted); margin-left: 4px; font-weight: normal;">PRO DEVELOPER DOCS</small>
+        </a>
+        <div class="nav-links">
+            <a href="/">Home</a>
+            <a href="#quickstart">Quickstart</a>
+            <a href="#relay-api">Cloud Relay</a>
+            <a href="#local-api">Local Appliance</a>
+            <a href="#stability">Stability & SLA</a>
+            <a href="/support" style="color: var(--primary);">Support Desk</a>
+            <a href="https://buy.stripe.com/cNi5kDdJQ558c6k2yB2go0b" class="btn-pro-nav">Get Pro ($149.99)</a>
+        </div>
+    </div>
+</nav>
+
+<div class="container">
+
+    <!-- Hero Header -->
+    <div class="hero-docs">
+        <div class="badge-dev">⚡ Developer & Automation Hub</div>
+        <h1>Direct Hardware Carrier Gateway & Webhook API</h1>
+        <p>
+            Connect <strong>n8n</strong>, <strong>Make.com</strong>, <strong>Zapier</strong>, or custom webhooks directly to physical Android SIM cards. Enjoy 100% exemption from A2P 10DLC registration fees with automated two-way delivery receipts and enterprise-grade carrier rate pacing.
+        </p>
+        <div class="hero-cta-row">
+            <a href="#quickstart" class="btn-primary">🚀 3-Minute Quickstart</a>
+            <a href="/MissedCallAutoSMS_n8n_Workflow.json" download class="btn-outline">📥 Download n8n Template</a>
+            <a href="/support" class="btn-outline">🎫 Developer Support</a>
+        </div>
+    </div>
+
+    <!-- Live Performance SLA Grid -->
+    <div class="grid-3" style="margin-bottom: 40px;">
+        <div class="metric-card">
+            <div class="metric-val">100%</div>
+            <div class="metric-lbl">A2P 10DLC Exempt (Direct SIM)</div>
+        </div>
+        <div class="metric-card">
+            <div class="metric-val" style="color: #C084FC;">3.5s</div>
+            <div class="metric-lbl">SIM Burn Safeguard™ Pacing</div>
+        </div>
+        <div class="metric-card">
+            <div class="metric-val" style="color: #38BDF8;">&lt; 850ms</div>
+            <div class="metric-lbl">Cloud Relay Dispatch Latency</div>
+        </div>
+    </div>
+
+    <!-- SECTION 1: Architecture Overview -->
+    <div id="quickstart" class="section-card">
+        <h2>🏗️ 1. Architecture: Cloud Relay vs Direct Appliance</h2>
+        <div class="section-sub">Choose between centralized cloud-routed dispatch or completely isolated local LAN execution.</div>
+
+        <div class="grid-2">
+            <div class="feat-box" style="border-left: 4px solid #C084FC;">
+                <h3 style="color: #C084FC;">Option C: Central Cloud Relay (Recommended)</h3>
+                <p>
+                    Engineered for <strong>n8n Cloud</strong>, <strong>Make.com</strong>, or any cloud CRM without static IPs. Your automation posts to our central serverless endpoint using your Pro License Key; high-priority Google Firebase Cloud Messaging (FCM) instantly wakes the Android device and executes the native carrier SMS.
+                </p>
+                <div style="margin-top: 14px; font-size: 13px;">
+                    <span style="color: var(--primary);">✓ Zero Port Forwarding</span> • 
+                    <span style="color: var(--primary);">✓ Works on LTE/5G & Roaming</span> • 
+                    <span style="color: var(--primary);">✓ End-to-End HMAC Protected</span>
+                </div>
+            </div>
+
+            <div class="feat-box" style="border-left: 4px solid var(--primary);">
+                <h3 style="color: var(--primary);">Option A: Direct Appliance Gateway</h3>
+                <p>
+                    For self-hosted homelabs, local CRM servers, or secure private networks using Tailscale / WireGuard. The Android app spins up an embedded HTTP server listening on port <code>8080</code> for zero-latency local dispatch with delivery receipt callbacks.
+                </p>
+                <div style="margin-top: 14px; font-size: 13px;">
+                    <span style="color: var(--primary);">✓ 100% On-Premise</span> • 
+                    <span style="color: var(--primary);">✓ No Third-Party Servers</span> • 
+                    <span style="color: var(--primary);">✓ Sub-100ms Execution</span>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- SECTION 2: Central Cloud Relay API -->
+    <div id="relay-api" class="section-card">
+        <h2>☁️ 2. Central Cloud Relay API Reference</h2>
+        <div class="section-sub">Dispatch SMS messages from any cloud automation system anywhere in the world.</div>
+
+        <div class="endpoint-badge">
+            <span class="method-post">POST</span>
+            <span class="endpoint-url">https://missedcallautosms.com/api/dispatch-sms</span>
+        </div>
+
+        <p style="color: var(--muted); font-size: 14px;">
+            Pass your Pro License Key in the <code>X-License-Key</code> header or Authorization header. Destination numbers should be formatted in standard E.164 format (e.g. <code>+15551234567</code>).
+        </p>
+
+        <!-- Interactive Code Snippets -->
+        <div class="code-container">
+            <div class="code-tabs">
+                <button class="code-tab active" onclick="switchSnippet('relay', 'curl')">cURL</button>
+                <button class="code-tab" onclick="switchSnippet('relay', 'node')">Node.js (Fetch)</button>
+                <button class="code-tab" onclick="switchSnippet('relay', 'python')">Python</button>
+                <button class="code-tab" onclick="switchSnippet('relay', 'n8n')">n8n JSON Node</button>
+                <button class="code-tab" onclick="switchSnippet('relay', 'make')">Make.com HTTP</button>
+            </div>
+
+            <!-- cURL -->
+            <pre id="relay-curl" class="code-snippet active"><code><button class="btn-copy" onclick="copySnippet('relay-curl')">Copy</button>curl -X POST https://missedcallautosms.com/api/dispatch-sms \
+  -H "Content-Type: application/json" \
+  -H "X-License-Key: MCAS-PRO-DEMO-89F2" \
+  -d '{
+    "to": "+15551234567",
+    "message": "Hi John! Thanks for booking your estimate with Apex Plumbing. See you Thursday at 2 PM!",
+    "sim_slot": 1,
+    "callback_url": "https://your-domain.com/webhook/sms-callback"
+  }'</code></pre>
+
+            <!-- Node.js -->
+            <pre id="relay-node" class="code-snippet"><code><button class="btn-copy" onclick="copySnippet('relay-node')">Copy</button>const response = await fetch('https://missedcallautosms.com/api/dispatch-sms', {
+  method: 'POST',
+  headers: {
+    'Content-Type': 'application/json',
+    'X-License-Key': 'MCAS-PRO-DEMO-89F2'
+  },
+  body: JSON.stringify({
+    to: '+15551234567',
+    message: 'Hi John! Your appointment confirmation has been received.',
+    sim_slot: 1,
+    callback_url: 'https://your-crm.com/webhooks/sms-delivery'
+  })
+});
+
+const data = await response.json();
+console.log('Dispatch status:', data);</code></pre>
+
+            <!-- Python -->
+            <pre id="relay-python" class="code-snippet"><code><button class="btn-copy" onclick="copySnippet('relay-python')">Copy</button>import requests
+
+url = "https://missedcallautosms.com/api/dispatch-sms"
+headers = {
+    "Content-Type": "application/json",
+    "X-License-Key": "MCAS-PRO-DEMO-89F2"
+}
+payload = {
+    "to": "+15551234567",
+    "message": "Hi John! Your invoice #1042 is ready for review.",
+    "sim_slot": 1,
+    "callback_url": "https://your-crm.com/webhooks/sms-delivery"
+}
+
+res = requests.post(url, json=payload, headers=headers)
+print(res.status_code, res.json())</code></pre>
+
+            <!-- n8n -->
+            <pre id="relay-n8n" class="code-snippet"><code><button class="btn-copy" onclick="copySnippet('relay-n8n')">Copy</button>// In an n8n HTTP Request node:
+Method: POST
+URL: https://missedcallautosms.com/api/dispatch-sms
+Authentication: None (Use Header)
+Headers:
+  - Name: X-License-Key
+    Value: MCAS-PRO-DEMO-89F2
+  - Name: Content-Type
+    Value: application/json
+Body Parameters:
+  {
+    "to": "={{ $json.customer_phone }}",
+    "message": "={{ $json.sms_body }}",
+    "sim_slot": 1
+  }</code></pre>
+
+            <!-- Make.com -->
+            <pre id="relay-make" class="code-snippet"><code><button class="btn-copy" onclick="copySnippet('relay-make')">Copy</button>// In Make.com (Integromat) HTTP Module:
+Action: Make a request
+URL: https://missedcallautosms.com/api/dispatch-sms
+Method: POST
+Headers:
+  - Key: X-License-Key, Value: MCAS-PRO-DEMO-89F2
+  - Key: Content-Type, Value: application/json
+Body type: Raw
+Content type: JSON (application/json)
+Request content:
+{
+  "to": "{{1.phone_number}}",
+  "message": "Hi {{1.first_name}}, thanks for contacting us!",
+  "sim_slot": 1
+}</code></pre>
+        </div>
+
+        <h3 style="margin-top: 24px; font-size: 16px;">Payload Parameters</h3>
+        <table>
+            <thead>
+                <tr>
+                    <th>Field</th>
+                    <th>Type</th>
+                    <th>Required</th>
+                    <th>Description</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr>
+                    <td><code>to</code> or <code>phone</code></td>
+                    <td>string</td>
+                    <td>Yes</td>
+                    <td>Target recipient phone number in standard E.164 format.</td>
+                </tr>
+                <tr>
+                    <td><code>message</code></td>
+                    <td>string</td>
+                    <td>Yes</td>
+                    <td>Text message content. Automatically segmented if exceeding 160 chars.</td>
+                </tr>
+                <tr>
+                    <td><code>sim_slot</code></td>
+                    <td>integer</td>
+                    <td>No</td>
+                    <td><code>1</code> for SIM 1, <code>2</code> for SIM 2 (eSIM). Default is <code>1</code>.</td>
+                </tr>
+                <tr>
+                    <td><code>callback_url</code></td>
+                    <td>string</td>
+                    <td>No</td>
+                    <td>Webhook URL to receive instantaneous carrier delivery confirmation.</td>
+                </tr>
+            </tbody>
+        </table>
+    </div>
+
+    <!-- SECTION 3: Direct Hardware Gateway API -->
+    <div id="local-api" class="section-card">
+        <h2>📱 3. Direct Local Appliance Gateway API</h2>
+        <div class="section-sub">Zero cloud dependencies. Communicate directly with your Android phone over LAN or Tailscale.</div>
+
+        <div class="endpoint-badge" style="border-left-color: var(--primary);">
+            <span class="method-post" style="background: var(--primary); color: #000;">POST</span>
+            <span class="endpoint-url">http://&lt;PHONE-IP&gt;:8080/api/send-sms</span>
+        </div>
+
+        <div class="code-container">
+            <pre class="code-snippet active" style="display:block;"><code>curl -X POST http://192.168.1.150:8080/api/send-sms \
+  -H "Content-Type: application/json" \
+  -d '{
+    "secret": "YOUR_16_CHAR_SECRET",
+    "phone": "+15551234567",
+    "message": "Direct on-premise carrier dispatch.",
+    "sim_slot": 1,
+    "callback_url": "https://your-homelab.internal/webhook/delivery"
+  }'</code></pre>
+        </div>
+
+        <h3 style="margin-top: 24px; font-size: 16px;">Two-Way Delivery Callback Payload</h3>
+        <p style="color: var(--muted); font-size: 14px;">
+            When the carrier network acknowledges dispatch, your Android appliance fires an HTTP POST payload back to your specified <code>callback_url</code>:
+        </p>
+
+        <div class="code-container">
+            <pre class="code-snippet active" style="display:block;"><code>{
+  "status": "SENT",
+  "phone": "+15551234567",
+  "sim_slot": 1,
+  "message": "Hi John! Thanks for reaching out...",
+  "timestamp": 1789658400000,
+  "carrier_dispatched": true
+}</code></pre>
+        </div>
+    </div>
+
+    <!-- SECTION 4: Platform Stability, SLA & Resilience -->
+    <div id="stability" class="section-card">
+        <h2>🛡️ 4. Platform Stability, SLA & Resilience Specification</h2>
+        <div class="section-sub">Engineered from the kernel up to run 24/7/365 without sleep drops, memory kills, or carrier flags.</div>
+
+        <div class="grid-2">
+            <div class="feat-box">
+                <h3>🔋 24/7 Foreground Service & WAKE_LOCK</h3>
+                <p>
+                    Consumer Android apps get suspended when the screen locks. Missed Call Auto SMS registers an Android <strong>Foreground Sticky Service</strong> with a persistent notification bar icon and acquires partial CPU wake locks during incoming call events. It will never be killed by Android memory managers.
+                </p>
+            </div>
+
+            <div class="feat-box">
+                <h3>🛡️ SIM Burn Safeguard™ (Carrier Anti-Spam)</h3>
+                <p>
+                    Mobile carriers (Verizon, AT&T, T-Mobile) will flag consumer SIMs if hundreds of texts fire in seconds. Our engine enforces a strict <strong>3.5-second sequential pacing interval</strong> and a 20 SMS/minute burst ceiling. Your phone line remains 100% compliant and healthy.
+                </p>
+            </div>
+
+            <div class="feat-box">
+                <h3>📦 WorkManager Persistent SQLite Queue</h3>
+                <p>
+                    If the phone momentarily enters a basement or elevator with zero cell service, outbound dispatches do not vanish. They are queued to an encrypted SQLite database via Android <code>WorkManager</code> and automatically flushed the instant cellular towers re-acquire connection.
+                </p>
+            </div>
+
+            <div class="feat-box">
+                <h3>☁️ High-Priority FCM Push Redundancy</h3>
+                <p>
+                    Central Cloud Relay leverages Google Firebase Cloud Messaging at <code>HIGH_PRIORITY</code> level. This bypasses Android Doze mode and wakes the device radio within milliseconds, ensuring real-time response times for critical lead generation workflows.
+                </p>
+            </div>
+        </div>
+
+        <div style="background: rgba(255,179,0,0.1); border: 1px solid rgba(255,179,0,0.3); border-radius: 12px; padding: 20px; margin-top: 24px;">
+            <h4 style="color: var(--warning); margin: 0 0 6px 0; font-size: 15px;">⚠️ Crucial Device Setup Step: Disable Vendor Battery Optimization</h4>
+            <p style="margin: 0; color: #CBD5E0; font-size: 13px; line-height: 1.6;">
+                Certain Android manufacturers (Samsung OneUI, Xiaomi MIUI) aggressively throttle background apps unless instructed otherwise. On your appliance device, navigate to <strong>Settings ➔ Apps ➔ Missed Call Auto SMS ➔ Battery ➔ Select "Unrestricted"</strong> to ensure zero sleep interruptions.
+            </p>
+        </div>
+    </div>
+
+    <!-- SECTION 5: HTTP Status Codes & Error Handling -->
+    <div class="section-card">
+        <h2>🚦 5. Response Status Codes & Troubleshooting</h2>
+        <div class="section-sub">Standard HTTP status codes returned by the Central Cloud Relay and Local Gateways.</div>
+
+        <table>
+            <thead>
+                <tr>
+                    <th>Status Code</th>
+                    <th>Meaning</th>
+                    <th>Solution</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr>
+                    <td><code>200 OK</code></td>
+                    <td>Message Queued / Dispatched</td>
+                    <td>Carrier dispatch initiated successfully.</td>
+                </tr>
+                <tr>
+                    <td><code>400 Bad Request</code></td>
+                    <td>Missing Phone or Body</td>
+                    <td>Ensure destination phone number is provided in valid international format.</td>
+                </tr>
+                <tr>
+                    <td><code>401 Unauthorized</code></td>
+                    <td>Missing License Key</td>
+                    <td>Provide your Pro License Key in the <code>X-License-Key</code> header.</td>
+                </tr>
+                <tr>
+                    <td><code>403 Forbidden</code></td>
+                    <td>Standard Tier Key / Invalid</td>
+                    <td>Feature is exclusive to Pro Edition. Upgrade your key or verify formatting.</td>
+                </tr>
+                <tr>
+                    <td><code>404 Not Found</code></td>
+                    <td>Device Token Not Registered</td>
+                    <td>Open the Missed Call Auto SMS Pro app on your phone once to register the device FCM token.</td>
+                </tr>
+                <tr>
+                    <td><code>429 Rate Limited</code></td>
+                    <td>SIM Burn Safeguard Triggered</td>
+                    <td>Pacing protection active. Space out automated webhook triggers by 3.5 seconds.</td>
+                </tr>
+            </tbody>
+        </table>
+    </div>
+
+    <!-- Ready to Automate CTA -->
+    <div style="text-align: center; background: linear-gradient(180deg, rgba(147,51,234,0.15) 0%, rgba(9,11,14,0) 100%); border: 1px solid var(--card-border); border-radius: 16px; padding: 40px 24px;">
+        <h2 style="font-size: 26px; margin: 0 0 10px 0;">Ready to Supercharge Your SMS Automation?</h2>
+        <p style="color: var(--muted); max-width: 600px; margin: 0 auto 24px auto; font-size: 15px;">
+            Get the Pro Automation Edition for a one-time \$149.99 lifetime payment. Zero monthly subscription fees, unlimited automations, and full webhook access.
+        </p>
+        <div style="display: flex; justify-content: center; gap: 14px; flex-wrap: wrap;">
+            <a href="https://buy.stripe.com/cNi5kDdJQ558c6k2yB2go0b" class="btn-primary" style="background: linear-gradient(135deg, #7E22CE, #9333EA); color: #FFF;">
+                🚀 Purchase Pro Automation (\$149.99)
+            </a>
+            <a href="/support" class="btn-outline">🎫 Open Support Ticket</a>
+        </div>
+    </div>
+
+</div>
+
+<!-- Footer -->
+<footer>
+    <p style="margin-bottom: 8px;">
+        <a href="/">Home</a> • 
+        <a href="/developers" style="color: var(--primary); font-weight: bold;">Developer Docs</a> • 
+        <a href="/support">Helpdesk & Support</a> • 
+        <a href="/terms.html">Terms & TCPA Policy</a> • 
+        <a href="/blog">Blog</a> • 
+        <a href="/owner">Owner Admin</a>
+    </p>
+    <p>© 2026 <a href="https://missedcallautosms.com/">MissedCallAutoSMS.com</a>. Built for automation engineers & business builders.</p>
+</footer>
+
+<script>
+function switchSnippet(group, tab) {
+    const container = document.querySelector('.code-container');
+    const tabs = container.querySelectorAll('.code-tab');
+    tabs.forEach(t => t.classList.remove('active'));
+
+    const snippets = container.querySelectorAll('.code-snippet');
+    snippets.forEach(s => s.classList.remove('active'));
+
+    const activeBtn = event.currentTarget;
+    if (activeBtn) activeBtn.classList.add('active');
+
+    const target = document.getElementById(`${group}-${tab}`);
+    if (target) target.classList.add('active');
+}
+
+function copySnippet(snippetId) {
+    const el = document.getElementById(snippetId);
+    if (!el) return;
+    const text = el.innerText.replace('Copy', '').trim();
+    navigator.clipboard.writeText(text).then(() => {
+        const btn = el.querySelector('.btn-copy');
+        if (btn) {
+            btn.innerText = '✓ Copied!';
+            setTimeout(() => { btn.innerText = 'Copy'; }, 2000);
+        }
+    });
+}
+</script>
+
+</body>
+</html>
