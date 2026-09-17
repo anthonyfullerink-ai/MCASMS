@@ -10,7 +10,9 @@ enum class LogStatus {
     SKIPPED_COOLDOWN,
     SKIPPED_OFF_HOURS,
     SKIPPED_UNLICENSED,
-    FAILED_SIM_ERROR
+    FAILED_SIM_ERROR,
+    REMOTE_SENT,
+    REMOTE_REJECTED
 }
 
 @Entity(tableName = "call_log_events")

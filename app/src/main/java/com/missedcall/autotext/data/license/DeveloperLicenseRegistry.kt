@@ -18,7 +18,7 @@ data class DeveloperLicenseRecord(
     val licenseKey: String,
     val dateIssued: Long = System.currentTimeMillis(),
     val isRevoked: Boolean = false,
-    val priceText: String = "$49.99 Lifetime"
+    val priceText: String = if (licenseKey.contains("PRO")) "$149.99 Pro Lifetime" else "$49.99 Lifetime"
 )
 
 private val Context.devDataStore: DataStore<Preferences> by preferencesDataStore(name = "developer_license_registry")

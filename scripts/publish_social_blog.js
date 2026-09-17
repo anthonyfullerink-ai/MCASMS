@@ -170,12 +170,18 @@ if (require.main === module) {
     try {
       const posts = JSON.parse(fs.readFileSync(postsJsonPath, 'utf8'));
       if (posts.length > 0) {
-        publishToSocial(posts[0]);
+        publishToSocial(posts[0]).then(res => {
+          if (res && res.facebook && !res.facebook.success && res.instagram && !res.instagram.success) {
+            console.error('❌ Social cross-posting failed for both platforms.');
+            process.exit(1);
+          }
+        });
       } else {
         console.log('No articles found in blog/posts.json');
       }
     } catch (e) {
       console.error('Error reading blog/posts.json:', e.message);
+      process.exit(1);
     }
   }
 }

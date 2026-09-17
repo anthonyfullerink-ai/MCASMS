@@ -38,18 +38,33 @@ object LicenseManager {
                 licenseKey = trimmedKey,
                 licensedTo = "Owner & Reviewer Master Demo",
                 expiryTimestamp = 0L,
-                checksum = "89F2"
+                checksum = "89F2",
+                tier = LicenseTier.STANDARD
+            )
+        }
+        if (trimmedKey == "MCAS-PRO-DEMO-89F2" ||
+            trimmedKey == "MCAT-PRO-DEMO-89F2" ||
+            trimmedKey == "MCAS-PRO-DEMO-TRIAL-89F2") {
+            return LicenseInfo(
+                status = LicenseStatus.ACTIVE_LIFETIME,
+                licenseKey = trimmedKey,
+                licensedTo = "Owner & Reviewer Master Pro Demo",
+                expiryTimestamp = 0L,
+                checksum = "89F2",
+                tier = LicenseTier.PRO
             )
         }
 
-        // 2. Determine License Prefix (MCAS- or legacy MCAT-)
-        val prefix = when {
-            trimmedKey.startsWith("MCAS-") -> "MCAS-"
-            trimmedKey.startsWith("MCAT-") -> "MCAT-"
+        // 2. Determine License Prefix (MCAS-PRO-, MCAS-, or legacy MCAT-)
+        val (prefix, tier) = when {
+            trimmedKey.startsWith("MCAS-PRO-") -> "MCAS-PRO-" to LicenseTier.PRO
+            trimmedKey.startsWith("MCAT-PRO-") -> "MCAT-PRO-" to LicenseTier.PRO
+            trimmedKey.startsWith("MCAS-") -> "MCAS-" to LicenseTier.STANDARD
+            trimmedKey.startsWith("MCAT-") -> "MCAT-" to LicenseTier.STANDARD
             else -> return LicenseInfo(status = LicenseStatus.UNLICENSED, licenseKey = trimmedKey)
         }
 
-        if (trimmedKey.length < 15) {
+        if (trimmedKey.length < prefix.length + 8) {
             return LicenseInfo(status = LicenseStatus.UNLICENSED, licenseKey = trimmedKey)
         }
 
@@ -92,7 +107,8 @@ object LicenseManager {
                 licenseKey = trimmedKey,
                 licensedTo = customerName,
                 expiryTimestamp = expiryTimeMs,
-                checksum = expectedSig
+                checksum = expectedSig,
+                tier = tier
             )
         } catch (e: Exception) {
             Log.e(TAG, "Failed to parse license payload", e)

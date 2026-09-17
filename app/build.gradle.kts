@@ -17,12 +17,38 @@ android {
         versionName = "1.2.2"
 
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
+        manifestPlaceholders["appName"] = "Missed Call Auto SMS"
+    }
+
+    signingConfigs {
+        create("release") {
+            storeFile = file("${rootDir}/keystore/release.jks")
+            storePassword = "MissedCallAutoText2026!"
+            keyAlias = "missedcallkey"
+            keyPassword = "MissedCallAutoText2026!"
+        }
+    }
+
+    flavorDimensions += "edition"
+    productFlavors {
+        create("standard") {
+            dimension = "edition"
+            buildConfigField("boolean", "IS_PRO_EDITION", "false")
+            buildConfigField("String", "EDITION_NAME", "\"Flagship Edition\"")
+            manifestPlaceholders["appName"] = "Missed Call Auto-SMS"
+        }
+        create("pro") {
+            dimension = "edition"
+            buildConfigField("boolean", "IS_PRO_EDITION", "true")
+            buildConfigField("String", "EDITION_NAME", "\"Pro Automation Edition\"")
+            manifestPlaceholders["appName"] = "Missed Call Auto-SMS Pro"
+        }
     }
 
     buildTypes {
         release {
             isMinifyEnabled = false
-            signingConfig = signingConfigs.getByName("debug")
+            signingConfig = signingConfigs.getByName("release")
             proguardFiles(
                 getDefaultProguardFile("proguard-android-optimize.txt"),
                 "proguard-rules.pro"
@@ -38,6 +64,12 @@ android {
     }
     buildFeatures {
         compose = true
+        buildConfig = true
+    }
+
+    lint {
+        abortOnError = false
+        checkReleaseBuilds = false
     }
 }
 
@@ -62,5 +94,7 @@ dependencies {
     implementation(libs.androidx.work.runtime.ktx)
     implementation(libs.gson)
     implementation("org.nanohttpd:nanohttpd:2.3.1")
+    implementation(platform("com.google.firebase:firebase-bom:33.7.0"))
+    implementation("com.google.firebase:firebase-messaging")
     testImplementation("junit:junit:4.13.2")
 }

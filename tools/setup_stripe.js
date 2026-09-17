@@ -73,44 +73,68 @@ async function run() {
   console.log(`⚡ Connecting to Stripe API with key (${apiKey.substring(0, 7)}...)...`);
 
   try {
-    // 1. Create Product
-    console.log('1. Creating Stripe Product...');
-    const product = await stripeRequest('/v1/products', {
+    // 1. Create Standard Product & Price ($49.99 USD)
+    console.log('1. Creating Standard Stripe Product ($49.99)...');
+    const stdProduct = await stripeRequest('/v1/products', {
       name: 'Missed Call Auto SMS - Lifetime License',
       description: 'Standalone Android Appliance License. 0 Monthly Fees, 100% A2P 10DLC Exempt.'
     }, apiKey);
-    console.log(`✅ Product Created: ${product.id}`);
+    console.log(`✅ Standard Product Created: ${stdProduct.id}`);
 
-    // 2. Create Price ($49.99 USD)
-    console.log('2. Creating $49.99 Price...');
-    const price = await stripeRequest('/v1/prices', {
-      product: product.id,
+    const stdPrice = await stripeRequest('/v1/prices', {
+      product: stdProduct.id,
       unit_amount: 4999, // $49.99 in cents
       currency: 'usd'
     }, apiKey);
-    console.log(`✅ Price Created: ${price.id}`);
+    console.log(`✅ Standard Price Created: ${stdPrice.id}`);
 
-    // 3. Create Payment Link
-    console.log('3. Generating Payment Link...');
-    const paymentLink = await stripeRequest('/v1/payment_links', {
-      'line_items[0][price]': price.id,
+    const stdPaymentLink = await stripeRequest('/v1/payment_links', {
+      'line_items[0][price]': stdPrice.id,
       'line_items[0][quantity]': 1,
       'after_completion[type]': 'hosted_confirmation'
     }, apiKey);
+    console.log(`🎉 Standard Payment Link Generated: ${stdPaymentLink.url}`);
 
-    console.log(`\n🎉 SUCCESS! Stripe Payment Link Generated:\n👉 ${paymentLink.url}\n`);
+    // 2. Create Pro Automation Product & Price ($149.99 USD)
+    console.log('\n2. Creating Pro Automation Stripe Product ($149.99)...');
+    const proProduct = await stripeRequest('/v1/products', {
+      name: 'Missed Call Auto SMS - Pro Automation Edition',
+      description: 'Unlimited n8n Webhook Automations, FCM Cloud Push, Dual SIM Outbound Line Selector, 100% A2P 10DLC Exempt.',
+      'metadata[tier]': 'pro_automation'
+    }, apiKey);
+    console.log(`✅ Pro Product Created: ${proProduct.id}`);
 
-    // 4. Update sales_landing_page.html
-    const landingPath = path.join(__dirname, '..', 'sales_landing_page.html');
-    if (fs.existsSync(landingPath)) {
-      let html = fs.readFileSync(landingPath, 'utf8');
-      const replacementLifetime = `function initiateStripeCheckout() {\n        window.location.href = "${paymentLink.url}";\n    }`;
-      const replacementTrial = `function initiateFreeTrialCheckout() {\n        window.location.href = "${paymentLink.url}?trial_period_days=3";\n    }`;
-      html = html.replace(/function initiateStripeCheckout\(\)\s*\{[^}]*\}/g, replacementLifetime);
-      html = html.replace(/function initiateFreeTrialCheckout\(\)\s*\{[^}]*\}/g, replacementTrial);
-      fs.writeFileSync(landingPath, html, 'utf8');
-      console.log(`✅ Updated sales_landing_page.html with live Stripe Lifetime & 3-Day Trial Payment Links!`);
-    }
+    const proPrice = await stripeRequest('/v1/prices', {
+      product: proProduct.id,
+      unit_amount: 14999, // $149.99 in cents
+      currency: 'usd'
+    }, apiKey);
+    console.log(`✅ Pro Price Created: ${proPrice.id}`);
+
+    const proPaymentLink = await stripeRequest('/v1/payment_links', {
+      'line_items[0][price]': proPrice.id,
+      'line_items[0][quantity]': 1,
+      'metadata[tier]': 'pro_automation',
+      'after_completion[type]': 'hosted_confirmation'
+    }, apiKey);
+    console.log(`🎉 Pro Payment Link Generated: ${proPaymentLink.url}`);
+
+    // 3. Update HTML files
+    const htmlFiles = ['sales_landing_page.html', 'index.html'];
+    htmlFiles.forEach(file => {
+      const filePath = path.join(__dirname, '..', file);
+      if (fs.existsSync(filePath)) {
+        let html = fs.readFileSync(filePath, 'utf8');
+        const replacementStd = `function initiateStripeCheckout() {\n        window.location.href = "${stdPaymentLink.url}";\n    }`;
+        const replacementTrial = `function initiateFreeTrialCheckout() {\n        window.location.href = "${stdPaymentLink.url}?trial_period_days=3";\n    }`;
+        const replacementPro = `function initiateProStripeCheckout() {\n        window.location.href = "${proPaymentLink.url}";\n    }`;
+        html = html.replace(/function initiateStripeCheckout\(\)\s*\{[^}]*\}/g, replacementStd);
+        html = html.replace(/function initiateFreeTrialCheckout\(\)\s*\{[^}]*\}/g, replacementTrial);
+        html = html.replace(/function initiateProStripeCheckout\(\)\s*\{[^}]*\}/g, replacementPro);
+        fs.writeFileSync(filePath, html, 'utf8');
+        console.log(`✅ Updated ${file} with live Standard ($49.99) & Pro ($149.99) Payment Links!`);
+      }
+    });
   } catch (err) {
     console.error(`❌ Stripe API Error: ${err.message}`);
   }
