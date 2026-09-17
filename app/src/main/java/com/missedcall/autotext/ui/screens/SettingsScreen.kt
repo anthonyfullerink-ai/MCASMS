@@ -704,24 +704,40 @@ fun SettingsScreen(
 
                     Button(
                         onClick = {
-                            if (testWebhookPhone.isBlank()) {
-                                Toast.makeText(context, "Please enter a phone number to test", Toast.LENGTH_SHORT).show()
-                            } else {
-                                val workData = androidx.work.Data.Builder()
-                                    .putString(com.missedcall.autotext.worker.SendAutoTextWorker.KEY_PHONE_NUMBER, testWebhookPhone.trim())
-                                    .putString(com.missedcall.autotext.worker.SendAutoTextWorker.KEY_OVERRIDE_MESSAGE, testWebhookMsg.trim())
-                                    .putBoolean(com.missedcall.autotext.worker.SendAutoTextWorker.KEY_IS_REMOTE_TRIGGER, true)
-                                    .putInt(com.missedcall.autotext.worker.SendAutoTextWorker.KEY_SIM_SLOT, testSimSlot)
-                                    .build()
-
-                                val workRequest = androidx.work.OneTimeWorkRequestBuilder<com.missedcall.autotext.worker.SendAutoTextWorker>()
-                                    .setInputData(workData)
-                                    .build()
-
-                                androidx.work.WorkManager.getInstance(context).enqueue(workRequest)
-                                val simLabel = if (testSimSlot == 0) "Auto Default SIM" else "SIM $testSimSlot"
-                                Toast.makeText(context, "⚡ Webhook Simulated! SMS queued via $simLabel for ${testWebhookPhone.trim()}", Toast.LENGTH_LONG).show()
+                            val sanitizedPhone = testWebhookPhone.replace("[^0-9+]".toRegex(), "").trim()
+                            if (sanitizedPhone.isBlank()) {
+                                Toast.makeText(context, "Please enter a valid phone number to test", Toast.LENGTH_SHORT).show()
+                                return@Button
                             }
+
+                            val hasSmsPerm = androidx.core.content.ContextCompat.checkSelfPermission(
+                                context, android.Manifest.permission.SEND_SMS
+                            ) == android.content.pm.PackageManager.PERMISSION_GRANTED
+                            if (!hasSmsPerm) {
+                                Toast.makeText(context, "⚠️ SMS Permission Missing! Please grant SMS permissions in Android Settings.", Toast.LENGTH_LONG).show()
+                                return@Button
+                            }
+
+                            val licenseInfo = com.missedcall.autotext.data.license.LicenseManager.verifyLicenseKey(settings.licenseKey)
+                            if (licenseInfo.status == com.missedcall.autotext.data.license.LicenseStatus.UNLICENSED) {
+                                Toast.makeText(context, "⚠️ Appliance is Unlicensed! Enter your License Key (or Master Demo Key: MCAS-PRO-DEMO-89F2) in Settings.", Toast.LENGTH_LONG).show()
+                                return@Button
+                            }
+
+                            val workData = androidx.work.Data.Builder()
+                                .putString(com.missedcall.autotext.worker.SendAutoTextWorker.KEY_PHONE_NUMBER, sanitizedPhone)
+                                .putString(com.missedcall.autotext.worker.SendAutoTextWorker.KEY_OVERRIDE_MESSAGE, testWebhookMsg.trim())
+                                .putBoolean(com.missedcall.autotext.worker.SendAutoTextWorker.KEY_IS_REMOTE_TRIGGER, true)
+                                .putInt(com.missedcall.autotext.worker.SendAutoTextWorker.KEY_SIM_SLOT, testSimSlot)
+                                .build()
+
+                            val workRequest = androidx.work.OneTimeWorkRequestBuilder<com.missedcall.autotext.worker.SendAutoTextWorker>()
+                                .setInputData(workData)
+                                .build()
+
+                            androidx.work.WorkManager.getInstance(context).enqueue(workRequest)
+                            val simLabel = if (testSimSlot == 0) "Auto Default SIM" else "SIM $testSimSlot"
+                            Toast.makeText(context, "⚡ Webhook Simulated! SMS queued via $simLabel for $sanitizedPhone", Toast.LENGTH_LONG).show()
                         },
                         modifier = Modifier.fillMaxWidth(),
                         colors = ButtonDefaults.buttonColors(containerColor = MaterialTheme.colorScheme.primary)

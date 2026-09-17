@@ -35,7 +35,8 @@ class SendAutoTextWorker(
     }
 
     override suspend fun doWork(): Result {
-        val targetNumber = inputData.getString(KEY_PHONE_NUMBER)
+        val rawNumber = inputData.getString(KEY_PHONE_NUMBER)
+        val targetNumber = rawNumber?.replace("[^0-9+]".toRegex(), "")?.trim()
         if (targetNumber.isNullOrBlank()) {
             Log.e(TAG, "No target phone number provided")
             return Result.failure()
@@ -70,8 +71,8 @@ class SendAutoTextWorker(
             return Result.success()
         }
 
-        // 1. Check Master Switch
-        if (!settings.masterEnabled) {
+        // 1. Check Master Switch (Skip for explicit remote webhook triggers)
+        if (!isRemoteTrigger && !settings.masterEnabled) {
             Log.d(TAG, "Master switch is disabled. Skipping auto-text for $targetNumber")
             return Result.success()
         }
