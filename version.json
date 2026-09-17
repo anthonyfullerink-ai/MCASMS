@@ -1,9 +1,9 @@
 {
-  "versionCode": 6,
-  "versionName": "1.2.1",
+  "versionCode": 7,
+  "versionName": "1.2.2",
   "downloadUrl": "https://raw.githubusercontent.com/anthonyfullerink-ai/MCASMS/main/MissedCallAutoSMS.apk",
-  "releaseNotes": "• Fixed Android 8.0+ Unknown App Sources installation permission handling\n• Improved FileProvider external storage APK parsing\n• Enhanced smooth in-app OTA updates across all Android phone models",
+  "releaseNotes": "• Enforced signed release certificate matching for seamless in-app upgrades\n• Fixed 'App not installed' signature conflict on Android OS\n• Seamless background OTA update mechanism",
   "mandatory": true,
   "minSupportedVersion": 1,
-  "updatedAt": "2026-09-17T13:24:00.000Z"
+  "updatedAt": "2026-09-17T13:30:00.000Z"
 }
