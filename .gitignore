@@ -5,6 +5,7 @@ app/build/
 app/captures/
 *.apk
 !MissedCallAutoSMS.apk
+!MissedCallAutoSMS-Pro.apk
 !app-debug.apk
 *.aar
 

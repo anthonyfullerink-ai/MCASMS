@@ -25,5 +25,6 @@ data class AppSettings(
     val subscriptionStatus: String = "ACTIVE",
     val webhookEnabled: Boolean = true,
     val webhookApiSecret: String = "",
-    val fcmDeviceToken: String = ""
+    val fcmDeviceToken: String = "",
+    val preferredSimSlot: Int = 0
 )

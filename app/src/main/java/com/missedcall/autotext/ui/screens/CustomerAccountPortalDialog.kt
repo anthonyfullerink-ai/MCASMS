@@ -62,6 +62,7 @@ fun CustomerAccountPortalDialog(
 
     val isCancelled = settings.subscriptionStatus == "CANCELLED"
     val isTrial = settings.subscriptionStatus == "TRIAL" || settings.licenseKey.contains("TRIAL", ignoreCase = true)
+    val isPro = settings.licenseKey.contains("PRO", ignoreCase = true)
 
     Dialog(
         onDismissRequest = onDismiss,
@@ -88,16 +89,15 @@ fun CustomerAccountPortalDialog(
                 ) {
                     Row(verticalAlignment = Alignment.CenterVertically) {
                         Surface(
-                            shape = RoundedCornerShape(12.dp),
+                            shape = RoundedCornerShape(10.dp),
                             color = MaterialTheme.colorScheme.primaryContainer,
-                            modifier = Modifier.size(44.dp)
+                            modifier = Modifier.size(40.dp)
                         ) {
                             Box(contentAlignment = Alignment.Center) {
                                 Icon(
                                     Icons.Default.AccountCircle,
                                     contentDescription = null,
-                                    tint = MaterialTheme.colorScheme.primary,
-                                    modifier = Modifier.size(28.dp)
+                                    tint = MaterialTheme.colorScheme.onPrimaryContainer
                                 )
                             }
                         }
@@ -106,11 +106,11 @@ fun CustomerAccountPortalDialog(
                             Text(
                                 text = "Customer Account Portal",
                                 style = MaterialTheme.typography.titleMedium,
-                                fontWeight = FontWeight.Black
+                                fontWeight = FontWeight.Bold
                             )
                             Text(
-                                text = "Local Appliance Profile & Subscription",
-                                style = MaterialTheme.typography.bodySmall,
+                                text = "Self-Service License & Subscription Center",
+                                style = MaterialTheme.typography.labelSmall,
                                 color = MaterialTheme.colorScheme.onSurfaceVariant
                             )
                         }
@@ -123,9 +123,10 @@ fun CustomerAccountPortalDialog(
 
                 Spacer(modifier = Modifier.height(16.dp))
 
+                // Scrollable Content
                 LazyColumn(
-                    modifier = Modifier.weight(1f),
-                    verticalArrangement = Arrangement.spacedBy(14.dp)
+                    modifier = Modifier.fillMaxSize(),
+                    verticalArrangement = Arrangement.spacedBy(16.dp)
                 ) {
                     // Card 1: Subscription Status Banner
                     item {
@@ -135,6 +136,8 @@ fun CustomerAccountPortalDialog(
                                     MaterialTheme.colorScheme.surfaceVariant
                                 } else if (isTrial) {
                                     Color(0xFFFFB300).copy(alpha = 0.15f)
+                                } else if (isPro) {
+                                    Color(0xFF9333EA).copy(alpha = 0.18f)
                                 } else {
                                     ActiveGreenContainer
                                 }
@@ -153,13 +156,15 @@ fun CustomerAccountPortalDialog(
                                         text = "SUBSCRIPTION & LICENSE",
                                         style = MaterialTheme.typography.labelSmall,
                                         fontWeight = FontWeight.Bold,
-                                        color = if (isCancelled) MaterialTheme.colorScheme.onSurfaceVariant else if (isTrial) Color(0xFFFFB300) else ActiveGreenText
+                                        color = if (isCancelled) MaterialTheme.colorScheme.onSurfaceVariant else if (isTrial) Color(0xFFFFB300) else if (isPro) Color(0xFFC084FC) else ActiveGreenText
                                     )
                                     Text(
                                         text = if (isCancelled) {
                                             "Cancelled ($0.00 Charged)"
                                         } else if (isTrial) {
                                             "3-Day Free Trial ($0 Today)"
+                                        } else if (isPro) {
+                                            "Active Pro Automation License"
                                         } else {
                                             "Active Lifetime License"
                                         },
@@ -171,6 +176,8 @@ fun CustomerAccountPortalDialog(
                                             "No future charges will occur."
                                         } else if (isTrial) {
                                             "Auto-charges $49.99 on Day 4 if not cancelled."
+                                        } else if (isPro) {
+                                            "$149.99 One-Time — Unlimited Automations & Dual SIM"
                                         } else {
                                             "Paid One-Time — 0 Monthly Fees Forever"
                                         },
@@ -180,11 +187,11 @@ fun CustomerAccountPortalDialog(
                                 }
 
                                 Surface(
-                                    color = if (isCancelled) MaterialTheme.colorScheme.outlineVariant else if (isTrial) Color(0xFFFFB300) else ActiveGreenText,
+                                    color = if (isCancelled) MaterialTheme.colorScheme.outlineVariant else if (isTrial) Color(0xFFFFB300) else if (isPro) Color(0xFF9333EA) else ActiveGreenText,
                                     shape = RoundedCornerShape(8.dp)
                                 ) {
                                     Text(
-                                        text = if (isCancelled) "CANCELLED" else if (isTrial) "TRIAL" else "ACTIVE",
+                                        text = if (isCancelled) "CANCELLED" else if (isTrial) "TRIAL" else if (isPro) "PRO ACTIVE" else "ACTIVE",
                                         color = if (isTrial) Color.Black else Color.White,
                                         fontWeight = FontWeight.Black,
                                         fontSize = 11.sp,

@@ -10,7 +10,7 @@ const OWNER_NOTIFY_EMAIL = process.env.OWNER_EMAIL || 'contactus@offgridmediagro
 const LICENSE_SECRET = "MCAT_SECRET_PROD_KEY_2026";
 const KEY_PREFIX = "MCAS-";
 
-function generateKey(customerName, daysValid = 0) {
+function generateKey(customerName, daysValid = 0, isPro = false) {
   const expiryTimestamp = daysValid === 0 ? 0 : Math.floor(Date.now() / 1000) + (daysValid * 86400);
   const payloadStr = `${customerName || 'Valued Customer'}|${expiryTimestamp}|${Math.floor(Date.now() / 1000)}`;
   const payloadHex = Buffer.from(payloadStr, "utf-8").toString("hex").toUpperCase();
@@ -19,60 +19,89 @@ function generateKey(customerName, daysValid = 0) {
   hmac.update(payloadHex);
   const sigShort = hmac.digest("hex").substring(0, 8).toUpperCase();
   
-  return `${KEY_PREFIX}${payloadHex}-${sigShort}`;
+  const prefix = isPro ? "MCAS-PRO-" : KEY_PREFIX;
+  return `${prefix}${payloadHex}-${sigShort}`;
 }
 
-function generateEmailHtml(customerName, licenseKey, apkDownloadUrl, amountPaid) {
+function generateEmailHtml(customerName, licenseKey, apkDownloadUrl, amountPaid, isPro = false) {
+  const brandTitle = isPro ? "Missed Call Auto SMS • Pro Automation" : "Missed Call Auto SMS";
+  const badgeText = isPro ? "PRO AUTOMATION EDITION (UNLIMITED)" : "FLAGSHIP APPLIANCE EDITION";
+  const themeBorderColor = isPro ? "#A855F7" : "#00E676";
+  const themeTextColor = isPro ? "#C084FC" : "#00E676";
+  const editionSummary = isPro
+    ? "Lifetime Pro Automation License • Unlimited n8n Integration • Dual SIM Business Line • 100% A2P 10DLC Exempt"
+    : "Lifetime License • 1 Android Phone Bound • 100% A2P 10DLC Exempt";
+
   return `<!DOCTYPE html>
 <html>
 <head>
     <meta charset="utf-8">
-    <title>Your Missed Call Auto SMS License Key & Setup Guide</title>
+    <title>Your ${brandTitle} License Key & Setup Guide</title>
 </head>
 <body style="font-family: -apple-system, BlinkMacSystemFont, Arial, sans-serif; background-color: #090B0E; color: #FFFFFF; margin: 0; padding: 24px;">
     <div style="max-width: 600px; margin: 0 auto; background: #131720; border: 1px solid #222836; border-radius: 16px; padding: 32px;">
         <div style="text-align: center; margin-bottom: 24px;">
-            <div style="font-size: 44px; margin-bottom: 8px;">📱</div>
-            <h1 style="color: #00E676; margin: 0; font-size: 24px; font-weight: 900;">Missed Call Auto SMS</h1>
-            <p style="color: #949BAE; font-size: 14px; margin-top: 4px;">Hardware Appliance License Delivery</p>
+            <div style="font-size: 44px; margin-bottom: 8px;">${isPro ? '⚡' : '📱'}</div>
+            <h1 style="color: ${themeTextColor}; margin: 0; font-size: 24px; font-weight: 900;">${brandTitle}</h1>
+            <div style="display: inline-block; margin-top: 6px; padding: 4px 12px; border-radius: 20px; font-size: 11px; font-weight: 800; background: ${themeBorderColor}22; color: ${themeTextColor}; border: 1px solid ${themeBorderColor}44;">
+                ${badgeText}
+            </div>
         </div>
 
-        <div style="background: #1A202C; border-left: 4px solid #00E676; padding: 16px; border-radius: 8px; margin-bottom: 24px;">
+        <div style="background: #1A202C; border-left: 4px solid ${themeBorderColor}; padding: 16px; border-radius: 8px; margin-bottom: 24px;">
             <h2 style="margin: 0 0 6px 0; font-size: 18px; color: #FFF;">Thank you, ${customerName}!</h2>
             <p style="margin: 0; color: #CBD5E0; font-size: 14px; line-height: 1.5;">
-                Your payment of <strong>$${amountPaid}</strong> was successful. Your lifetime hardware license key is ready to activate on your Android phone.
+                Your payment of <strong>$${amountPaid}</strong> was successful. Your lifetime ${isPro ? 'Pro Automation' : 'hardware'} license key is ready to activate on your Android device.
             </p>
         </div>
 
         <!-- License Key Box -->
-        <div style="background: #090B0E; border: 1px dashed #00E676; border-radius: 12px; padding: 20px; text-align: center; margin-bottom: 24px;">
-            <div style="font-size: 12px; color: #949BAE; text-transform: uppercase; font-weight: bold; margin-bottom: 8px;">Your Hardware License Key</div>
-            <div style="font-family: monospace; font-size: 22px; color: #00E676; font-weight: bold; word-break: break-all; letter-spacing: 1px; margin-bottom: 8px;">
+        <div style="background: #090B0E; border: 1px dashed ${themeBorderColor}; border-radius: 12px; padding: 20px; text-align: center; margin-bottom: 24px;">
+            <div style="font-size: 12px; color: #949BAE; text-transform: uppercase; font-weight: bold; margin-bottom: 8px;">Your ${isPro ? 'Pro ' : ''}Hardware License Key</div>
+            <div style="font-family: monospace; font-size: 22px; color: ${themeTextColor}; font-weight: bold; word-break: break-all; letter-spacing: 1px; margin-bottom: 8px;">
                 ${licenseKey}
             </div>
-            <div style="font-size: 12px; color: #A0AEC0;">Lifetime License • 1 Android Phone Bound • 100% A2P 10DLC Exempt</div>
+            <div style="font-size: 12px; color: #A0AEC0;">${editionSummary}</div>
         </div>
 
         <!-- APK Download Button -->
-        <div style="text-align: center; margin-bottom: 28px;">
-            <a href="${apkDownloadUrl}" style="display: inline-block; background: #00E676; color: #000000; font-weight: 800; font-size: 16px; padding: 14px 36px; border-radius: 30px; text-decoration: none; box-shadow: 0 6px 20px rgba(0,230,118,0.3);">
-                📥 Download Android App (.APK)
+        <div style="text-align: center; margin-bottom: 24px;">
+            <a href="${apkDownloadUrl}" style="display: inline-block; background: ${themeBorderColor}; color: ${isPro ? '#FFFFFF' : '#000000'}; font-weight: 800; font-size: 16px; padding: 14px 36px; border-radius: 30px; text-decoration: none; box-shadow: 0 6px 20px ${isPro ? 'rgba(168,85,247,0.35)' : 'rgba(0,230,118,0.3)'};">
+                📥 Download ${isPro ? 'Pro APK' : 'Android App (.APK)'}
             </a>
-            <div style="font-size: 12px; color: #949BAE; margin-top: 8px;">Direct Link: <a href="${apkDownloadUrl}" style="color:#00E676;">${apkDownloadUrl}</a></div>
+            <div style="font-size: 12px; color: #949BAE; margin-top: 8px;">Direct Link: <a href="${apkDownloadUrl}" style="color:${themeTextColor};">${apkDownloadUrl}</a></div>
         </div>
+
+        ${isPro ? `
+        <!-- n8n Workflow Template Bonus for Pro -->
+        <div style="background: linear-gradient(180deg, #181126 0%, #0D1016 100%); border: 1px solid #7928CA; border-radius: 12px; padding: 18px; text-align: center; margin-bottom: 24px;">
+            <div style="font-size: 14px; font-weight: 800; color: #D8B4FE; margin-bottom: 4px;">⚡ Ready-to-Use n8n Workflow Included</div>
+            <div style="font-size: 12px; color: #CBD5E0; margin-bottom: 12px; line-height: 1.4;">
+                Import this pre-configured template directly into n8n to connect incoming leads to your carrier SIM with two-way delivery callbacks.
+            </div>
+            <a href="https://missedcallautosms.com/MissedCallAutoSMS_n8n_Workflow.json" download style="display: inline-block; background: #7928CA; color: #FFFFFF; font-weight: 700; font-size: 13px; padding: 10px 22px; border-radius: 20px; text-decoration: none; box-shadow: 0 4px 14px rgba(121,40,202,0.4);">
+                📦 Download n8n Workflow Template (.json)
+            </a>
+            <div style="font-size: 11px; color: #949BAE; margin-top: 6px;">Direct Link: <a href="https://missedcallautosms.com/MissedCallAutoSMS_n8n_Workflow.json" style="color:#C084FC;">missedcallautosms.com/MissedCallAutoSMS_n8n_Workflow.json</a></div>
+        </div>
+        ` : ''}
 
         <!-- 3-Step Quick Start -->
         <div style="border-top: 1px solid #222836; padding-top: 20px; margin-bottom: 24px;">
             <h3 style="color: #FFF; font-size: 16px; margin: 0 0 12px 0;">🚀 3-Step Instant Activation</h3>
             <ol style="color: #CBD5E0; font-size: 14px; padding-left: 20px; line-height: 1.8;">
-                <li><strong>Download and install</strong> the APK file on your Android business device.</li>
+                <li><strong>Download and install</strong> the APK file on your Android business phone.</li>
                 <li>Open the app and <strong>paste your License Key</strong> above.</li>
-                <li>Grant standard SMS and Call Log permissions, then <strong>Toggle Master Appliance ON</strong>.</li>
+                <li>${isPro ? 'Configure your <strong>preferred Dual SIM slot</strong> and link your <strong>n8n webhook URL</strong>.' : 'Grant standard SMS and Call Log permissions, then <strong>Toggle Master Appliance ON</strong>.'}</li>
             </ol>
         </div>
 
+        <div style="background: #0D1117; border: 1px solid #222836; border-radius: 8px; padding: 12px; margin-bottom: 20px; font-size: 11px; color: #949BAE; line-height: 1.5; text-align: center;">
+            🛡️ <strong>Carrier Velocity Notice:</strong> Designed for high-velocity 1-to-1 conversational triggers (new lead alerts, appointment reminders, quote replies), not bulk mass spamming. Built-in SIM Burn Safeguard™ automatically paces outbound queues to protect your line.
+        </div>
+
         <div style="border-top: 1px solid #222836; padding-top: 18px; text-align: center; font-size: 12px; color: #718096;">
-            Need help or device transfer? Visit <a href="https://missedcallautosms.com/license_dashboard.html" style="color: #00E676;">Customer License Portal</a> or reply directly to this email.
+            Need help or device transfer? Visit <a href="https://missedcallautosms.com/license_dashboard.html" style="color: ${themeTextColor};">Customer License Portal</a> or reply directly to this email.
         </div>
     </div>
 </body>
@@ -180,24 +209,33 @@ exports.handler = async (event) => {
     const customerDetails = session.customer_details || {};
     const customerEmail = customerDetails.email || session.customer_email;
     const customerName = customerDetails.name || 'Valued Customer';
-    const amountPaid = session.amount_total ? (session.amount_total / 100).toFixed(2) : '49.99';
+    const amountTotal = session.amount_total || 4999;
+    const amountPaid = (amountTotal / 100).toFixed(2);
 
     if (!customerEmail) {
       console.warn('⚠️ No customer email found in checkout session:', session.id);
       return { statusCode: 200, body: JSON.stringify({ received: true, warning: 'No email found' }) };
     }
 
-    const host = (event.headers && event.headers.host) || 'missedcallautosms.com';
-    const apkDownloadUrl = `https://${host}/MissedCallAutoSMS.apk`;
+    // Determine Tier: Pro ($149.99+) vs Standard ($49.99)
+    const isPro = amountTotal >= 10000 ||
+                  (session.metadata && (session.metadata.tier === 'pro' || session.metadata.tier === 'pro_automation')) ||
+                  (session.client_reference_id && session.client_reference_id.toLowerCase().includes('pro'));
 
-    // 1. Generate Signed License Key
-    const licenseKey = generateKey(customerName, 0);
-    console.log(`🔑 [LICENSE GENERATED] ${licenseKey} for ${customerEmail} ($${amountPaid})`);
+    const host = (event.headers && event.headers.host) || 'missedcallautosms.com';
+    const apkFileName = isPro ? 'MissedCallAutoSMS-Pro.apk' : 'MissedCallAutoSMS.apk';
+    const apkDownloadUrl = `https://${host}/${apkFileName}`;
+
+    // 1. Generate Signed License Key (MCAS-PRO- for Pro, MCAS- for Standard)
+    const licenseKey = generateKey(customerName, 0, isPro);
+    console.log(`🔑 [${isPro ? 'PRO ' : 'STANDARD '}LICENSE GENERATED] ${licenseKey} for ${customerEmail} ($${amountPaid})`);
 
     // 2. Automatically Dispatch Delivery Email
     if (RESEND_API_KEY) {
-      const emailSubject = `Your Missed Call Auto SMS License Key & Setup Guide`;
-      const emailHtml = generateEmailHtml(customerName, licenseKey, apkDownloadUrl, amountPaid);
+      const emailSubject = isPro
+        ? `⚡ Your Missed Call Auto SMS (Pro Automation Edition) License Key & Setup Guide`
+        : `Your Missed Call Auto SMS License Key & Setup Guide`;
+      const emailHtml = generateEmailHtml(customerName, licenseKey, apkDownloadUrl, amountPaid, isPro);
 
       try {
         const sendResult = await sendEmail(RESEND_API_KEY, customerEmail, emailSubject, emailHtml);
@@ -205,7 +243,17 @@ exports.handler = async (event) => {
 
         // Notify owner of purchase
         if (OWNER_NOTIFY_EMAIL && OWNER_NOTIFY_EMAIL !== customerEmail) {
-          sendEmail(RESEND_API_KEY, OWNER_NOTIFY_EMAIL, `🎉 New $${amountPaid} Purchase: ${customerName}`, `<p>New license purchased!</p><p><strong>Customer:</strong> ${customerName} (${customerEmail})</p><p><strong>Amount:</strong> $${amountPaid}</p><p><strong>License Key:</strong> <code>${licenseKey}</code></p>`).catch(() => {});
+          sendEmail(
+            RESEND_API_KEY,
+            OWNER_NOTIFY_EMAIL,
+            `🎉 New ${isPro ? '⚡ Pro ($149.99)' : '📱 Standard ($49.99)'} Purchase: ${customerName}`,
+            `<p>New ${isPro ? 'Pro Automation' : 'Standard'} license purchased!</p>
+             <p><strong>Customer:</strong> ${customerName} (${customerEmail})</p>
+             <p><strong>Amount:</strong> $${amountPaid}</p>
+             <p><strong>Edition:</strong> ${isPro ? 'Pro Automation ($149.99)' : 'Flagship Appliance ($49.99)'}</p>
+             <p><strong>License Key:</strong> <code>${licenseKey}</code></p>
+             <p><strong>APK Delivered:</strong> ${apkDownloadUrl}</p>`
+          ).catch(() => {});
         }
       } catch (emailErr) {
         console.error(`❌ [EMAIL DISPATCH FAILED] for ${customerEmail}:`, emailErr.message);
@@ -219,7 +267,9 @@ exports.handler = async (event) => {
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({
         received: true,
+        tier: isPro ? 'pro_automation' : 'standard',
         licenseKey: licenseKey,
+        apkUrl: apkDownloadUrl,
         customerEmail: customerEmail
       })
     };

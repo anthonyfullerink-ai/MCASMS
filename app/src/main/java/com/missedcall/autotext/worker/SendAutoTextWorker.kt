@@ -31,6 +31,7 @@ class SendAutoTextWorker(
         const val KEY_OVERRIDE_MESSAGE = "key_override_message"
         const val KEY_IS_REMOTE_TRIGGER = "key_is_remote_trigger"
         const val KEY_CALLBACK_URL = "key_callback_url"
+        const val KEY_SIM_SLOT = "key_sim_slot"
     }
 
     override suspend fun doWork(): Result {
@@ -43,6 +44,7 @@ class SendAutoTextWorker(
         val overrideMessage = inputData.getString(KEY_OVERRIDE_MESSAGE)
         val isRemoteTrigger = inputData.getBoolean(KEY_IS_REMOTE_TRIGGER, false)
         val callbackUrl = inputData.getString(KEY_CALLBACK_URL)
+        val requestedSimSlot = inputData.getInt(KEY_SIM_SLOT, 0)
 
         val app = applicationContext as App
         val settingsRepo = app.settingsRepository
@@ -138,20 +140,25 @@ class SendAutoTextWorker(
             delay(delayMillis)
         }
 
-        // Dispatch SMS using SmsManager with multi-part support
+        val effectiveSimSlot = if (requestedSimSlot > 0) requestedSimSlot else settings.preferredSimSlot
+
+        // Carrier Anti-Spam & SIM Burn Safeguard™ (Minimum 3.5s pacing + burst protection)
+        com.missedcall.autotext.util.SmsRateLimiter.acquireSendSlot(isRemoteTrigger)
+
+        // Dispatch SMS using SmsManager with multi-part and Dual SIM support
         return try {
-            val smsManager = applicationContext.getSystemService(SmsManager::class.java)
-                ?: @Suppress("DEPRECATION") SmsManager.getDefault()
+            val smsManager = getSmsManager(effectiveSimSlot)
 
             val parts = smsManager.divideMessage(messageBody)
             if (parts.size > 1) {
-                Log.d(TAG, "Message exceeds single SMS limit, sending ${parts.size} multipart segments to $targetNumber")
+                Log.d(TAG, "Message exceeds single SMS limit, sending ${parts.size} multipart segments to $targetNumber (SIM Slot: $effectiveSimSlot)")
                 smsManager.sendMultipartTextMessage(targetNumber, null, parts, null, null)
             } else {
+                Log.d(TAG, "Sending single SMS to $targetNumber (SIM Slot: $effectiveSimSlot)")
                 smsManager.sendTextMessage(targetNumber, null, messageBody, null, null)
             }
 
-            Log.i(TAG, "SMS successfully dispatched to $targetNumber")
+            Log.i(TAG, "SMS successfully dispatched to $targetNumber via SIM slot $effectiveSimSlot")
             dao.insertLog(
                 CallLogEvent(
                     phoneNumber = targetNumber,
@@ -161,7 +168,7 @@ class SendAutoTextWorker(
             )
 
             if (!callbackUrl.isNullOrBlank()) {
-                sendDeliveryCallback(callbackUrl, "SENT", targetNumber, messageBody, null)
+                sendDeliveryCallback(callbackUrl, "SENT", targetNumber, messageBody, null, effectiveSimSlot)
             }
 
             Result.success()
@@ -177,17 +184,57 @@ class SendAutoTextWorker(
             )
 
             if (!callbackUrl.isNullOrBlank()) {
-                sendDeliveryCallback(callbackUrl, "FAILED", targetNumber, messageBody, e.localizedMessage)
+                sendDeliveryCallback(callbackUrl, "FAILED", targetNumber, messageBody, e.localizedMessage, effectiveSimSlot)
             }
 
             Result.failure()
         }
     }
 
-    private suspend fun sendDeliveryCallback(callbackUrl: String, status: String, phone: String, message: String?, reason: String?) {
+    private fun getSmsManager(slot: Int): SmsManager {
+        if (slot > 0) {
+            val targetSlotIndex = slot - 1
+            try {
+                val subscriptionManager = applicationContext.getSystemService(android.telephony.SubscriptionManager::class.java)
+                @android.annotation.SuppressLint("MissingPermission")
+                val activeSubs = subscriptionManager?.activeSubscriptionInfoList
+                val targetSub = activeSubs?.firstOrNull { it.simSlotIndex == targetSlotIndex }
+                if (targetSub != null) {
+                    val subId = targetSub.subscriptionId
+                    Log.i(TAG, "Targeting SIM Slot $slot (${targetSub.displayName ?: targetSub.carrierName}, SubscriptionId: $subId)")
+                    return if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.S) {
+                        applicationContext.getSystemService(SmsManager::class.java).createForSubscriptionId(subId)
+                    } else {
+                        @Suppress("DEPRECATION")
+                        SmsManager.getSmsManagerForSubscriptionId(subId)
+                    }
+                } else {
+                    Log.w(TAG, "Requested SIM slot $slot, but no active subscription found for slot index $targetSlotIndex. Falling back to default SIM.")
+                }
+            } catch (e: Exception) {
+                Log.w(TAG, "Could not resolve Dual SIM subscription for slot $slot: ${e.localizedMessage}. Using default SIM.")
+            }
+        }
+
+        return if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.S) {
+            applicationContext.getSystemService(SmsManager::class.java)
+        } else {
+            @Suppress("DEPRECATION")
+            SmsManager.getDefault()
+        }
+    }
+
+    private suspend fun sendDeliveryCallback(
+        callbackUrl: String,
+        status: String,
+        phone: String,
+        message: String?,
+        reason: String?,
+        simSlot: Int = 0
+    ) {
         withContext(Dispatchers.IO) {
             try {
-                Log.d(TAG, "Posting delivery callback to $callbackUrl with status $status...")
+                Log.d(TAG, "Posting delivery callback to $callbackUrl with status $status (SIM Slot: $simSlot)...")
                 val url = URL(callbackUrl)
                 val conn = url.openConnection() as HttpURLConnection
                 conn.requestMethod = "POST"
@@ -202,6 +249,7 @@ class SendAutoTextWorker(
                     "phone" to phone,
                     "timestamp" to System.currentTimeMillis()
                 )
+                if (simSlot > 0) payloadMap["sim_slot"] = simSlot
                 if (!message.isNullOrBlank()) payloadMap["message"] = message
                 if (!reason.isNullOrBlank()) payloadMap["reason"] = reason
 

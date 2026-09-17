@@ -38,6 +38,7 @@ class SettingsRepository(private val context: Context) {
         val WEBHOOK_ENABLED = booleanPreferencesKey("webhook_enabled")
         val WEBHOOK_API_SECRET = stringPreferencesKey("webhook_api_secret")
         val FCM_DEVICE_TOKEN = stringPreferencesKey("fcm_device_token")
+        val PREFERRED_SIM_SLOT = intPreferencesKey("preferred_sim_slot")
     }
 
     val settingsFlow: Flow<AppSettings> = context.dataStore.data.map { preferences ->
@@ -71,7 +72,8 @@ class SettingsRepository(private val context: Context) {
             subscriptionStatus = preferences[SUBSCRIPTION_STATUS] ?: "ACTIVE",
             webhookEnabled = preferences[WEBHOOK_ENABLED] ?: true,
             webhookApiSecret = preferences[WEBHOOK_API_SECRET] ?: "",
-            fcmDeviceToken = preferences[FCM_DEVICE_TOKEN] ?: ""
+            fcmDeviceToken = preferences[FCM_DEVICE_TOKEN] ?: "",
+            preferredSimSlot = preferences[PREFERRED_SIM_SLOT] ?: 0
         )
     }
 
@@ -134,6 +136,7 @@ class SettingsRepository(private val context: Context) {
                 preferences[WEBHOOK_API_SECRET] = settings.webhookApiSecret
             }
             preferences[FCM_DEVICE_TOKEN] = settings.fcmDeviceToken
+            preferences[PREFERRED_SIM_SLOT] = settings.preferredSimSlot
         }
     }
 }

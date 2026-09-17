@@ -13,8 +13,10 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.BatteryAlert
+import androidx.compose.material.icons.filled.Call
 import androidx.compose.material.icons.filled.CheckCircle
 import androidx.compose.material.icons.filled.Key
+import androidx.compose.material.icons.filled.PhoneAndroid
 import androidx.compose.material.icons.filled.Schedule
 import androidx.compose.material.icons.filled.Security
 import androidx.compose.material.icons.filled.VerifiedUser
@@ -47,8 +49,19 @@ fun SettingsScreen(
     var isIgnoringBattery by remember { mutableStateOf(checkBatteryOptimization(context)) }
     var inputLicenseKey by remember { mutableStateOf(settings.licenseKey) }
     val licenseInfo = remember(settings.licenseKey) { LicenseManager.verifyLicenseKey(settings.licenseKey) }
+    val isPro = com.missedcall.autotext.BuildConfig.IS_PRO_EDITION || licenseInfo.tier == com.missedcall.autotext.data.license.LicenseTier.PRO || licenseInfo.licenseKey.contains("PRO")
     var testWebhookPhone by remember { mutableStateOf("") }
     var testWebhookMsg by remember { mutableStateOf("🚀 End-to-End™ Test: n8n automation SMS dispatched via phone SIM!") }
+    var testSimSlot by remember { mutableStateOf(settings.preferredSimSlot) }
+    val activeSimInfoList = remember {
+        try {
+            val sm = context.getSystemService(android.telephony.SubscriptionManager::class.java)
+            @android.annotation.SuppressLint("MissingPermission")
+            sm?.activeSubscriptionInfoList ?: emptyList()
+        } catch (e: Exception) {
+            emptyList()
+        }
+    }
 
     Column(
         modifier = Modifier
@@ -89,8 +102,8 @@ fun SettingsScreen(
                     }
 
                     val badgeText = when (licenseInfo.status) {
-                        LicenseStatus.ACTIVE_LIFETIME -> "ACTIVE"
-                        LicenseStatus.ACTIVE_SUBSCRIPTION -> "TRIAL ACTIVE"
+                        LicenseStatus.ACTIVE_LIFETIME -> if (isPro) "PRO ACTIVE" else "ACTIVE"
+                        LicenseStatus.ACTIVE_SUBSCRIPTION -> if (isPro) "PRO TRIAL" else "TRIAL ACTIVE"
                         LicenseStatus.EXPIRED -> "EXPIRED"
                         LicenseStatus.REVOKED -> "REVOKED"
                         else -> "UNLICENSED"
@@ -98,7 +111,9 @@ fun SettingsScreen(
 
                     Surface(
                         shape = RoundedCornerShape(12.dp),
-                        color = if (isLicenseActive) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.error
+                        color = if (isLicenseActive) {
+                            if (isPro) MaterialTheme.colorScheme.tertiary else MaterialTheme.colorScheme.primary
+                        } else MaterialTheme.colorScheme.error
                     ) {
                         Text(
                             text = badgeText,
@@ -541,7 +556,7 @@ fun SettingsScreen(
                 if (settings.webhookEnabled) {
                     Spacer(modifier = Modifier.height(12.dp))
                     Text(
-                        text = "Trigger custom SMS texts directly from n8n workflows through this phone's SIM card using Firebase Cloud Messaging (FCM).",
+                        text = "Trigger custom SMS texts directly from n8n workflows through this phone's SIM card using Firebase Cloud Messaging (FCM) or Local Wi-Fi API. Built-in SIM Burn Safeguard™ automatically paces outbound carrier queues (3.5s minimum pacing) to protect your line from spam flags.",
                         style = MaterialTheme.typography.bodySmall,
                         color = MaterialTheme.colorScheme.onSurfaceVariant
                     )
@@ -630,6 +645,7 @@ fun SettingsScreen(
                                        "  \"secret\": \"${if (settings.webhookApiSecret.isNotBlank()) settings.webhookApiSecret else "YOUR_SECRET_KEY"}\",\n" +
                                        "  \"phone\": \"+15551234567\",\n" +
                                        "  \"message\": \"Hi John, quote confirmed!\",\n" +
+                                       "  \"sim_slot\": 2,\n" +
                                        "  \"callback_url\": \"https://your-n8n.com/webhook/status\"\n" +
                                        "}",
                                 style = MaterialTheme.typography.bodySmall,
@@ -667,6 +683,23 @@ fun SettingsScreen(
                         maxLines = 3,
                         modifier = Modifier.fillMaxWidth()
                     )
+                    Spacer(modifier = Modifier.height(8.dp))
+
+                    Row(
+                        modifier = Modifier.fillMaxWidth(),
+                        horizontalArrangement = Arrangement.spacedBy(8.dp),
+                        verticalAlignment = Alignment.CenterVertically
+                    ) {
+                        Text("Dispatch SIM:", style = MaterialTheme.typography.bodySmall, fontWeight = FontWeight.Bold)
+                        listOf(0 to "Auto", 1 to "SIM 1", 2 to "SIM 2").forEach { (slot, name) ->
+                            FilterChip(
+                                selected = testSimSlot == slot,
+                                onClick = { testSimSlot = slot },
+                                label = { Text(name) }
+                            )
+                        }
+                    }
+
                     Spacer(modifier = Modifier.height(10.dp))
 
                     Button(
@@ -678,6 +711,7 @@ fun SettingsScreen(
                                     .putString(com.missedcall.autotext.worker.SendAutoTextWorker.KEY_PHONE_NUMBER, testWebhookPhone.trim())
                                     .putString(com.missedcall.autotext.worker.SendAutoTextWorker.KEY_OVERRIDE_MESSAGE, testWebhookMsg.trim())
                                     .putBoolean(com.missedcall.autotext.worker.SendAutoTextWorker.KEY_IS_REMOTE_TRIGGER, true)
+                                    .putInt(com.missedcall.autotext.worker.SendAutoTextWorker.KEY_SIM_SLOT, testSimSlot)
                                     .build()
 
                                 val workRequest = androidx.work.OneTimeWorkRequestBuilder<com.missedcall.autotext.worker.SendAutoTextWorker>()
@@ -685,13 +719,115 @@ fun SettingsScreen(
                                     .build()
 
                                 androidx.work.WorkManager.getInstance(context).enqueue(workRequest)
-                                Toast.makeText(context, "⚡ Webhook Simulated! SMS queued for ${testWebhookPhone.trim()}", Toast.LENGTH_LONG).show()
+                                val simLabel = if (testSimSlot == 0) "Auto Default SIM" else "SIM $testSimSlot"
+                                Toast.makeText(context, "⚡ Webhook Simulated! SMS queued via $simLabel for ${testWebhookPhone.trim()}", Toast.LENGTH_LONG).show()
                             }
                         },
                         modifier = Modifier.fillMaxWidth(),
                         colors = ButtonDefaults.buttonColors(containerColor = MaterialTheme.colorScheme.primary)
                     ) {
                         Text("Simulate Webhook Dispatch ➔", fontWeight = FontWeight.Bold)
+                    }
+                }
+            }
+        }
+
+        // 9. Dual SIM Selector (Pro Feature) Card
+        Card(
+            shape = RoundedCornerShape(16.dp),
+            modifier = Modifier.fillMaxWidth()
+        ) {
+            Column(modifier = Modifier.padding(16.dp)) {
+                Row(
+                    modifier = Modifier.fillMaxWidth(),
+                    horizontalArrangement = Arrangement.SpaceBetween,
+                    verticalAlignment = Alignment.CenterVertically
+                ) {
+                    Row(verticalAlignment = Alignment.CenterVertically) {
+                        Icon(
+                            imageVector = Icons.Default.Call,
+                            contentDescription = "Dual SIM Icon",
+                            tint = MaterialTheme.colorScheme.primary
+                        )
+                        Spacer(modifier = Modifier.width(8.dp))
+                        Text(
+                            text = "Dual SIM Selector",
+                            style = MaterialTheme.typography.titleMedium,
+                            fontWeight = FontWeight.Bold
+                        )
+                    }
+                    Surface(
+                        shape = RoundedCornerShape(8.dp),
+                        color = MaterialTheme.colorScheme.primary.copy(alpha = 0.15f)
+                    ) {
+                        Text(
+                            text = "PRO FEATURE",
+                            style = MaterialTheme.typography.labelSmall,
+                            fontWeight = FontWeight.Bold,
+                            color = MaterialTheme.colorScheme.primary,
+                            modifier = Modifier.padding(horizontal = 8.dp, vertical = 4.dp)
+                        )
+                    }
+                }
+
+                Spacer(modifier = Modifier.height(8.dp))
+                Text(
+                    text = "Designate which physical or eSIM line dispatches automated text-backs (e.g. keep personal calls on SIM 1 and automated texts on SIM 2 Business eSIM). n8n can also pass 'sim_slot': 1 or 2 dynamically in webhooks.",
+                    style = MaterialTheme.typography.bodySmall,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant
+                )
+
+                Spacer(modifier = Modifier.height(14.dp))
+
+                val simOptions = listOf(
+                    0 to "Auto / Carrier Default SIM",
+                    1 to "SIM 1 (Primary / Personal)",
+                    2 to "SIM 2 (Business / eSIM)"
+                )
+
+                simOptions.forEach { (slotValue, label) ->
+                    val isSelected = settings.preferredSimSlot == slotValue
+                    Row(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .padding(vertical = 4.dp),
+                        verticalAlignment = Alignment.CenterVertically
+                    ) {
+                        RadioButton(
+                            selected = isSelected,
+                            onClick = { onSettingsChanged(settings.copy(preferredSimSlot = slotValue)) }
+                        )
+                        Spacer(modifier = Modifier.width(8.dp))
+                        Text(
+                            text = label,
+                            style = MaterialTheme.typography.bodyMedium,
+                            fontWeight = if (isSelected) FontWeight.Bold else FontWeight.Normal
+                        )
+                    }
+                }
+
+                if (activeSimInfoList.isNotEmpty()) {
+                    Spacer(modifier = Modifier.height(12.dp))
+                    Surface(
+                        shape = RoundedCornerShape(8.dp),
+                        color = MaterialTheme.colorScheme.surfaceVariant,
+                        modifier = Modifier.fillMaxWidth()
+                    ) {
+                        Column(modifier = Modifier.padding(10.dp)) {
+                            Text(
+                                text = "Detected Subscriptions on Device:",
+                                style = MaterialTheme.typography.labelSmall,
+                                fontWeight = FontWeight.Bold
+                            )
+                            Spacer(modifier = Modifier.height(4.dp))
+                            activeSimInfoList.forEach { sub ->
+                                val slotIndex = sub.simSlotIndex + 1
+                                Text(
+                                    text = "• SIM $slotIndex: ${sub.displayName ?: sub.carrierName ?: "Carrier"} (Slot Index: ${sub.simSlotIndex})",
+                                    style = MaterialTheme.typography.bodySmall
+                                )
+                            }
+                        }
                     }
                 }
             }

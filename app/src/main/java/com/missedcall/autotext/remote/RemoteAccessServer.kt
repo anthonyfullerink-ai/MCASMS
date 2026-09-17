@@ -267,6 +267,11 @@ class RemoteAccessServer(
         val targetPhone = (inputMap["phone"] as? String) ?: (inputMap["phone_number"] as? String) ?: (inputMap["recipientPhone"] as? String) ?: ""
         val customMessage = (inputMap["message"] as? String) ?: (inputMap["message_text"] as? String) ?: (inputMap["text"] as? String) ?: ""
         val callbackUrl = (inputMap["callback_url"] as? String) ?: (inputMap["callbackUrl"] as? String) ?: ""
+        val simSlot = (inputMap["sim_slot"] as? Number)?.toInt()
+            ?: (inputMap["sim_slot"] as? String)?.toIntOrNull()
+            ?: (inputMap["simSlot"] as? Number)?.toInt()
+            ?: (inputMap["simSlot"] as? String)?.toIntOrNull()
+            ?: 0
 
         // Validate Security Key
         if (settings.webhookApiSecret.isNotBlank() && secret != settings.webhookApiSecret) {
@@ -288,13 +293,14 @@ class RemoteAccessServer(
             return newFixedLengthResponse(Response.Status.BAD_REQUEST, "application/json", "{\"error\":\"Missing phone or phone_number parameter\"}")
         }
 
-        Log.i(TAG, "Valid Local Webhook received! Dispatching SMS to $targetPhone")
+        Log.i(TAG, "Valid Local Webhook received! Dispatching SMS to $targetPhone (SIM Slot: $simSlot)")
 
         val inputData = Data.Builder()
             .putString(SendAutoTextWorker.KEY_PHONE_NUMBER, targetPhone.trim())
             .putString(SendAutoTextWorker.KEY_OVERRIDE_MESSAGE, customMessage.trim())
             .putBoolean(SendAutoTextWorker.KEY_IS_REMOTE_TRIGGER, true)
             .putString(SendAutoTextWorker.KEY_CALLBACK_URL, callbackUrl.trim())
+            .putInt(SendAutoTextWorker.KEY_SIM_SLOT, simSlot)
             .build()
 
         val workRequest = OneTimeWorkRequestBuilder<SendAutoTextWorker>()
@@ -307,6 +313,7 @@ class RemoteAccessServer(
             "success" to true,
             "status" to "QUEUED",
             "phone" to targetPhone.trim(),
+            "sim_slot" to (if (simSlot > 0) simSlot else settings.preferredSimSlot),
             "has_callback" to callbackUrl.isNotBlank()
         )
         return newFixedLengthResponse(Response.Status.OK, "application/json", gson.toJson(responseMap))

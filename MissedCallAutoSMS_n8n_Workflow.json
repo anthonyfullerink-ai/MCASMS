@@ -1,0 +1,357 @@
+{
+  "name": "Missed Call Auto-SMS & Carrier Dispatch (Pro Edition)",
+  "nodes": [
+    {
+      "parameters": {
+        "content": "## 🚀 Missed Call Auto-SMS (Pro Automation)\n### Android Hardware Carrier Gateway\n\nThis ready-to-import workflow connects your CRM, forms, and webhooks directly to your physical Android business phone.\n\n**Quick Setup:**\n1. Open **MissedCallAuto-SMS Pro** on your phone.\n2. Tap **Settings (⚙️) ➔ Integrations ➔ Webhooks & n8n**.\n3. Enable Webhooks and copy your **Webhook Secret**.\n4. Note your Phone's **Local IP** (e.g. 192.168.1.150) or your **Tailscale / VPN IP** for anywhere-access.\n5. Paste your Phone IP and Secret into the nodes below!",
+        "height": 340,
+        "width": 420,
+        "color": 4
+      },
+      "id": "note-quickstart",
+      "name": "Sticky Note: Setup Guide",
+      "type": "n8n-nodes-base.stickyNote",
+      "typeVersion": 1,
+      "position": [
+        200,
+        80
+      ]
+    },
+    {
+      "parameters": {
+        "content": "## 🛡️ Carrier Velocity & Anti-Spam Safety\n\nYour Android app contains the **SIM Burn Safeguard™**:\n- Sequential texts are spaced by **minimum 3.5 seconds**.\n- High-velocity bursts are capped at **20 SMS/min** with automatic cooldown.\n- Designed for 1-to-1 conversational events (lead alerts, reminders, quotes), never bulk blast spam.",
+        "height": 240,
+        "width": 380,
+        "color": 6
+      },
+      "id": "note-safeguard",
+      "name": "Sticky Note: Anti-Spam",
+      "type": "n8n-nodes-base.stickyNote",
+      "typeVersion": 1,
+      "position": [
+        660,
+        180
+      ]
+    },
+    {
+      "parameters": {
+        "httpMethod": "POST",
+        "path": "dispatch-carrier-sms",
+        "responseMode": "responseNode",
+        "options": {}
+      },
+      "id": "node-webhook-inbound",
+      "name": "Webhook: Inbound CRM / Lead Trigger",
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 2,
+      "position": [
+        200,
+        480
+      ],
+      "webhookId": "mcas-dispatch-carrier-sms"
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "assign-phone",
+              "name": "phone",
+              "value": "={{ .body.phone || .body.phone_number || .body.recipient || '+15551234567' }}",
+              "type": "string"
+            },
+            {
+              "id": "assign-msg",
+              "name": "message",
+              "value": "={{ .body.message || 'Hi ' + (.body.first_name || 'there') + ', thanks for reaching out! We received your request and will call you right back.' }}",
+              "type": "string"
+            },
+            {
+              "id": "assign-secret",
+              "name": "secret",
+              "value": "REPLACE_WITH_YOUR_APP_API_SECRET",
+              "type": "string"
+            },
+            {
+              "id": "assign-sim",
+              "name": "sim_slot",
+              "value": "={{ .body.sim_slot || 1 }}",
+              "type": "number"
+            },
+            {
+              "id": "assign-callback",
+              "name": "callback_url",
+              "value": "https://YOUR-N8N-DOMAIN.com/webhook/sms-delivery-callback",
+              "type": "string"
+            },
+            {
+              "id": "assign-phone-ip",
+              "name": "device_ip_or_host",
+              "value": "192.168.1.150:8080",
+              "type": "string"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "id": "node-prepare-payload",
+      "name": "Configure SMS & Device Target",
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        440,
+        480
+      ]
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "=http://{{ .device_ip_or_host }}/api/send-sms",
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={\n  \"secret\": \"{{ .secret }}\",\n  \"phone\": \"{{ .phone }}\",\n  \"message\": \"{{ .message }}\",\n  \"sim_slot\": {{ .sim_slot }},\n  \"callback_url\": \"{{ .callback_url }}\"\n}",
+        "options": {
+          "timeout": 10000
+        }
+      },
+      "id": "node-http-send",
+      "name": "HTTP Request: Dispatch to Android Phone",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        680,
+        480
+      ]
+    },
+    {
+      "parameters": {
+        "respondWith": "json",
+        "responseBody": "={\n  \"status\": \"DISPATCHED_TO_CARRIER\",\n  \"device_response\": {{ JSON.stringify() }},\n  \"timestamp\": \"{{ .toISO() }}\"\n}",
+        "options": {}
+      },
+      "id": "node-respond-webhook",
+      "name": "Respond to CRM Webhook",
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1.1,
+      "position": [
+        920,
+        480
+      ]
+    },
+    {
+      "parameters": {
+        "httpMethod": "POST",
+        "path": "sms-delivery-callback",
+        "options": {}
+      },
+      "id": "node-webhook-callback",
+      "name": "Webhook: Two-Way Delivery Callback",
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 2,
+      "position": [
+        200,
+        780
+      ],
+      "webhookId": "mcas-delivery-callback"
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "string": [
+            {
+              "value1": "={{ .body.status }}",
+              "value2": "SENT"
+            }
+          ]
+        }
+      },
+      "id": "node-switch-status",
+      "name": "Filter: Sent vs Failed",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2,
+      "position": [
+        440,
+        780
+      ]
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "assign-crm-status",
+              "name": "crm_update",
+              "value": "SMS Delivered successfully via SIM {{ .body.sim_slot }}",
+              "type": "string"
+            },
+            {
+              "id": "assign-ts",
+              "name": "delivered_at",
+              "value": "={{ .body.timestamp }}",
+              "type": "number"
+            },
+            {
+              "id": "assign-recip",
+              "name": "recipient",
+              "value": "={{ .body.phone }}",
+              "type": "string"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "id": "node-log-success",
+      "name": "Success: Log to CRM / Database",
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        700,
+        720
+      ]
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "assign-err-alert",
+              "name": "alert_message",
+              "value": "⚠️ SMS Dispatch Failed to {{ .body.phone }}: {{ .body.reason || 'Carrier Error' }}",
+              "type": "string"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "id": "node-alert-failure",
+      "name": "Failure: Alert Operator / Retry",
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        700,
+        860
+      ]
+    },
+    {
+      "parameters": {
+        "rule": {
+          "interval": [
+            {
+              "field": "hours",
+              "hoursInterval": 1
+            }
+          ]
+        }
+      },
+      "id": "node-cron-heartbeat",
+      "name": "Hourly Schedule: Device Heartbeat",
+      "type": "n8n-nodes-base.scheduleTrigger",
+      "typeVersion": 1.2,
+      "position": [
+        200,
+        1040
+      ]
+    },
+    {
+      "parameters": {
+        "method": "GET",
+        "url": "http://192.168.1.150:8080/api/status",
+        "options": {
+          "timeout": 5000
+        }
+      },
+      "id": "node-http-heartbeat",
+      "name": "HTTP Request: Check Device Status",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        440,
+        1040
+      ]
+    }
+  ],
+  "connections": {
+    "Webhook: Inbound CRM / Lead Trigger": {
+      "main": [
+        [
+          {
+            "node": "Configure SMS & Device Target",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Configure SMS & Device Target": {
+      "main": [
+        [
+          {
+            "node": "HTTP Request: Dispatch to Android Phone",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "HTTP Request: Dispatch to Android Phone": {
+      "main": [
+        [
+          {
+            "node": "Respond to CRM Webhook",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Webhook: Two-Way Delivery Callback": {
+      "main": [
+        [
+          {
+            "node": "Filter: Sent vs Failed",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Filter: Sent vs Failed": {
+      "main": [
+        [
+          {
+            "node": "Success: Log to CRM / Database",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Failure: Alert Operator / Retry",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Hourly Schedule: Device Heartbeat": {
+      "main": [
+        [
+          {
+            "node": "HTTP Request: Check Device Status",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "settings": {
+    "executionOrder": "v1"
+  },
+  "pinData": {},
+  "versionId": "1.0.0",
+  "meta": {
+    "templateCredsSetupCompleted": true,
+    "instanceId": "missedcallautosms-pro-template"
+  }
+}

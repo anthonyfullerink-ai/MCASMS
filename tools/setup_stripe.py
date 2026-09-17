@@ -47,12 +47,12 @@ def create_stripe_product_and_link(secret_key):
         with urllib.request.urlopen(req) as resp:
             prod_res = json.loads(resp.read().decode("utf-8"))
             product_id = prod_res["id"]
-            print(f"✅ Stripe Product Created: {product_id}")
+            print(f"✅ Standard Stripe Product Created: {product_id}")
     except Exception as e:
         print(f"❌ Failed to create Stripe product: {e}")
         return
 
-    # 2. Create Price ($49.99 USD)
+    # 2. Create Standard Price ($49.99 USD)
     price_url = "https://api.stripe.com/v1/prices"
     price_data = urllib.parse.urlencode({
         "product": product_id,
@@ -68,12 +68,12 @@ def create_stripe_product_and_link(secret_key):
         with urllib.request.urlopen(req) as resp:
             price_res = json.loads(resp.read().decode("utf-8"))
             price_id = price_res["id"]
-            print(f"✅ Stripe $49.99 Price Created: {price_id}")
+            print(f"✅ Standard $49.99 Price Created: {price_id}")
     except Exception as e:
         print(f"❌ Failed to create Stripe price: {e}")
         return
 
-    # 3. Create Payment Link
+    # 3. Create Standard Payment Link
     link_url = "https://api.stripe.com/v1/payment_links"
     link_data = urllib.parse.urlencode({
         "line_items[0][price]": price_id,
@@ -89,24 +89,89 @@ def create_stripe_product_and_link(secret_key):
         with urllib.request.urlopen(req) as resp:
             link_res = json.loads(resp.read().decode("utf-8"))
             payment_link_url = link_res["url"]
-            print(f"🎉 SUCCESS! Created Stripe Payment Link: {payment_link_url}")
+            print(f"🎉 Standard Payment Link Created: {payment_link_url}")
     except Exception as e:
         print(f"❌ Failed to create Payment Link: {e}")
         return
 
-    # 4. Update sales_landing_page.html
-    landing_path = os.path.join(os.path.dirname(os.path.dirname(os.path.abspath(__file__))), "sales_landing_page.html")
-    if os.path.exists(landing_path):
-        with open(landing_path, "r", encoding="utf-8") as f:
-            content = f.read()
+    # 4. Create Pro Automation Product & Price ($149.99 USD)
+    pro_prod_data = urllib.parse.urlencode({
+        "name": "Missed Call Auto SMS - Pro Automation Edition",
+        "description": "Unlimited n8n Webhook Automations, FCM Cloud Push, Dual SIM Outbound Line Selector, 100% A2P 10DLC Exempt.",
+        "metadata[tier]": "pro_automation"
+    }).encode("utf-8")
 
-        new_func = f'function initiateStripeCheckout() {{\n        window.location.href = "{payment_link_url}";\n    }}'
-        content_updated = re.sub(r'function initiateStripeCheckout\(\)\s*\{[^}]*\}', new_func, content)
+    req = urllib.request.Request(prod_url, data=pro_prod_data, method="POST")
+    req.add_header("Authorization", f"Bearer {secret_key}")
+    req.add_header("Content-Type", "application/x-www-form-urlencoded")
 
-        with open(landing_path, "w", encoding="utf-8") as f:
-            f.write(content_updated)
+    try:
+        with urllib.request.urlopen(req) as resp:
+            pro_prod_res = json.loads(resp.read().decode("utf-8"))
+            pro_product_id = pro_prod_res["id"]
+            print(f"✅ Pro Automation Product Created: {pro_product_id}")
+    except Exception as e:
+        print(f"❌ Failed to create Pro product: {e}")
+        return
 
-        print(f"✅ Updated sales_landing_page.html with your live Stripe Payment Link ({payment_link_url})!")
+    pro_price_data = urllib.parse.urlencode({
+        "product": pro_product_id,
+        "unit_amount": "14999", # $149.99 in cents
+        "currency": "usd",
+    }).encode("utf-8")
+
+    req = urllib.request.Request(price_url, data=pro_price_data, method="POST")
+    req.add_header("Authorization", f"Bearer {secret_key}")
+    req.add_header("Content-Type", "application/x-www-form-urlencoded")
+
+    try:
+        with urllib.request.urlopen(req) as resp:
+            pro_price_res = json.loads(resp.read().decode("utf-8"))
+            pro_price_id = pro_price_res["id"]
+            print(f"✅ Pro $149.99 Price Created: {pro_price_id}")
+    except Exception as e:
+        print(f"❌ Failed to create Pro price: {e}")
+        return
+
+    pro_link_data = urllib.parse.urlencode({
+        "line_items[0][price]": pro_price_id,
+        "line_items[0][quantity]": "1",
+        "metadata[tier]": "pro_automation",
+        "after_completion[type]": "hosted_confirmation",
+    }).encode("utf-8")
+
+    req = urllib.request.Request(link_url, data=pro_link_data, method="POST")
+    req.add_header("Authorization", f"Bearer {secret_key}")
+    req.add_header("Content-Type", "application/x-www-form-urlencoded")
+
+    try:
+        with urllib.request.urlopen(req) as resp:
+            pro_link_res = json.loads(resp.read().decode("utf-8"))
+            pro_payment_link_url = pro_link_res["url"]
+            print(f"🎉 Pro Payment Link Created: {pro_payment_link_url}")
+    except Exception as e:
+        print(f"❌ Failed to create Pro Payment Link: {e}")
+        return
+
+    # 5. Update HTML files
+    for file_name in ["sales_landing_page.html", "index.html"]:
+        fpath = os.path.join(os.path.dirname(os.path.dirname(os.path.abspath(__file__))), file_name)
+        if os.path.exists(fpath):
+            with open(fpath, "r", encoding="utf-8") as f:
+                content = f.read()
+
+            new_std = f'function initiateStripeCheckout() {{\n        window.location.href = "{payment_link_url}";\n    }}'
+            new_trial = f'function initiateFreeTrialCheckout() {{\n        window.location.href = "{payment_link_url}?trial_period_days=3";\n    }}'
+            new_pro = f'function initiateProStripeCheckout() {{\n        window.location.href = "{pro_payment_link_url}";\n    }}'
+
+            content = re.sub(r'function initiateStripeCheckout\(\)\s*\{[^}]*\}', new_std, content)
+            content = re.sub(r'function initiateFreeTrialCheckout\(\)\s*\{[^}]*\}', new_trial, content)
+            content = re.sub(r'function initiateProStripeCheckout\(\)\s*\{[^}]*\}', new_pro, content)
+
+            with open(fpath, "w", encoding="utf-8") as f:
+                f.write(content)
+
+            print(f"✅ Updated {file_name} with live Standard and Pro Payment Links!")
 
 if __name__ == "__main__":
     env_vars = load_env_file()
