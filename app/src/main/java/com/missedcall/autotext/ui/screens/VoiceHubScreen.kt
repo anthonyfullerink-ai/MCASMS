@@ -225,9 +225,20 @@ fun VoiceHubScreen(
             // If user has NOT activated voice (neither Managed nor BYOK)
             if (!isVoiceActive) {
                 item {
+                    val isProApp = com.missedcall.autotext.BuildConfig.IS_PRO_EDITION || settings.licenseKey.contains("PRO", ignoreCase = true)
                     VoiceReceptionistPromoCard(
+                        isProApp = isProApp,
                         onStartTrial = {
-                            val intent = Intent(Intent.ACTION_VIEW, Uri.parse(InAppPromoController.STRIPE_VOICE_PRO_URL))
+                            val targetUrl = if (settings.licenseKey.isNotBlank()) {
+                                "${InAppPromoController.STRIPE_VOICE_PRO_URL}?client_reference_id=${settings.licenseKey}"
+                            } else {
+                                InAppPromoController.STRIPE_VOICE_PRO_URL
+                            }
+                            val intent = Intent(Intent.ACTION_VIEW, Uri.parse(targetUrl))
+                            context.startActivity(intent)
+                        },
+                        onUpgradeToPro = {
+                            val intent = Intent(Intent.ACTION_VIEW, Uri.parse(InAppPromoController.STRIPE_PRO_UPGRADE_URL))
                             context.startActivity(intent)
                         },
                         onConfigureByok = {
@@ -1232,7 +1243,9 @@ fun VoiceCallDetailDialog(
  */
 @Composable
 fun VoiceReceptionistPromoCard(
+    isProApp: Boolean = true,
     onStartTrial: () -> Unit,
+    onUpgradeToPro: () -> Unit,
     onConfigureByok: () -> Unit
 ) {
     Card(
@@ -1287,14 +1300,54 @@ fun VoiceReceptionistPromoCard(
 
             Spacer(modifier = Modifier.height(18.dp))
 
-            Button(
-                onClick = onStartTrial,
-                colors = ButtonDefaults.buttonColors(containerColor = Color(0xFF9C27B0)),
-                modifier = Modifier.fillMaxWidth()
-            ) {
-                Icon(Icons.Default.FlashOn, contentDescription = null, modifier = Modifier.size(18.dp))
-                Spacer(modifier = Modifier.width(8.dp))
-                Text("Start Turnkey Free Trial ($29/mo)")
+            if (isProApp) {
+                Button(
+                    onClick = onStartTrial,
+                    colors = ButtonDefaults.buttonColors(containerColor = Color(0xFF9C27B0)),
+                    modifier = Modifier.fillMaxWidth()
+                ) {
+                    Icon(Icons.Default.FlashOn, contentDescription = null, modifier = Modifier.size(18.dp))
+                    Spacer(modifier = Modifier.width(8.dp))
+                    Text("Start Turnkey Free Trial ($29/mo)")
+                }
+            } else {
+                Surface(
+                    shape = RoundedCornerShape(12.dp),
+                    color = Color(0xFF7928CA).copy(alpha = 0.15f),
+                    border = BorderStroke(1.dp, Color(0xFF9C27B0).copy(alpha = 0.4f)),
+                    modifier = Modifier.fillMaxWidth()
+                ) {
+                    Column(modifier = Modifier.padding(12.dp)) {
+                        Row(verticalAlignment = Alignment.CenterVertically) {
+                            Text("⭐", fontSize = 16.sp)
+                            Spacer(modifier = Modifier.width(6.dp))
+                            Text(
+                                text = "Pro Automation Edition Required",
+                                style = MaterialTheme.typography.titleSmall,
+                                fontWeight = FontWeight.Bold,
+                                color = Color(0xFFC084FC)
+                            )
+                        }
+                        Spacer(modifier = Modifier.height(4.dp))
+                        Text(
+                            text = "The AI Voice Receptionist add-on is exclusive to MissedCallAutoSMS Pro ($149). Standard Edition ($49) does not support telephony routing or webhooks.",
+                            style = MaterialTheme.typography.bodySmall,
+                            color = Color(0xFFE2E8F0)
+                        )
+                    }
+                }
+
+                Spacer(modifier = Modifier.height(10.dp))
+
+                Button(
+                    onClick = onUpgradeToPro,
+                    colors = ButtonDefaults.buttonColors(containerColor = Color(0xFF7928CA)),
+                    modifier = Modifier.fillMaxWidth()
+                ) {
+                    Icon(Icons.Default.RocketLaunch, contentDescription = null, modifier = Modifier.size(18.dp))
+                    Spacer(modifier = Modifier.width(8.dp))
+                    Text("⚡ Upgrade to Pro Automation ($149.99)")
+                }
             }
 
             Spacer(modifier = Modifier.height(8.dp))

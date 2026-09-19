@@ -18,7 +18,7 @@ exports.handler = async (event) => {
       payload = {};
     }
 
-    const licenseKey = (payload.licenseKey || '').trim();
+    const licenseKey = (payload.licenseKey || '').trim().toUpperCase();
     if (!licenseKey) {
       return {
         statusCode: 400,
@@ -27,14 +27,32 @@ exports.handler = async (event) => {
       };
     }
 
+    // Check if there is an active Voice Pro binding for this key
+    let voiceSubscriptionActive = false;
+    let voiceDetails = null;
+    try {
+      const fs = require('fs');
+      const path = require('path');
+      const voiceBindingsPath = path.join(__dirname, '../../.voice_pro_bindings.json');
+      if (fs.existsSync(voiceBindingsPath)) {
+        const bindings = JSON.parse(fs.readFileSync(voiceBindingsPath, 'utf8'));
+        if (bindings[licenseKey] && bindings[licenseKey].status === 'ACTIVE') {
+          voiceSubscriptionActive = true;
+          voiceDetails = bindings[licenseKey];
+        }
+      }
+    } catch (e) {}
+
     return {
       statusCode: 200,
       headers,
       body: JSON.stringify({
         success: true,
-        message: `Hardware device binding reset successfully for key ${licenseKey}. You can now register a new Android phone.`,
+        message: `Hardware device binding reset successfully for key ${licenseKey}. You can now register a new Android phone.${voiceSubscriptionActive ? ' Your bound 24/7 AI Voice Receptionist subscription remains active and will carry over automatically.' : ''}`,
         licenseKey: licenseKey,
-        deviceId: null
+        deviceId: null,
+        voiceSubscriptionActive: voiceSubscriptionActive,
+        forwardingNumber: voiceDetails ? voiceDetails.forwardingNumber : null
       })
     };
   } catch (e) {

@@ -494,8 +494,44 @@ exports.handler = async (event) => {
       const carrierCode = `*71${cleanDigits.slice(-10)}`;
       const carrierDeactivateCode = '*73';
 
-      const voiceLicenseKey = generateKey(customerName, 0, true);
-      console.log(`🎙️ [MANAGED VOICE PRO ACTIVATED] Line: ${forwardingNumber}, Key: ${voiceLicenseKey} for ${customerEmail}`);
+      // Enforce binding to user's existing Pro license key:
+      const candidateKey = (session.client_reference_id ||
+                           (session.metadata && session.metadata.license_key) ||
+                           (session.subscription_data && session.subscription_data.metadata && session.subscription_data.metadata.license_key) || '').trim().toUpperCase();
+
+      const isProCandidate = candidateKey && (
+        candidateKey.startsWith('MCAS-PRO-') ||
+        candidateKey.startsWith('MCAT-PRO-') ||
+        candidateKey.includes('PRO-DEMO')
+      );
+
+      // Bind to user's existing Pro license key, or generate a Pro key if purchased in a bundle
+      const voiceLicenseKey = isProCandidate ? candidateKey : generateKey(customerName, 0, true);
+
+      // Persist binding to prevent decoupling during device resets
+      try {
+        const voiceBindingsPath = path.join(__dirname, '../../.voice_pro_bindings.json');
+        let bindings = {};
+        if (fs.existsSync(voiceBindingsPath)) {
+          bindings = JSON.parse(fs.readFileSync(voiceBindingsPath, 'utf8'));
+        }
+        bindings[voiceLicenseKey] = {
+          licenseKey: voiceLicenseKey,
+          subscriptionId: session.subscription || session.id,
+          customerEmail: customerEmail,
+          customerName: customerName,
+          status: 'ACTIVE',
+          forwardingNumber: forwardingNumber,
+          carrierCode: carrierCode,
+          carrierDeactivateCode: carrierDeactivateCode,
+          boundAt: new Date().toISOString()
+        };
+        fs.writeFileSync(voiceBindingsPath, JSON.stringify(bindings, null, 2), 'utf8');
+      } catch (cacheErr) {
+        console.warn('Could not update voice pro bindings cache:', cacheErr.message);
+      }
+
+      console.log(`🎙️ [MANAGED VOICE PRO BOUND TO PRO KEY] Line: ${forwardingNumber}, Pro Key: ${voiceLicenseKey} for ${customerEmail}`);
 
       if (RESEND_API_KEY) {
         const emailSubject = `🎙️ Your AI Voice Receptionist is Live! Assigned Line: ${forwardingNumber}`;
@@ -512,9 +548,10 @@ exports.handler = async (event) => {
               `🎙️ New Voice Receptionist Subscriber ($29/mo): ${customerName}`,
               `<p>New Managed Voice Pro ($29/mo) subscriber active!</p>
                <p><strong>Customer:</strong> ${customerName} (${customerEmail})</p>
+               <p><strong>Bound Pro Key:</strong> <code>${voiceLicenseKey}</code></p>
                <p><strong>Assigned Line:</strong> ${forwardingNumber}</p>
                <p><strong>Carrier Dial Code:</strong> <code>${carrierCode}</code></p>
-               <p><strong>License Key:</strong> <code>${voiceLicenseKey}</code></p>`
+               <p><strong>Subscription ID:</strong> <code>${session.subscription || session.id}</code></p>`
             ).catch(() => {});
           }
         } catch (emailErr) {

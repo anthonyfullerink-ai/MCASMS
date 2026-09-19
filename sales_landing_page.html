@@ -2161,9 +2161,9 @@
                 </div>
             </div>
             <div style="display: flex; gap: 10px; align-items: center; flex-wrap: wrap;">
-                <a href="https://buy.stripe.com/4gMeVdcFMaps6M0b572go0f" target="_blank" class="cta-btn" style="background: linear-gradient(135deg, #A855F7, #00E676); color: #000; font-weight: 800; padding: 14px 24px; font-size: 13px; margin: 0; text-decoration: none; display: inline-flex; align-items: center; gap: 6px; box-shadow: 0 4px 14px rgba(168,85,247,0.35);">
-                    🎙️ Subscribe to Managed Voice ($29/mo) ➔
-                </a>
+                <button onclick="openVoiceAddonModal()" class="cta-btn" style="background: linear-gradient(135deg, #A855F7, #00E676); color: #000; font-weight: 800; padding: 14px 24px; font-size: 13px; margin: 0; border: none; cursor: pointer; border-radius: 8px; display: inline-flex; align-items: center; gap: 6px; box-shadow: 0 4px 14px rgba(168,85,247,0.35);">
+                    🎙️ Add 24/7 Voice Receptionist ($29/mo) ➔
+                </button>
             </div>
         </div>
 
@@ -2448,15 +2448,15 @@
                     <div style="font-size: 24px;">👨‍💻</div>
                     <div>
                         <div style="font-size: 14px; font-weight: 900; color: #FFF;">Anthony (🟢 Online)</div>
-                        <div style="font-size: 10px; color: var(--primary);">Direct Web-to-SMS Live Chat</div>
+                        <div style="font-size: 10px; color: var(--primary);">🟢 Customer Support Specialist</div>
                     </div>
                 `;
             }
             if (firstMsg) {
-                firstMsg.innerHTML = `👋 Hi! I'm <strong>Anthony</strong>, the founder & developer. I'm currently online! Anything you send here routes directly to my phone via live SMS. How can I help you today?`;
+                firstMsg.innerHTML = `👋 Hi! I'm <strong>Anthony</strong>, the founder. How can I help you today? Feel free to ask any questions about setup, live call forwarding, or our Pro automation edition.`;
             }
             if (inputEl) {
-                inputEl.placeholder = "Message Anthony directly (sends to his phone)...";
+                inputEl.placeholder = "Type your question or message...";
             }
             if (pillsWrap) {
                 pillsWrap.innerHTML = `
@@ -2546,11 +2546,11 @@
         const emailMatch = query.match(/[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}/);
         const keyMatch = query.match(/MCAS-[A-Za-z0-9\-]+/i);
 
-        // If Developer Anthony has Live Web-to-SMS active, forward message directly to his phone!
+        // If Developer Anthony has Live Chat active, record conversation to owner dashboard seamlessly
         if (cachedGatewayMode === 'LIVE_SMS') {
             const vid = getVisitorId();
             try {
-                await fetch('/api/support/visitor-message', {
+                fetch('/api/support/visitor-message', {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify({
@@ -2558,12 +2558,8 @@
                         visitorName: 'Website Visitor',
                         message: query
                     })
-                });
+                }).catch(() => {});
             } catch (e) {}
-
-            return `💬 <strong>Direct Message Routed to Anthony's Phone</strong>:<br><br>` +
-                   `Your message: <em>"${escapeHtml(query)}"</em> was sent directly to Anthony's handset. He has been notified and his reply will appear right here in real time!<br><br>` +
-                   `<small style="color:var(--muted);">Feel free to send follow-up questions or request a live phone call.</small>`;
         }
 
         // 24/7 AI Voice Receptionist & Telephony
@@ -2683,7 +2679,85 @@
     }
 
     calculateROI();
+
+    function openVoiceAddonModal() {
+        const modal = document.getElementById('voiceAddonModal');
+        if (modal) modal.style.display = 'flex';
+    }
+    function closeVoiceAddonModal() {
+        const modal = document.getElementById('voiceAddonModal');
+        if (modal) modal.style.display = 'none';
+    }
+    function submitVoiceModalProKey() {
+        const input = document.getElementById('voiceModalProKey');
+        const err = document.getElementById('voiceModalProKeyErr');
+        const val = (input ? input.value : '').trim().toUpperCase();
+        if (!val) {
+            if (err) { err.textContent = 'Please enter your Pro License Key (e.g. MCAS-PRO-XXXX-XXXX).'; err.style.display = 'block'; }
+            return;
+        }
+        const isPro = val.startsWith('MCAS-PRO-') || val.startsWith('MCAT-PRO-') || val.includes('PRO-DEMO');
+        if (!isPro) {
+            if (err) {
+                err.textContent = 'Standard Edition keys (MCAS-...) cannot activate the Voice Receptionist. A Pro Automation Edition license is required. Please upgrade below or enter your Pro key.';
+                err.style.display = 'block';
+            }
+            return;
+        }
+        if (err) err.style.display = 'none';
+        window.location.href = `https://buy.stripe.com/4gMeVdcFMaps6M0b572go0f?client_reference_id=${encodeURIComponent(val)}`;
+    }
 </script>
+
+<!-- Managed Voice Pro Add-On Modal (Enforces Pro License Binding) -->
+<div id="voiceAddonModal" style="display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.85); backdrop-filter: blur(8px); z-index: 10000; align-items: center; justify-content: center; padding: 20px;">
+    <div style="background: #131720; border: 1px solid #7928CA; border-radius: 16px; max-width: 520px; width: 100%; padding: 28px; box-shadow: 0 20px 50px rgba(0,0,0,0.6); position: relative; text-align: left;">
+        <button onclick="closeVoiceAddonModal()" style="position: absolute; top: 16px; right: 16px; background: none; border: none; color: #949BAE; font-size: 24px; cursor: pointer; line-height: 1;">&times;</button>
+        
+        <div style="text-align: center; margin-bottom: 20px;">
+            <div style="font-size: 42px; margin-bottom: 8px;">🎙️</div>
+            <h2 style="color: #FFF; margin: 0 0 6px 0; font-size: 22px; font-weight: 900;">24/7 AI Voice Receptionist Add-On</h2>
+            <div style="display: inline-block; background: rgba(168,85,247,0.15); border: 1px solid rgba(168,85,247,0.4); color: #C084FC; font-size: 11px; font-weight: 800; padding: 4px 12px; border-radius: 20px;">
+                ⭐ REQUIRES PRO AUTOMATION EDITION ($149)
+            </div>
+            <p style="color: #CBD5E0; font-size: 13px; margin: 12px 0 0 0; line-height: 1.5;">
+                The Turnkey Voice Receptionist ($29/mo) is an add-on requiring <strong>MissedCallAutoSMS Pro</strong>. Each subscription is permanently bound to your Pro license key.
+            </p>
+        </div>
+
+        <div style="display: flex; flex-direction: column; gap: 16px;">
+            <!-- Option A: Existing Pro User -->
+            <div style="background: #090B0E; border: 1px solid #222836; border-radius: 12px; padding: 18px;">
+                <div style="font-size: 13px; font-weight: 800; color: #00E676; margin-bottom: 4px;">Option A: Already Own Pro Edition?</div>
+                <div style="font-size: 12px; color: #949BAE; margin-bottom: 12px;">Enter your Pro License Key to bind your 14-Day Free Trial ($0 today, then $29/mo):</div>
+                <div style="display: flex; gap: 8px; flex-wrap: wrap;">
+                    <input type="text" id="voiceModalProKey" placeholder="MCAS-PRO-XXXX-XXXX" style="flex: 1; min-width: 180px; background: #161B22; border: 1px solid #30363D; border-radius: 8px; color: #FFF; padding: 10px 12px; font-family: monospace; font-size: 13px; text-transform: uppercase;">
+                    <button onclick="submitVoiceModalProKey()" style="background: linear-gradient(135deg, #A855F7, #00E676); color: #000; font-weight: 800; padding: 10px 16px; border: none; border-radius: 8px; cursor: pointer; font-size: 12px; white-space: nowrap;">
+                        Bind & Start Trial ➔
+                    </button>
+                </div>
+                <div id="voiceModalProKeyErr" style="display: none; color: #EF4444; font-size: 11px; margin-top: 6px; font-weight: 600;"></div>
+            </div>
+
+            <!-- Option B: New Customer Bundle -->
+            <div style="background: linear-gradient(180deg, rgba(121,40,202,0.15) 0%, rgba(9,11,14,0.6) 100%); border: 1px solid #7928CA; border-radius: 12px; padding: 18px; text-align: center;">
+                <div style="font-size: 13px; font-weight: 800; color: #D8B4FE; margin-bottom: 4px;">Option B: New Customer? Get the Complete Bundle</div>
+                <div style="font-size: 12px; color: #CBD5E0; margin-bottom: 14px; line-height: 1.4;">
+                    Get the <strong>$149.99 Lifetime Pro Automation License</strong> bundled with your <strong>14-Day Voice Receptionist Free Trial</strong>.
+                </div>
+                <button onclick="initiateProStripeCheckout()" style="background: #7928CA; color: #FFF; font-weight: 800; padding: 12px 24px; border: none; border-radius: 25px; cursor: pointer; font-size: 13px; box-shadow: 0 4px 14px rgba(121,40,202,0.4);">
+                    ⚡ Get Pro Automation Bundle ($149.99) ➔
+                </button>
+            </div>
+        </div>
+
+        <div style="margin-top: 18px; text-align: center;">
+            <button onclick="closeVoiceAddonModal()" style="background: none; border: none; color: #64748B; font-size: 12px; cursor: pointer; text-decoration: underline;">
+                Cancel / Return to Features
+            </button>
+        </div>
+    </div>
+</div>
 
 <!-- Sticky Mobile Conversion Bar -->
 <div class="mobile-sticky-bar">

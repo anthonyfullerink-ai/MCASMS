@@ -218,6 +218,7 @@ fun MainScreen(
     if (availableUpdate == null && activePromo != null) {
         InAppPromoDialog(
             promoType = activePromo!!,
+            licenseKey = settings.licenseKey,
             onDismiss = { activePromo = null }
         )
     }

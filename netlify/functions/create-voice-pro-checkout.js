@@ -75,20 +75,42 @@ exports.handler = async (event) => {
     const payload = JSON.parse(event.body || '{}');
     const customerEmail = (payload.email || '').trim();
     const businessName = (payload.businessName || 'Apex Trade Services').trim();
-    const licenseKey = (payload.licenseKey || '').trim();
+    const licenseKey = (payload.licenseKey || '').trim().toUpperCase();
+
+    // Enforce Pro License Requirement: Voice Receptionist is strictly an add-on for Pro ($149)
+    const isProKey = licenseKey && (
+      licenseKey.startsWith('MCAS-PRO-') ||
+      licenseKey.startsWith('MCAT-PRO-') ||
+      licenseKey.includes('PRO-DEMO')
+    );
+
+    if (!isProKey) {
+      return {
+        statusCode: 400,
+        headers,
+        body: JSON.stringify({
+          success: false,
+          error: 'The $29/mo AI Voice Receptionist is an exclusive add-on requiring MissedCallAutoSMS Pro ($149). Please provide your active Pro License Key (e.g. MCAS-PRO-...) or purchase the Pro Edition first.'
+        })
+      };
+    }
 
     const postData = {
       'mode': 'subscription',
       'payment_method_types[0]': 'card',
       'line_items[0][price_data][currency]': 'usd',
       'line_items[0][price_data][product_data][name]': '24/7 AI Voice Receptionist (Turnkey Managed)',
-      'line_items[0][price_data][product_data][description]': '14-Day Free Trial ($0 today) • Auto-renews at $29/mo for 200 included minutes & carrier forwarding',
+      'line_items[0][price_data][product_data][description]': '14-Day Free Trial ($0 today) • Auto-renews at $29/mo for 200 included minutes & carrier forwarding (Bound to Pro Key ' + licenseKey + ')',
       'line_items[0][price_data][unit_amount]': '2900', // $29.00
       'line_items[0][price_data][recurring][interval]': 'month',
+      'line_items[0][quantity]': '1',
       'subscription_data[trial_period_days]': '14',      // 14-Day Auto-Billing Free Trial
       'subscription_data[metadata][tier]': 'managed_voice_pro',
       'subscription_data[metadata][business_name]': businessName,
       'subscription_data[metadata][license_key]': licenseKey,
+      'client_reference_id': licenseKey,
+      'metadata[license_key]': licenseKey,
+      'metadata[tier]': 'managed_voice_pro',
       'success_url': 'https://missedcallautosms.com/success.html?session_id={CHECKOUT_SESSION_ID}&tier=managed_voice_pro',
       'cancel_url': 'https://missedcallautosms.com/#pricing'
     };
@@ -106,6 +128,7 @@ exports.handler = async (event) => {
         success: true,
         checkoutUrl: session.url,
         sessionId: session.id,
+        licenseKey: licenseKey,
         trialPeriodDays: 14
       })
     };

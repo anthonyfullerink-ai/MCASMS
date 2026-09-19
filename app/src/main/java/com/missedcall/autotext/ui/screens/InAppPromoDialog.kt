@@ -67,16 +67,11 @@ object InAppPromoController {
         if ((now - lastShown) < COOLDOWN_HOURS_MS) return null
 
         return if (isPro) {
-            // Pro user who doesn't have Voice Pro yet - NEVER show upgrade to pro
+            // Pro user who doesn't have Voice Pro yet -> show Voice Receptionist trial
             if (!hasVoice) PromoType.SUBSCRIBE_VOICE_PRO else null
         } else {
-            // $49 standard user: if has voice, only show Pro upgrade; otherwise alternate
-            if (hasVoice) {
-                PromoType.UPGRADE_TO_PRO
-            } else {
-                val index = prefs.getInt(KEY_PROMO_INDEX, 0)
-                if (index % 2 == 0) PromoType.SUBSCRIBE_VOICE_PRO else PromoType.UPGRADE_TO_PRO
-            }
+            // Standard $49 user -> ONLY show Upgrade to Pro ($149), as Voice is strictly a Pro add-on
+            PromoType.UPGRADE_TO_PRO
         }
     }
 
@@ -93,6 +88,7 @@ object InAppPromoController {
 @Composable
 fun InAppPromoDialog(
     promoType: PromoType,
+    licenseKey: String = "",
     onDismiss: () -> Unit
 ) {
     val context = LocalContext.current
@@ -101,7 +97,12 @@ fun InAppPromoDialog(
     val accentColor = if (isVoice) Color(0xFF00E676) else Color(0xFFA855F7)
     val containerBorder = if (isVoice) Color(0xFF00E676).copy(alpha = 0.5f) else Color(0xFFA855F7).copy(alpha = 0.5f)
 
-    val targetUrl = if (isVoice) InAppPromoController.STRIPE_VOICE_PRO_URL else InAppPromoController.STRIPE_PRO_UPGRADE_URL
+    val voiceUrl = if (licenseKey.isNotBlank()) {
+        "${InAppPromoController.STRIPE_VOICE_PRO_URL}?client_reference_id=$licenseKey"
+    } else {
+        InAppPromoController.STRIPE_VOICE_PRO_URL
+    }
+    val targetUrl = if (isVoice) voiceUrl else InAppPromoController.STRIPE_PRO_UPGRADE_URL
 
     Dialog(
         onDismissRequest = {
@@ -339,7 +340,12 @@ fun InAppPromoBannerCard(
     // Pro users must NEVER see "Upgrade to Pro Automation"
     val targetIsVoice = isPro // If already Pro, target Voice only
     val accent = if (targetIsVoice) Color(0xFF00E676) else Color(0xFFA855F7)
-    val url = if (targetIsVoice) InAppPromoController.STRIPE_VOICE_PRO_URL else InAppPromoController.STRIPE_PRO_UPGRADE_URL
+    val voiceUrl = if (settings.licenseKey.isNotBlank()) {
+        "${InAppPromoController.STRIPE_VOICE_PRO_URL}?client_reference_id=${settings.licenseKey}"
+    } else {
+        InAppPromoController.STRIPE_VOICE_PRO_URL
+    }
+    val url = if (targetIsVoice) voiceUrl else InAppPromoController.STRIPE_PRO_UPGRADE_URL
 
     Card(
         colors = CardDefaults.cardColors(containerColor = Color(0xFF131720)),
