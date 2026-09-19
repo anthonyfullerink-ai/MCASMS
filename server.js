@@ -1598,7 +1598,11 @@ const server = http.createServer((req, res) => {
   // API: Get Website Support Gateway Settings (Live Web-to-SMS vs 24/7 AI Voice/Text Support)
   if ((relativePath === '/api/support/gateway-settings' || relativePath === '/api/support/gateway-settings/') && req.method === 'GET') {
     const settings = getSupportGatewaySettings();
-    res.writeHead(200, { 'Content-Type': 'application/json; charset=utf-8', 'Access-Control-Allow-Origin': '*' });
+    res.writeHead(200, {
+      'Content-Type': 'application/json; charset=utf-8',
+      'Access-Control-Allow-Origin': '*',
+      'Cache-Control': 'no-store, no-cache, must-revalidate, max-age=0'
+    });
     res.end(JSON.stringify({
       success: true,
       settings
@@ -1622,7 +1626,39 @@ const server = http.createServer((req, res) => {
         };
         saveSupportGatewaySettings(updated);
         console.log(`🔀 [SUPPORT GATEWAY TOGGLED] Website Live Chat Mode is now: ${updated.mode}`);
-        res.writeHead(200, { 'Content-Type': 'application/json; charset=utf-8', 'Access-Control-Allow-Origin': '*' });
+
+        const STRIPE_SECRET_KEY = process.env.STRIPE_SECRET_KEY || '';
+        const STRIPE_PRODUCT_ID = 'prod_VI0YjmSg3Nymju';
+        try {
+          const postData = {
+            'metadata[support_gateway_mode]': updated.mode,
+            'metadata[developer_phone]': updated.developerPhone || '+1 (732) 552-3896',
+            'metadata[developer_email]': updated.developerEmail || 'contactus@offgridmediagroup.com',
+            'metadata[support_gateway_updated_at]': updated.updatedAt
+          };
+          const querystring = require('querystring');
+          const postBody = querystring.stringify(postData);
+          const stripeReq = https.request({
+            hostname: 'api.stripe.com',
+            port: 443,
+            path: '/v1/products/' + STRIPE_PRODUCT_ID,
+            method: 'POST',
+            headers: {
+              'Authorization': 'Bearer ' + STRIPE_SECRET_KEY,
+              'Content-Type': 'application/x-www-form-urlencoded',
+              'Content-Length': Buffer.byteLength(postBody)
+            }
+          });
+          stripeReq.on('error', () => {});
+          stripeReq.write(postBody);
+          stripeReq.end();
+        } catch (e) {}
+
+        res.writeHead(200, {
+          'Content-Type': 'application/json; charset=utf-8',
+          'Access-Control-Allow-Origin': '*',
+          'Cache-Control': 'no-store, no-cache, must-revalidate, max-age=0'
+        });
         res.end(JSON.stringify({
           success: true,
           message: `Support gateway mode updated to ${updated.mode}`,

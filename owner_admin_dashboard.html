@@ -2592,10 +2592,19 @@ Return your response STRICTLY as a raw JSON object (no extra commentary) matchin
         const phoneInput = document.getElementById('inputGatewayPhone');
         const emailInput = document.getElementById('inputGatewayEmail');
 
+        const localSaved = localStorage.getItem('mcas_support_gateway_mode');
+        if (localSaved && (localSaved === 'LIVE_SMS' || localSaved === 'AI_SUPPORT')) {
+            currentSupportGatewayMode = localSaved;
+            updateGatewayUiState(currentSupportGatewayMode);
+        }
+
         try {
-            const data = await safeFetchJson('/api/support/gateway-settings');
+            const data = await safeFetchJson('/api/support/gateway-settings?_t=' + Date.now());
             const s = data.settings || {};
-            currentSupportGatewayMode = s.mode || 'AI_SUPPORT';
+            if (s.mode) {
+                currentSupportGatewayMode = s.mode;
+                localStorage.setItem('mcas_support_gateway_mode', currentSupportGatewayMode);
+            }
 
             if (phoneInput && s.developerPhone) phoneInput.value = s.developerPhone;
             if (emailInput && s.developerEmail) emailInput.value = s.developerEmail;
@@ -2603,7 +2612,7 @@ Return your response STRICTLY as a raw JSON object (no extra commentary) matchin
             updateGatewayUiState(currentSupportGatewayMode);
         } catch (e) {
             console.warn('Failed to load gateway settings:', e);
-            if (badge) {
+            if (badge && !localSaved) {
                 badge.innerText = 'OFFLINE / LOCAL';
                 badge.style.background = 'rgba(139, 148, 158, 0.15)';
                 badge.style.color = 'var(--muted)';
@@ -2666,11 +2675,11 @@ Return your response STRICTLY as a raw JSON object (no extra commentary) matchin
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({ mode, developerPhone: phone, developerEmail: email })
             });
-            if (res.success) {
-                alert(`Live Chat Mode switched to: ${mode === 'LIVE_SMS' ? '🟢 Live Chat (Anthony)' : '🤖 24/7 AI Voice & Text Support'}`);
+            if (res && res.success) {
+                alert(`Website Live Chat Mode successfully saved & synced to: ${mode === 'LIVE_SMS' ? '🟢 Live Chat (Anthony)' : '🤖 24/7 AI Voice & Text Support'}`);
             }
         } catch (e) {
-            alert('Failed to update live chat mode: ' + e.message);
+            alert('Failed to update live chat mode on server: ' + e.message);
         }
     }
 

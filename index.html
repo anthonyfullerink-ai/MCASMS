@@ -2430,6 +2430,8 @@
         const triggerBtn = document.getElementById('aiAgentTrigger');
         const widgetHeader = document.querySelector('.ai-widget-header > div:first-child');
         const firstMsg = document.querySelector('#aiChatMessages .ai-msg.bot');
+        const pillsWrap = document.querySelector('.ai-quick-pills');
+        const inputEl = document.getElementById('aiInputText');
 
         if (mode === 'LIVE_SMS') {
             if (triggerBtn) {
@@ -2450,9 +2452,19 @@
                     </div>
                 `;
             }
-            if (firstMsg && !firstMsg.dataset.customized) {
-                firstMsg.dataset.customized = 'true';
-                firstMsg.innerHTML = `👋 Hi! I'm <strong>Anthony</strong>. I'm currently online! Anything you send here routes directly to my phone via live SMS. How can I help you today?`;
+            if (firstMsg) {
+                firstMsg.innerHTML = `👋 Hi! I'm <strong>Anthony</strong>, the founder & developer. I'm currently online! Anything you send here routes directly to my phone via live SMS. How can I help you today?`;
+            }
+            if (inputEl) {
+                inputEl.placeholder = "Message Anthony directly (sends to his phone)...";
+            }
+            if (pillsWrap) {
+                pillsWrap.innerHTML = `
+                    <button class="pill" onclick="sendAiQuickQuery('Hi Anthony, can you tell me more about how Missed Call Auto SMS works?')">👋 Chat with Anthony</button>
+                    <button class="pill" onclick="sendAiQuickQuery('Can I schedule a live demo or call with you?')">📞 Request Call</button>
+                    <button class="pill" onclick="sendAiQuickQuery('How does the AI Voice Receptionist route calls with *71?')">🎙️ Voice Receptionist</button>
+                    <button class="pill" onclick="sendAiQuickQuery('Can you explain the 14-day free trial?')">🎁 14-Day Free Trial</button>
+                `;
             }
             startVisitorChatPolling();
         } else {
@@ -2472,6 +2484,21 @@
                         <div style="font-size: 14px; font-weight: 900; color: #FFF;">MissedCallAutoSMS Support</div>
                         <div style="font-size: 10px; color: var(--primary);">🟢 Text & Voice AI Assistant Online</div>
                     </div>
+                `;
+            }
+            if (firstMsg) {
+                firstMsg.innerHTML = `👋 Hello! I'm your <strong>Missed Call Auto SMS AI Support & Voice Assistant</strong>. I can walk you through setup, compare our platform to GoHighLevel/Twilio, check your license status, reset device locks, or <strong>cancel your trial or account at any time</strong> with $0 charged.<br><br>How can I help you today?`;
+            }
+            if (inputEl) {
+                inputEl.placeholder = "Type a message or request help...";
+            }
+            if (pillsWrap) {
+                pillsWrap.innerHTML = `
+                    <button class="pill" onclick="sendAiQuickQuery('Walk me through Android setup step by step')">📲 Setup Guide</button>
+                    <button class="pill" onclick="sendAiQuickQuery('Why pick this over GoHighLevel or Twilio?')">⚖️ vs GHL/Twilio</button>
+                    <button class="pill" onclick="sendAiQuickQuery('Check my license key status')">🔍 Check License</button>
+                    <button class="pill" onclick="sendAiQuickQuery('Reset hardware device lock')">🔒 Reset Lock</button>
+                    <button class="pill" onclick="sendAiQuickQuery('Cancel my 3-day free trial')">❌ Cancel Trial</button>
                 `;
             }
             stopVisitorChatPolling();

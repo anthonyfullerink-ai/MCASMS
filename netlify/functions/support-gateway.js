@@ -5,8 +5,8 @@ const https = require('https');
 const RESEND_API_KEY = process.env.RESEND_API_KEY || '';
 const FROM_EMAIL = process.env.FROM_EMAIL || 'Missed Call Auto SMS <onboarding@resend.dev>';
 const OWNER_EMAIL = process.env.OWNER_EMAIL || 'contactus@offgridmediagroup.com';
-const LOCAL_SETTINGS_CACHE = path.join(__dirname, '../../.support_gateway_settings_cache.json');
-const LOCAL_CHATS_CACHE = path.join(__dirname, '../../.developer_support_chats_cache.json');
+const LOCAL_SETTINGS_CACHE = path.join(__dirname, '../../data/support_gateway_settings.json');
+const LOCAL_CHATS_CACHE = path.join(__dirname, '../../data/developer_support_chats.json');
 
 // Firebase Admin setup
 let initializeApp, getApps, cert, getFirestore;
@@ -60,6 +60,69 @@ function getBlobStore() {
   }
 }
 
+const querystring = require('querystring');
+
+const STRIPE_SECRET_KEY = process.env.STRIPE_SECRET_KEY || '';
+const STRIPE_PRODUCT_ID = 'prod_VI0YjmSg3Nymju';
+
+function stripeGetProductMetadata() {
+  if (!STRIPE_SECRET_KEY) return Promise.resolve(null);
+  return new Promise((resolve) => {
+    const req = https.request({
+      hostname: 'api.stripe.com',
+      port: 443,
+      path: '/v1/products/' + STRIPE_PRODUCT_ID,
+      method: 'GET',
+      headers: { 'Authorization': 'Bearer ' + STRIPE_SECRET_KEY }
+    }, res => {
+      let data = '';
+      res.on('data', c => data += c);
+      res.on('end', () => {
+        try {
+          const p = JSON.parse(data);
+          resolve((p && p.metadata) ? p.metadata : null);
+        } catch (e) {
+          resolve(null);
+        }
+      });
+    });
+    req.on('error', () => resolve(null));
+    req.end();
+  });
+}
+
+function stripeUpdateProductMetadata(metadata) {
+  if (!STRIPE_SECRET_KEY) return Promise.resolve(false);
+  return new Promise((resolve) => {
+    const postData = {};
+    for (const [k, v] of Object.entries(metadata)) {
+      postData['metadata[' + k + ']'] = v;
+    }
+    const body = querystring.stringify(postData);
+    const req = https.request({
+      hostname: 'api.stripe.com',
+      port: 443,
+      path: '/v1/products/' + STRIPE_PRODUCT_ID,
+      method: 'POST',
+      headers: {
+        'Authorization': 'Bearer ' + STRIPE_SECRET_KEY,
+        'Content-Type': 'application/x-www-form-urlencoded',
+        'Content-Length': Buffer.byteLength(body)
+      }
+    }, res => {
+      let data = '';
+      res.on('data', c => data += c);
+      res.on('end', () => resolve(res.statusCode >= 200 && res.statusCode < 300));
+    });
+    req.on('error', () => resolve(false));
+    req.write(body);
+    req.end();
+  });
+}
+
+let inMemorySettingsCache = null;
+let lastCacheTime = 0;
+
 const DEFAULT_SETTINGS = {
   mode: 'AI_SUPPORT', // 'LIVE_SMS' | 'AI_SUPPORT'
   developerPhone: '+1 (732) 552-3896',
@@ -70,6 +133,31 @@ const DEFAULT_SETTINGS = {
 };
 
 async function getGatewaySettings() {
+  const now = Date.now();
+  if (inMemorySettingsCache && (now - lastCacheTime < 10000)) {
+    return inMemorySettingsCache;
+  }
+
+  // 1. Primary permanent cloud store: Stripe product metadata
+  try {
+    const meta = await stripeGetProductMetadata();
+    if (meta && meta.support_gateway_mode) {
+      const settings = {
+        ...DEFAULT_SETTINGS,
+        mode: meta.support_gateway_mode === 'LIVE_SMS' ? 'LIVE_SMS' : 'AI_SUPPORT',
+        developerPhone: meta.developer_phone || DEFAULT_SETTINGS.developerPhone,
+        developerEmail: meta.developer_email || DEFAULT_SETTINGS.developerEmail,
+        updatedAt: meta.support_gateway_updated_at || new Date().toISOString()
+      };
+      inMemorySettingsCache = settings;
+      lastCacheTime = now;
+      return settings;
+    }
+  } catch (e) {
+    console.warn('Stripe metadata read warning:', e.message);
+  }
+
+  // 2. Netlify Blobs fallback
   const store = getBlobStore();
   if (store) {
     try {
@@ -82,6 +170,7 @@ async function getGatewaySettings() {
     }
   }
 
+  // 3. Firestore fallback
   const db = initFirebase();
   if (db) {
     try {
@@ -94,6 +183,7 @@ async function getGatewaySettings() {
     }
   }
 
+  // 4. Local filesystem cache fallback
   try {
     if (fs.existsSync(LOCAL_SETTINGS_CACHE)) {
       return { ...DEFAULT_SETTINGS, ...JSON.parse(fs.readFileSync(LOCAL_SETTINGS_CACHE, 'utf8')) };
@@ -104,6 +194,22 @@ async function getGatewaySettings() {
 }
 
 async function saveGatewaySettings(settings) {
+  inMemorySettingsCache = settings;
+  lastCacheTime = Date.now();
+
+  // 1. Write to Stripe product metadata (permanent, surviving serverless restarts)
+  try {
+    await stripeUpdateProductMetadata({
+      support_gateway_mode: settings.mode,
+      developer_phone: settings.developerPhone || DEFAULT_SETTINGS.developerPhone,
+      developer_email: settings.developerEmail || DEFAULT_SETTINGS.developerEmail,
+      support_gateway_updated_at: new Date().toISOString()
+    });
+  } catch (e) {
+    console.warn('Stripe metadata write warning:', e.message);
+  }
+
+  // 2. Netlify Blobs fallback
   const store = getBlobStore();
   if (store) {
     try {
@@ -113,6 +219,7 @@ async function saveGatewaySettings(settings) {
     }
   }
 
+  // 3. Firestore fallback
   const db = initFirebase();
   if (db) {
     try {
@@ -122,7 +229,10 @@ async function saveGatewaySettings(settings) {
     }
   }
 
+  // 4. Local filesystem fallback
   try {
+    const dataDir = path.dirname(LOCAL_SETTINGS_CACHE);
+    if (!fs.existsSync(dataDir)) fs.mkdirSync(dataDir, { recursive: true });
     fs.writeFileSync(LOCAL_SETTINGS_CACHE, JSON.stringify(settings, null, 2), 'utf8');
   } catch (e) {}
 }
@@ -216,7 +326,8 @@ exports.handler = async (event) => {
     'Content-Type': 'application/json; charset=utf-8',
     'Access-Control-Allow-Origin': '*',
     'Access-Control-Allow-Methods': 'GET, POST, OPTIONS',
-    'Access-Control-Allow-Headers': 'Content-Type, Authorization, x-resend-key'
+    'Access-Control-Allow-Headers': 'Content-Type, Authorization, x-resend-key, x-stripe-key',
+    'Cache-Control': 'no-store, no-cache, must-revalidate, proxy-revalidate, max-age=0'
   };
 
   if (event.httpMethod === 'OPTIONS') {
