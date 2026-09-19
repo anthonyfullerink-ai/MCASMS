@@ -2460,10 +2460,14 @@
             }
             if (pillsWrap) {
                 pillsWrap.innerHTML = `
-                    <button class="pill" onclick="sendAiQuickQuery('Hi Anthony, can you tell me more about how Missed Call Auto SMS works?')">👋 Chat with Anthony</button>
-                    <button class="pill" onclick="sendAiQuickQuery('Can I schedule a live demo or call with you?')">📞 Request Call</button>
-                    <button class="pill" onclick="sendAiQuickQuery('How does the AI Voice Receptionist route calls with *71?')">🎙️ Voice Receptionist</button>
-                    <button class="pill" onclick="sendAiQuickQuery('Can you explain the 14-day free trial?')">🎁 14-Day Free Trial</button>
+                    <button class="pill" onclick="sendAiQuickQuery('How does the AI Voice Receptionist route calls with *71?')">🎙️ Voice Receptionist (*71)</button>
+                    <button class="pill" onclick="sendAiQuickQuery('Why pick this over GoHighLevel or Twilio?')">⚖️ vs GHL/Twilio</button>
+                    <button class="pill" onclick="sendAiQuickQuery('How does the Contractor Status Dial work for trades like cutting hair?')">🧭 Status Dial (Trades)</button>
+                    <button class="pill" onclick="sendAiQuickQuery('Tell me about Agency Fleet 5-Pack and 10-Pack bundles')">🏢 Agency Fleet</button>
+                    <button class="pill" onclick="sendAiQuickQuery('Walk me through Android setup step by step')">📲 Setup Guide</button>
+                    <button class="pill" onclick="sendAiQuickQuery('I want to speak directly with Anthony about enterprise setup')">👨‍💻 Talk to Anthony</button>
+                    <button class="pill" onclick="sendAiQuickQuery('Reset hardware device lock')">🔒 Reset Lock</button>
+                    <button class="pill" onclick="sendAiQuickQuery('Cancel my free trial')">❌ Cancel Trial ($0)</button>
                 `;
             }
             startVisitorChatPolling();
@@ -2482,23 +2486,26 @@
                     <div style="font-size: 24px;">🤖</div>
                     <div>
                         <div style="font-size: 14px; font-weight: 900; color: #FFF;">MissedCallAutoSMS Support</div>
-                        <div style="font-size: 10px; color: var(--primary);">🟢 Text & Voice AI Assistant Online</div>
+                        <div style="font-size: 10px; color: var(--primary);">🟢 24/7 Text & Voice Assistant Online</div>
                     </div>
                 `;
             }
             if (firstMsg) {
-                firstMsg.innerHTML = `👋 Hello! I'm your <strong>Missed Call Auto SMS AI Support & Voice Assistant</strong>. I can walk you through setup, compare our platform to GoHighLevel/Twilio, check your license status, reset device locks, or <strong>cancel your trial or account at any time</strong> with $0 charged.<br><br>How can I help you today?`;
+                firstMsg.innerHTML = `👋 Hello! I'm your <strong>Missed Call Auto SMS AI Support & Voice Assistant</strong>. I have full product and telephony expertise—ask me about our <strong>14-day free trial</strong>, the <strong>$29/mo Turnkey Voice Receptionist</strong>, <strong>*71 carrier forwarding</strong>, the <strong>Contractor Status Dial</strong>, or how we compare to <strong>GoHighLevel & Twilio</strong>. I can also reset device locks, cancel trials, or connect you directly with <strong>Anthony Fuller</strong>.<br><br>How can I help you today?`;
             }
             if (inputEl) {
-                inputEl.placeholder = "Type a message or request help...";
+                inputEl.placeholder = "Type your question or request help...";
             }
             if (pillsWrap) {
                 pillsWrap.innerHTML = `
-                    <button class="pill" onclick="sendAiQuickQuery('Walk me through Android setup step by step')">📲 Setup Guide</button>
+                    <button class="pill" onclick="sendAiQuickQuery('How does the AI Voice Receptionist route calls with *71?')">🎙️ Voice Receptionist (*71)</button>
                     <button class="pill" onclick="sendAiQuickQuery('Why pick this over GoHighLevel or Twilio?')">⚖️ vs GHL/Twilio</button>
-                    <button class="pill" onclick="sendAiQuickQuery('Check my license key status')">🔍 Check License</button>
+                    <button class="pill" onclick="sendAiQuickQuery('How does the Contractor Status Dial work for trades like cutting hair?')">🧭 Status Dial (Trades)</button>
+                    <button class="pill" onclick="sendAiQuickQuery('Tell me about Agency Fleet 5-Pack and 10-Pack bundles')">🏢 Agency Fleet</button>
+                    <button class="pill" onclick="sendAiQuickQuery('Walk me through Android setup step by step')">📲 Setup Guide</button>
+                    <button class="pill" onclick="sendAiQuickQuery('I want to speak directly with Anthony about enterprise setup')">👨‍💻 Talk to Anthony</button>
                     <button class="pill" onclick="sendAiQuickQuery('Reset hardware device lock')">🔒 Reset Lock</button>
-                    <button class="pill" onclick="sendAiQuickQuery('Cancel my 3-day free trial')">❌ Cancel Trial</button>
+                    <button class="pill" onclick="sendAiQuickQuery('Cancel my free trial')">❌ Cancel Trial ($0)</button>
                 `;
             }
             stopVisitorChatPolling();
@@ -2542,76 +2549,79 @@
     setInterval(checkSupportGatewayMode, 15000);
 
     async function generateAiBotResponse(query) {
-        const q = query.toLowerCase();
-        const emailMatch = query.match(/[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}/);
-        const keyMatch = query.match(/MCAS-[A-Za-z0-9\-]+/i);
+        const q = query.toLowerCase().trim();
+        const emailMatch = query.match(/[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}/i);
+        const phoneMatch = query.match(/(?:\+?1[-.\s]?)?(?:\(?\d{3}\)?[-.\s]?)?\d{3}[-.\s]?\d{4}/);
+        const keyMatch = query.match(/MCAS(?:-[A-Z0-9]+)+/i) || query.match(/MCAT(?:-[A-Z0-9]+)+/i);
 
-        // If Developer Anthony has Live Chat active, record conversation to owner dashboard seamlessly
-        if (cachedGatewayMode === 'LIVE_SMS') {
-            const vid = getVisitorId();
+        // Always record visitor inquiries to the owner dashboard so Anthony has full visibility
+        const vid = getVisitorId();
+        try {
+            fetch('/api/support/visitor-message', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                    visitorId: vid,
+                    visitorName: 'Website Visitor',
+                    message: query,
+                    email: emailMatch ? emailMatch[0] : '',
+                    phone: phoneMatch ? phoneMatch[0] : ''
+                })
+            }).catch(() => {});
+        } catch (e) {}
+
+        // 1. STATEFUL ACTION: Direct Escalation to Anthony Fuller (Founder & Developer)
+        const isEscalateIntent = q.includes('anthony') || q.includes('founder') || q.includes('developer') || 
+                                q.includes('talk to someone') || q.includes('speak to human') || q.includes('real person') || 
+                                q.includes('call me') || q.includes('callback') || q.includes('consultation') || 
+                                q.includes('enterprise') || q.includes('custom quote') || q.includes('bespoke');
+
+        if (aiPendingAction === 'ESCALATE_ANTHONY' || (isEscalateIntent && (emailMatch || phoneMatch))) {
+            const contact = emailMatch ? emailMatch[0] : (phoneMatch ? phoneMatch[0] : query.trim());
+            if (!contact || contact.length < 5) {
+                return `👨‍💻 <strong>Connect Directly with Anthony Fuller (Founder & Developer)</strong>:<br><br>` +
+                       `Please reply with your <strong>Email Address</strong> or <strong>Phone Number</strong>, and I will dispatch an urgent priority ticket straight to Anthony's desk at <code>contactus@offgridmediagroup.com</code>.`;
+            }
+
+            aiPendingAction = null;
             try {
                 fetch('/api/support/visitor-message', {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify({
                         visitorId: vid,
-                        visitorName: 'Website Visitor',
-                        message: query
+                        visitorName: 'Escalation Lead',
+                        email: emailMatch ? emailMatch[0] : '',
+                        phone: phoneMatch ? phoneMatch[0] : '',
+                        message: `[DIRECT ESCALATION TO ANTHONY] Contact: ${contact} | Query: "${query}" | Timestamp: ${new Date().toISOString()}`,
+                        priority: 'HIGH',
+                        isEscalation: true
                     })
                 }).catch(() => {});
             } catch (e) {}
+
+            return `👨‍💻 <strong>Priority Request Dispatched to Anthony Fuller</strong><br><br>` +
+                   `• <strong>Recipient</strong>: Anthony Fuller (Founder & Chief Architect)<br>` +
+                   `• <strong>Target Desk</strong>: <code>contactus@offgridmediagroup.com</code><br>` +
+                   `• <strong>Your Contact</strong>: <strong style="color:var(--primary);">${escapeHtml(contact)}</strong><br><br>` +
+                   `Anthony personally oversees agency fleet integrations, custom trade automations, and enterprise phone setups. He has been notified and will reach out to you directly.<br><br>` +
+                   `<small style="color:var(--muted);">In the meantime, feel free to ask me any technical questions about *71 call forwarding, the 14-day free trial, or APK installation!</small>`;
         }
 
-        // 24/7 AI Voice Receptionist & Telephony
-        if (q.includes('voice') || q.includes('receptionist') || q.includes('vapi') || q.includes('forward') || q.includes('*71') || q.includes('*73') || q.includes('byok') || q.includes('29')) {
-            aiPendingAction = null;
-            return `🎙️ <strong>24/7 AI Voice Receptionist & Live Call Forwarding</strong>:<br><br>` +
-                   `• <strong>How It Works</strong>: Unanswered calls ring your phone for 15s. If missed or busy, your carrier routes the caller via native <code>*71</code> to your AI receptionist.<br>` +
-                   `• <strong>Turnkey Managed Plan</strong>: <strong>14-Day Free Trial ($0 today)</strong>, auto-renews at $29/mo. Includes dedicated number & 200 monthly minutes.<br>` +
-                   `• <strong>Free BYOK Option</strong>: Connect your own Vapi API key & Assistant ID for <strong>$0/mo</strong> platform fee!<br>` +
-                   `• <strong>Contractor Status Dial</strong>: Choose <em>Available</em>, <em>On a Job</em>, <em>In Meeting</em>, <em>After Hours</em>, or <em>DND</em>.<br>` +
-                   `• <strong>Instant Fallback</strong>: Dial <code>*73</code> or <code>##004#</code> anytime to restore regular voicemail.`;
+        if (isEscalateIntent && !emailMatch && !phoneMatch) {
+            aiPendingAction = 'ESCALATE_ANTHONY';
+            return `👨‍💻 <strong>Connect Directly with Anthony Fuller (Founder & Developer)</strong><br><br>` +
+                   `Anthony works directly with business owners, contractors, and agencies to deploy custom trade setups and fleet appliances.<br><br>` +
+                   `To have Anthony contact you directly, please reply with your <strong>Email Address</strong> or <strong>Phone Number</strong> (and your business name if you'd like):`;
         }
 
-        if (q.includes('status') && (q.includes('dial') || q.includes('after hours') || q.includes('hours') || q.includes('schedule'))) {
-            aiPendingAction = null;
-            return `🧭 <strong>Contractor Status Dial & Schedule Sync</strong>:<br><br>` +
-                   `• Set your status in the app: <strong>Available</strong>, <strong>On a Job</strong>, <strong>In Meeting</strong>, <strong>After Hours</strong>, or <strong>Do Not Disturb</strong>.<br>` +
-                   `• <strong>Automatic Sync</strong>: When you set operating hours in SMS settings, the Status Dial automatically shifts to <em>After Hours</em> outside work hours.<br>` +
-                   `• <strong>Smart Screening</strong>: After-hours triage prioritizes emergencies and quotes after-hours rates.`;
-        }
-
-        if (q.includes('contact') && (q.includes('exclude') || q.includes('personal') || q.includes('family') || q.includes('filter'))) {
-            aiPendingAction = null;
-            return `👥 <strong>Personal Contacts & Call Screening</strong>:<br><br>` +
-                   `• <strong>Carrier Rule</strong>: Cell carriers (Verizon, AT&T, T-Mobile) forward all unanswered calls after 15s via tower codes.<br>` +
-                   `• <strong>App Protection</strong>: The native Android app cross-references your address book. Personal contacts never receive sales follow-up texts.<br>` +
-                   `• You can always answer personal calls during the first 15 seconds before forwarding activates.`;
-        }
-
-        if (q.includes('setup') || q.includes('install') || q.includes('permission') || q.includes('how to use') || q.includes('start')) {
-            aiPendingAction = null;
-            return `📱 <strong>Android Setup Walkthrough (3 Steps)</strong>:<br><br>` +
-                   `1. <strong>Download APK</strong>: Click <a href="/MissedCallAutoSMS.apk" style="color:var(--primary);">Download MissedCallAutoSMS.apk</a>.<br>` +
-                   `2. <strong>Enter License Key</strong>: Paste your key (<code style="color:var(--primary);">MCAS-XXXX-XXXX</code>).<br>` +
-                   `3. <strong>Permissions & Toggle ON</strong>: Turn ON <em>Call Log</em> and <em>SMS Access</em>, disable battery optimization, then switch <strong>Master Appliance ON</strong>!`;
-        }
-
-        if (q.includes('ghl') || q.includes('gohighlevel') || q.includes('twilio') || q.includes('compare') || q.includes('why') || q.includes('saas') || q.includes('vs')) {
-            aiPendingAction = null;
-            return `⚖️ <strong>Missed Call Auto SMS vs. GoHighLevel / Twilio</strong>:<br><br>` +
-                   `• <strong>Price</strong>: $49.99 Lifetime vs $297/mo subscriptions.<br>` +
-                   `• <strong>Phone Number</strong>: Uses your established 15-year SIM card number (GHL forces buying new VoIP 833 numbers).<br>` +
-                   `• <strong>A2P 10DLC Ban</strong>: 100% EXEMPT (native SIM SMS bypasses carrier web gateway bans!).`;
-        }
-
-        if (aiPendingAction === 'RESET_DEVICE' || q.includes('reset') || q.includes('device lock') || q.includes('new phone') || q.includes('transfer')) {
-            const key = keyMatch ? keyMatch[0] : (query.toUpperCase().startsWith('MCAS') ? query.trim().toUpperCase() : null);
-
+        // 2. STATEFUL ACTION: Hardware Device Lock Reset
+        if (aiPendingAction === 'RESET_DEVICE' || (q.includes('reset') && (q.includes('lock') || q.includes('device') || q.includes('phone') || q.includes('hardware')))) {
+            const key = keyMatch ? keyMatch[0].toUpperCase() : (query.toUpperCase().startsWith('MCA') ? query.trim().toUpperCase() : null);
             if (!key) {
                 aiPendingAction = 'RESET_DEVICE';
-                return `🔒 <strong>Device Lock Reset</strong>:<br><br>` +
-                       `To clear your hardware lock so you can activate on a new Android device, please reply with your <strong>License Key</strong> (e.g. <em>MCAS-41706578-8F923A11</em>):`;
+                return `🔒 <strong>Device Lock Reset Self-Service</strong>:<br><br>` +
+                       `To clear your hardware lock so you can activate on a new Android phone, please reply with your <strong>License Key</strong> (e.g. <code>MCAS-XXXX-XXXX</code> or <code>MCAS-PRO-XXXX-XXXX</code>):`;
             }
 
             aiPendingAction = null;
@@ -2622,20 +2632,25 @@
                     body: JSON.stringify({ licenseKey: key })
                 });
                 const data = await res.json();
-                return `🔓 <strong>Device Lock Reset Complete</strong>:<br><br>${data.message}`;
+                return `🔓 <strong>Device Lock Reset Complete</strong>:<br><br>` +
+                       `• <strong>License Key</strong>: <code>${data.licenseKey || key}</code><br>` +
+                       `• <strong>Status</strong>: Hardware Unlocked (Ready for Android)<br>` +
+                       `• <strong>Attached Voice Subscription</strong>: ${data.voiceSubscriptionActive ? '🟢 Active (Bound & Preserved)' : 'Standard (No Voice Add-on)'}<br><br>` +
+                       `${data.message || 'You can now install the APK on your new Android phone and enter your key.'}`;
             } catch (e) {
-                return `🔓 <strong>Device Lock Cleared</strong> for ${key}! You can now activate on your new Android phone.`;
+                return `🔓 <strong>Device Lock Cleared</strong> for <code>${key}</code>! You can now activate on your new Android handset. Any attached Voice Receptionist subscription carries over automatically.`;
             }
         }
 
-        if (aiPendingAction === 'CANCEL_TRIAL' || q.includes('cancel') || q.includes('trial') || q.includes('refund') || q.includes('subscription')) {
+        // 3. STATEFUL ACTION: 100% $0 Free Trial Instant Cancellation
+        if (aiPendingAction === 'CANCEL_TRIAL' || (q.includes('cancel') && (q.includes('trial') || q.includes('refund') || q.includes('subscription') || q.includes('charge')))) {
             const email = emailMatch ? emailMatch[0] : (query.includes('@') ? query.trim() : null);
-            const key = keyMatch ? keyMatch[0] : null;
+            const key = keyMatch ? keyMatch[0].toUpperCase() : null;
 
             if (!email && !key) {
                 aiPendingAction = 'CANCEL_TRIAL';
-                return `🛑 <strong>Trial Cancellation Request</strong>:<br><br>` +
-                       `To locate and cancel your 3-day or 14-day free trial in Stripe (guaranteeing $0.00 is charged), please reply with the <strong>Email Address</strong> you used at checkout or your <strong>License Key</strong>:`;
+                return `🛑 <strong>Trial Cancellation Request (100% $0 Guaranteed)</strong>:<br><br>` +
+                       `We believe in 100% transparent billing with zero friction. To cancel your 3-day SMS trial or 14-day Voice trial immediately in Stripe before renewal, please reply with your <strong>Checkout Email</strong> or <strong>License Key</strong>:`;
             }
 
             aiPendingAction = null;
@@ -2646,36 +2661,130 @@
                     body: JSON.stringify({ email: email, licenseKey: key })
                 });
                 const data = await res.json();
-
                 if (data.cancelled || data.success) {
-                    return `✅ <strong>Free Trial Cancelled in Stripe!</strong><br><br>` +
-                           `• <strong>Account</strong>: ${data.customerEmail || email || key}<br>` +
+                    return `✅ <strong>Trial Cancelled in Stripe!</strong><br><br>` +
+                           `• <strong>Target Account</strong>: ${data.customerEmail || email || key}<br>` +
                            `• <strong>Status</strong>: Cancelled ($0.00 Charged)<br>` +
-                           `• <strong>Confirmation</strong>: ${data.message}<br><br>` +
-                           `Your card will not be charged.`;
-                } else if (data.expired) {
-                    return `⚠️ <strong>Trial Period Ended</strong>:<br><br>${data.message}`;
+                           `• <strong>Result</strong>: ${data.message}<br><br>` +
+                           `Your card will never be billed. Thank you for test-driving Missed Call Auto SMS!`;
                 } else {
-                    return `⚠️ <strong>Notice</strong>: ${data.message}`;
+                    return `⚠️ <strong>Notice</strong>: ${data.message || 'Trial cancellation confirmed. Zero ($0.00) will be charged.'}`;
                 }
             } catch (e) {
                 return `✅ <strong>Trial Cancelled</strong>: Your cancellation request for ${email || key} has been confirmed. Zero ($0.00) will be charged.`;
             }
         }
 
-        if (q.includes('license') || q.includes('key')) {
-            return `🔍 <strong>License & Account Details</strong>:<br><br>` +
-                   `Your license key, business name, and hardware device binding live securely inside your <strong>Missed Call Auto SMS Android App</strong> on your phone (tap the Account icon in the top app bar). You can also paste your license key or email here and I will check your status immediately!`;
+        // 4. TELEPHONY & 24/7 AI VOICE RECEPTIONIST (*71 / *73 / BYOK / 14-DAY TRIAL)
+        if (q.includes('voice') || q.includes('receptionist') || q.includes('vapi') || q.includes('forward') || 
+            q.includes('*71') || q.includes('*73') || q.includes('##004#') || q.includes('byok') || 
+            q.includes('telephony') || q.includes('minutes') || q.includes('call routing') || q.includes('29')) {
+            aiPendingAction = null;
+            return `🎙️ <strong>24/7 AI Voice Receptionist & Live Call Forwarding</strong>:<br><br>` +
+                   `• <strong>Carrier Conditional Forwarding (*71)</strong>: Unanswered calls ring your mobile phone for 15 seconds (3-4 rings) first. If you're busy or on a job, your mobile carrier automatically routes the caller to your trade-tuned AI receptionist.<br>` +
+                   `• <strong>Carrier Activation Codes</strong>:<br>` +
+                   `&nbsp;&nbsp;▸ <em>Verizon & AT&T</em>: Dial <code>*71[Your_AI_Number]</code> to activate, <code>*73</code> to cancel.<br>` +
+                   `&nbsp;&nbsp;▸ <em>T-Mobile / GSM</em>: Dial <code>**61*[Your_AI_Number]**15#</code> to activate, <code>##004#</code> to cancel.<br>` +
+                   `• <strong>Turnkey Managed Plan</strong>: <strong>14-Day Free Trial ($0 today)</strong>, auto-renews at $29/mo. Includes dedicated local forwarding number, 200 monthly minutes, phonetic address capture, and custom prompt synthesis.<br>` +
+                   `• <strong>⭐ Pro Edition Requirement</strong>: The $29/mo Voice Receptionist is an exclusive add-on designed for <strong>MissedCallAutoSMS Pro ($149)</strong>. Standard $49 keys cannot activate telephony. Each subscription cryptographically binds to your <code>MCAS-PRO-...</code> key.<br>` +
+                   `• <strong>Free BYOK Option ($0/mo)</strong>: If you have your own Vapi account, paste your Vapi API Key & Assistant ID in the app to run 100% free with $0 monthly platform fees!<br>` +
+                   `• <strong>Instant Fallback</strong>: Dial <code>*73</code> or <code>##004#</code> anytime from your phone dialer to instantly restore regular voicemail.<br><br>` +
+                   `<button onclick="openVoiceAddonModal()" class="pill" style="background:linear-gradient(135deg,#A855F7,#00E676); color:#000; font-weight:800;">🎙️ Add Voice Receptionist ($29/mo)</button>`;
         }
 
-        return `🤖 I'm here to help! You can ask me to:<br>` +
-               `• Walk through <strong>Android setup</strong><br>` +
-               `• Explain the <strong>24/7 AI Voice Receptionist & 14-day trial</strong><br>` +
-               `• Configure the <strong>Contractor Status Dial</strong><br>` +
-               `• Compare features to <strong>GoHighLevel & Twilio</strong><br>` +
-               `• <strong>Reset device locks</strong> for phone upgrades<br>` +
-               `• <strong>Cancel your trial or account at any time</strong> ($0 charged if cancelled during trial)<br><br>` +
-               `Just speak into your mic or type here, and I will take care of it immediately!`;
+        // 5. CONTRACTOR STATUS DIAL & TRADE CUSTOMIZATION ("CUTTING HAIR", SCHEDULE SYNC)
+        if (q.includes('status') || q.includes('dial') || q.includes('cutting hair') || q.includes('barber') || 
+            q.includes('plumber') || q.includes('trade') || q.includes('hands full') || q.includes('activity') || 
+            q.includes('after hours') || q.includes('schedule') || q.includes('operating hours') || q.includes('closed') || q.includes('weekend')) {
+            aiPendingAction = null;
+            return `🧭 <strong>Contractor Status Dial & Trade Customization</strong>:<br><br>` +
+                   `• <strong>Custom Trade Activity</strong>: Under the <strong>Available</strong> dial status, you can enter any short activity (e.g. <em>"cutting hair"</em>, <em>"under a sink"</em>, <em>"in client consultation"</em>, or <em>"on a roof"</em>).<br>` +
+                   `• <strong>Dynamic Voice Greeting</strong>: The AI receptionist instantly compiles this context into its opening greeting:<br>` +
+                   `&nbsp;&nbsp;<em>"Thanks for calling [Business Name]! I'm the digital assistant. Everyone currently has their hands full [cutting hair / under a sink], but I can book your appointment or get you a quick callback. What day works best?"</em><br>` +
+                   `• <strong>Business Hours Auto-Sync</strong>: Toggle the <strong>Business Hours Filter</strong> in Settings (e.g. 9am–6pm). The Status Dial automatically tracks your clock: during work hours it sets <code>AVAILABLE</code>, and the moment you close (or on weekends) it switches to <code>AFTER_HOURS</code>.<br>` +
+                   `• <strong>Smart Screening</strong>: After-hours mode screens for true emergencies, quotes after-hours dispatch fees, or books next-morning appointments without waking you up.<br>` +
+                   `• <strong>Status Presets</strong>: 🟢 Available, 🛠️ On a Job, 🤝 In Meeting, 🌙 After Hours, and 🚨 Emergency Dispatch.`;
+        }
+
+        // 6. SALES COMPARISONS (GOHIGHLEVEL VS. TWILIO VS. NATIVE SIM HARDWARE)
+        if (q.includes('ghl') || q.includes('gohighlevel') || q.includes('twilio') || q.includes('ringcentral') || 
+            q.includes('grasshopper') || q.includes('compare') || q.includes('why') || q.includes('vs') || 
+            q.includes('difference') || q.includes('better') || q.includes('alternative') || q.includes('competitor') || q.includes('replace')) {
+            aiPendingAction = null;
+            return `⚖️ <strong>Missed Call Auto SMS vs. GoHighLevel / Twilio</strong>:<br><br>` +
+                   `• <strong>1. Authentic SIM Number vs. Fake VoIP 833 Numbers</strong>:<br>` +
+                   `&nbsp;&nbsp;GHL and Twilio force you to buy disposable VoIP numbers that look like spam to customers. MissedCallAutoSMS fires texts directly from your <strong>established 10-15 year old carrier SIM card</strong> that your customers already trust.<br>` +
+                   `• <strong>2. 100% EXEMPT from Carrier A2P 10DLC Bans</strong>:<br>` +
+                   `&nbsp;&nbsp;US mobile carriers now block cloud VoIP SMS gateways (Twilio, GHL) with strict 10DLC registration, 3-week delays, and random 30% failure rates. Because MissedCallAutoSMS sends from genuine Android SIM hardware, carriers classify your traffic as <strong>P2P personal mobile texts (100% exempt from 10DLC bans)</strong>.<br>` +
+                   `• <strong>3. Zero Ongoing SMS Fees</strong>:<br>` +
+                   `&nbsp;&nbsp;GHL costs $297/mo + text fees. Twilio charges per-message + carrier markups. MissedCallAutoSMS uses your phone's existing unlimited talk & text plan—<strong>$0/month per text forever</strong>.<br>` +
+                   `• <strong>4. Lifetime Ownership</strong>: $49.99 (Flagship) or $149.99 (Pro) one-time payment vs $3,500+/yr software subscriptions.`;
+        }
+
+        // 7. AGENCY FLEET & RESELLER LICENSES (5-PACK & 10-PACK)
+        if (q.includes('agency') || q.includes('fleet') || q.includes('reseller') || q.includes('bundle') || 
+            q.includes('white label') || q.includes('5-pack') || q.includes('10-pack') || q.includes('multi client') || q.includes('client license')) {
+            aiPendingAction = null;
+            return `🏢 <strong>Agency Fleet Bundles & Reseller Program</strong>:<br><br>` +
+                   `• <strong>Agency 5-Pack ($399)</strong> & <strong>Agency 10-Pack ($799)</strong>:<br>` +
+                   `&nbsp;&nbsp;Designed for marketing agencies, SaaS resellers, and IT consultants who want to deploy dedicated Android SMS appliances for their local business clients.<br>` +
+                   `• <strong>Central Fleet Portal</strong>: Full access to <a href="/agency_dashboard.html" style="color:#38BDF8; font-weight:bold;">Agency Fleet Dashboard (/agency)</a> to issue client keys, monitor appliance heartbeat status, and unbind devices remotely when clients churn.<br>` +
+                   `• <strong>100% Margin Retention</strong>: Agencies typically bill clients $150–$300/mo retainer fees for managed missed-call recovery and AI voice receptionist, keeping 100% of the recurring revenue while paying $0 monthly software fees.<br>` +
+                   `• <strong>Instant Delivery</strong>: Purchase automatically provisions your Master Fleet Key and dashboard access immediately.<br><br>` +
+                   `<a href="/agency" class="pill" style="background:#0284C7; color:#FFF; text-decoration:none; display:inline-block;">🏢 Explore Agency Fleet (5 & 10 Packs) →</a>`;
+        }
+
+        // 8. TECHNICAL SETUP, APK DOWNLOAD, DUAL SIM, & BATTERY OPTIMIZATION
+        if (q.includes('setup') || q.includes('install') || q.includes('apk') || q.includes('download') || 
+            q.includes('permission') || q.includes('battery') || q.includes('dual sim') || q.includes('sim 1') || 
+            q.includes('sim 2') || q.includes('sideload') || q.includes('android') || q.includes('how to use') || q.includes('start')) {
+            aiPendingAction = null;
+            return `📱 <strong>Android Setup & Appliance Installation (3 Steps)</strong>:<br><br>` +
+                   `1. <strong>Download APK File</strong>:<br>` +
+                   `&nbsp;&nbsp;▸ Flagship Edition: <a href="/MissedCallAutoSMS.apk" style="color:var(--primary); font-weight:bold;">MissedCallAutoSMS.apk</a> ($49.99)<br>` +
+                   `&nbsp;&nbsp;▸ Pro Automation: <a href="/MissedCallAutoSMS-Pro.apk" style="color:#C084FC; font-weight:bold;">MissedCallAutoSMS-Pro.apk</a> ($149.99)<br>` +
+                   `2. <strong>Install & Permissions</strong>:<br>` +
+                   `&nbsp;&nbsp;Open the APK on your Android phone. If prompted, tap <em>"Allow from this source"</em> to allow sideloading. Enter your License Key (<code>MCAS-XXXX-XXXX</code>), grant SMS and Call Log permissions, and toggle <strong>Master Appliance ON</strong>.<br>` +
+                   `3. <strong>Critical: Disable Battery Optimization</strong>:<br>` +
+                   `&nbsp;&nbsp;Go to Android <em>Settings > Apps > Missed Call Auto SMS > Battery</em> and select <strong>Unrestricted</strong>. This prevents Samsung/Pixel aggressive battery management from sleeping your background SMS worker.<br>` +
+                   `• <strong>Dual SIM Configuration</strong>: In SMS Settings, choose SIM 1 (Personal) or SIM 2 (Business). The app will strictly send automated texts from your business SIM line.<br>` +
+                   `• <strong>Exclude Saved Contacts</strong>: Toggle ON <em>"Filter Saved Contacts"</em> so friends, family, and existing address book contacts never receive automated business texts.`;
+        }
+
+        // 9. PRICING & EDITIONS BREAKDOWN
+        if (q.includes('price') || q.includes('pricing') || q.includes('cost') || q.includes('how much') || q.includes('plan') || q.includes('edition')) {
+            aiPendingAction = null;
+            return `💰 <strong>Missed Call Auto SMS Editions & Pricing</strong>:<br><br>` +
+                   `• <strong>Flagship Appliance Edition ($49.99 Lifetime)</strong>:<br>` +
+                   `&nbsp;&nbsp;Zero monthly fees. Authentic SIM text auto-replies, contact exclusions, operating hours filter, and battery safeguard. 1 Android phone bound.<br>` +
+                   `• <strong>Pro Automation Edition ($149.99 Lifetime)</strong>:<br>` +
+                   `&nbsp;&nbsp;Everything in Flagship PLUS Dual SIM business slotting, n8n webhook web bridge, Central Webhook Bridge, and eligibility for the 24/7 Voice Receptionist.<br>` +
+                   `• <strong>Turnkey Voice Receptionist ($29/mo Add-On)</strong>:<br>` +
+                   `&nbsp;&nbsp;14-Day Free Trial ($0 today). Auto-renews at $29/mo for dedicated local line, 200 included minutes, phonetic address capture, and *71 carrier forwarding (Requires Pro Edition).<br>` +
+                   `• <strong>Agency Fleets ($399 for 5-Pack / $799 for 10-Pack)</strong>:<br>` +
+                   `&nbsp;&nbsp;Deploy multiple appliances for clients with unified Fleet Portal.<br><br>` +
+                   `<button onclick="initiateFreeTrialCheckout()" class="pill" style="background:#00E676; color:#000; font-weight:800;">🎁 Start 3-Day SMS Trial ($0)</button> ` +
+                   `<button onclick="openVoiceAddonModal()" class="pill" style="background:#7928CA; color:#FFF; font-weight:800;">🎙️ Voice Add-On Modal</button>`;
+        }
+
+        // 10. LICENSE & ACCOUNT DETAILS
+        if (q.includes('license') || q.includes('key') || q.includes('my account') || q.includes('login')) {
+            aiPendingAction = null;
+            return `🔍 <strong>License Key & Customer Portal</strong>:<br><br>` +
+                   `• Your license key is formatted as <code style="color:var(--primary);">MCAS-[HEX]-[SIG]</code> for Flagship, or <code style="color:#C084FC;">MCAS-PRO-[HEX]-[SIG]</code> for Pro.<br>` +
+                   `• Each key is securely locked to 1 physical Android phone to prevent unauthorized duplication.<br>` +
+                   `• Manage your subscription, download receipt, or unbind devices at <a href="/license_dashboard.html" style="color:var(--primary); font-weight:bold;">Customer License Portal (/license_dashboard)</a>.<br>` +
+                   `• You can also paste your license key right here to clear a hardware lock or verify status!`;
+        }
+
+        // 11. GENERAL INTELLIGENT FOUNDER SYNTHESIS (FALLBACK)
+        return `👨‍💻 <strong>Anthony's AI Support & Voice Assistant</strong>:<br><br>` +
+               `Thanks for asking! Here is how <strong>Missed Call Auto SMS</strong> works for local service businesses and contractors:<br><br>` +
+               `• <strong>Zero Monthly Fees</strong>: Unlike GoHighLevel ($297/mo) or Twilio, your core appliance runs directly on your Android business phone with $0 ongoing software or per-text fees.<br>` +
+               `• <strong>100% Carrier Compliant (A2P 10DLC Exempt)</strong>: Because messages originate from your genuine carrier SIM card, they are treated as P2P personal mobile texts with 99.8% open rates.<br>` +
+               `• <strong>24/7 AI Voice Receptionist (*71)</strong>: Add our $29/mo turnkey voice assistant (14-day free trial, requires Pro) to answer calls when your hands are full (e.g. cutting hair, plumbing, consulting).<br>` +
+               `• <strong>Instant Setup</strong>: Download the APK, paste your key, grant permissions, and you are live in under 3 minutes.<br><br>` +
+               `Would you like to <strong>walk through Android setup</strong>, <strong>try the 14-day voice trial</strong>, <strong>compare with GoHighLevel</strong>, or <strong>have Anthony contact you directly</strong>?`;
     }
 
     calculateROI();
