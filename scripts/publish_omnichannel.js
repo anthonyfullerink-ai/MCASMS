@@ -1,0 +1,397 @@
+const fs = require('fs');
+const path = require('path');
+const https = require('https');
+const { generateDailyContentBundle } = require('./generate_daily_content');
+
+// Load environment variables safely
+function loadEnv() {
+  const envPath = path.join(__dirname, '../.env');
+  if (fs.existsSync(envPath)) {
+    const lines = fs.readFileSync(envPath, 'utf8').split('\n');
+    lines.forEach(line => {
+      const match = line.match(/^\s*([\w.-]+)\s*=\s*(.*)?\s*$/);
+      if (match) {
+        const key = match[1];
+        let val = match[2] || '';
+        if (val.startsWith('"') && val.endsWith('"')) val = val.slice(1, -1);
+        if (val.startsWith("'") && val.endsWith("'")) val = val.slice(1, -1);
+        if (!process.env[key]) process.env[key] = val.trim();
+      }
+    });
+  }
+}
+
+loadEnv();
+
+const TOKEN = process.env.META_PAGE_ACCESS_TOKEN || '';
+const FB_PAGE_ID = process.env.FB_PAGE_ID || '1248332278370968';
+const IG_USER_ID = process.env.IG_USER_ID || '17841428781387416';
+
+function postGraphApi(endpoint, postData) {
+  return new Promise((resolve, reject) => {
+    const payload = JSON.stringify(postData);
+    const options = {
+      hostname: 'graph.facebook.com',
+      port: 443,
+      path: endpoint,
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'Content-Length': Buffer.byteLength(payload)
+      }
+    };
+
+    const req = https.request(options, res => {
+      let body = '';
+      res.on('data', chunk => body += chunk);
+      res.on('end', () => {
+        try {
+          const json = JSON.parse(body);
+          if (res.statusCode >= 200 && res.statusCode < 300) {
+            resolve(json);
+          } else {
+            reject(new Error(`HTTP ${res.statusCode}: ` + (json.error ? json.error.message : body)));
+          }
+        } catch (e) {
+          reject(new Error(`Parse error (${res.statusCode}): ` + body));
+        }
+      });
+    });
+
+    req.on('error', reject);
+    req.write(payload);
+    req.end();
+  });
+}
+
+function getGraphApi(endpoint) {
+  return new Promise((resolve, reject) => {
+    const options = {
+      hostname: 'graph.facebook.com',
+      port: 443,
+      path: endpoint,
+      method: 'GET'
+    };
+
+    const req = https.request(options, res => {
+      let body = '';
+      res.on('data', chunk => body += chunk);
+      res.on('end', () => {
+        try {
+          const json = JSON.parse(body);
+          if (res.statusCode >= 200 && res.statusCode < 300) {
+            resolve(json);
+          } else {
+            reject(new Error(`HTTP ${res.statusCode}: ` + (json.error ? json.error.message : body)));
+          }
+        } catch (e) {
+          reject(new Error(`Parse error (${res.statusCode}): ` + body));
+        }
+      });
+    });
+
+    req.on('error', reject);
+    req.end();
+  });
+}
+
+/**
+ * Pre-flight Meta Token Health Guard
+ * Checks if the page access token is alive and has proper permissions before upload
+ */
+async function checkMetaTokenHealth() {
+  if (!TOKEN) {
+    console.warn('⚠️ [TokenGuard] META_PAGE_ACCESS_TOKEN is not defined in .env.');
+    return false;
+  }
+  try {
+    const res = await getGraphApi(`/v20.0/me?access_token=${TOKEN}`);
+    console.log(`🔒 [TokenGuard] Verified Meta Access Token for Account: ${res.name || res.id} (Status: OK)`);
+    return true;
+  } catch (e) {
+    console.warn(`⚠️ [TokenGuard] Meta Token Verification Warning: ${e.message}`);
+    return false;
+  }
+}
+
+// 1. Morning Slot: Publish Blog to Website
+async function publishMorningBlog(bundle, isDryRun) {
+  console.log('\n====================================================');
+  console.log('🌅 [MORNING SLOT: 8:00 AM] PUBLISHING DAILY BLOG');
+  console.log('====================================================');
+  console.log(`Trade: [${bundle.trade || 'All Trades'}]`);
+  console.log(`Title: "${bundle.blog.title}"`);
+  console.log(`Pillar: [${bundle.contentType}] ${bundle.pillar}`);
+
+  if (isDryRun) {
+    console.log('✔ [DRY RUN] Blog files would be updated in blog/posts.json and sitemap.xml');
+    return { status: 'dry_run_success' };
+  }
+
+  const postsJsonPath = path.join(__dirname, '../blog/posts.json');
+  const templatePath = path.join(__dirname, '../blog/template.html');
+  const sitemapPath = path.join(__dirname, '../sitemap.xml');
+
+  let posts = [];
+  if (fs.existsSync(postsJsonPath)) {
+    try { posts = JSON.parse(fs.readFileSync(postsJsonPath, 'utf8')); } catch (e) {}
+  }
+
+  const slug = bundle.blog.slug;
+  if (!posts.some(p => p.slug === slug)) {
+    const newPostEntry = {
+      slug: slug,
+      title: bundle.blog.title,
+      category: bundle.blog.category,
+      date: bundle.date,
+      readTime: bundle.blog.readTime,
+      excerpt: bundle.blog.excerpt,
+      imageUrl: `https://raw.githubusercontent.com/anthonyfullerink-ai/MCASMS/main/assets/social/contractor-speed-rule.jpg`
+    };
+
+    posts.unshift(newPostEntry);
+    fs.writeFileSync(postsJsonPath, JSON.stringify(posts, null, 2), 'utf8');
+    console.log(`✔ Updated blog/posts.json (Total articles: ${posts.length})`);
+
+    // Render HTML page
+    if (fs.existsSync(templatePath)) {
+      const template = fs.readFileSync(templatePath, 'utf8');
+      const rendered = template
+        .replace(/\{\{TITLE\}\}/g, bundle.blog.title)
+        .replace(/\{\{EXCERPT\}\}/g, bundle.blog.excerpt)
+        .replace(/\{\{CATEGORY\}\}/g, bundle.blog.category)
+        .replace(/\{\{DATE\}\}/g, bundle.date)
+        .replace(/\{\{READ_TIME\}\}/g, bundle.blog.readTime)
+        .replace(/\{\{IMAGE_URL\}\}/g, newPostEntry.imageUrl)
+        .replace(/\{\{CONTENT_HTML\}\}/g, bundle.blog.contentMarkdown.replace(/\n\n/g, '<br><br>'));
+      
+      const outPostPath = path.join(__dirname, `../blog/posts/${slug}.html`);
+      fs.mkdirSync(path.dirname(outPostPath), { recursive: true });
+      fs.writeFileSync(outPostPath, rendered, 'utf8');
+      console.log(`✔ Generated static article page: blog/posts/${slug}.html`);
+    }
+  } else {
+    console.log(`ℹ️ Article with slug "${slug}" already exists in blog/posts.json`);
+  }
+
+  return { status: 'published' };
+}
+
+// 2. Lunch Slot: Publish 1:1 Feed Post (FB & IG)
+async function publishLunchFeedPost(bundle, isDryRun) {
+  console.log('\n====================================================');
+  console.log('☀️ [LUNCH SLOT: 12:30 PM] PUBLISHING 1:1 FEED POST');
+  console.log('====================================================');
+  console.log(`Trade Focus: ${bundle.trade}`);
+  console.log(`Headline: ${bundle.feedPost.headline}`);
+  console.log(`Asset: ${bundle.feedPost.imageAsset} (${bundle.feedPost.aspectRatio})`);
+
+  // Resolve public image URL
+  const imageUrl = `https://raw.githubusercontent.com/anthonyfullerink-ai/MCASMS/main/assets/social/hvac-speed-to-lead.jpg`;
+
+  if (isDryRun) {
+    console.log('✔ [DRY RUN] Facebook Feed Post simulated with payload:');
+    console.log(`   Message preview: ${bundle.feedPost.copyFacebook.slice(0, 100)}...`);
+    console.log('✔ [DRY RUN] Instagram Feed Post simulated with image container:');
+    console.log(`   Image URL: ${imageUrl}`);
+    return { fb: 'dry_run', ig: 'dry_run' };
+  }
+
+  let fbResult = null;
+  let igResult = null;
+
+  // A. Facebook Page Feed
+  try {
+    console.log('🔵 Posting to Facebook Page Feed...');
+    fbResult = await postGraphApi(`/v20.0/${FB_PAGE_ID}/photos`, {
+      url: imageUrl,
+      caption: bundle.feedPost.copyFacebook,
+      access_token: TOKEN
+    });
+    console.log(`🎉 SUCCESS: Facebook Feed Post is LIVE! (ID: ${fbResult.id})`);
+  } catch (e) {
+    console.error(`❌ Facebook Feed Post Error:`, e.message);
+  }
+
+  // B. Instagram Feed
+  try {
+    console.log('🟣 Posting to Instagram Feed (1:1)...');
+    const container = await postGraphApi(`/v20.0/${IG_USER_ID}/media`, {
+      image_url: imageUrl,
+      caption: bundle.feedPost.copyInstagram,
+      access_token: TOKEN
+    });
+    console.log(`✔ IG Container created (ID: ${container.id}). Waiting 3s...`);
+    await new Promise(r => setTimeout(r, 3000));
+
+    igResult = await postGraphApi(`/v20.0/${IG_USER_ID}/media_publish`, {
+      creation_id: container.id,
+      access_token: TOKEN
+    });
+    console.log(`🎉 SUCCESS: Instagram Feed Post is LIVE! (ID: ${igResult.id})`);
+  } catch (e) {
+    console.error(`❌ Instagram Feed Post Error:`, e.message);
+  }
+
+  return { fbResult, igResult };
+}
+
+// 3. Evening Slot: Publish 9:16 Vertical Reel & Story (FB & IG)
+async function publishEveningReelAndStory(bundle, isDryRun) {
+  console.log('\n====================================================');
+  console.log('🌙 [EVENING SLOT: 5:30 PM] PUBLISHING 9:16 REEL & STORY');
+  console.log('====================================================');
+  console.log(`Trade Focus: ${bundle.trade}`);
+  console.log(`Video Asset: ${bundle.reelStory.videoAsset} (${bundle.reelStory.aspectRatio})`);
+
+  const videoUrl = `https://raw.githubusercontent.com/anthonyfullerink-ai/MCASMS/main/${bundle.reelStory.videoAsset}`;
+  const coverUrl = `https://raw.githubusercontent.com/anthonyfullerink-ai/MCASMS/main/${bundle.reelStory.coverAsset}`;
+
+  if (isDryRun) {
+    console.log('✔ [DRY RUN] Instagram Reel simulated with 9:16 vertical video');
+    console.log('✔ [DRY RUN] Instagram Story simulated with 9:16 container');
+    console.log('✔ [DRY RUN] Facebook Video / Reel simulated');
+    return { reel: 'dry_run', story: 'dry_run', fb: 'dry_run' };
+  }
+
+  let reelResult = null;
+  let storyResult = null;
+  let fbResult = null;
+
+  // A. Facebook Page Video / Reel
+  try {
+    console.log('🔵 Posting Reel to Facebook Page...');
+    fbResult = await postGraphApi(`/v20.0/${FB_PAGE_ID}/videos`, {
+      file_url: videoUrl,
+      title: `Hands-Busy Trade Solution: Missed Call Auto SMS`,
+      description: bundle.reelStory.captionFacebook,
+      access_token: TOKEN
+    });
+    console.log(`🎉 SUCCESS: Facebook Reel is LIVE! (ID: ${fbResult.id})`);
+  } catch (e) {
+    console.error(`❌ Facebook Reel Error:`, e.message);
+  }
+
+  // B. Instagram Reel with Adaptive Backoff Polling
+  try {
+    console.log('🟣 Creating Instagram Reel container (9:16)...');
+    const container = await postGraphApi(`/v20.0/${IG_USER_ID}/media`, {
+      media_type: 'REELS',
+      video_url: videoUrl,
+      cover_url: coverUrl,
+      caption: bundle.reelStory.captionInstagram,
+      share_to_feed: true,
+      access_token: TOKEN
+    });
+
+    console.log(`✔ Reel container created (ID: ${container.id}). Polling processing status with adaptive backoff...`);
+    let isReady = false;
+    const delays = [4000, 6000, 8000, 10000, 15000, 20000]; // Adaptive backoff intervals
+    
+    for (let i = 0; i < delays.length; i++) {
+      await new Promise(r => setTimeout(r, delays[i]));
+      const statusRes = await getGraphApi(`/v20.0/${container.id}?fields=status_code,status&access_token=${TOKEN}`);
+      console.log(`Polling status (attempt ${i + 1}/${delays.length}): ${statusRes.status_code || statusRes.status}`);
+
+      if (statusRes.status_code === 'FINISHED') {
+        isReady = true;
+        break;
+      } else if (statusRes.status_code === 'ERROR') {
+        throw new Error('Reel video encoding failed in Meta cloud');
+      }
+    }
+
+    if (isReady) {
+      reelResult = await postGraphApi(`/v20.0/${IG_USER_ID}/media_publish`, {
+        creation_id: container.id,
+        access_token: TOKEN
+      });
+      console.log(`🎉 SUCCESS: Instagram Reel is LIVE! (ID: ${reelResult.id})`);
+    } else {
+      console.warn('⚠️ Timed out waiting for Instagram Reel encoding.');
+    }
+  } catch (e) {
+    console.error(`❌ Instagram Reel Error:`, e.message);
+  }
+
+  // C. Instagram Story (9:16 Vertical Video)
+  try {
+    console.log('🟣 Creating Instagram Story container (9:16)...');
+    const storyContainer = await postGraphApi(`/v20.0/${IG_USER_ID}/media`, {
+      media_type: 'STORIES',
+      video_url: videoUrl,
+      access_token: TOKEN
+    });
+
+    console.log(`✔ Story container created (ID: ${storyContainer.id}). Polling status...`);
+    let isStoryReady = false;
+    const storyDelays = [4000, 6000, 8000, 10000];
+
+    for (let i = 0; i < storyDelays.length; i++) {
+      await new Promise(r => setTimeout(r, storyDelays[i]));
+      const statusRes = await getGraphApi(`/v20.0/${storyContainer.id}?fields=status_code,status&access_token=${TOKEN}`);
+      if (statusRes.status_code === 'FINISHED') {
+        isStoryReady = true;
+        break;
+      } else if (statusRes.status_code === 'ERROR') {
+        throw new Error('Story encoding failed in Meta cloud');
+      }
+    }
+
+    if (isStoryReady) {
+      storyResult = await postGraphApi(`/v20.0/${IG_USER_ID}/media_publish`, {
+        creation_id: storyContainer.id,
+        access_token: TOKEN
+      });
+      console.log(`🎉 SUCCESS: Instagram Story is LIVE! (ID: ${storyResult.id})`);
+    }
+  } catch (e) {
+    console.error(`❌ Instagram Story Error:`, e.message);
+  }
+
+  return { fbResult, reelResult, storyResult };
+}
+
+async function run() {
+  const args = process.argv.slice(2);
+  const isDryRun = args.includes('--dry-run') || process.env.DRY_RUN === 'true';
+  const slotArg = (args.find(a => a.startsWith('--slot=')) || '').replace('--slot=', '').toLowerCase();
+
+  // Run Meta Token Guard check
+  if (!isDryRun) {
+    await checkMetaTokenHealth();
+  } else {
+    console.log('🔒 RUNNING IN SAFE DRY-RUN MODE (0 Meta API calls, conserving credits & quota)');
+  }
+
+  const bufferPath = path.join(__dirname, '../data/daily_content_buffer.json');
+  let bundle = null;
+
+  if (fs.existsSync(bufferPath)) {
+    try {
+      bundle = JSON.parse(fs.readFileSync(bufferPath, 'utf8'));
+    } catch (e) {}
+  }
+
+  if (!bundle) {
+    console.log('Generating fresh daily multi-trade content bundle...');
+    bundle = await generateDailyContentBundle({ offline: true });
+  }
+
+  if (slotArg === 'morning' || slotArg === 'blog') {
+    await publishMorningBlog(bundle, isDryRun);
+  } else if (slotArg === 'lunch' || slotArg === 'feed') {
+    await publishLunchFeedPost(bundle, isDryRun);
+  } else if (slotArg === 'evening' || slotArg === 'reel' || slotArg === 'story') {
+    await publishEveningReelAndStory(bundle, isDryRun);
+  } else {
+    console.log(`No specific slot specified (--slot=morning|lunch|evening). Running full bundle test...`);
+    await publishMorningBlog(bundle, isDryRun);
+    await publishLunchFeedPost(bundle, isDryRun);
+    await publishEveningReelAndStory(bundle, isDryRun);
+  }
+
+  console.log('\n🏁 Omnichannel execution finished.');
+}
+
+run().catch(console.error);

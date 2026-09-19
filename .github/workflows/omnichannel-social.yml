@@ -1,0 +1,96 @@
+name: Omnichannel Autonomous Social Publisher
+
+on:
+  schedule:
+    # 1. Morning Blog Slot: 12:00 UTC (8:00 AM EDT)
+    - cron: '0 12 * * *'
+    # 2. Lunch Feed Post Slot (1:1): 16:30 UTC (12:30 PM EDT)
+    - cron: '30 16 * * *'
+    # 3. Evening Reel & Story Slot (9:16): 21:30 UTC (5:30 PM EDT)
+    - cron: '30 21 * * *'
+
+  workflow_dispatch:
+    inputs:
+      slot:
+        description: 'Publishing Slot to Run'
+        required: true
+        default: 'all'
+        type: choice
+        options:
+          - all
+          - morning
+          - lunch
+          - evening
+      dry_run:
+        description: 'Run in Safe Dry-Run Mode (No Meta API requests)'
+        required: true
+        default: false
+        type: boolean
+
+permissions:
+  contents: write
+
+jobs:
+  publish-omnichannel:
+    name: Run Omnichannel Publisher
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout Repository
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: 'npm'
+
+      - name: Install Dependencies
+        run: |
+          npm ci --prefer-offline --no-audit || npm install --production
+
+      - name: Determine Active Slot
+        id: slot_picker
+        run: |
+          if [ "${{ github.event_name }}" = "workflow_dispatch" ]; then
+            echo "slot=${{ github.event.inputs.slot }}" >> "$GITHUB_OUTPUT"
+            echo "dry_run=${{ github.event.inputs.dry_run }}" >> "$GITHUB_OUTPUT"
+          else
+            HOUR=$(date -u +%H)
+            if [ "$HOUR" -ge 11 ] && [ "$HOUR" -le 14 ]; then
+              echo "slot=morning" >> "$GITHUB_OUTPUT"
+            elif [ "$HOUR" -ge 15 ] && [ "$HOUR" -le 19 ]; then
+              echo "slot=lunch" >> "$GITHUB_OUTPUT"
+            else
+              echo "slot=evening" >> "$GITHUB_OUTPUT"
+            fi
+            echo "dry_run=false" >> "$GITHUB_OUTPUT"
+          fi
+
+      - name: Generate & Publish Content
+        env:
+          GEMINI_API_KEY: ${{ secrets.GEMINI_API_KEY }}
+          META_PAGE_ACCESS_TOKEN: ${{ secrets.META_PAGE_ACCESS_TOKEN }}
+          FB_PAGE_ID: ${{ secrets.FB_PAGE_ID || '1248332278370968' }}
+          IG_USER_ID: ${{ secrets.IG_USER_ID || '17841428781387416' }}
+          DRY_RUN: ${{ steps.slot_picker.outputs.dry_run }}
+        run: |
+          echo "🚀 Executing Omnichannel Slot: ${{ steps.slot_picker.outputs.slot }} (DryRun: ${{ steps.slot_picker.outputs.dry_run }})"
+          node scripts/publish_omnichannel.js --slot=${{ steps.slot_picker.outputs.slot }}
+
+      - name: Commit & Push Blog/Buffer Updates (If Morning or Buffer Updated)
+        if: steps.slot_picker.outputs.dry_run != 'true'
+        run: |
+          git config --global user.name "github-actions[bot]"
+          git config --global user.email "github-actions[bot]@users.noreply.github.com"
+          
+          if [ -n "$(git status --porcelain blog sitemap.xml data/ assets/social)" ]; then
+            echo "📝 Committing updated blog and social data..."
+            git add blog/ sitemap.xml data/ assets/social/
+            git commit -m "feat(social): update daily blog and omnichannel buffer"
+            git push origin main
+            echo "✅ Successfully synced to repository!"
+          else
+            echo "ℹ️ No repository files changed during this slot."
+          fi
