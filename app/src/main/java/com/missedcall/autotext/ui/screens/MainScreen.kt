@@ -101,11 +101,18 @@ fun MainScreen(
         )
     }
 
+    val isDeveloperKey = remember(settings.licenseKey) {
+        settings.licenseKey.contains("DEV", ignoreCase = true) ||
+        settings.licenseKey.startsWith("MCAS-DEV") ||
+        settings.licenseKey.contains("DEMO", ignoreCase = true) ||
+        settings.licenseKey.contains("MASTER", ignoreCase = true)
+    }
+
     // Root-Level OTA Update Dialog (Forced / Mandatory when mandatory == true)
     availableUpdate?.let { update ->
         AlertDialog(
             onDismissRequest = {
-                if (!update.mandatory) {
+                if (!update.mandatory || isDeveloperKey) {
                     availableUpdate = null
                 }
             },
@@ -192,9 +199,15 @@ fun MainScreen(
                 }
             },
             dismissButton = {
-                if (!isDownloadingApk && !update.mandatory) {
-                    TextButton(onClick = { availableUpdate = null }) {
-                        Text("Later")
+                if (!isDownloadingApk) {
+                    if (isDeveloperKey) {
+                        TextButton(onClick = { availableUpdate = null }) {
+                            Text("🛠️ Developer Bypass", color = MaterialTheme.colorScheme.primary, fontWeight = FontWeight.Bold)
+                        }
+                    } else if (!update.mandatory) {
+                        TextButton(onClick = { availableUpdate = null }) {
+                            Text("Later")
+                        }
                     }
                 }
             }

@@ -1,9 +1,9 @@
 {
-  "versionCode": 10,
-  "versionName": "1.4.0",
+  "versionCode": 11,
+  "versionName": "1.4.1",
   "downloadUrl": "https://raw.githubusercontent.com/anthonyfullerink-ai/MCASMS/main/MissedCallAutoSMS.apk",
-  "releaseNotes": "• 🎙️ 24/7 AI Voice Receptionist (*71 Live Call Forwarding & 24/7 Answering)\n• 🛡️ Anti-Spam Rate Limiting & Financial Quota Armor\n• ⚡ Instant Offline Outbound SIM SMS Queue Recovery\n• 🚨 Mandatory Upgrade: Required for new telecom routing architecture",
+  "releaseNotes": "• 🎙️ 24/7 AI Voice Receptionist (*71 Carrier Call Forwarding & Live Assistant)\n• 🤖 BYOK Multi-Agent & Inbound Line Selector in Setup\n• 🛠️ Developer Master Voice Mode & Simulated Inbound Testing\n• 💬 Direct Developer Web-to-SMS Live Chat Gateway Sync\n• ⚡ Instant Offline Outbound SIM SMS Recovery",
   "mandatory": true,
-  "minSupportedVersion": 10,
-  "updatedAt": "2026-09-19T12:00:00.000Z"
+  "minSupportedVersion": 11,
+  "updatedAt": "2026-09-19T18:45:00.000Z"
 }

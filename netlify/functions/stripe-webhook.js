@@ -454,10 +454,16 @@ exports.handler = async (event) => {
     const customerDetails = session.customer_details || {};
     const customerEmail = customerDetails.email || session.customer_email;
     const customerName = customerDetails.name || 'Valued Customer';
-    const amountTotal = (session.amount_total !== undefined && session.amount_total !== null) ? session.amount_total : 4999;
-    const isTrial = (amountTotal === 0) ||
+    // Managed AI Voice Receptionist ($29.00/mo Recurring Subscription / 14-Day Free Trial)
+    const isVoicePro = (session.metadata && session.metadata.tier === 'managed_voice_pro') ||
+                       (session.metadata && session.metadata.service === 'voice_receptionist') ||
+                       (amountTotal === 2900) ||
+                       (session.subscription && amountTotal === 2900);
+
+    const isTrial = !isVoicePro && (
+                    (amountTotal === 0) ||
                     (session.subscription && amountTotal === 0) ||
-                    (session.metadata && session.metadata.tier === 'standard_trial');
+                    (session.metadata && session.metadata.tier === 'standard_trial'));
     const amountPaid = (amountTotal / 100).toFixed(2);
 
     if (!customerEmail) {
@@ -466,70 +472,17 @@ exports.handler = async (event) => {
     }
 
     // Determine Tier: Agency 10-Pack ($799+) vs Agency 5-Pack ($399+) vs Pro ($149.99+) vs Standard ($49.99) vs Free Trial ($0.00)
-    const isAgency10 = !isTrial && ((amountTotal >= 70000) || (session.metadata && session.metadata.tier === 'agency_10'));
-    const isAgency5 = !isTrial && !isAgency10 && ((amountTotal >= 30000 && amountTotal < 70000) || (session.metadata && session.metadata.tier === 'agency_5'));
+    const isAgency10 = !isTrial && !isVoicePro && ((amountTotal >= 70000) || (session.metadata && session.metadata.tier === 'agency_10'));
+    const isAgency5 = !isTrial && !isVoicePro && !isAgency10 && ((amountTotal >= 30000 && amountTotal < 70000) || (session.metadata && session.metadata.tier === 'agency_5'));
     const isAgency = isAgency5 || isAgency10;
 
-    const isPro = !isTrial && !isAgency && (amountTotal >= 10000 ||
+    const isPro = !isTrial && !isVoicePro && !isAgency && (amountTotal >= 10000 ||
                   (session.metadata && (session.metadata.tier === 'pro' || session.metadata.tier === 'pro_automation')) ||
                   (session.client_reference_id && session.client_reference_id.toLowerCase().includes('pro')));
 
     const host = (event.headers && event.headers.host) || 'missedcallautosms.com';
     const apkFileName = isPro ? 'MissedCallAutoSMS-Pro.apk' : 'MissedCallAutoSMS.apk';
     const apkDownloadUrl = `https://${host}/${apkFileName}`;
-
-    if (isTrial) {
-      // 1. Generate 3-Day Free Trial License Key (valid 4 days for timezone buffer)
-      const trialLicenseKey = generateKey(customerName, 4, false);
-      console.log(`🎁 [3-DAY TRIAL ACTIVATED] ${trialLicenseKey} for ${customerEmail} ($0.00 Charged)`);
-
-      // 2. Automatically Dispatch Free Trial Delivery Email
-      if (RESEND_API_KEY) {
-        const emailSubject = `🎁 Your Missed Call Auto SMS 3-Day Free Trial Key & Setup Guide ($0 Today)`;
-        const emailHtml = generateTrialEmailHtml(customerName, trialLicenseKey, apkDownloadUrl);
-
-        try {
-          const sendResult = await sendEmail(RESEND_API_KEY, customerEmail, emailSubject, emailHtml);
-          console.log(`📧 [TRIAL EMAIL DELIVERED] Dispatched to ${customerEmail} (ID: ${sendResult.id})`);
-
-          // Notify owner of new free trial signup
-          if (OWNER_NOTIFY_EMAIL && OWNER_NOTIFY_EMAIL !== customerEmail) {
-            sendEmail(
-              RESEND_API_KEY,
-              OWNER_NOTIFY_EMAIL,
-              `🎁 New 3-Day Free Trial Signup: ${customerName}`,
-              `<p>A new customer has started their 3-day free trial ($0 charged today)!</p>
-               <p><strong>Customer:</strong> ${customerName} (${customerEmail})</p>
-               <p><strong>Trial License Key:</strong> <code>${trialLicenseKey}</code></p>
-               <p><strong>Stripe Session:</strong> ${session.id}</p>
-               <p><strong>Subscription ID:</strong> ${session.subscription || 'N/A'}</p>`
-            ).catch(() => {});
-          }
-        } catch (emailErr) {
-          console.error(`❌ [TRIAL EMAIL FAILED] for ${customerEmail}:`, emailErr.message);
-        }
-      }
-
-      return {
-        statusCode: 200,
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          received: true,
-          tier: 'standard_trial',
-          trialDays: 3,
-          amountPaid: '0.00',
-          licenseKey: trialLicenseKey,
-          apkUrl: apkDownloadUrl,
-          customerEmail: customerEmail
-        })
-      };
-    }
-
-    // Managed AI Voice Receptionist ($29.00/mo Recurring Subscription)
-    const isVoicePro = (amountTotal === 2900) || 
-                       (session.metadata && session.metadata.tier === 'managed_voice_pro') ||
-                       (session.metadata && session.metadata.service === 'voice_receptionist') ||
-                       (session.subscription && amountTotal === 2900);
 
     if (isVoicePro) {
       const areaCodeMatch = (customerDetails.phone || '').match(/\+?1?\(?([2-9][0-9]{2})\)?/);
@@ -581,6 +534,53 @@ exports.handler = async (event) => {
           licenseKey: voiceLicenseKey,
           customerEmail: customerEmail,
           subscriptionId: session.subscription || session.id
+        })
+      };
+    }
+
+    if (isTrial) {
+      // 1. Generate 3-Day Free Trial License Key (valid 4 days for timezone buffer)
+      const trialLicenseKey = generateKey(customerName, 4, false);
+      console.log(`🎁 [3-DAY TRIAL ACTIVATED] ${trialLicenseKey} for ${customerEmail} ($0.00 Charged)`);
+
+      // 2. Automatically Dispatch Free Trial Delivery Email
+      if (RESEND_API_KEY) {
+        const emailSubject = `🎁 Your Missed Call Auto SMS 3-Day Free Trial Key & Setup Guide ($0 Today)`;
+        const emailHtml = generateTrialEmailHtml(customerName, trialLicenseKey, apkDownloadUrl);
+
+        try {
+          const sendResult = await sendEmail(RESEND_API_KEY, customerEmail, emailSubject, emailHtml);
+          console.log(`📧 [TRIAL EMAIL DELIVERED] Dispatched to ${customerEmail} (ID: ${sendResult.id})`);
+
+          // Notify owner of new free trial signup
+          if (OWNER_NOTIFY_EMAIL && OWNER_NOTIFY_EMAIL !== customerEmail) {
+            sendEmail(
+              RESEND_API_KEY,
+              OWNER_NOTIFY_EMAIL,
+              `🎁 New 3-Day Free Trial Signup: ${customerName}`,
+              `<p>A new customer has started their 3-day free trial ($0 charged today)!</p>
+               <p><strong>Customer:</strong> ${customerName} (${customerEmail})</p>
+               <p><strong>Trial License Key:</strong> <code>${trialLicenseKey}</code></p>
+               <p><strong>Stripe Session:</strong> ${session.id}</p>
+               <p><strong>Subscription ID:</strong> ${session.subscription || 'N/A'}</p>`
+            ).catch(() => {});
+          }
+        } catch (emailErr) {
+          console.error(`❌ [TRIAL EMAIL FAILED] for ${customerEmail}:`, emailErr.message);
+        }
+      }
+
+      return {
+        statusCode: 200,
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          received: true,
+          tier: 'standard_trial',
+          trialDays: 3,
+          amountPaid: '0.00',
+          licenseKey: trialLicenseKey,
+          apkUrl: apkDownloadUrl,
+          customerEmail: customerEmail
         })
       };
     }

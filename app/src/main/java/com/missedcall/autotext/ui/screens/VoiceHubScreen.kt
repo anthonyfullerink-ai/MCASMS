@@ -29,11 +29,19 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.compose.ui.window.Dialog
 import androidx.compose.ui.window.DialogProperties
+import com.missedcall.autotext.App
 import com.missedcall.autotext.data.AppSettings
 import com.missedcall.autotext.data.db.VoiceCallEvent
 import com.missedcall.autotext.ui.theme.ActiveGreenContainer
 import com.missedcall.autotext.ui.theme.ActiveGreenText
 import com.missedcall.autotext.util.CarrierForwardingManager
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.launch
+import kotlinx.coroutines.withContext
+import org.json.JSONArray
+import org.json.JSONObject
+import java.net.HttpURLConnection
+import java.net.URL
 import java.text.SimpleDateFormat
 import java.util.*
 
@@ -47,13 +55,19 @@ fun VoiceHubScreen(
     onClearVoiceCalls: () -> Unit
 ) {
     val context = LocalContext.current
+    val coroutineScope = rememberCoroutineScope()
     var showConfigDialog by remember { mutableStateOf(false) }
     var selectedCallForDetail by remember { mutableStateOf<VoiceCallEvent?>(null) }
 
+    val isDeveloperKey = settings.licenseKey.contains("DEV", ignoreCase = true) ||
+            settings.licenseKey.startsWith("MCAS-DEV") ||
+            settings.licenseKey.contains("DEMO", ignoreCase = true) ||
+            settings.licenseKey.contains("MASTER", ignoreCase = true)
+
     val isByok = settings.vapiMode.equals("BYOK", ignoreCase = true)
     val hasByokConfigured = isByok && settings.vapiApiKey.isNotBlank()
-    val isManagedActive = settings.voiceSubscriptionActive || settings.licenseKey.contains("VOICE-PRO", ignoreCase = true)
-    val isVoiceActive = isManagedActive || hasByokConfigured || settings.voiceReceptionistEnabled
+    val isManagedActive = isDeveloperKey || settings.voiceSubscriptionActive || settings.licenseKey.contains("VOICE-PRO", ignoreCase = true)
+    val isVoiceActive = isDeveloperKey || isManagedActive || hasByokConfigured || settings.voiceReceptionistEnabled
 
     val carrier = remember { CarrierForwardingManager.detectCarrier(context) }
     val carrierCodes = remember(carrier, settings.voiceReceptionistForwardingNumber) {
@@ -122,6 +136,86 @@ fun VoiceHubScreen(
             verticalArrangement = Arrangement.spacedBy(16.dp)
         ) {
             item { Spacer(modifier = Modifier.height(4.dp)) }
+
+            // Developer Master Voice Mode banner & Call Simulator
+            if (isDeveloperKey) {
+                item {
+                    Card(
+                        colors = CardDefaults.cardColors(containerColor = Color(0xFF1E1B4B)),
+                        border = BorderStroke(1.dp, Color(0xFF818CF8)),
+                        shape = RoundedCornerShape(16.dp),
+                        modifier = Modifier.fillMaxWidth()
+                    ) {
+                        Column(modifier = Modifier.padding(16.dp)) {
+                            Row(
+                                modifier = Modifier.fillMaxWidth(),
+                                horizontalArrangement = Arrangement.SpaceBetween,
+                                verticalAlignment = Alignment.CenterVertically
+                            ) {
+                                Row(verticalAlignment = Alignment.CenterVertically) {
+                                    Icon(Icons.Default.Engineering, contentDescription = null, tint = Color(0xFFA5B4FC), modifier = Modifier.size(20.dp))
+                                    Spacer(modifier = Modifier.width(8.dp))
+                                    Text(
+                                        text = "Developer Master Voice Mode",
+                                        fontWeight = FontWeight.Bold,
+                                        style = MaterialTheme.typography.titleSmall,
+                                        color = Color.White
+                                    )
+                                }
+                                Surface(
+                                    color = Color(0xFF312E81),
+                                    shape = RoundedCornerShape(12.dp)
+                                ) {
+                                    Text(
+                                        text = "DEV-UNLOCKED",
+                                        modifier = Modifier.padding(horizontal = 8.dp, vertical = 3.dp),
+                                        style = MaterialTheme.typography.labelSmall,
+                                        fontWeight = FontWeight.Bold,
+                                        color = Color(0xFFA5B4FC)
+                                    )
+                                }
+                            }
+
+                            Spacer(modifier = Modifier.height(6.dp))
+                            Text(
+                                text = "Full AI Voice Receptionist backend features, status dial controls, and call simulation are unlocked on this build.",
+                                style = MaterialTheme.typography.bodySmall,
+                                color = Color(0xFFCBD5E1)
+                            )
+
+                            Spacer(modifier = Modifier.height(10.dp))
+
+                            Button(
+                                onClick = {
+                                    coroutineScope.launch(Dispatchers.IO) {
+                                        val app = context.applicationContext as? App
+                                        val simEvent = VoiceCallEvent(
+                                            phoneNumber = "+1 (732) 552-3896",
+                                            callerName = "Anthony Fuller (Developer Test)",
+                                            durationSeconds = 54,
+                                            intent = if (settings.contractorStatus == "EMERGENCY") "EMERGENCY" else if (settings.contractorStatus == "AFTER_HOURS") "AFTER_HOURS" else "SERVICE_CALL",
+                                            summary = "Caller reported an urgent plumbing pipe leak and requested service dispatch.",
+                                            transcript = "Caller: 'Hi Anthony, I have water leaking under the sink and need help today.'\nAI Receptionist: 'Thanks for calling! Anthony is currently assisting another client, but I can dispatch a technician or send a direct booking link right away.'\nCaller: 'Please send the link, thank you!'",
+                                            recordingUrl = null,
+                                            followUpSms = "Hi! Thanks for calling. As discussed with our AI assistant, here is our priority booking link: ${settings.contractorGoalLink.ifBlank { "https://missedcallautosms.com" }}",
+                                            contractorStatus = settings.contractorStatus,
+                                            isRead = false
+                                        )
+                                        app?.database?.voiceCallDao()?.insert(simEvent)
+                                    }
+                                    Toast.makeText(context, "🧪 Simulated AI call event added to voice hub!", Toast.LENGTH_SHORT).show()
+                                },
+                                colors = ButtonDefaults.buttonColors(containerColor = Color(0xFF4F46E5)),
+                                modifier = Modifier.fillMaxWidth()
+                            ) {
+                                Icon(Icons.Default.PlayCircle, contentDescription = null, modifier = Modifier.size(18.dp))
+                                Spacer(modifier = Modifier.width(6.dp))
+                                Text("Simulate Inbound AI Call & Transcript")
+                            }
+                        }
+                    }
+                }
+            }
 
             // If user has NOT activated voice (neither Managed nor BYOK)
             if (!isVoiceActive) {
@@ -1020,6 +1114,9 @@ fun VoiceBenefitRow(icon: String, text: String) {
     }
 }
 
+data class VapiAssistantSummary(val id: String, val name: String, val model: String = "")
+data class VapiPhoneNumberSummary(val id: String, val number: String, val name: String = "")
+
 /**
  * BYOK & Custom Greeting Configuration Modal Dialog
  */
@@ -1031,12 +1128,98 @@ fun VoiceReceptionistConfigDialog(
     onDismiss: () -> Unit
 ) {
     val context = LocalContext.current
+    val coroutineScope = rememberCoroutineScope()
     var mode by remember { mutableStateOf(settings.vapiMode) }
     var apiKeyInput by remember { mutableStateOf(settings.vapiApiKey) }
     var assistantIdInput by remember { mutableStateOf(settings.vapiAssistantId) }
     var phoneIdInput by remember { mutableStateOf(settings.vapiPhoneNumberId) }
     var forwardNumInput by remember { mutableStateOf(settings.voiceReceptionistForwardingNumber) }
     var greetingInput by remember { mutableStateOf(settings.voiceReceptionistGreeting) }
+
+    var isFetchingVapi by remember { mutableStateOf(false) }
+    var vapiAssistants by remember { mutableStateOf<List<VapiAssistantSummary>>(emptyList()) }
+    var vapiPhoneNumbers by remember { mutableStateOf<List<VapiPhoneNumberSummary>>(emptyList()) }
+    var vapiFetchError by remember { mutableStateOf<String?>(null) }
+    var vapiFetchSuccess by remember { mutableStateOf<String?>(null) }
+
+    fun fetchVapiData(apiKey: String) {
+        if (apiKey.isBlank()) {
+            vapiFetchError = "Please enter your Vapi Private API Key first."
+            return
+        }
+        isFetchingVapi = true
+        vapiFetchError = null
+        vapiFetchSuccess = null
+        coroutineScope.launch(Dispatchers.IO) {
+            try {
+                // 1. Fetch Assistants
+                val asstConn = URL("https://api.vapi.ai/assistant").openConnection() as HttpURLConnection
+                asstConn.requestMethod = "GET"
+                asstConn.setRequestProperty("Authorization", "Bearer ${apiKey.trim()}")
+                asstConn.setRequestProperty("Content-Type", "application/json")
+                asstConn.connectTimeout = 8000
+                asstConn.readTimeout = 8000
+
+                val fetchedAssistants = mutableListOf<VapiAssistantSummary>()
+                if (asstConn.responseCode in 200..299) {
+                    val respText = asstConn.inputStream.bufferedReader().use { it.readText() }
+                    val jsonArr = JSONArray(respText)
+                    for (i in 0 until jsonArr.length()) {
+                        val obj = jsonArr.getJSONObject(i)
+                        val id = obj.optString("id", "")
+                        val name = obj.optString("name", "Unnamed Assistant")
+                        val modelObj = obj.optJSONObject("model")
+                        val modelName = modelObj?.optString("model", "") ?: ""
+                        if (id.isNotBlank()) {
+                            fetchedAssistants.add(VapiAssistantSummary(id, name, modelName))
+                        }
+                    }
+                } else {
+                    val errBody = try { asstConn.errorStream?.bufferedReader()?.use { it.readText() } } catch (e: Exception) { null }
+                    throw Exception("Vapi Assistants API returned HTTP ${asstConn.responseCode}${if (errBody != null) ": $errBody" else ""}")
+                }
+
+                // 2. Fetch Phone Numbers
+                val phoneConn = URL("https://api.vapi.ai/phone-number").openConnection() as HttpURLConnection
+                phoneConn.requestMethod = "GET"
+                phoneConn.setRequestProperty("Authorization", "Bearer ${apiKey.trim()}")
+                phoneConn.setRequestProperty("Content-Type", "application/json")
+                phoneConn.connectTimeout = 8000
+                phoneConn.readTimeout = 8000
+
+                val fetchedPhoneNumbers = mutableListOf<VapiPhoneNumberSummary>()
+                if (phoneConn.responseCode in 200..299) {
+                    val respText = phoneConn.inputStream.bufferedReader().use { it.readText() }
+                    val jsonArr = JSONArray(respText)
+                    for (i in 0 until jsonArr.length()) {
+                        val obj = jsonArr.getJSONObject(i)
+                        val id = obj.optString("id", "")
+                        val num = obj.optString("number", "")
+                        val name = obj.optString("name", "")
+                        if (id.isNotBlank() || num.isNotBlank()) {
+                            fetchedPhoneNumbers.add(VapiPhoneNumberSummary(id, num, name))
+                        }
+                    }
+                }
+
+                withContext(Dispatchers.Main) {
+                    vapiAssistants = fetchedAssistants
+                    vapiPhoneNumbers = fetchedPhoneNumbers
+                    isFetchingVapi = false
+                    if (fetchedAssistants.isEmpty() && fetchedPhoneNumbers.isEmpty()) {
+                        vapiFetchError = "Connected to Vapi, but no assistants or phone numbers were found in this account."
+                    } else {
+                        vapiFetchSuccess = "Found ${fetchedAssistants.size} assistant(s) and ${fetchedPhoneNumbers.size} number(s)!"
+                    }
+                }
+            } catch (e: Exception) {
+                withContext(Dispatchers.Main) {
+                    isFetchingVapi = false
+                    vapiFetchError = "Failed to load Vapi agents: ${e.message}"
+                }
+            }
+        }
+    }
 
     Dialog(
         onDismissRequest = onDismiss,
@@ -1104,15 +1287,141 @@ fun VoiceReceptionistConfigDialog(
                                 shape = RoundedCornerShape(12.dp),
                                 modifier = Modifier.fillMaxWidth()
                             ) {
-                                Column(modifier = Modifier.padding(12.dp), verticalArrangement = Arrangement.spacedBy(10.dp)) {
-                                    Text("Vapi Credentials", style = MaterialTheme.typography.labelSmall, fontWeight = FontWeight.Bold)
+                                Column(modifier = Modifier.padding(14.dp), verticalArrangement = Arrangement.spacedBy(10.dp)) {
+                                    Row(
+                                        modifier = Modifier.fillMaxWidth(),
+                                        horizontalArrangement = Arrangement.SpaceBetween,
+                                        verticalAlignment = Alignment.CenterVertically
+                                    ) {
+                                        Text("Vapi BYOK Integration", style = MaterialTheme.typography.titleSmall, fontWeight = FontWeight.Bold)
+                                        Surface(
+                                            color = MaterialTheme.colorScheme.primaryContainer,
+                                            shape = RoundedCornerShape(8.dp)
+                                        ) {
+                                            Text(
+                                                text = "FREE / DIRECT",
+                                                modifier = Modifier.padding(horizontal = 6.dp, vertical = 2.dp),
+                                                style = MaterialTheme.typography.labelSmall,
+                                                fontWeight = FontWeight.Bold,
+                                                color = MaterialTheme.colorScheme.primary
+                                            )
+                                        }
+                                    }
+
+                                    Text(
+                                        text = "Connect your private Vapi account. If you have multiple assistants configured, tap 'Fetch Assistants & Numbers' to select your agent.",
+                                        style = MaterialTheme.typography.bodySmall,
+                                        color = MaterialTheme.colorScheme.onSurfaceVariant
+                                    )
+
                                     OutlinedTextField(
                                         value = apiKeyInput,
-                                        onValueChange = { apiKeyInput = it },
+                                        onValueChange = {
+                                            apiKeyInput = it
+                                            vapiFetchError = null
+                                            vapiFetchSuccess = null
+                                        },
                                         label = { Text("Vapi Private API Key") },
+                                        placeholder = { Text("e.g. 4d8b2f91-...") },
                                         singleLine = true,
                                         modifier = Modifier.fillMaxWidth()
                                     )
+
+                                    Button(
+                                        onClick = { fetchVapiData(apiKeyInput) },
+                                        enabled = !isFetchingVapi && apiKeyInput.isNotBlank(),
+                                        colors = ButtonDefaults.buttonColors(containerColor = MaterialTheme.colorScheme.secondary),
+                                        modifier = Modifier.fillMaxWidth()
+                                    ) {
+                                        if (isFetchingVapi) {
+                                            CircularProgressIndicator(modifier = Modifier.size(16.dp), color = Color.White, strokeWidth = 2.dp)
+                                            Spacer(modifier = Modifier.width(8.dp))
+                                            Text("Loading Vapi Account...", fontSize = 12.sp)
+                                        } else {
+                                            Icon(Icons.Default.Sync, contentDescription = null, modifier = Modifier.size(16.dp))
+                                            Spacer(modifier = Modifier.width(8.dp))
+                                            Text("Fetch Assistants & Numbers", fontSize = 12.sp)
+                                        }
+                                    }
+
+                                    if (vapiFetchError != null) {
+                                        Text(vapiFetchError!!, color = MaterialTheme.colorScheme.error, style = MaterialTheme.typography.labelSmall)
+                                    }
+                                    if (vapiFetchSuccess != null) {
+                                        Text(vapiFetchSuccess!!, color = ActiveGreenText, style = MaterialTheme.typography.labelSmall, fontWeight = FontWeight.Bold)
+                                    }
+
+                                    // Assistants list picker
+                                    if (vapiAssistants.isNotEmpty()) {
+                                        Text("Select Your Assistant / Agent:", style = MaterialTheme.typography.labelSmall, fontWeight = FontWeight.Bold)
+                                        Column(verticalArrangement = Arrangement.spacedBy(6.dp)) {
+                                            vapiAssistants.forEach { asst ->
+                                                val isSelected = assistantIdInput == asst.id
+                                                Surface(
+                                                    shape = RoundedCornerShape(8.dp),
+                                                    color = if (isSelected) MaterialTheme.colorScheme.primaryContainer else MaterialTheme.colorScheme.surface,
+                                                    border = BorderStroke(1.dp, if (isSelected) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.outlineVariant),
+                                                    modifier = Modifier
+                                                        .fillMaxWidth()
+                                                        .clickable { assistantIdInput = asst.id }
+                                                ) {
+                                                    Row(
+                                                        modifier = Modifier.padding(horizontal = 10.dp, vertical = 8.dp),
+                                                        horizontalArrangement = Arrangement.SpaceBetween,
+                                                        verticalAlignment = Alignment.CenterVertically
+                                                    ) {
+                                                        Column(modifier = Modifier.weight(1f)) {
+                                                            Text(asst.name, fontWeight = FontWeight.SemiBold, style = MaterialTheme.typography.bodyMedium)
+                                                            Text("ID: ${asst.id} ${if (asst.model.isNotBlank()) "• ${asst.model}" else ""}", style = MaterialTheme.typography.labelSmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
+                                                        }
+                                                        if (isSelected) {
+                                                            Icon(Icons.Default.CheckCircle, contentDescription = null, tint = MaterialTheme.colorScheme.primary, modifier = Modifier.size(18.dp))
+                                                        }
+                                                    }
+                                                }
+                                            }
+                                        }
+                                    }
+
+                                    // Phone lines list picker
+                                    if (vapiPhoneNumbers.isNotEmpty()) {
+                                        Text("Select Inbound Phone Line (*71 Forwarding Target):", style = MaterialTheme.typography.labelSmall, fontWeight = FontWeight.Bold)
+                                        Column(verticalArrangement = Arrangement.spacedBy(6.dp)) {
+                                            vapiPhoneNumbers.forEach { phone ->
+                                                val isSelected = phoneIdInput == phone.id || forwardNumInput == phone.number
+                                                Surface(
+                                                    shape = RoundedCornerShape(8.dp),
+                                                    color = if (isSelected) MaterialTheme.colorScheme.secondaryContainer else MaterialTheme.colorScheme.surface,
+                                                    border = BorderStroke(1.dp, if (isSelected) MaterialTheme.colorScheme.secondary else MaterialTheme.colorScheme.outlineVariant),
+                                                    modifier = Modifier
+                                                        .fillMaxWidth()
+                                                        .clickable {
+                                                            phoneIdInput = phone.id
+                                                            if (phone.number.isNotBlank()) {
+                                                                forwardNumInput = phone.number
+                                                            }
+                                                        }
+                                                ) {
+                                                    Row(
+                                                        modifier = Modifier.padding(horizontal = 10.dp, vertical = 8.dp),
+                                                        horizontalArrangement = Arrangement.SpaceBetween,
+                                                        verticalAlignment = Alignment.CenterVertically
+                                                    ) {
+                                                        Column(modifier = Modifier.weight(1f)) {
+                                                            Text(phone.number.ifBlank { "Phone ID: ${phone.id}" }, fontWeight = FontWeight.SemiBold, style = MaterialTheme.typography.bodyMedium)
+                                                            if (phone.name.isNotBlank()) {
+                                                                Text(phone.name, style = MaterialTheme.typography.labelSmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
+                                                            }
+                                                        }
+                                                        if (isSelected) {
+                                                            Icon(Icons.Default.CheckCircle, contentDescription = null, tint = MaterialTheme.colorScheme.secondary, modifier = Modifier.size(18.dp))
+                                                        }
+                                                    }
+                                                }
+                                            }
+                                        }
+                                    }
+
                                     OutlinedTextField(
                                         value = assistantIdInput,
                                         onValueChange = { assistantIdInput = it },
@@ -1120,10 +1429,11 @@ fun VoiceReceptionistConfigDialog(
                                         singleLine = true,
                                         modifier = Modifier.fillMaxWidth()
                                     )
+
                                     OutlinedTextField(
                                         value = phoneIdInput,
                                         onValueChange = { phoneIdInput = it },
-                                        label = { Text("Phone Number ID") },
+                                        label = { Text("Phone Number ID (Optional)") },
                                         singleLine = true,
                                         modifier = Modifier.fillMaxWidth()
                                     )

@@ -2385,44 +2385,142 @@
     }
 
     let aiPendingAction = null;
-    let cachedGatewayMode = null;
+    let cachedGatewayMode = 'AI_SUPPORT';
+    let visitorChatPollTimer = null;
+    let renderedMessageIds = new Set();
+
+    function getVisitorId() {
+        let vid = localStorage.getItem('mcas_visitor_id');
+        if (!vid) {
+            vid = `visitor_${Date.now()}_${Math.floor(Math.random()*1000)}`;
+            localStorage.setItem('mcas_visitor_id', vid);
+        }
+        return vid;
+    }
 
     async function checkSupportGatewayMode() {
-        if (cachedGatewayMode !== null) return cachedGatewayMode;
         try {
-            const res = await fetch('/api/support/gateway-settings');
+            const res = await fetch(`/api/support/gateway-settings?_t=${Date.now()}`);
             const data = await res.json();
             cachedGatewayMode = data.settings?.mode || 'AI_SUPPORT';
+            updateWebsiteSupportUi(cachedGatewayMode, data.settings);
         } catch (e) {
             cachedGatewayMode = 'AI_SUPPORT';
         }
         return cachedGatewayMode;
     }
 
+    function updateWebsiteSupportUi(mode, settings) {
+        const triggerBtn = document.getElementById('aiAgentTrigger');
+        const widgetHeader = document.querySelector('.ai-widget-header > div:first-child');
+        const firstMsg = document.querySelector('#aiChatMessages .ai-msg.bot');
+
+        if (mode === 'LIVE_SMS') {
+            if (triggerBtn) {
+                triggerBtn.innerHTML = `
+                    <span style="display: inline-block; width: 10px; height: 10px; border-radius: 50%; background: #00E676; box-shadow: 0 0 10px #00E676; margin-right: 4px;"></span>
+                    <span class="ai-trigger-label-desktop" style="font-weight: 800;">🟢 Live Chat (Anthony Online)</span>
+                    <span class="ai-trigger-label-mobile" style="font-weight: 800;">🟢 Live Chat</span>
+                `;
+                triggerBtn.style.border = '1px solid #00E676';
+                triggerBtn.style.boxShadow = '0 6px 24px rgba(0, 230, 118, 0.35)';
+            }
+            if (widgetHeader) {
+                widgetHeader.innerHTML = `
+                    <div style="font-size: 24px;">👨‍💻</div>
+                    <div>
+                        <div style="font-size: 14px; font-weight: 900; color: #FFF;">Anthony Fuller • Developer</div>
+                        <div style="font-size: 10px; color: var(--primary);">🟢 Online • Direct Web-to-SMS to Phone</div>
+                    </div>
+                `;
+            }
+            if (firstMsg && !firstMsg.dataset.customized) {
+                firstMsg.dataset.customized = 'true';
+                firstMsg.innerHTML = `👋 Hi! I'm <strong>Anthony</strong>, the developer and founder of Missed Call Auto SMS. I'm currently online! Anything you send here routes directly to my private phone via SMS. How can I help you today?`;
+            }
+            startVisitorChatPolling();
+        } else {
+            if (triggerBtn) {
+                triggerBtn.innerHTML = `
+                    <span style="font-size: 16px;">💬</span>
+                    <span class="ai-trigger-label-desktop">AI Support & Voice Assistant</span>
+                    <span class="ai-trigger-label-mobile">AI Support</span>
+                `;
+                triggerBtn.style.border = '1px solid var(--card-border)';
+                triggerBtn.style.boxShadow = '0 6px 20px rgba(0,0,0,0.3)';
+            }
+            if (widgetHeader) {
+                widgetHeader.innerHTML = `
+                    <div style="font-size: 24px;">🤖</div>
+                    <div>
+                        <div style="font-size: 14px; font-weight: 900; color: #FFF;">MissedCallAutoSMS Support</div>
+                        <div style="font-size: 10px; color: var(--primary);">🟢 Text & Voice AI Assistant Online</div>
+                    </div>
+                `;
+            }
+            stopVisitorChatPolling();
+        }
+    }
+
+    function startVisitorChatPolling() {
+        if (visitorChatPollTimer) return;
+        visitorChatPollTimer = setInterval(pollVisitorReplies, 3000);
+    }
+
+    function stopVisitorChatPolling() {
+        if (visitorChatPollTimer) {
+            clearInterval(visitorChatPollTimer);
+            visitorChatPollTimer = null;
+        }
+    }
+
+    async function pollVisitorReplies() {
+        const vid = getVisitorId();
+        try {
+            const res = await fetch(`/api/support/visitor-messages?visitorId=${encodeURIComponent(vid)}&_t=${Date.now()}`);
+            const data = await res.json();
+            const msgs = data.messages || [];
+            msgs.forEach(m => {
+                if (m.sender === 'developer' && !renderedMessageIds.has(m.id)) {
+                    renderedMessageIds.add(m.id);
+                    appendAiMessage(`👨‍💻 <strong>Anthony (Developer):</strong><br>${escapeHtml(m.text)}`, 'bot');
+                    speakText(m.text);
+                }
+            });
+        } catch (e) {}
+    }
+
+    function escapeHtml(str) {
+        return (str || '').replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
+    }
+
+    // Check mode on startup and periodically every 15 seconds
+    checkSupportGatewayMode();
+    setInterval(checkSupportGatewayMode, 15000);
+
     async function generateAiBotResponse(query) {
         const q = query.toLowerCase();
         const emailMatch = query.match(/[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}/);
         const keyMatch = query.match(/MCAS-[A-Za-z0-9\-]+/i);
 
-        // Check if Developer Anthony has enabled Live Web-to-SMS
-        const gatewayMode = await checkSupportGatewayMode();
-        if (gatewayMode === 'LIVE_SMS') {
+        // If Developer Anthony has Live Web-to-SMS active, forward message directly to his phone!
+        if (cachedGatewayMode === 'LIVE_SMS') {
+            const vid = getVisitorId();
             try {
-                let visitorId = localStorage.getItem('mcas_visitor_id');
-                if (!visitorId) {
-                    visitorId = `visitor_${Date.now()}`;
-                    localStorage.setItem('mcas_visitor_id', visitorId);
-                }
-                fetch('/api/support/visitor-message', {
+                await fetch('/api/support/visitor-message', {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify({
-                        visitorId: visitorId,
+                        visitorId: vid,
                         visitorName: 'Website Visitor',
                         message: query
                     })
-                }).catch(() => {});
+                });
             } catch (e) {}
+
+            return `💬 <strong>Direct Message Routed to Anthony's Phone</strong>:<br><br>` +
+                   `Your message: <em>"${escapeHtml(query)}"</em> was sent directly to Anthony's handset. He has been notified and his reply will appear right here in real time!<br><br>` +
+                   `<small style="color:var(--muted);">Feel free to send follow-up questions or request a live phone call.</small>`;
         }
 
         if (q.includes('voice') || q.includes('receptionist') || q.includes('vapi') || q.includes('forward') || q.includes('*71') || q.includes('*73') || q.includes('byok') || q.includes('29')) {

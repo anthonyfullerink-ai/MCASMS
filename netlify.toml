@@ -135,6 +135,12 @@
   to = "/owner_admin_dashboard.html"
   status = 200
 
+# Direct access to success confirmation page
+[[redirects]]
+  from = "/success"
+  to = "/success.html"
+  status = 200
+
 # Serve sales_landing_page.html as homepage
 [[redirects]]
   from = "/"
