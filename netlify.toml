@@ -94,6 +94,29 @@
   to = "/.netlify/functions/agency-fleet"
   status = 200
 
+# API Route: Create Voice Pro Checkout
+[[redirects]]
+  from = "/api/create-voice-pro-checkout"
+  to = "/.netlify/functions/create-voice-pro-checkout"
+  status = 200
+
+# API Route: Support Ticket Submission
+[[redirects]]
+  from = "/api/submit-ticket"
+  to = "/.netlify/functions/submit-ticket"
+  status = 200
+
+# API Route: Support Gateway API
+[[redirects]]
+  from = "/api/support/*"
+  to = "/.netlify/functions/support-gateway"
+  status = 200
+
+[[redirects]]
+  from = "/api/support"
+  to = "/.netlify/functions/support-gateway"
+  status = 200
+
 # Direct access to Agency Fleet Dashboard
 [[redirects]]
   from = "/agency/dashboard"
