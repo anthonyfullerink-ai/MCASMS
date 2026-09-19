@@ -43,6 +43,23 @@ function initFirebase() {
   }
 }
 
+let getStore;
+try {
+  const blobs = require('@netlify/blobs');
+  getStore = blobs.getStore;
+} catch (e) {
+  getStore = null;
+}
+
+function getBlobStore() {
+  if (!getStore) return null;
+  try {
+    return getStore({ name: 'support_gateway', consistency: 'strong' });
+  } catch (e) {
+    return null;
+  }
+}
+
 const DEFAULT_SETTINGS = {
   mode: 'AI_SUPPORT', // 'LIVE_SMS' | 'AI_SUPPORT'
   developerPhone: '+1 (732) 552-3896',
@@ -53,6 +70,18 @@ const DEFAULT_SETTINGS = {
 };
 
 async function getGatewaySettings() {
+  const store = getBlobStore();
+  if (store) {
+    try {
+      const data = await store.get('config', { type: 'json' });
+      if (data && data.mode) {
+        return { ...DEFAULT_SETTINGS, ...data };
+      }
+    } catch (e) {
+      console.warn('Netlify Blobs read warning:', e.message);
+    }
+  }
+
   const db = initFirebase();
   if (db) {
     try {
@@ -75,6 +104,15 @@ async function getGatewaySettings() {
 }
 
 async function saveGatewaySettings(settings) {
+  const store = getBlobStore();
+  if (store) {
+    try {
+      await store.setJSON('config', settings);
+    } catch (e) {
+      console.warn('Netlify Blobs write warning:', e.message);
+    }
+  }
+
   const db = initFirebase();
   if (db) {
     try {

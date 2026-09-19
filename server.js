@@ -187,7 +187,7 @@ const SUPPORT_GATEWAY_SETTINGS_FILE = path.join(__dirname, 'data', 'support_gate
 function getSupportGatewaySettings() {
   const defaults = {
     mode: 'AI_SUPPORT', // 'LIVE_SMS' | 'AI_SUPPORT'
-    developerPhone: '+1 (404) 555-0199',
+    developerPhone: '+1 (732) 552-3896',
     developerEmail: 'contactus@offgridmediagroup.com',
     onlineHoursStart: 8,
     onlineHoursEnd: 22,

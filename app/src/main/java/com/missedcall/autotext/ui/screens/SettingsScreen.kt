@@ -34,9 +34,11 @@ import java.net.URL
 import java.nio.charset.StandardCharsets
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.sp
 import com.missedcall.autotext.data.AppSettings
 import com.missedcall.autotext.data.license.LicenseManager
 import com.missedcall.autotext.data.license.LicenseStatus
@@ -474,12 +476,60 @@ fun SettingsScreen(
                     }
                     Switch(
                         checked = settings.businessHoursEnabled,
-                        onCheckedChange = { onSettingsChanged(settings.copy(businessHoursEnabled = it)) }
+                        onCheckedChange = { enabled ->
+                            val check = com.missedcall.autotext.util.ScheduleUtils.checkScheduleDetailed(settings.schedule)
+                            val newStatus = if (enabled && settings.contractorStatus != "EMERGENCY") {
+                                if (check.isWithinHours) "AVAILABLE" else "AFTER_HOURS"
+                            } else {
+                                settings.contractorStatus
+                            }
+                            onSettingsChanged(
+                                settings.copy(
+                                    businessHoursEnabled = enabled,
+                                    contractorStatus = newStatus
+                                )
+                            )
+                        }
                     )
                 }
 
                 if (settings.businessHoursEnabled) {
-                    Spacer(modifier = Modifier.height(16.dp))
+                    Spacer(modifier = Modifier.height(14.dp))
+
+                    val scheduleCheck = remember(settings.schedule, settings.businessHoursEnabled) {
+                        com.missedcall.autotext.util.ScheduleUtils.checkScheduleDetailed(settings.schedule)
+                    }
+
+                    // Live auto-calculated schedule status card
+                    Surface(
+                        color = if (scheduleCheck.isWithinHours) Color(0xFF00E676).copy(alpha = 0.12f) else Color(0xFF38BDF8).copy(alpha = 0.12f),
+                        shape = RoundedCornerShape(10.dp),
+                        modifier = Modifier.fillMaxWidth()
+                    ) {
+                        Row(
+                            modifier = Modifier.padding(12.dp),
+                            verticalAlignment = Alignment.CenterVertically
+                        ) {
+                            Text(if (scheduleCheck.isWithinHours) "🟢" else "🌙", fontSize = 18.sp)
+                            Spacer(modifier = Modifier.width(10.dp))
+                            Column {
+                                Text(
+                                    text = if (scheduleCheck.isWithinHours) "Auto-Status: OPEN / AVAILABLE" else "Auto-Status: CLOSED / AFTER HOURS",
+                                    fontWeight = FontWeight.Bold,
+                                    style = MaterialTheme.typography.titleSmall,
+                                    color = if (scheduleCheck.isWithinHours) Color(0xFF00E676) else Color(0xFF38BDF8)
+                                )
+                                Text(
+                                    text = "Today is ${scheduleCheck.currentDay} (${if (scheduleCheck.isDayActive) "Active Day" else "Day Off"}). ${scheduleCheck.reason}",
+                                    style = MaterialTheme.typography.bodySmall,
+                                    color = MaterialTheme.colorScheme.onSurfaceVariant
+                                )
+                            }
+                        }
+                    }
+
+                    Spacer(modifier = Modifier.height(14.dp))
+
                     Row(
                         modifier = Modifier.fillMaxWidth(),
                         horizontalArrangement = Arrangement.spacedBy(12.dp)
@@ -487,8 +537,16 @@ fun SettingsScreen(
                         OutlinedTextField(
                             value = settings.schedule.startTime,
                             onValueChange = { newTime ->
+                                val newSchedule = settings.schedule.copy(startTime = newTime)
+                                val check = com.missedcall.autotext.util.ScheduleUtils.checkScheduleDetailed(newSchedule)
+                                val newStatus = if (settings.contractorStatus != "EMERGENCY") {
+                                    if (check.isWithinHours) "AVAILABLE" else "AFTER_HOURS"
+                                } else settings.contractorStatus
                                 onSettingsChanged(
-                                    settings.copy(schedule = settings.schedule.copy(startTime = newTime))
+                                    settings.copy(
+                                        schedule = newSchedule,
+                                        contractorStatus = newStatus
+                                    )
                                 )
                             },
                             label = { Text("Start Time (HH:mm)") },
@@ -498,8 +556,16 @@ fun SettingsScreen(
                         OutlinedTextField(
                             value = settings.schedule.endTime,
                             onValueChange = { newTime ->
+                                val newSchedule = settings.schedule.copy(endTime = newTime)
+                                val check = com.missedcall.autotext.util.ScheduleUtils.checkScheduleDetailed(newSchedule)
+                                val newStatus = if (settings.contractorStatus != "EMERGENCY") {
+                                    if (check.isWithinHours) "AVAILABLE" else "AFTER_HOURS"
+                                } else settings.contractorStatus
                                 onSettingsChanged(
-                                    settings.copy(schedule = settings.schedule.copy(endTime = newTime))
+                                    settings.copy(
+                                        schedule = newSchedule,
+                                        contractorStatus = newStatus
+                                    )
                                 )
                             },
                             label = { Text("End Time (HH:mm)") },
@@ -509,8 +575,38 @@ fun SettingsScreen(
                     }
 
                     Spacer(modifier = Modifier.height(12.dp))
-                    Text(text = "Active Days", fontWeight = FontWeight.Medium)
-                    Spacer(modifier = Modifier.height(6.dp))
+                    Row(
+                        modifier = Modifier.fillMaxWidth(),
+                        horizontalArrangement = Arrangement.SpaceBetween,
+                        verticalAlignment = Alignment.CenterVertically
+                    ) {
+                        Text(text = "Active Operating Days", fontWeight = FontWeight.Medium)
+                        val allSevenDays = listOf("MONDAY", "TUESDAY", "WEDNESDAY", "THURSDAY", "FRIDAY", "SATURDAY", "SUNDAY")
+                        val hasAllSeven = settings.schedule.activeDays.containsAll(allSevenDays)
+                        TextButton(
+                            onClick = {
+                                val newDays = if (hasAllSeven) {
+                                    listOf("MONDAY", "TUESDAY", "WEDNESDAY", "THURSDAY", "FRIDAY")
+                                } else {
+                                    allSevenDays
+                                }
+                                val newSchedule = settings.schedule.copy(activeDays = newDays)
+                                val check = com.missedcall.autotext.util.ScheduleUtils.checkScheduleDetailed(newSchedule)
+                                val newStatus = if (settings.contractorStatus != "EMERGENCY") {
+                                    if (check.isWithinHours) "AVAILABLE" else "AFTER_HOURS"
+                                } else settings.contractorStatus
+                                onSettingsChanged(
+                                    settings.copy(
+                                        schedule = newSchedule,
+                                        contractorStatus = newStatus
+                                    )
+                                )
+                            }
+                        ) {
+                            Text(if (hasAllSeven) "Mon-Fri Only" else "Include Weekends (7 Days)", fontSize = 11.sp)
+                        }
+                    }
+                    Spacer(modifier = Modifier.height(4.dp))
 
                     val daysOfWeek = listOf("MONDAY", "TUESDAY", "WEDNESDAY", "THURSDAY", "FRIDAY", "SATURDAY", "SUNDAY")
                     FlowRow(
@@ -527,8 +623,16 @@ fun SettingsScreen(
                                     } else {
                                         settings.schedule.activeDays + day
                                     }
+                                    val newSchedule = settings.schedule.copy(activeDays = newDays)
+                                    val check = com.missedcall.autotext.util.ScheduleUtils.checkScheduleDetailed(newSchedule)
+                                    val newStatus = if (settings.contractorStatus != "EMERGENCY") {
+                                        if (check.isWithinHours) "AVAILABLE" else "AFTER_HOURS"
+                                    } else settings.contractorStatus
                                     onSettingsChanged(
-                                        settings.copy(schedule = settings.schedule.copy(activeDays = newDays))
+                                        settings.copy(
+                                            schedule = newSchedule,
+                                            contractorStatus = newStatus
+                                        )
                                     )
                                 },
                                 label = { Text(day.take(3)) }

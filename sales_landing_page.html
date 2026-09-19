@@ -2399,16 +2399,32 @@
     }
 
     async function checkSupportGatewayMode() {
+        const localSaved = localStorage.getItem('mcas_support_gateway_mode');
+        if (localSaved && (localSaved === 'LIVE_SMS' || localSaved === 'AI_SUPPORT')) {
+            cachedGatewayMode = localSaved;
+            updateWebsiteSupportUi(cachedGatewayMode);
+        }
+
         try {
             const res = await fetch(`/api/support/gateway-settings?_t=${Date.now()}`);
             const data = await res.json();
-            cachedGatewayMode = data.settings?.mode || 'AI_SUPPORT';
-            updateWebsiteSupportUi(cachedGatewayMode, data.settings);
+            if (data && data.settings && data.settings.mode) {
+                cachedGatewayMode = data.settings.mode;
+                localStorage.setItem('mcas_support_gateway_mode', cachedGatewayMode);
+                updateWebsiteSupportUi(cachedGatewayMode, data.settings);
+            }
         } catch (e) {
-            cachedGatewayMode = 'AI_SUPPORT';
+            // Keep current mode if network error
         }
         return cachedGatewayMode;
     }
+
+    window.addEventListener('storage', function(e) {
+        if (e.key === 'mcas_support_gateway_mode' && e.newValue) {
+            cachedGatewayMode = e.newValue;
+            updateWebsiteSupportUi(cachedGatewayMode);
+        }
+    });
 
     function updateWebsiteSupportUi(mode, settings) {
         const triggerBtn = document.getElementById('aiAgentTrigger');
@@ -2418,8 +2434,8 @@
         if (mode === 'LIVE_SMS') {
             if (triggerBtn) {
                 triggerBtn.innerHTML = `
-                    <span style="display: inline-block; width: 10px; height: 10px; border-radius: 50%; background: #00E676; box-shadow: 0 0 10px #00E676; margin-right: 4px;"></span>
-                    <span class="ai-trigger-label-desktop" style="font-weight: 800;">🟢 Live Chat (Anthony Online)</span>
+                    <span style="display: inline-block; width: 10px; height: 10px; border-radius: 50%; background: #00E676; box-shadow: 0 0 10px #00E676; margin-right: 6px;"></span>
+                    <span class="ai-trigger-label-desktop" style="font-weight: 800;">🟢 Live Chat</span>
                     <span class="ai-trigger-label-mobile" style="font-weight: 800;">🟢 Live Chat</span>
                 `;
                 triggerBtn.style.border = '1px solid #00E676';
@@ -2429,14 +2445,14 @@
                 widgetHeader.innerHTML = `
                     <div style="font-size: 24px;">👨‍💻</div>
                     <div>
-                        <div style="font-size: 14px; font-weight: 900; color: #FFF;">Anthony Fuller • Developer</div>
-                        <div style="font-size: 10px; color: var(--primary);">🟢 Online • Direct Web-to-SMS to Phone</div>
+                        <div style="font-size: 14px; font-weight: 900; color: #FFF;">Anthony (🟢 Online)</div>
+                        <div style="font-size: 10px; color: var(--primary);">Direct Web-to-SMS Live Chat</div>
                     </div>
                 `;
             }
             if (firstMsg && !firstMsg.dataset.customized) {
                 firstMsg.dataset.customized = 'true';
-                firstMsg.innerHTML = `👋 Hi! I'm <strong>Anthony</strong>, the developer and founder of Missed Call Auto SMS. I'm currently online! Anything you send here routes directly to my private phone via SMS. How can I help you today?`;
+                firstMsg.innerHTML = `👋 Hi! I'm <strong>Anthony</strong>. I'm currently online! Anything you send here routes directly to my phone via live SMS. How can I help you today?`;
             }
             startVisitorChatPolling();
         } else {

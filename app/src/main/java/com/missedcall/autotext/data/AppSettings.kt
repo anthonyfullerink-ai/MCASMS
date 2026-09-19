@@ -40,6 +40,7 @@ data class AppSettings(
     val vapiAssistantId: String = "",
     val vapiPhoneNumberId: String = "",
     val contractorStatus: String = "AVAILABLE", // "AVAILABLE", "AFTER_HOURS", "EMERGENCY"
+    val contractorActivity: String = "Hands Full", // "cutting hair", "on a job", "in a meeting", etc.
     val contractorGoal: String = "BOOKING_LINK", // "BOOKING_LINK", "CALLBACK_PROMISE", "QUOTE_FORM"
     val contractorGoalLink: String = ""
 )

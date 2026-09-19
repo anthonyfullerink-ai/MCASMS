@@ -52,6 +52,7 @@ class SettingsRepository(private val context: Context) {
         val VAPI_ASSISTANT_ID = stringPreferencesKey("vapi_assistant_id")
         val VAPI_PHONE_NUMBER_ID = stringPreferencesKey("vapi_phone_number_id")
         val CONTRACTOR_STATUS = stringPreferencesKey("contractor_status")
+        val CONTRACTOR_ACTIVITY = stringPreferencesKey("contractor_activity")
         val CONTRACTOR_GOAL = stringPreferencesKey("contractor_goal")
         val CONTRACTOR_GOAL_LINK = stringPreferencesKey("contractor_goal_link")
     }
@@ -113,6 +114,7 @@ class SettingsRepository(private val context: Context) {
             vapiAssistantId = preferences[VAPI_ASSISTANT_ID] ?: "",
             vapiPhoneNumberId = preferences[VAPI_PHONE_NUMBER_ID] ?: "",
             contractorStatus = preferences[CONTRACTOR_STATUS] ?: "AVAILABLE",
+            contractorActivity = preferences[CONTRACTOR_ACTIVITY] ?: "Hands Full",
             contractorGoal = preferences[CONTRACTOR_GOAL] ?: "BOOKING_LINK",
             contractorGoalLink = preferences[CONTRACTOR_GOAL_LINK] ?: ""
         )
@@ -191,6 +193,7 @@ class SettingsRepository(private val context: Context) {
             preferences[VAPI_ASSISTANT_ID] = settings.vapiAssistantId
             preferences[VAPI_PHONE_NUMBER_ID] = settings.vapiPhoneNumberId
             preferences[CONTRACTOR_STATUS] = settings.contractorStatus
+            preferences[CONTRACTOR_ACTIVITY] = settings.contractorActivity
             preferences[CONTRACTOR_GOAL] = settings.contractorGoal
             preferences[CONTRACTOR_GOAL_LINK] = settings.contractorGoalLink
         }

@@ -821,7 +821,7 @@
                     <div style="font-size: 12px; font-weight: 700; color: var(--muted);">LIVE CHAT MODE:</div>
                     <div style="display: inline-flex; background: #161B22; border: 1px solid var(--card-border); border-radius: 30px; padding: 4px; gap: 4px;">
                         <button id="btnGatewayLiveSms" class="btn-action" style="border: 1px solid transparent; border-radius: 20px; padding: 8px 16px; font-size: 12px; font-weight: 800; cursor: pointer; transition: all 0.2s; background: transparent; color: var(--muted);" onclick="setGatewayMode('LIVE_SMS')">
-                            🟢 Live Web-to-SMS (Anthony)
+                            🟢 Live Chat (Anthony)
                         </button>
                         <button id="btnGatewayAiSupport" class="btn-action" style="border: 1px solid transparent; border-radius: 20px; padding: 8px 16px; font-size: 12px; font-weight: 800; cursor: pointer; transition: all 0.2s; background: transparent; color: var(--muted);" onclick="setGatewayMode('AI_SUPPORT')">
                             🤖 24/7 AI Assistant
@@ -2619,7 +2619,7 @@ Return your response STRICTLY as a raw JSON object (no extra commentary) matchin
 
         if (mode === 'LIVE_SMS') {
             if (badge) {
-                badge.innerText = '🟢 LIVE WEB-TO-SMS (ANTHONY)';
+                badge.innerText = '🟢 LIVE CHAT (ANTHONY)';
                 badge.style.background = 'rgba(0, 230, 118, 0.15)';
                 badge.style.color = 'var(--primary)';
                 badge.style.borderColor = 'var(--primary)';
@@ -2656,6 +2656,7 @@ Return your response STRICTLY as a raw JSON object (no extra commentary) matchin
 
     async function setGatewayMode(mode) {
         currentSupportGatewayMode = mode;
+        localStorage.setItem('mcas_support_gateway_mode', mode);
         updateGatewayUiState(mode);
         try {
             const phone = document.getElementById('inputGatewayPhone')?.value || '';
@@ -2666,7 +2667,7 @@ Return your response STRICTLY as a raw JSON object (no extra commentary) matchin
                 body: JSON.stringify({ mode, developerPhone: phone, developerEmail: email })
             });
             if (res.success) {
-                alert(`Website Live Chat Mode switched to: ${mode === 'LIVE_SMS' ? '🟢 Live Web-to-SMS (Direct to Anthony)' : '🤖 24/7 AI Voice & Text Support'}`);
+                alert(`Live Chat Mode switched to: ${mode === 'LIVE_SMS' ? '🟢 Live Chat (Anthony)' : '🤖 24/7 AI Voice & Text Support'}`);
             }
         } catch (e) {
             alert('Failed to update live chat mode: ' + e.message);

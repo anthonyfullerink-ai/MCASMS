@@ -189,21 +189,26 @@ fun VoiceHubScreen(
                                 onClick = {
                                     coroutineScope.launch(Dispatchers.IO) {
                                         val app = context.applicationContext as? App
+                                        val currentAct = settings.contractorActivity.ifBlank { "hands full" }
                                         val simEvent = VoiceCallEvent(
                                             phoneNumber = "+1 (732) 552-3896",
-                                            callerName = "Anthony Fuller (Developer Test)",
+                                            callerName = "Sarah Jenkins",
                                             durationSeconds = 54,
                                             intent = if (settings.contractorStatus == "EMERGENCY") "EMERGENCY" else if (settings.contractorStatus == "AFTER_HOURS") "AFTER_HOURS" else "SERVICE_CALL",
-                                            summary = "Caller reported an urgent plumbing pipe leak and requested service dispatch.",
-                                            transcript = "Caller: 'Hi Anthony, I have water leaking under the sink and need help today.'\nAI Receptionist: 'Thanks for calling! Anthony is currently assisting another client, but I can dispatch a technician or send a direct booking link right away.'\nCaller: 'Please send the link, thank you!'",
+                                            summary = if (settings.contractorStatus == "AFTER_HOURS") {
+                                                "Caller reached after-hours line and requested next-day service appointment."
+                                            } else {
+                                                "Caller requested priority appointment while staff was $currentAct."
+                                            },
+                                            transcript = "Caller: 'Hi, I need an appointment as soon as possible.'\nAI Receptionist: 'Thanks for calling ${settings.businessName}! Everyone currently has their hands full $currentAct, but I can dispatch a technician or send our priority booking link right away.'\nCaller: 'Please send the link, thank you!'",
                                             recordingUrl = null,
-                                            followUpSms = "Hi! Thanks for calling. As discussed with our AI assistant, here is our priority booking link: ${settings.contractorGoalLink.ifBlank { "https://missedcallautosms.com" }}",
+                                            followUpSms = "Hey! Thanks for calling ${settings.businessName}. As discussed with our digital assistant while we were $currentAct, here is our priority link: ${settings.contractorGoalLink.ifBlank { "https://missedcallautosms.com" }}",
                                             contractorStatus = settings.contractorStatus,
                                             isRead = false
                                         )
                                         app?.database?.voiceCallDao()?.insert(simEvent)
                                     }
-                                    Toast.makeText(context, "🧪 Simulated AI call event added to voice hub!", Toast.LENGTH_SHORT).show()
+                                    Toast.makeText(context, "Inbound call event recorded to AI Voice Hub!", Toast.LENGTH_SHORT).show()
                                 },
                                 colors = ButtonDefaults.buttonColors(containerColor = Color(0xFF4F46E5)),
                                 modifier = Modifier.fillMaxWidth()
@@ -255,14 +260,28 @@ fun VoiceHubScreen(
                         businessHoursEnabled = settings.businessHoursEnabled,
                         isWithinHours = isWithinHours,
                         schedule = settings.schedule,
+                        contractorActivity = settings.contractorActivity,
+                        businessName = settings.businessName,
+                        contractorGoalLink = settings.contractorGoalLink,
                         onStatusSelected = { newStatus ->
                             onSettingsChanged(settings.copy(contractorStatus = newStatus))
                             val label = when (newStatus) {
-                                "AVAILABLE" -> "🟢 Available / On a Job"
+                                "AVAILABLE" -> "🟢 Available"
                                 "AFTER_HOURS" -> "🌙 After Hours"
                                 else -> "🚨 Emergency Only"
                             }
                             Toast.makeText(context, "Status set to $label. AI greeting and triggers updated.", Toast.LENGTH_SHORT).show()
+                        },
+                        onActivitySelected = { newActivity ->
+                            val cleanAct = newActivity.trim().ifBlank { "hands full" }
+                            val generatedGreeting = "Thanks for calling ${settings.businessName}! Everyone currently has their hands full $cleanAct, but I'm the digital assistant and I can help book your appointment right now or take down your information for a prompt callback. What day works best for you?"
+                            onSettingsChanged(
+                                settings.copy(
+                                    contractorActivity = newActivity,
+                                    voiceReceptionistGreeting = generatedGreeting
+                                )
+                            )
+                            Toast.makeText(context, "Activity updated to '$newActivity'. AI voice intro updated!", Toast.LENGTH_SHORT).show()
                         }
                     )
                 }
@@ -416,8 +435,19 @@ fun ContractorStatusDial(
     businessHoursEnabled: Boolean = false,
     isWithinHours: Boolean = true,
     schedule: com.missedcall.autotext.data.AppSchedule = com.missedcall.autotext.data.AppSchedule(),
-    onStatusSelected: (String) -> Unit
+    contractorActivity: String = "Hands Full",
+    businessName: String = "My Business",
+    contractorGoalLink: String = "",
+    onStatusSelected: (String) -> Unit,
+    onActivitySelected: (String) -> Unit
 ) {
+    var showCustomActivityDialog by remember { mutableStateOf(false) }
+    var customActivityInput by remember { mutableStateOf(contractorActivity) }
+
+    val cleanActivity = contractorActivity.ifBlank { "hands full" }
+    val generatedVoiceIntro = "Thanks for calling $businessName! Everyone currently has their hands full $cleanActivity, but I'm the digital assistant and I can help book your appointment right now or take down your information for a prompt callback. What day works best for you?"
+    val generatedSmsPreview = "Hey! Sorry we missed your call while $cleanActivity. Here is our direct booking link: ${contractorGoalLink.ifBlank { "https://missedcallautosms.com" }} - $businessName"
+
     Card(
         colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.5f)),
         shape = RoundedCornerShape(16.dp),
@@ -457,7 +487,7 @@ fun ContractorStatusDial(
                 StatusChip(
                     modifier = Modifier.weight(1f),
                     title = "Available",
-                    subtitle = if (businessHoursEnabled && isWithinHours) "Active" else "Hands Full",
+                    subtitle = cleanActivity.replaceFirstChar { if (it.isLowerCase()) it.titlecase(Locale.ROOT) else it.toString() },
                     icon = "🟢",
                     isSelected = currentStatus == "AVAILABLE" || currentStatus.isBlank(),
                     activeColor = Color(0xFF00E676),
@@ -487,20 +517,196 @@ fun ContractorStatusDial(
                 )
             }
 
-            Spacer(modifier = Modifier.height(10.dp))
+            Spacer(modifier = Modifier.height(12.dp))
 
-            val desc = when (currentStatus) {
-                "AFTER_HOURS" -> "🌙 After Hours: AI informs caller the office is closed, captures job needs, and texts booking link for next morning."
-                "EMERGENCY" -> "🚨 Emergency Only: AI screens for active leaks or hazards. Routine callers are filtered; emergencies alert you immediately."
-                else -> "🟢 Available / On a Job: AI explains you have hands full on a job site, gathers details, and promises a prompt callback."
+            // When Available is selected, provide activity chooser & dynamic AI intro preview
+            if (currentStatus == "AVAILABLE" || currentStatus.isBlank()) {
+                Surface(
+                    color = MaterialTheme.colorScheme.surface,
+                    shape = RoundedCornerShape(12.dp),
+                    border = BorderStroke(1.dp, MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.6f)),
+                    modifier = Modifier.fillMaxWidth()
+                ) {
+                    Column(modifier = Modifier.padding(12.dp)) {
+                        Row(
+                            modifier = Modifier.fillMaxWidth(),
+                            horizontalArrangement = Arrangement.SpaceBetween,
+                            verticalAlignment = Alignment.CenterVertically
+                        ) {
+                            Text(
+                                text = "Current Activity / Trade Focus:",
+                                style = MaterialTheme.typography.labelSmall,
+                                fontWeight = FontWeight.Bold,
+                                color = MaterialTheme.colorScheme.primary
+                            )
+                            TextButton(
+                                onClick = {
+                                    customActivityInput = contractorActivity
+                                    showCustomActivityDialog = true
+                                },
+                                contentPadding = PaddingValues(horizontal = 4.dp, vertical = 0.dp)
+                            ) {
+                                Text("✏️ Custom", fontSize = 11.sp)
+                            }
+                        }
+
+                        // Preset trade chips
+                        val presets = listOf("cutting hair", "hands full", "on a job", "on the road", "in a consultation")
+                        Row(
+                            modifier = Modifier.fillMaxWidth(),
+                            horizontalArrangement = Arrangement.spacedBy(6.dp)
+                        ) {
+                            presets.forEach { act ->
+                                val isSelected = cleanActivity.equals(act, ignoreCase = true)
+                                FilterChip(
+                                    selected = isSelected,
+                                    onClick = { onActivitySelected(act) },
+                                    label = {
+                                        Text(
+                                            when (act) {
+                                                "cutting hair" -> "✂️ Hair"
+                                                "hands full" -> "🛠️ Hands Full"
+                                                "on a job" -> "🏗️ On Job"
+                                                "on the road" -> "🚗 Driving"
+                                                else -> "🤝 Meeting"
+                                            },
+                                            fontSize = 11.sp
+                                        )
+                                    },
+                                    modifier = Modifier.weight(1f)
+                                )
+                            }
+                        }
+
+                        Spacer(modifier = Modifier.height(10.dp))
+
+                        // Opening AI Voice Intro preview
+                        Surface(
+                            color = Color(0xFF673AB7).copy(alpha = 0.1f),
+                            shape = RoundedCornerShape(8.dp),
+                            modifier = Modifier.fillMaxWidth()
+                        ) {
+                            Column(modifier = Modifier.padding(10.dp)) {
+                                Row(verticalAlignment = Alignment.CenterVertically) {
+                                    Icon(Icons.Default.RecordVoiceOver, contentDescription = null, tint = Color(0xFFAB47BC), modifier = Modifier.size(14.dp))
+                                    Spacer(modifier = Modifier.width(6.dp))
+                                    Text("AI Opening Voice Greeting (Auto-Generated)", style = MaterialTheme.typography.labelSmall, fontWeight = FontWeight.Bold, color = Color(0xFFAB47BC))
+                                }
+                                Spacer(modifier = Modifier.height(4.dp))
+                                Text(
+                                    text = "\"$generatedVoiceIntro\"",
+                                    style = MaterialTheme.typography.bodySmall,
+                                    color = MaterialTheme.colorScheme.onSurfaceVariant
+                                )
+                            }
+                        }
+
+                        Spacer(modifier = Modifier.height(8.dp))
+
+                        // Context-aware SMS preview
+                        Surface(
+                            color = Color(0xFF00E676).copy(alpha = 0.08f),
+                            shape = RoundedCornerShape(8.dp),
+                            modifier = Modifier.fillMaxWidth()
+                        ) {
+                            Column(modifier = Modifier.padding(10.dp)) {
+                                Row(verticalAlignment = Alignment.CenterVertically) {
+                                    Icon(Icons.Default.Sms, contentDescription = null, tint = ActiveGreenText, modifier = Modifier.size(14.dp))
+                                    Spacer(modifier = Modifier.width(6.dp))
+                                    Text("Context-Aware Post-Call SMS", style = MaterialTheme.typography.labelSmall, fontWeight = FontWeight.Bold, color = ActiveGreenText)
+                                }
+                                Spacer(modifier = Modifier.height(4.dp))
+                                Text(
+                                    text = "\"$generatedSmsPreview\"",
+                                    style = MaterialTheme.typography.bodySmall,
+                                    color = MaterialTheme.colorScheme.onSurfaceVariant
+                                )
+                            }
+                        }
+                    }
+                }
+            } else if (currentStatus == "AFTER_HOURS") {
+                Surface(
+                    color = Color(0xFF38BDF8).copy(alpha = 0.08f),
+                    shape = RoundedCornerShape(8.dp),
+                    modifier = Modifier.fillMaxWidth()
+                ) {
+                    Column(modifier = Modifier.padding(10.dp)) {
+                        Row(verticalAlignment = Alignment.CenterVertically) {
+                            Text("🌙", fontSize = 14.sp)
+                            Spacer(modifier = Modifier.width(6.dp))
+                            Text("After Hours Closed Script Active", style = MaterialTheme.typography.labelSmall, fontWeight = FontWeight.Bold, color = Color(0xFF38BDF8))
+                        }
+                        Spacer(modifier = Modifier.height(4.dp))
+                        Text(
+                            text = "\"Thanks for calling $businessName! Our office is currently closed for the day. I can capture your request for our morning team or text you a priority booking link right now. What can we help you with?\"",
+                            style = MaterialTheme.typography.bodySmall,
+                            color = MaterialTheme.colorScheme.onSurfaceVariant
+                        )
+                    }
+                }
+            } else {
+                Surface(
+                    color = Color(0xFFEF4444).copy(alpha = 0.08f),
+                    shape = RoundedCornerShape(8.dp),
+                    modifier = Modifier.fillMaxWidth()
+                ) {
+                    Column(modifier = Modifier.padding(10.dp)) {
+                        Row(verticalAlignment = Alignment.CenterVertically) {
+                            Text("🚨", fontSize = 14.sp)
+                            Spacer(modifier = Modifier.width(6.dp))
+                            Text("Emergency Priority Filter Active", style = MaterialTheme.typography.labelSmall, fontWeight = FontWeight.Bold, color = Color(0xFFEF4444))
+                        }
+                        Spacer(modifier = Modifier.height(4.dp))
+                        Text(
+                            text = "\"Thanks for calling $businessName emergency line! Are you currently experiencing an active emergency hazard or urgent issue?\"",
+                            style = MaterialTheme.typography.bodySmall,
+                            color = MaterialTheme.colorScheme.onSurfaceVariant
+                        )
+                    }
+                }
             }
-
-            Text(
-                text = desc,
-                style = MaterialTheme.typography.bodySmall,
-                color = MaterialTheme.colorScheme.onSurfaceVariant
-            )
         }
+    }
+
+    if (showCustomActivityDialog) {
+        AlertDialog(
+            onDismissRequest = { showCustomActivityDialog = false },
+            title = { Text("Custom Trade Activity") },
+            text = {
+                Column {
+                    Text(
+                        "Enter what you or your staff are busy doing (e.g. 'cutting hair', 'under a sink', 'with a patient', 'operating crane'):",
+                        style = MaterialTheme.typography.bodySmall
+                    )
+                    Spacer(modifier = Modifier.height(10.dp))
+                    OutlinedTextField(
+                        value = customActivityInput,
+                        onValueChange = { customActivityInput = it },
+                        label = { Text("Busy Activity") },
+                        placeholder = { Text("cutting hair") },
+                        singleLine = true,
+                        modifier = Modifier.fillMaxWidth()
+                    )
+                }
+            },
+            confirmButton = {
+                Button(onClick = {
+                    val trimmed = customActivityInput.trim()
+                    if (trimmed.isNotBlank()) {
+                        onActivitySelected(trimmed)
+                    }
+                    showCustomActivityDialog = false
+                }) {
+                    Text("Save & Generate Intro")
+                }
+            },
+            dismissButton = {
+                TextButton(onClick = { showCustomActivityDialog = false }) {
+                    Text("Cancel")
+                }
+            }
+        )
     }
 }
 
