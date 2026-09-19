@@ -21,12 +21,13 @@ const MIME_TYPES = {
 };
 
 const LATEST_APP_VERSION = {
-  versionCode: 10,
-  versionName: '1.4.0',
+  versionCode: 11,
+  versionName: '1.4.1',
   downloadUrl: 'https://raw.githubusercontent.com/anthonyfullerink-ai/MCASMS/main/MissedCallAutoSMS.apk',
-  releaseNotes: '• 🎙️ 24/7 AI Voice Receptionist (*71 Live Call Forwarding & 24/7 Answering)\n• 🛡️ Anti-Spam Rate Limiting & Financial Quota Armor\n• ⚡ Instant Offline Outbound SIM SMS Queue Recovery\n• 🚨 Mandatory Upgrade: Required for new telecom routing architecture',
+  proDownloadUrl: 'https://raw.githubusercontent.com/anthonyfullerink-ai/MCASMS/main/MissedCallAutoSMS-Pro.apk',
+  releaseNotes: '• 🎙️ 24/7 AI Voice Receptionist (*71 Carrier Call Forwarding & Live Assistant)\n• ⚡ Dual SIM & Pro Webhook Automation Bridge\n• 🤖 BYOK Multi-Agent & Inbound Line Selector in Setup\n• 🛠️ Developer Master Voice Mode & Simulated Inbound Testing\n• 💬 Direct Developer Web-to-SMS Live Chat Gateway Sync\n• ⚡ Instant Offline Outbound SIM SMS Recovery',
   mandatory: true,
-  minSupportedVersion: 10
+  minSupportedVersion: 11
 };
 
 // Ensure sent_emails log directory exists
@@ -92,43 +93,73 @@ function stripeApiRequest(endpoint, method = 'GET', postData = null) {
 
 function generateLicenseEmailHtml(data) {
   const { customerName, customerEmail, licenseKey, licenseType, price } = data;
-  const apkDownloadUrl = `http://localhost:8000/MissedCallAutoSMS.apk`;
+  const isPro = (licenseKey && (licenseKey.startsWith('MCAS-PRO-') || licenseKey.startsWith('MCAT-PRO-') || licenseKey.includes('PRO-DEMO'))) ||
+                licenseType === 'PRO' || price === 149.99 || data.isPro;
+  const apkDownloadUrl = isPro 
+    ? `http://localhost:8000/MissedCallAutoSMS-Pro.apk` 
+    : `http://localhost:8000/MissedCallAutoSMS.apk`;
   const isFree = (price === 0 || licenseType === 'FREE');
+
+  const brandTitle = isPro ? "Missed Call Auto SMS • Pro Automation" : "Missed Call Auto SMS";
+  const brandIcon = isPro ? "⚡" : "📱";
+  const themeColor = isPro ? "#A855F7" : "#00E676";
+  const themeAccent = isPro ? "#C084FC" : "#00E676";
+  const editionTitle = isPro 
+    ? "PRO AUTOMATION EDITION (UNLIMITED)" 
+    : "FLAGSHIP APPLIANCE EDITION";
+  const featuresHtml = isPro 
+    ? `<ul style="color: #CBD5E0; font-size: 13px; line-height: 1.8; margin-top: 8px; padding-left: 20px;">
+         <li><strong>Dual SIM Business Slotting</strong>: Separate personal and business missed call auto-replies.</li>
+         <li><strong>Central Webhook Bridge & n8n</strong>: Forward incoming SMS and calls to your private webhooks.</li>
+         <li><strong>24/7 AI Voice Receptionist Ready</strong>: Eligible for *71 carrier conditional forwarding add-on.</li>
+         <li><strong>100% P2P Carrier Exemption</strong>: Zero monthly fees and immune to A2P 10DLC bans.</li>
+       </ul>`
+    : `<ul style="color: #CBD5E0; font-size: 13px; line-height: 1.8; margin-top: 8px; padding-left: 20px;">
+         <li><strong>Instant Missed Call Text-Back</strong>: Automatically responds in &lt; 5 seconds.</li>
+         <li><strong>Single Android Device Lock</strong>: Runs 100% locally from your genuine carrier SIM.</li>
+         <li><strong>Zero Ongoing Software Fees</strong>: No monthly recurring bills or per-SMS markups.</li>
+       </ul>`;
 
   return `<!DOCTYPE html>
 <html>
 <head>
     <meta charset="utf-8">
-    <title>Your MissedCallAutoSMS License Key & APK Download</title>
+    <title>Your ${brandTitle} License Key & APK Download</title>
 </head>
 <body style="font-family: Arial, sans-serif; background-color: #090B0E; color: #FFFFFF; margin: 0; padding: 30px;">
     <div style="max-width: 600px; margin: 0 auto; background: #131720; border: 1px solid #222836; border-radius: 16px; padding: 32px;">
         <div style="text-align: center; margin-bottom: 24px;">
-            <div style="font-size: 40px; margin-bottom: 8px;">📱</div>
-            <h1 style="color: #00E676; margin: 0; font-size: 24px;">Missed Call Auto SMS</h1>
-            <p style="color: #949BAE; font-size: 14px; margin-top: 4px;">Android Appliance Setup & License Key Delivery</p>
+            <div style="font-size: 40px; margin-bottom: 8px;">${brandIcon}</div>
+            <h1 style="color: ${themeColor}; margin: 0; font-size: 24px;">${brandTitle}</h1>
+            <p style="color: #949BAE; font-size: 14px; margin-top: 4px;">${editionTitle}</p>
         </div>
 
-        <div style="background: #1A202C; border-left: 4px solid #00E676; padding: 16px; border-radius: 8px; margin-bottom: 24px;">
-            <h2 style="margin: 0 0 8px 0; font-size: 18px; color: #FFF;">Hello ${customerName || 'Valued Customer'},</h2>
+        <div style="background: #1A202C; border-left: 4px solid ${themeColor}; padding: 16px; border-radius: 8px; margin-bottom: 24px;">
+            <h2 style="margin: 0 0 8px 0; font-size: 18px; color: #FFF;">Hello ${escapeHtml(customerName || 'Valued Customer')},</h2>
             <p style="margin: 0; color: #CBD5E0; font-size: 14px; line-height: 1.5;">
-                Thank you for choosing <strong>Missed Call Auto SMS</strong>! Your ${isFree ? 'Complimentary' : 'Lifetime'} License Key is active and ready to use.
+                Thank you for choosing <strong>${brandTitle}</strong>! Your ${isFree ? 'Complimentary' : 'Lifetime'} License Key is active and ready to use.
             </p>
         </div>
 
         <!-- License Box -->
-        <div style="background: #090B0E; border: 1px dashed #00E676; border-radius: 12px; padding: 20px; text-align: center; margin-bottom: 24px;">
+        <div style="background: #090B0E; border: 1px dashed ${themeColor}; border-radius: 12px; padding: 20px; text-align: center; margin-bottom: 24px;">
             <div style="font-size: 12px; color: #949BAE; text-transform: uppercase; font-weight: bold; margin-bottom: 6px;">Your Hardware License Key</div>
-            <div style="font-family: monospace; font-size: 20px; color: #00E676; font-weight: bold; word-break: break-all; letter-spacing: 1px; margin-bottom: 12px;">
-                ${licenseKey}
+            <div style="font-family: monospace; font-size: 20px; color: ${themeAccent}; font-weight: bold; word-break: break-all; letter-spacing: 1px; margin-bottom: 12px;">
+                ${escapeHtml(licenseKey)}
             </div>
             <div style="font-size: 12px; color: #A0AEC0;">Tied to 1 Android Device • Hardware Bound</div>
         </div>
 
+        <!-- Included Entitlements -->
+        <div style="background: #0D1117; border: 1px solid #222836; border-radius: 10px; padding: 16px; margin-bottom: 24px;">
+            <div style="font-size: 13px; font-weight: bold; color: #FFF;">✨ Included Edition Features:</div>
+            ${featuresHtml}
+        </div>
+
         <!-- APK Download Button -->
         <div style="text-align: center; margin-bottom: 30px;">
-            <a href="${apkDownloadUrl}" style="display: inline-block; background: #00E676; color: #000000; font-weight: bold; font-size: 16px; padding: 14px 32px; border-radius: 30px; text-decoration: none; box-shadow: 0 6px 20px rgba(0,230,118,0.3);">
-                📥 Download Android App (.APK)
+            <a href="${apkDownloadUrl}" style="display: inline-block; background: ${themeColor}; color: ${isPro ? '#FFFFFF' : '#000000'}; font-weight: bold; font-size: 16px; padding: 14px 32px; border-radius: 30px; text-decoration: none; box-shadow: 0 6px 20px rgba(168,85,247,0.3);">
+                📥 Download ${isPro ? 'Pro' : 'Standard'} Android App (.APK)
             </a>
             <div style="font-size: 12px; color: #949BAE; margin-top: 8px;">Direct Link: ${apkDownloadUrl}</div>
         </div>
@@ -138,13 +169,13 @@ function generateLicenseEmailHtml(data) {
             <h3 style="color: #FFF; font-size: 16px; margin: 0 0 16px 0;">🚀 3-Step Activation Guide</h3>
             <ol style="color: #CBD5E0; font-size: 14px; padding-left: 20px; line-height: 1.8;">
                 <li><strong>Download & Install</strong> the APK file on your Android phone.</li>
-                <li>Open the app and <strong>paste your License Key</strong> (<code style="color:#00E676;">${licenseKey}</code>).</li>
+                <li>Open the app and <strong>paste your License Key</strong> (<code style="color:${themeAccent};">${escapeHtml(licenseKey)}</code>).</li>
                 <li>Grant standard SMS and Call Log permissions, then <strong>Toggle Master Appliance ON</strong>.</li>
             </ol>
         </div>
 
         <div style="margin-top: 30px; border-top: 1px solid #222836; padding-top: 20px; text-align: center; font-size: 12px; color: #718096;">
-            Need help? Contact support or access your admin dashboard at <a href="http://localhost:8000/owner_admin_dashboard.html" style="color: #00E676;">MissedCallAutoSMS Admin</a>.
+            Need help? Contact support or access your admin dashboard at <a href="http://localhost:8000/owner_admin_dashboard.html" style="color: ${themeColor};">MissedCallAutoSMS Admin</a>.
         </div>
     </div>
 </body>
@@ -447,7 +478,7 @@ function generateKey(customerName, daysValid = 0, isPro = false) {
   hmac.update(payloadHex);
   const sigShort = hmac.digest("hex").substring(0, 8).toUpperCase();
   
-  const prefix = isPro ? "MCAS-VOICE-PRO-" : KEY_PREFIX;
+  const prefix = isPro ? "MCAS-PRO-" : KEY_PREFIX;
   return `${prefix}${payloadHex}-${sigShort}`;
 }
 
@@ -628,10 +659,11 @@ const server = http.createServer((req, res) => {
         const current = getLiveAppVersion();
 
         const updated = {
-          versionCode: parseInt(payload.versionCode, 10) || current.versionCode || 2,
-          versionName: payload.versionName || current.versionName || '1.1.0',
-          downloadUrl: payload.downloadUrl || current.downloadUrl || 'http://10.0.0.65:8000/app-debug.apk',
-          releaseNotes: payload.releaseNotes || current.releaseNotes || 'Bug fixes and performance enhancements.',
+          versionCode: parseInt(payload.versionCode, 10) || current.versionCode || 11,
+          versionName: payload.versionName || current.versionName || '1.4.1',
+          downloadUrl: payload.downloadUrl || current.downloadUrl || 'https://raw.githubusercontent.com/anthonyfullerink-ai/MCASMS/main/MissedCallAutoSMS.apk',
+          proDownloadUrl: payload.proDownloadUrl || current.proDownloadUrl || 'https://raw.githubusercontent.com/anthonyfullerink-ai/MCASMS/main/MissedCallAutoSMS-Pro.apk',
+          releaseNotes: payload.releaseNotes || current.releaseNotes || '• 🎙️ 24/7 AI Voice Receptionist (*71 Live Call Forwarding)\n• ⚡ Dual SIM & Webhook Bridge',
           mandatory: Boolean(payload.mandatory),
           minSupportedVersion: parseInt(payload.minSupportedVersion, 10) || 1,
           updatedAt: new Date().toISOString()
@@ -877,6 +909,9 @@ const server = http.createServer((req, res) => {
 
         console.log(`📧 [EMAIL SENT] License key ${licenseKey} & APK link dispatched to ${customerEmail}. Saved to: sent_emails/${fileName}`);
 
+        const isPro = (payload.tier === 'PRO' || payload.licenseType === 'PRO' || (licenseKey && licenseKey.includes('PRO')));
+        const apkDownloadUrl = isPro ? `http://localhost:8000/MissedCallAutoSMS-Pro.apk` : `http://localhost:8000/MissedCallAutoSMS.apk`;
+
         res.writeHead(200, {
           'Content-Type': 'application/json; charset=utf-8',
           'Access-Control-Allow-Origin': '*'
@@ -887,7 +922,7 @@ const server = http.createServer((req, res) => {
           sentTo: customerEmail,
           licenseKey: licenseKey,
           previewUrl: `http://localhost:8000/sent_emails/${fileName}`,
-          apkDownloadUrl: `http://localhost:8000/MissedCallAutoSMS.apk`
+          apkDownloadUrl: apkDownloadUrl
         }));
       } catch (err) {
         res.writeHead(500, { 'Content-Type': 'application/json; charset=utf-8', 'Access-Control-Allow-Origin': '*' });
@@ -898,36 +933,91 @@ const server = http.createServer((req, res) => {
   }
 }
 
-  // API Route: Verify License Key & Status
-  if ((relativePath === '/api/verify-license' || relativePath === '/api/verify-license/') && req.method === 'POST') {
-    let body = '';
-    req.on('data', chunk => body += chunk);
-    req.on('end', () => {
-      try {
-        const payload = JSON.parse(body || '{}');
-        const key = (payload.licenseKey || '').trim().toUpperCase();
-
-        res.writeHead(200, { 'Content-Type': 'application/json; charset=utf-8', 'Access-Control-Allow-Origin': '*' });
-        
-        if (!key.startsWith('MCAS-')) {
-          res.end(JSON.stringify({ valid: false, message: 'Invalid License Key Prefix. Keys start with MCAS-' }));
-          return;
-        }
-
-        res.end(JSON.stringify({
-          valid: true,
-          licenseKey: key,
-          status: 'ACTIVE',
-          type: key.includes('TRIAL') ? 'TRIAL' : 'PAID',
-          deviceId: 'LOCKED (1 Device)',
-          createdAt: new Date().toISOString()
-        }));
-      } catch (e) {
-        res.writeHead(400, { 'Content-Type': 'application/json; charset=utf-8', 'Access-Control-Allow-Origin': '*' });
-        res.end(JSON.stringify({ valid: false, error: e.message }));
+  // API Route: Verify License Key & Status (Supports GET & POST)
+  if (relativePath === '/api/verify-license' || relativePath === '/api/verify-license/') {
+    const handleVerify = (rawKey) => {
+      const key = (rawKey || '').trim().toUpperCase();
+      if (!key.startsWith('MCAS-') && !key.startsWith('MCAT-')) {
+        return { valid: false, message: 'Invalid License Key Prefix. Keys start with MCAS- or MCAS-PRO-' };
       }
-    });
-    return;
+
+      const isPro = key.startsWith('MCAS-PRO-') || key.startsWith('MCAT-PRO-') || key.includes('PRO-DEMO');
+      const isAgency = key.startsWith('MCAS-AGENCY-') || key.startsWith('MCAT-AGENCY-');
+
+      // Check Voice Pro Bindings
+      let voiceActive = false;
+      let voiceForwardingNumber = null;
+      const voiceBindingsFile = path.join(__dirname, '.voice_pro_bindings.json');
+      if (fs.existsSync(voiceBindingsFile)) {
+        try {
+          const bindings = JSON.parse(fs.readFileSync(voiceBindingsFile, 'utf8'));
+          if (bindings[key] && bindings[key].active !== false) {
+            voiceActive = true;
+            voiceForwardingNumber = bindings[key].forwardingNumber;
+          }
+        } catch (e) {}
+      }
+
+      // Check registered devices
+      let boundDevice = 'Unbound (Ready for Launch)';
+      const registeredDevicesFile = path.join(__dirname, 'registered_devices.json');
+      if (fs.existsSync(registeredDevicesFile)) {
+        try {
+          const devices = JSON.parse(fs.readFileSync(registeredDevicesFile, 'utf8'));
+          if (devices[key] && devices[key].deviceId) {
+            boundDevice = devices[key].deviceId;
+          }
+        } catch (e) {}
+      }
+
+      return {
+        valid: true,
+        licenseKey: key,
+        status: 'ACTIVE',
+        tier: isAgency ? 'AGENCY' : (isPro ? 'PRO' : 'STANDARD'),
+        edition: isAgency ? 'Agency Fleet Management' : (isPro ? 'Pro Automation Edition ($149)' : 'Flagship Appliance Edition ($49.99)'),
+        voiceActive: voiceActive,
+        voiceForwardingNumber: voiceForwardingNumber,
+        voiceEligible: isPro || isAgency,
+        type: key.includes('TRIAL') ? 'TRIAL' : (key.includes('DEMO') ? 'DEMO' : 'PAID'),
+        deviceId: boundDevice,
+        features: {
+          dualSim: isPro || isAgency,
+          n8nWebhook: isPro || isAgency,
+          centralWebhookBridge: isPro || isAgency,
+          aiVoiceReceptionist: isPro || isAgency,
+          p2pSmsExempt: true
+        },
+        createdAt: new Date().toISOString()
+      };
+    };
+
+    if (req.method === 'GET') {
+      const urlObj = new URL(req.url, `http://localhost:${PORT}`);
+      const key = urlObj.searchParams.get('key') || urlObj.searchParams.get('licenseKey') || '';
+      const result = handleVerify(key);
+      res.writeHead(200, { 'Content-Type': 'application/json; charset=utf-8', 'Access-Control-Allow-Origin': '*' });
+      res.end(JSON.stringify(result));
+      return;
+    }
+
+    if (req.method === 'POST') {
+      let body = '';
+      req.on('data', chunk => body += chunk);
+      req.on('end', () => {
+        try {
+          const payload = JSON.parse(body || '{}');
+          const key = payload.licenseKey || payload.key || '';
+          const result = handleVerify(key);
+          res.writeHead(200, { 'Content-Type': 'application/json; charset=utf-8', 'Access-Control-Allow-Origin': '*' });
+          res.end(JSON.stringify(result));
+        } catch (e) {
+          res.writeHead(400, { 'Content-Type': 'application/json; charset=utf-8', 'Access-Control-Allow-Origin': '*' });
+          res.end(JSON.stringify({ valid: false, error: e.message }));
+        }
+      });
+      return;
+    }
   }
 
   // API Route: Reset Hardware Device Lock
@@ -1946,7 +2036,7 @@ const server = http.createServer((req, res) => {
     }
   }
 
-  // Map /MissedCallAutoSMS.apk and /app-debug.apk from build output or root
+  // Map /MissedCallAutoSMS.apk, /MissedCallAutoSMS-Pro.apk and /app-debug.apk from build output or root
   let filePath = path.join(__dirname, relativePath);
   if (relativePath === '/MissedCallAutoSMS.apk' || relativePath === '/app-debug.apk') {
     filePath = path.join(__dirname, 'MissedCallAutoSMS.apk');
@@ -1955,6 +2045,11 @@ const server = http.createServer((req, res) => {
     }
     if (!fs.existsSync(filePath)) {
       filePath = path.join(__dirname, 'app/build/outputs/apk/debug/app-debug.apk');
+    }
+  } else if (relativePath === '/MissedCallAutoSMS-Pro.apk') {
+    filePath = path.join(__dirname, 'MissedCallAutoSMS-Pro.apk');
+    if (!fs.existsSync(filePath)) {
+      filePath = path.join(__dirname, 'app/build/outputs/apk/proRelease/app-pro-release.apk');
     }
   }
   

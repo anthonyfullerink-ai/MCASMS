@@ -23,6 +23,7 @@ data class UpdateInfo(
     val versionName: String,
     @SerializedName("downloadUrl", alternate = ["apkUrl"])
     val apkUrl: String,
+    val proDownloadUrl: String? = null,
     val releaseNotes: String? = null,
     val mandatory: Boolean = false,
     val minSupportedVersion: Int = 1
@@ -120,7 +121,12 @@ class RemoteUpdateManager(private val context: Context) {
 
                     if (updateInfo != null && updateInfo.versionCode > 0) {
                         Log.i(TAG, "Retrieved update manifest from $targetUrl: remote v${updateInfo.versionName} (${updateInfo.versionCode}) vs current v$currentVersionName ($currentVersionCode)")
-                        val resolvedApk = resolveApkUrl(updateInfo.apkUrl, targetUrl)
+                        val targetApkUrl = if (com.missedcall.autotext.BuildConfig.IS_PRO_EDITION && !updateInfo.proDownloadUrl.isNullOrBlank()) {
+                            updateInfo.proDownloadUrl
+                        } else {
+                            updateInfo.apkUrl
+                        }
+                        val resolvedApk = resolveApkUrl(targetApkUrl, targetUrl)
                         val isMandatory = updateInfo.mandatory || (currentVersionCode < updateInfo.minSupportedVersion)
                         val finalUpdateInfo = updateInfo.copy(apkUrl = resolvedApk, mandatory = isMandatory)
 
@@ -151,12 +157,17 @@ class RemoteUpdateManager(private val context: Context) {
     }
 
     private fun resolveApkUrl(rawUrl: String, manifestUrl: String): String {
-        if (rawUrl.isBlank()) return "https://raw.githubusercontent.com/anthonyfullerink-ai/MCASMS/main/MissedCallAutoSMS.apk"
+        val defaultApk = if (com.missedcall.autotext.BuildConfig.IS_PRO_EDITION) {
+            "https://raw.githubusercontent.com/anthonyfullerink-ai/MCASMS/main/MissedCallAutoSMS-Pro.apk"
+        } else {
+            "https://raw.githubusercontent.com/anthonyfullerink-ai/MCASMS/main/MissedCallAutoSMS.apk"
+        }
+        if (rawUrl.isBlank()) return defaultApk
         
         // If manifest was fetched from GitHub, always ensure APK points to GitHub raw
         if (manifestUrl.contains("githubusercontent.com") || manifestUrl.contains("jsdelivr.net")) {
             if (rawUrl.contains("localhost") || rawUrl.contains("10.0.0.") || rawUrl.startsWith("/")) {
-                return "https://raw.githubusercontent.com/anthonyfullerink-ai/MCASMS/main/MissedCallAutoSMS.apk"
+                return defaultApk
             }
         }
 
