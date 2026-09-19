@@ -4,6 +4,7 @@
   },
   "dependencies": {
     "@google/genai": "^2.23.0",
-    "firebase-admin": "^14.4.0"
+    "firebase-admin": "^14.4.0",
+    "msedge-tts": "^2.0.7"
   }
 }
