@@ -407,6 +407,7 @@
         <button id="tabBtn2" class="tab-btn" onclick="switchTab(2)">⚙️ Developer OTA & System Controls</button>
         <button id="tabBtn3" class="tab-btn" onclick="switchTab(3)">📰 AI Blog Engine (<span id="countTabBlog">0</span>)</button>
         <button id="tabBtn4" class="tab-btn" onclick="switchTab(4)">🎫 Support Tickets (<span id="countTabTickets">0</span>)</button>
+        <button id="tabBtn5" class="tab-btn" onclick="switchTab(5)">🎙️ AI Voice Receptionist (<span id="countTabVoice">0</span>)</button>
     </div>
 
     <!-- TAB 0: Sales & License Directory -->
@@ -575,7 +576,8 @@
                 </div>
                 <div style="display: flex; gap: 10px; flex-wrap: wrap;">
                     <button class="btn-action" onclick="checkStripeConnectionLive()">⚡ Test Stripe Live API</button>
-                    <button class="btn-action btn-primary-action" onclick="testStripeWebhookLive()">⚡ Send Test Webhook Event</button>
+                    <button class="btn-action" onclick="testStripeWebhookLive()">⚡ Send Test Lifetime Webhook</button>
+                    <button class="btn-action btn-primary-action" onclick="testStripeVoiceProWebhookLive()">🎙️ Test Voice Pro ($29/mo) Webhook</button>
                 </div>
             </div>
 
@@ -592,7 +594,7 @@
                 </div>
             </div>
 
-            <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 16px;">
+            <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(240px, 1fr)); gap: 16px;">
                 <div>
                     <label style="font-size: 13px; color: var(--muted); display: block; margin-bottom: 6px;">Stripe 3-Day Free Trial Checkout Link ($0):</label>
                     <input type="text" value="https://buy.stripe.com/5kQ5kDbBI8hkdao8WZ2go0c" readonly onclick="this.select()" style="width: 100%; background: #090B0E; border: 1px solid var(--card-border); color: #FFF; padding: 10px; border-radius: 8px; font-size: 12px; font-family: monospace;">
@@ -604,6 +606,10 @@
                 <div>
                     <label style="font-size: 13px; color: #D8B4FE; display: block; margin-bottom: 6px;">⚡ Stripe Pro Automation Direct Link ($149.99):</label>
                     <input type="text" value="https://buy.stripe.com/cNi5kDdJQ558c6k2yB2go0b" readonly onclick="this.select()" style="width: 100%; background: #090B0E; border: 1px solid #A855F7; color: #D8B4FE; padding: 10px; border-radius: 8px; font-size: 12px; font-family: monospace;">
+                </div>
+                <div>
+                    <label style="font-size: 13px; color: var(--primary); display: block; margin-bottom: 6px;">🎙️ Stripe Managed Voice Pro Link ($29/mo):</label>
+                    <input type="text" value="https://buy.stripe.com/4gMeVdcFMaps6M0b572go0f" readonly onclick="this.select()" style="width: 100%; background: #090B0E; border: 1px solid var(--primary); color: var(--primary); padding: 10px; border-radius: 8px; font-size: 12px; font-family: monospace;">
                 </div>
             </div>
 
@@ -833,6 +839,212 @@
             </tbody>
         </table>
     </div>
+
+    <!-- TAB 5: AI Voice Receptionist (Vapi) -->
+    <div id="tab5" class="tab-content card" style="display: none;">
+        <div class="card-header">
+            <div>
+                <h2>🎙️ AI Voice Receptionist & Live Call Forwarding (Vapi)</h2>
+                <div style="font-size: 13px; color: var(--muted); margin-top: 4px;">
+                    Dual-Architecture Voice Engine: 100% Free BYOK or $29/mo Turnkey Managed. Inbound carrier calls forward via *71.
+                </div>
+            </div>
+            <div style="display: flex; gap: 10px; flex-wrap: wrap;">
+                <button class="btn-action btn-primary-action" onclick="loadVoiceDashboard()">🔄 Refresh Live Voice</button>
+                <button class="btn-action" style="border-color: #A855F7; color: #C084FC;" onclick="testVoiceCallFromUi()">🧪 Simulate Inbound AI Call</button>
+            </div>
+        </div>
+
+        <!-- Metric Badges -->
+        <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 14px; margin-bottom: 20px;">
+            <div style="background: #090B0E; border: 1px solid var(--card-border); border-radius: 10px; padding: 14px;">
+                <div style="font-size: 11px; color: var(--muted); font-weight: 700; text-transform: uppercase;">Active Engine Mode</div>
+                <div id="voiceMetricMode" style="font-size: 18px; font-weight: 900; color: var(--primary); margin-top: 4px;">MANAGED ($29/mo)</div>
+            </div>
+            <div style="background: #090B0E; border: 1px solid var(--card-border); border-radius: 10px; padding: 14px;">
+                <div style="font-size: 11px; color: var(--muted); font-weight: 700; text-transform: uppercase;">Forwarding Line</div>
+                <div id="voiceMetricNumber" style="font-size: 16px; font-weight: 900; color: #FFF; margin-top: 6px; font-family: monospace;">+1 (555) 349-2810</div>
+            </div>
+            <div style="background: #090B0E; border: 1px solid var(--card-border); border-radius: 10px; padding: 14px; display: flex; flex-direction: column; justify-content: space-between;">
+                <div>
+                    <div style="font-size: 11px; color: var(--muted); font-weight: 700; text-transform: uppercase;">Monthly Minutes Quota</div>
+                    <div id="voiceMetricMinutes" style="font-size: 18px; font-weight: 900; color: #38BDF8; margin-top: 4px;">14 / 200 min</div>
+                </div>
+                <button class="btn-action" style="margin-top: 8px; font-size: 11px; padding: 4px 8px; border-color: #38BDF8; color: #38BDF8;" onclick="topUpMinutesFromUi()">💳 +100 Mins ($10)</button>
+            </div>
+            <div style="background: #090B0E; border: 1px solid var(--card-border); border-radius: 10px; padding: 14px;">
+                <div style="font-size: 11px; color: var(--muted); font-weight: 700; text-transform: uppercase;">Total Calls Handled</div>
+                <div id="voiceMetricCalls" style="font-size: 20px; font-weight: 900; color: #FFF; margin-top: 4px;">0</div>
+            </div>
+            <div style="background: #090B0E; border: 1px solid var(--card-border); border-radius: 10px; padding: 14px;">
+                <div style="font-size: 11px; color: var(--muted); font-weight: 700; text-transform: uppercase;">Offline SMS Queue</div>
+                <div id="voiceMetricQueue" style="font-size: 18px; font-weight: 900; color: #F59E0B; margin-top: 4px;">0 Pending</div>
+            </div>
+        </div>
+
+        <!-- Carrier Quick-Dial Card with Verification -->
+        <div style="background: rgba(0, 230, 118, 0.08); border: 1px solid rgba(0, 230, 118, 0.3); border-radius: 12px; padding: 16px; margin-bottom: 24px; display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 14px;">
+            <div style="flex: 1; min-width: 280px;">
+                <div style="display: flex; align-items: center; gap: 10px; flex-wrap: wrap;">
+                    <div style="font-size: 14px; font-weight: 800; color: #FFF;">📲 Contractor Carrier Setup (*71 Conditional Forwarding)</div>
+                    <span id="carrierVerificationBadge" class="badge" style="background: rgba(245,158,11,0.2); color: #F59E0B; border: 1px solid #F59E0B; font-size: 11px; padding: 3px 8px;">⚠️ Unverified</span>
+                </div>
+                <div style="font-size: 12px; color: var(--muted); margin-top: 4px;">
+                    When your hands are full and the phone rings for 15s without answer, your carrier automatically routes the call to your AI assistant. Deactivate anytime with <code>*73</code>.
+                </div>
+            </div>
+            <div style="display: flex; gap: 10px; align-items: center; flex-wrap: wrap;">
+                <div style="background: #090B0E; padding: 8px 12px; border-radius: 8px; border: 1px solid var(--card-border); font-family: monospace; font-size: 13px; color: var(--primary);">
+                    Activate: <strong id="displayCarrierCode">*715553492810</strong>
+                </div>
+                <button class="btn-action" style="margin: 0; font-size: 11px; padding: 7px 12px;" onclick="copyCarrierCode()">📋 Copy Code</button>
+                <button class="btn-action btn-primary-action" style="margin: 0; font-size: 11px; padding: 7px 12px;" onclick="verifyCarrierForwardingFromUi()">🧪 Verify Carrier Forwarding</button>
+            </div>
+        </div>
+
+        <!-- 2-Column Settings & Prompt Configuration -->
+        <div class="gen-grid" style="margin-bottom: 24px;">
+            <!-- Column 1: Mode Selection -->
+            <div style="background: #090B0E; border: 1px solid var(--card-border); border-radius: 12px; padding: 20px;">
+                <h3 style="margin-top: 0; font-size: 16px; color: #FFF;">🎛️ Tier & Architecture Selector</h3>
+                
+                <div style="margin-top: 14px;">
+                    <label style="display: flex; align-items: center; gap: 10px; cursor: pointer; padding: 10px; border-radius: 8px; border: 1px solid var(--card-border); margin-bottom: 10px; background: rgba(255,255,255,0.02);">
+                        <input type="radio" name="voiceModeRadio" value="OFF" onchange="updateVoiceModeSelection()">
+                        <div>
+                            <div style="font-weight: 800; color: #FFF;">1. Disabled (SMS Appliance Only)</div>
+                            <div style="font-size: 12px; color: var(--muted);">$0/month. 100% lifetime SMS recovery only.</div>
+                        </div>
+                    </label>
+
+                    <label style="display: flex; align-items: center; gap: 10px; cursor: pointer; padding: 12px; border-radius: 8px; border: 1px solid var(--primary); margin-bottom: 10px; background: rgba(0, 230, 118, 0.05);">
+                        <input type="radio" name="voiceModeRadio" value="MANAGED_PRO" checked onchange="updateVoiceModeSelection()">
+                        <div style="flex: 1;">
+                            <div style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 6px;">
+                                <div style="font-weight: 800; color: var(--primary);">2. Managed Pro Voice Receptionist ($29/mo)</div>
+                                <a href="https://buy.stripe.com/4gMeVdcFMaps6M0b572go0f" target="_blank" class="btn-action btn-primary-action" style="text-decoration: none; font-size: 11px; padding: 4px 10px; margin: 0;">💳 Subscribe / Pay $29/mo via Stripe ↗</a>
+                            </div>
+                            <div style="font-size: 12px; color: #CBD5E0; margin-top: 4px;">Turnkey setup, dedicated local line, 200 included mins/mo, zero config. Automated instant activation.</div>
+                        </div>
+                    </label>
+
+                    <label style="display: flex; align-items: center; gap: 10px; cursor: pointer; padding: 10px; border-radius: 8px; border: 1px solid var(--card-border); background: rgba(255,255,255,0.02);">
+                        <input type="radio" name="voiceModeRadio" value="BYOK" onchange="updateVoiceModeSelection()">
+                        <div>
+                            <div style="font-weight: 800; color: #38BDF8;">3. Developer BYOK ($0/mo)</div>
+                            <div style="font-size: 12px; color: var(--muted);">Bring Your Own Vapi Key. Pay wholesale ($0.05/min) directly to Vapi.</div>
+                        </div>
+                    </label>
+                </div>
+
+                <!-- BYOK Fields (Visible when BYOK selected) -->
+                <div id="byokFieldsWrap" style="display: none; margin-top: 14px; padding: 12px; background: #131720; border-radius: 8px; border: 1px solid #38BDF8;">
+                    <label>Vapi Private API Key:</label>
+                    <input type="password" id="inputByokKey" placeholder="Paste your vapi-private-key">
+                    <label>Vapi Assistant ID:</label>
+                    <input type="text" id="inputByokAssistantId" placeholder="e.g. asst_948194...">
+                </div>
+
+                <!-- Provision Local Number Form (for Managed Pro) -->
+                <div id="provisionNumberWrap" style="margin-top: 16px; padding: 12px; background: #131720; border-radius: 8px; border: 1px solid var(--card-border);">
+                    <div style="font-size: 13px; font-weight: bold; color: #FFF; margin-bottom: 8px;">📍 Request Custom Area Code Line:</div>
+                    <div style="display: flex; gap: 8px;">
+                        <input type="text" id="inputAreaCode" value="404" placeholder="Area Code (e.g. 404)" style="width: 120px;">
+                        <button class="btn-action btn-primary-action" onclick="provisionLocalLineFromUi()" style="flex: 1; margin: 0; padding: 10px;">⚡ Assign Local Number</button>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Column 2: Contractor Business Prompt & SMS Coordination -->
+            <div style="background: #090B0E; border: 1px solid var(--card-border); border-radius: 12px; padding: 20px;">
+                <h3 style="margin-top: 0; font-size: 16px; color: #FFF;">🛠️ Contractor Voice Prompt & Stabilization</h3>
+
+                <label>Business Name:</label>
+                <input type="text" id="inputVoiceBizName" value="Apex Field Services">
+
+                <label>Owner / Technician Name:</label>
+                <input type="text" id="inputVoiceOwnerName" value="Dave">
+
+                <label>Primary Service / Trade:</label>
+                <input type="text" id="inputVoiceTrade" value="Plumbing, Drain & Emergency Repairs">
+
+                <label>Emergency Keywords (Triggers Immediate Urgency Alert):</label>
+                <input type="text" id="inputVoiceKeywords" value="leak, outage, urgent, emergency, flooding, broken, sparking, freeze">
+
+                <!-- Step 5: Day/Night Business Hours Schedule -->
+                <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-top: 10px;">
+                    <div>
+                        <label style="margin-top: 0;">Business Hours Start:</label>
+                        <select id="inputVoiceHoursStart" style="width: 100%; background: #090B0E; border: 1px solid var(--card-border); color: #FFF; padding: 10px; border-radius: 8px; font-size: 13px;">
+                            <option value="6">6:00 AM</option>
+                            <option value="7">7:00 AM</option>
+                            <option value="8" selected>8:00 AM</option>
+                            <option value="9">9:00 AM</option>
+                        </select>
+                    </div>
+                    <div>
+                        <label style="margin-top: 0;">Business Hours End:</label>
+                        <select id="inputVoiceHoursEnd" style="width: 100%; background: #090B0E; border: 1px solid var(--card-border); color: #FFF; padding: 10px; border-radius: 8px; font-size: 13px;">
+                            <option value="17">5:00 PM (17:00)</option>
+                            <option value="18" selected>6:00 PM (18:00)</option>
+                            <option value="19">7:00 PM (19:00)</option>
+                            <option value="20">8:00 PM (20:00)</option>
+                        </select>
+                    </div>
+                </div>
+
+                <!-- Emergency Warm-Transfer Number -->
+                <div style="margin-top: 10px;">
+                    <label>Emergency Warm-Transfer Cell Number:</label>
+                    <input type="text" id="inputVoiceTransferNumber" value="+1 (404) 555-9988" placeholder="+1 (XXX) XXX-XXXX">
+                    <small style="color: var(--muted); font-size: 11px;">Transfers critical emergency calls (floods, outages, sparks) directly to technician cell phone.</small>
+                </div>
+
+                <!-- Step 4: Phonetic Street Address Read-Back -->
+                <div style="display: flex; align-items: center; gap: 8px; margin-top: 12px;">
+                    <input type="checkbox" id="checkAddressVerification" checked style="width: 16px; height: 16px; accent-color: var(--primary);">
+                    <label for="checkAddressVerification" style="margin: 0; font-size: 13px; color: #FFF; cursor: pointer;">
+                        Enforce Phonetic Street Address Read-Back & Confirmation
+                    </label>
+                </div>
+
+                <div style="margin-top: 16px; padding-top: 14px; border-top: 1px solid var(--card-border);">
+                    <label style="display: flex; align-items: center; gap: 8px; cursor: pointer; color: #FFF; font-weight: bold;">
+                        <input type="checkbox" id="checkPostCallSms" checked>
+                        <span>📲 Send Authentic SIM SMS Follow-Up Immediately After Call</span>
+                    </label>
+                    <label style="margin-top: 8px;">Post-Call SMS Template:</label>
+                    <input type="text" id="inputPostCallTemplate" value="Hey {{NAME}}, this is {{OWNER}}. My AI assistant let me know about {{SUMMARY}}. I am wrapping up on a job and will reach out to you shortly!">
+                </div>
+
+                <div style="margin-top: 16px; display: flex; justify-content: flex-end;">
+                    <button class="btn-action btn-primary-action" onclick="saveVoiceSettingsFromUi()" style="width: 100%; padding: 12px; font-size: 14px;">💾 Save Voice Receptionist Settings</button>
+                </div>
+            </div>
+        </div>
+
+        <!-- Voice Call Inbox & Transcripts -->
+        <div class="card-header" style="border-top: 1px solid var(--card-border); padding-top: 20px; margin-top: 10px;">
+            <h3>📥 Voice Call Inbox & Captured Leads (<span id="voiceCallsCount">0</span>)</h3>
+            <button class="btn-action" style="font-size: 12px;" onclick="loadVoiceDashboard()">🔄 Refresh Inbox</button>
+        </div>
+
+        <table>
+            <thead>
+                <tr>
+                    <th>Date / Time</th>
+                    <th>Caller Info</th>
+                    <th>Urgency & Category</th>
+                    <th>AI Call Summary & Address</th>
+                    <th>Audio Recording</th>
+                    <th>Transcript & SMS Status</th>
+                </tr>
+            </thead>
+            <tbody id="voiceCallsTableBody">
+                <tr><td colspan="6" style="text-align: center; color: var(--muted); padding: 24px;">Loading voice call logs...</td></tr>
+            </tbody>
+        </table>
+    </div>
 </div>
 
 <script>
@@ -1013,6 +1225,8 @@
             loadBlogDashboard();
         } else if (index === 4) {
             loadSupportTickets();
+        } else if (index === 5) {
+            loadVoiceDashboard();
         }
     }
 
@@ -1323,6 +1537,47 @@
             }
         } catch (e) {
             alert(`Webhook Test Failed: ${e.message}`);
+        }
+    }
+
+    async function testStripeVoiceProWebhookLive() {
+        const title = document.getElementById("stripeStatusTitle");
+        const detail = document.getElementById("stripeStatusDetail");
+        if (title) title.innerText = "Sending test Voice Pro ($29/mo) checkout event to /api/stripe-webhook...";
+        try {
+            const base = getApiBaseUrl();
+            const res = await fetch(`${base}/api/stripe-webhook`, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                    id: 'evt_voice_pro_test_' + Date.now(),
+                    type: 'checkout.session.completed',
+                    data: {
+                        object: {
+                            id: 'cs_voice_pro_test_' + Date.now(),
+                            amount_total: 2900,
+                            customer_details: {
+                                email: 'contactus@offgridmediagroup.com',
+                                name: 'Voice Pro Subscriber Test'
+                            },
+                            metadata: {
+                                tier: 'managed_voice_pro'
+                            }
+                        }
+                    }
+                })
+            });
+            const json = await res.json();
+            if (res.ok && json.received) {
+                alert(`🎙️ Voice Pro ($29/mo) Webhook Test Succeeded!\n\nStatus: HTTP ${res.status} OK\nForwarding Line: ${json.forwardingNumber}\nCarrier Dial Code: ${json.carrierCode}\nLicense Key: ${json.licenseKey}\nDeployment: ${json.status}\n\nManaged Voice Pro provisioning automation is 100% verified!`);
+                if (title) title.innerText = "Stripe Voice Pro Webhook Verified & Provisioned (200 OK)";
+                if (detail) detail.innerHTML = `Last Voice Pro Event: Provisioned line <code>${json.forwardingNumber}</code> (${json.carrierCode}) for ${json.customerEmail}`;
+                if (typeof loadVoiceDashboard === 'function') loadVoiceDashboard();
+            } else {
+                alert(`Voice Pro Webhook Response: HTTP ${res.status}\n${JSON.stringify(json, null, 2)}`);
+            }
+        } catch (e) {
+            alert(`Voice Pro Webhook Test Failed: ${e.message}`);
         }
     }
 
@@ -2268,6 +2523,318 @@ Return your response STRICTLY as a raw JSON object (no extra commentary) matchin
         } catch (e) {
             tbody.innerHTML = `<tr><td colspan="6" style="text-align: center; color: var(--danger); padding: 24px;">Failed to load tickets: ${escapeHtml(e.message)}</td></tr>`;
         }
+    // =========================================================================
+    // TAB 5: AI VOICE RECEPTIONIST & VAPI ENGINE CONTROLS
+    // =========================================================================
+    function updateVoiceModeSelection() {
+        const selected = document.querySelector('input[name="voiceModeRadio"]:checked')?.value || 'OFF';
+        const byokWrap = document.getElementById('byokFieldsWrap');
+        const provisionWrap = document.getElementById('provisionNumberWrap');
+        
+        if (byokWrap) byokWrap.style.display = (selected === 'BYOK') ? 'block' : 'none';
+        if (provisionWrap) provisionWrap.style.display = (selected === 'MANAGED_PRO') ? 'block' : 'none';
+    }
+
+    async function loadVoiceDashboard() {
+        try {
+            const base = getApiBaseUrl();
+            const [statusRes, settingsRes, callsRes] = await Promise.all([
+                safeFetchJson('/api/vapi/status'),
+                safeFetchJson('/api/vapi/settings'),
+                safeFetchJson('/api/vapi/calls')
+            ]);
+
+            const settings = settingsRes.settings || {};
+            const status = statusRes || {};
+            const calls = callsRes.calls || [];
+
+            // Update Tab Count
+            const tabCountEl = document.getElementById('countTabVoice');
+            if (tabCountEl) tabCountEl.innerText = calls.length;
+            const callsCountEl = document.getElementById('voiceCallsCount');
+            if (callsCountEl) callsCountEl.innerText = calls.length;
+
+            // Update Metrics
+            const metricModeEl = document.getElementById('voiceMetricMode');
+            if (metricModeEl) {
+                if (settings.mode === 'MANAGED_PRO') {
+                    metricModeEl.innerText = 'MANAGED ($29/mo)';
+                    metricModeEl.style.color = 'var(--primary)';
+                } else if (settings.mode === 'BYOK') {
+                    metricModeEl.innerText = 'BYOK ($0/mo)';
+                    metricModeEl.style.color = '#38BDF8';
+                } else {
+                    metricModeEl.innerText = 'DISABLED (SMS Only)';
+                    metricModeEl.style.color = 'var(--muted)';
+                }
+            }
+
+            const metricNumEl = document.getElementById('voiceMetricNumber');
+            if (metricNumEl) metricNumEl.innerText = settings.forwardingNumber || 'No Line Assigned';
+
+            const metricMinEl = document.getElementById('voiceMetricMinutes');
+            if (metricMinEl) metricMinEl.innerText = `${settings.minutesUsed || 0} / ${settings.monthlyMinutesQuota || 200} min`;
+
+            const metricCallsEl = document.getElementById('voiceMetricCalls');
+            if (metricCallsEl) metricCallsEl.innerText = calls.length;
+
+            const queueEl = document.getElementById('voiceMetricQueue');
+            if (queueEl) queueEl.innerText = `${status.pendingSmsQueueCount || 0} Pending`;
+
+            const carrierCodeEl = document.getElementById('displayCarrierCode');
+            if (carrierCodeEl) carrierCodeEl.innerText = settings.carrierCode || '*71';
+
+            const verifyBadgeEl = document.getElementById('carrierVerificationBadge');
+            if (verifyBadgeEl) {
+                if (status.forwardingVerified) {
+                    const timeStr = status.forwardingVerifiedAt ? new Date(status.forwardingVerifiedAt).toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'}) : 'Active';
+                    verifyBadgeEl.innerText = `🟢 Verified (${timeStr})`;
+                    verifyBadgeEl.style.background = 'rgba(0, 230, 118, 0.15)';
+                    verifyBadgeEl.style.color = 'var(--primary)';
+                    verifyBadgeEl.style.borderColor = 'var(--primary)';
+                } else {
+                    verifyBadgeEl.innerText = '⚠️ Unverified';
+                    verifyBadgeEl.style.background = 'rgba(245, 158, 11, 0.2)';
+                    verifyBadgeEl.style.color = '#F59E0B';
+                    verifyBadgeEl.style.borderColor = '#F59E0B';
+                }
+            }
+
+            // Sync Radio Selection
+            const radios = document.querySelectorAll('input[name="voiceModeRadio"]');
+            radios.forEach(r => {
+                r.checked = (r.value === settings.mode);
+            });
+            updateVoiceModeSelection();
+
+            // Populate Form Fields
+            const bizEl = document.getElementById('inputVoiceBizName');
+            if (bizEl) bizEl.value = settings.businessName || '';
+            const ownerEl = document.getElementById('inputVoiceOwnerName');
+            if (ownerEl) ownerEl.value = settings.ownerName || '';
+            const tradeEl = document.getElementById('inputVoiceTrade');
+            if (tradeEl) tradeEl.value = settings.serviceTrade || '';
+            const keywordsEl = document.getElementById('inputVoiceKeywords');
+            if (keywordsEl) keywordsEl.value = settings.emergencyKeywords || '';
+
+            const startHourEl = document.getElementById('inputVoiceHoursStart');
+            if (startHourEl) startHourEl.value = String(settings.businessHoursStart ?? 8);
+            const endHourEl = document.getElementById('inputVoiceHoursEnd');
+            if (endHourEl) endHourEl.value = String(settings.businessHoursEnd ?? 18);
+
+            const transferEl = document.getElementById('inputVoiceTransferNumber');
+            if (transferEl) transferEl.value = settings.emergencyTransferNumber || '+1 (404) 555-9988';
+
+            const addrCheckEl = document.getElementById('checkAddressVerification');
+            if (addrCheckEl) addrCheckEl.checked = (settings.addressVerificationEnforced !== false);
+
+            const postCallCheckEl = document.getElementById('checkPostCallSms');
+            if (postCallCheckEl) postCallCheckEl.checked = !!settings.postCallSmsEnabled;
+            const templateEl = document.getElementById('inputPostCallTemplate');
+            if (templateEl) templateEl.value = settings.postCallSmsTemplate || '';
+
+            const byokKeyEl = document.getElementById('inputByokKey');
+            if (byokKeyEl) byokKeyEl.value = settings.byokApiKey || '';
+            const byokAsstEl = document.getElementById('inputByokAssistantId');
+            if (byokAsstEl) byokAsstEl.value = settings.byokAssistantId || '';
+
+            // Render Calls Table
+            const tbody = document.getElementById('voiceCallsTableBody');
+            if (!tbody) return;
+
+            if (calls.length === 0) {
+                tbody.innerHTML = '<tr><td colspan="6" style="text-align: center; color: var(--muted); padding: 24px;">No inbound calls recorded yet. Forwarded calls will appear here in real-time.</td></tr>';
+                return;
+            }
+
+            tbody.innerHTML = calls.map(c => {
+                const dateFormatted = new Date(c.timestamp).toLocaleString();
+                const isUrgent = (c.urgency === 'HIGH');
+                const urgencyBadge = isUrgent
+                    ? '<span style="background: rgba(248,81,73,0.2); color: var(--danger); padding: 4px 10px; border-radius: 12px; font-size: 11px; font-weight: 800; border: 1px solid var(--danger);">🚨 URGENT EMERGENCY</span>'
+                    : '<span style="background: rgba(0,230,118,0.15); color: var(--primary); padding: 4px 10px; border-radius: 12px; font-size: 11px; font-weight: 800; border: 1px solid var(--primary);">🟢 ROUTINE INQUIRY</span>';
+
+                const audioControl = c.audioUrl
+                    ? `<audio controls src="${escapeHtml(c.audioUrl)}" style="height: 32px; max-width: 180px;"></audio>`
+                    : '<span style="font-size: 11px; color: var(--muted);">Recording Processing...</span>';
+
+                const smsBadge = c.smsFollowUpSent
+                    ? `<div style="font-size: 11px; color: var(--primary); font-weight: 700; margin-top: 4px;">✔ Real-SIM SMS Sent: <span style="color:#CBD5E0;font-weight:normal;">"${escapeHtml(c.smsFollowUpText || '')}"</span></div>`
+                    : '<div style="font-size: 11px; color: var(--muted); margin-top: 4px;">SMS Follow-Up Disabled</div>';
+
+                return `
+                    <tr>
+                        <td style="white-space: nowrap; font-size: 12px; color: var(--muted);">
+                            ${dateFormatted}<br>
+                            <span style="color: #FFF; font-weight: bold;">⏱️ ${escapeHtml(c.durationFormatted || '1m 00s')}</span>
+                        </td>
+                        <td>
+                            <strong style="color: #FFF; font-size: 14px;">${escapeHtml(c.callerName || 'Caller')}</strong><br>
+                            <span style="font-family: monospace; color: #38BDF8; font-size: 12px;">📞 ${escapeHtml(c.callerNumber || 'Unknown')}</span>
+                        </td>
+                        <td>
+                            ${urgencyBadge}<br>
+                            <small style="color: var(--muted);">${escapeHtml(c.category || 'General')}</small>
+                        </td>
+                        <td style="max-width: 260px;">
+                            <div style="font-size: 13px; color: #FFF; font-weight: 600; line-height: 1.4;">${escapeHtml(c.summary || '')}</div>
+                            ${c.address ? `<div style="font-size: 11px; color: #F59E0B; margin-top: 4px;">📍 ${escapeHtml(c.address)}</div>` : ''}
+                        </td>
+                        <td>
+                            ${audioControl}
+                        </td>
+                        <td style="max-width: 280px;">
+                            <details style="font-size: 11px; color: var(--muted); cursor: pointer;">
+                                <summary style="color: #38BDF8; font-weight: 700;">View Call Transcript</summary>
+                                <div style="background: #090B0E; border: 1px solid var(--card-border); padding: 8px; border-radius: 6px; margin-top: 6px; white-space: pre-wrap; font-family: monospace; color: #CBD5E0; max-height: 120px; overflow-y: auto;">
+                                    ${escapeHtml(c.transcript || '')}
+                                </div>
+                            </details>
+                            ${smsBadge}
+                        </td>
+                    </tr>
+                `;
+            }).join('');
+        } catch (e) {
+            console.error('Failed to load voice dashboard:', e);
+            const tbody = document.getElementById('voiceCallsTableBody');
+            if (tbody) tbody.innerHTML = `<tr><td colspan="6" style="text-align: center; color: var(--danger); padding: 24px;">Failed to load voice dashboard: ${escapeHtml(e.message)}</td></tr>`;
+        }
+    }
+
+    async function saveVoiceSettingsFromUi() {
+        try {
+            const base = getApiBaseUrl();
+            const mode = document.querySelector('input[name="voiceModeRadio"]:checked')?.value || 'MANAGED_PRO';
+            const payload = {
+                mode: mode,
+                businessName: document.getElementById('inputVoiceBizName')?.value || 'Apex Field Services',
+                ownerName: document.getElementById('inputVoiceOwnerName')?.value || 'Dave',
+                serviceTrade: document.getElementById('inputVoiceTrade')?.value || 'Contractor Services',
+                emergencyKeywords: document.getElementById('inputVoiceKeywords')?.value || '',
+                businessHoursStart: parseInt(document.getElementById('inputVoiceHoursStart')?.value || '8', 10),
+                businessHoursEnd: parseInt(document.getElementById('inputVoiceHoursEnd')?.value || '18', 10),
+                emergencyTransferNumber: (document.getElementById('inputVoiceTransferNumber')?.value || '').trim(),
+                addressVerificationEnforced: !!document.getElementById('checkAddressVerification')?.checked,
+                postCallSmsEnabled: !!document.getElementById('checkPostCallSms')?.checked,
+                postCallSmsTemplate: document.getElementById('inputPostCallTemplate')?.value || '',
+                byokApiKey: document.getElementById('inputByokKey')?.value || '',
+                byokAssistantId: document.getElementById('inputByokAssistantId')?.value || ''
+            };
+
+            const res = await fetch(`${base}/api/vapi/settings`, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(payload)
+            });
+            const json = await res.json();
+            if (json.success) {
+                alert('✅ AI Voice Receptionist Settings saved successfully!');
+                loadVoiceDashboard();
+            } else {
+                alert('Error saving settings: ' + (json.error || 'Unknown error'));
+            }
+        } catch (e) {
+            alert('Failed to save voice settings: ' + e.message);
+        }
+    }
+
+    async function verifyCarrierForwardingFromUi() {
+        try {
+            const base = getApiBaseUrl();
+            const res = await fetch(`${base}/api/vapi/verify-forwarding`, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' }
+            });
+            const json = await res.json();
+            if (json.success) {
+                alert(`✅ Carrier Forwarding Verified!\n\n${json.message}\nCarrier Dial Code: ${json.carrierCode}`);
+                loadVoiceDashboard();
+            } else {
+                alert('Carrier verification check failed: ' + (json.error || 'Unknown error'));
+            }
+        } catch (e) {
+            alert('Carrier verification error: ' + e.message);
+        }
+    }
+
+    async function topUpMinutesFromUi() {
+        if (!confirm('Recharge 100 Voice Minutes for $10.00? (Adds 100 minutes to your monthly quota)')) return;
+        try {
+            const base = getApiBaseUrl();
+            const res = await fetch(`${base}/api/vapi/topup-minutes`, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' }
+            });
+            const json = await res.json();
+            if (json.success) {
+                alert(`🎉 Top-Up Successful!\n\n${json.message}\nNew Quota: ${json.newQuota} minutes\nMinutes Remaining: ${json.minutesRemaining} min`);
+                loadVoiceDashboard();
+            } else {
+                alert('Top-up failed: ' + (json.error || 'Unknown error'));
+            }
+        } catch (e) {
+            alert('Top-up error: ' + e.message);
+        }
+    }
+
+    async function provisionLocalLineFromUi() {
+        const areaCode = (document.getElementById('inputAreaCode')?.value || '404').trim();
+        try {
+            const base = getApiBaseUrl();
+            const res = await fetch(`${base}/api/vapi/provision`, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ areaCode })
+            });
+            const json = await res.json();
+            if (json.success) {
+                alert(`🎉 Success!\n\nAssigned Forwarding Line: ${json.forwardingNumber}\nCarrier Dial Code: ${json.carrierCode}\n\nDial ${json.carrierCode} from your phone to activate.`);
+                loadVoiceDashboard();
+            } else {
+                alert('Provisioning failed: ' + (json.error || 'Unknown error'));
+            }
+        } catch (e) {
+            alert('Failed to provision local number: ' + e.message);
+        }
+    }
+
+    async function testVoiceCallFromUi() {
+        const name = prompt('Enter caller name for test call simulation:', 'Emily Watson') || 'Emily Watson';
+        const issue = prompt('Enter caller emergency/service issue:', 'Upstairs toilet overflowed and ceiling is leaking into living room') || 'Water leak emergency';
+
+        try {
+            const base = getApiBaseUrl();
+            const res = await fetch(`${base}/api/vapi/test-call`, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                    name: name,
+                    number: '+1 (404) 555-' + Math.floor(1000 + Math.random() * 9000),
+                    issue: issue,
+                    urgent: true,
+                    address: '512 Northside Dr, Atlanta, GA'
+                })
+            });
+            const json = await res.json();
+            if (json.success) {
+                alert(`🎉 Inbound AI Call Processed!\n\nCaller: ${json.call.callerName}\nIssue: ${json.call.summary}\nUrgency: ${json.call.urgency}\n\nAppended to your Voice Inbox!`);
+                loadVoiceDashboard();
+            } else {
+                alert('Simulation failed: ' + (json.error || 'Unknown error'));
+            }
+        } catch (e) {
+            alert('Simulation error: ' + e.message);
+        }
+    }
+
+    function copyCarrierCode() {
+        const code = document.getElementById('displayCarrierCode')?.innerText || '*71';
+        navigator.clipboard.writeText(code).then(() => {
+            alert(`📋 Copied carrier dial code (${code}) to clipboard!\n\nOpen your phone's dialer app, paste and press Send to activate conditional forwarding.`);
+        }).catch(() => {
+            alert(`Dial code: ${code}`);
+        });
     }
 
     checkAuth();

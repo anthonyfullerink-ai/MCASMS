@@ -29,6 +29,7 @@ import com.missedcall.autotext.remote.UpdateInfo
 import com.missedcall.autotext.ui.theme.ActiveGreenContainer
 import com.missedcall.autotext.ui.theme.ActiveGreenText
 import com.missedcall.autotext.ui.theme.GrayPaused
+import com.missedcall.autotext.util.CarrierForwardingManager
 import kotlinx.coroutines.launch
 import java.text.NumberFormat
 import java.text.SimpleDateFormat
@@ -257,6 +258,128 @@ fun DashboardScreen(
                         style = MaterialTheme.typography.bodyMedium,
                         color = MaterialTheme.colorScheme.onSurfaceVariant
                     )
+                }
+            }
+        }
+
+        // Strategic In-App Upgrade / Feature Spotlight Banner
+        item {
+            InAppPromoBannerCard(
+                settings = settings,
+                isProEdition = com.missedcall.autotext.BuildConfig.IS_PRO_EDITION
+            )
+        }
+
+        // AI Receptionist Conditional Call Forwarding Card
+        item {
+            val carrier = remember { CarrierForwardingManager.detectCarrier(context) }
+            val carrierCodes = remember(carrier, settings.voiceReceptionistForwardingNumber) {
+                CarrierForwardingManager.computeCodes(carrier, settings.voiceReceptionistForwardingNumber)
+            }
+
+            Card(
+                colors = CardDefaults.cardColors(
+                    containerColor = if (settings.voiceReceptionistEnabled)
+                        Color(0xFF673AB7).copy(alpha = 0.12f)
+                    else
+                        MaterialTheme.colorScheme.surface
+                ),
+                border = androidx.compose.foundation.BorderStroke(
+                    1.dp,
+                    if (settings.voiceReceptionistEnabled) Color(0xFF9C27B0).copy(alpha = 0.5f) else MaterialTheme.colorScheme.outlineVariant
+                ),
+                shape = RoundedCornerShape(16.dp)
+            ) {
+                Column(modifier = Modifier.padding(16.dp)) {
+                    Row(
+                        modifier = Modifier.fillMaxWidth(),
+                        horizontalArrangement = Arrangement.SpaceBetween,
+                        verticalAlignment = Alignment.CenterVertically
+                    ) {
+                        Row(verticalAlignment = Alignment.CenterVertically) {
+                            Surface(
+                                shape = RoundedCornerShape(10.dp),
+                                color = if (settings.voiceReceptionistEnabled) Color(0xFF9C27B0) else MaterialTheme.colorScheme.primaryContainer,
+                                modifier = Modifier.size(36.dp)
+                            ) {
+                                Box(contentAlignment = Alignment.Center) {
+                                    Icon(
+                                        Icons.Default.RecordVoiceOver,
+                                        contentDescription = null,
+                                        tint = if (settings.voiceReceptionistEnabled) Color.White else MaterialTheme.colorScheme.onPrimaryContainer,
+                                        modifier = Modifier.size(20.dp)
+                                    )
+                                }
+                            }
+                            Spacer(modifier = Modifier.width(10.dp))
+                            Column {
+                                Text(
+                                    text = "AI Voice Receptionist",
+                                    fontWeight = FontWeight.Bold,
+                                    style = MaterialTheme.typography.titleMedium
+                                )
+                                Text(
+                                    text = if (settings.voiceReceptionistEnabled) "Forwarding Active (15s Ring)" else "Carrier Forwarding Disabled",
+                                    style = MaterialTheme.typography.labelSmall,
+                                    color = if (settings.voiceReceptionistEnabled) Color(0xFF9C27B0) else MaterialTheme.colorScheme.onSurfaceVariant
+                                )
+                            }
+                        }
+
+                        Switch(
+                            checked = settings.voiceReceptionistEnabled,
+                            onCheckedChange = { isChecked ->
+                                if (isChecked) {
+                                    val codes = CarrierForwardingManager.activateConditionalForwarding(context, settings.voiceReceptionistForwardingNumber)
+                                    onSettingsChanged(settings.copy(voiceReceptionistEnabled = true))
+                                    Toast.makeText(context, "Dialing carrier activation (${codes.activateCode}). Press Call to confirm.", Toast.LENGTH_LONG).show()
+                                } else {
+                                    val codes = CarrierForwardingManager.deactivateConditionalForwarding(context)
+                                    onSettingsChanged(settings.copy(voiceReceptionistEnabled = false))
+                                    Toast.makeText(context, "Dialing carrier deactivation (${codes.deactivateCode}). Press Call to turn off forwarding.", Toast.LENGTH_LONG).show()
+                                }
+                            }
+                        )
+                    }
+
+                    Spacer(modifier = Modifier.height(10.dp))
+
+                    Text(
+                        text = if (settings.voiceReceptionistEnabled)
+                            "Unanswered calls ring your phone for 15 seconds, then forward automatically to your AI voice receptionist."
+                        else
+                            "Toggle ON to auto-forward unanswered calls to your AI receptionist. Toggle OFF anytime to revert to standard carrier voicemail.",
+                        style = MaterialTheme.typography.bodySmall,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant
+                    )
+
+                    Spacer(modifier = Modifier.height(10.dp))
+
+                    Surface(
+                        color = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.6f),
+                        shape = RoundedCornerShape(8.dp),
+                        modifier = Modifier.fillMaxWidth()
+                    ) {
+                        Row(
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .padding(horizontal = 10.dp, vertical = 6.dp),
+                            horizontalArrangement = Arrangement.SpaceBetween,
+                            verticalAlignment = Alignment.CenterVertically
+                        ) {
+                            Text(
+                                text = "Carrier: ${carrierCodes.carrierName} (${if (settings.voiceReceptionistEnabled) carrierCodes.activateCode else carrierCodes.deactivateCode})",
+                                style = MaterialTheme.typography.labelSmall,
+                                color = MaterialTheme.colorScheme.onSurfaceVariant
+                            )
+                            TextButton(
+                                onClick = { showAccountPortal = true },
+                                contentPadding = PaddingValues(horizontal = 4.dp, vertical = 0.dp)
+                            ) {
+                                Text("Greeting & Plan", fontSize = 11.sp)
+                            }
+                        }
+                    }
                 }
             }
         }

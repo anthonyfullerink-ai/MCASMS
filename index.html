@@ -1332,7 +1332,13 @@
         <input type="text" id="aiInputText" placeholder="Type a message or request help..." onkeypress="handleAiKeyPress(event)">
         <button id="micBtn" class="mic-btn" onclick="toggleVoiceInput()" title="Voice Speech-to-Text Input">🎙️</button>
         <button class="send-btn" onclick="submitAiQuery()">Send</button>
-    </div>
+</div>
+
+<!-- Top Launch Banner for 24/7 AI Voice Receptionist -->
+<div style="background: linear-gradient(90deg, #090B0E, #151D24, #090B0E); border-bottom: 1px solid rgba(0, 230, 118, 0.35); padding: 9px 16px; text-align: center; font-size: 13px; color: #CBD5E0; z-index: 1000; position: relative;">
+    <span style="background: rgba(0, 230, 118, 0.2); color: var(--primary); padding: 3px 8px; border-radius: 6px; font-weight: 800; font-size: 11px; margin-right: 8px; border: 1px solid var(--primary); letter-spacing: 0.5px;">NEW LAUNCH</span>
+    <strong>24/7 AI Voice Receptionist Add-On is Live!</strong> Forward unanswered calls via <code>*71</code> when your hands are full on a job.
+    <a href="#voice-edition" style="color: var(--primary); font-weight: 800; margin-left: 8px; text-decoration: underline;">Explore & Activate ($29/mo) &rarr;</a>
 </div>
 
 <div class="container">
@@ -1344,6 +1350,7 @@
         <div class="nav-links">
             <a href="#features">Features</a>
             <a href="#pro-edition" style="color: #C084FC; font-weight: 800;">⚡ Pro Edition ($149.99)</a>
+            <a href="#voice-edition" style="color: var(--primary); font-weight: 800;">🎙️ AI Voice ($29/mo)</a>
             <a href="/agency" style="color: #38BDF8; font-weight: 800;">🏢 Agency Fleet</a>
             <a href="/developers" style="color: #38BDF8; font-weight: 700;">API & Docs</a>
             <a href="/support" style="color: var(--primary); font-weight: 700;">Support</a>
@@ -1364,6 +1371,7 @@
     <div id="mobileNavDrawer" class="mobile-nav-drawer">
         <a href="#features" class="mobile-nav-link" onclick="closeMobileMenu()">⚡ Flagship App Features <span>&rsaquo;</span></a>
         <a href="#pro-edition" class="mobile-nav-link" onclick="closeMobileMenu()" style="color: #D8B4FE; font-weight: bold;">🚀 NEW: Pro Automation Edition ($149.99) <span>&rsaquo;</span></a>
+        <a href="#voice-edition" class="mobile-nav-link" onclick="closeMobileMenu()" style="color: var(--primary); font-weight: bold;">🎙️ 24/7 AI Voice Receptionist ($29/mo) <span>&rsaquo;</span></a>
         <a href="/agency" class="mobile-nav-link" onclick="closeMobileMenu()" style="color: #38BDF8; font-weight: bold;">🏢 Agency & Reseller Fleet Pack ($399+) <span>&rsaquo;</span></a>
         <a href="/developers" class="mobile-nav-link" onclick="closeMobileMenu()" style="color: #38BDF8; font-weight: bold;">⚡ Developer API & Webhook Docs <span>&rsaquo;</span></a>
         <a href="/support" class="mobile-nav-link" onclick="closeMobileMenu()" style="color: var(--primary); font-weight: bold;">🎫 Customer Support & Helpdesk <span>&rsaquo;</span></a>
@@ -1955,6 +1963,16 @@
 
         <div class="faq-item" onclick="toggleFaq(this)">
             <div class="faq-question">
+                <span>Can I add an AI Voice Receptionist to answer live calls for me?</span>
+                <span class="faq-icon">▼</span>
+            </div>
+            <div class="faq-answer">
+                <strong>Yes!</strong> While Missed Call Auto SMS is built as a 100% subscription-free SMS appliance ($49.99 lifetime), we offer an optional <strong>AI Voice Receptionist add-on</strong> powered by Vapi. When your phone rings for 15 seconds without answer, your carrier automatically forwards the call via native <code>*71</code> to your AI assistant. You can choose our <strong>Turnkey Managed Plan ($29/mo)</strong> with 200 included minutes and a dedicated local number, or connect your own Vapi API key for <strong>$0/mo (Free BYOK)</strong>. When the call ends, your phone automatically fires an authentic follow-up text from your real business SIM card!
+            </div>
+        </div>
+
+        <div class="faq-item" onclick="toggleFaq(this)">
+            <div class="faq-question">
                 <span>What is the difference between Flagship Standard ($49.99) and Pro Automation ($149.99)?</span>
                 <span class="faq-icon">▼</span>
             </div>
@@ -2119,6 +2137,30 @@
                 <div style="font-size: 11px; color: var(--muted); margin-top: 10px; line-height: 1.4;">
                     * Designed for high-velocity 1-to-1 conversational triggers (new lead alerts, appointment reminders, quote replies), not bulk mass spamming.
                 </div>
+            </div>
+        </div>
+
+        <!-- Optional AI Voice Receptionist Add-On ($29/mo or Free BYOK) -->
+        <div id="voice-edition" style="max-width: 1080px; margin: 24px auto 0 auto; background: linear-gradient(135deg, rgba(168, 85, 247, 0.15), rgba(0, 230, 118, 0.08)); border: 1px solid rgba(168, 85, 247, 0.4); border-radius: 16px; padding: 24px; text-align: left; display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 16px;">
+            <div style="flex: 1; min-width: 290px;">
+                <div style="display: inline-flex; align-items: center; gap: 6px; background: rgba(168, 85, 247, 0.2); color: #C084FC; padding: 3px 10px; border-radius: 20px; font-size: 11px; font-weight: 800; text-transform: uppercase;">
+                    🎙️ OPTIONAL ADD-ON • DUAL VOICE + SMS HYBRID
+                </div>
+                <h3 style="font-size: 20px; font-weight: 900; margin: 8px 0 4px 0; color: #FFF;">Turnkey 24/7 AI Voice Receptionist ($29/mo) or Free BYOK</h3>
+                <p style="color: #CBD5E0; font-size: 13px; margin: 0 0 12px 0; max-width: 680px; line-height: 1.5;">
+                    Keep your $49.99 lifetime SMS appliance 100% subscription-free forever. When you're ready for an AI agent to actually answer the phone with your custom voice, add our <strong>Turnkey Voice Receptionist ($29/mo)</strong> with 200 included mins & dedicated local forwarding line—or connect your own Vapi key for <strong>$0/mo (Free BYOK)</strong>.
+                </p>
+                <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(260px, 1fr)); gap: 8px; font-size: 12px; color: #E2E8F0;">
+                    <div>✔ <strong>*71 Conditional Forwarding:</strong> Rings 15s, then forwards to your AI</div>
+                    <div>✔ <strong>24/7 AI Receptionist:</strong> Triages emergencies & takes project notes</div>
+                    <div>✔ <strong>Phonetic Address Capture:</strong> Reads back street address to confirm</div>
+                    <div>✔ <strong>Real SIM SMS Auto-Reply:</strong> Texts both customer and your cell instantly</div>
+                </div>
+            </div>
+            <div style="display: flex; gap: 10px; align-items: center; flex-wrap: wrap;">
+                <a href="https://buy.stripe.com/4gMeVdcFMaps6M0b572go0f" target="_blank" class="cta-btn" style="background: linear-gradient(135deg, #A855F7, #00E676); color: #000; font-weight: 800; padding: 14px 24px; font-size: 13px; margin: 0; text-decoration: none; display: inline-flex; align-items: center; gap: 6px; box-shadow: 0 4px 14px rgba(168,85,247,0.35);">
+                    🎙️ Subscribe to Managed Voice ($29/mo) ➔
+                </a>
             </div>
         </div>
 

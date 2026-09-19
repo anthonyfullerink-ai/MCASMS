@@ -443,6 +443,7 @@
             <a href="#relay-api">Cloud Relay</a>
             <a href="#local-api">Local Appliance</a>
             <a href="#missed-call-webhook">n8n Forwarder</a>
+            <a href="#ai-voice-api" style="color: #C084FC;">AI Voice API</a>
             <a href="#stability">Stability & SLA</a>
             <a href="/support" style="color: var(--primary);">Support Desk</a>
             <a href="https://buy.stripe.com/cNi5kDdJQ558c6k2yB2go0b" class="btn-pro-nav">Get Pro ($149.99)</a>
@@ -880,6 +881,171 @@ Request content:
                 </tr>
             </tbody>
         </table>
+    </div>
+
+    <!-- SECTION 7: Turnkey AI Voice Receptionist ($29/mo) & Telephony Forwarding API -->
+    <div id="ai-voice-api" class="section-card" style="border-left: 4px solid #C084FC;">
+        <h2>🎙️ 7. Turnkey AI Voice Receptionist ($29/mo) & Telephony Forwarding API</h2>
+        <div class="section-sub">
+            Integrate Vapi, Retell, LiveKit, or native carrier SIP trunking for unanswered call triage and AI conversational voice handling with zero contractor technical setup.
+        </div>
+
+        <!-- Architecture Flow -->
+        <div class="feat-box" style="margin-bottom: 24px;">
+            <h3 style="color: #C084FC;">🔄 Dual-Track Triage Architecture</h3>
+            <p style="margin-bottom: 12px;">
+                Missed Call Auto SMS combines <strong>instant SMS auto-replies</strong> via native Android SIM with an <strong>autonomous AI voice receptionist</strong> via conditional carrier forwarding:
+            </p>
+            <ol style="margin: 0; padding-left: 20px; color: var(--muted); font-size: 14px; line-height: 1.8;">
+                <li><strong>Native Cell Ring (0–15s):</strong> Incoming calls ring the contractor's physical phone. If answered, normal phone conversation proceeds at $0 AI cost.</li>
+                <li><strong>Carrier Conditional Forwarding:</strong> If unanswered after 15s or busy, the mobile carrier automatically routes the audio stream to your dedicated Vapi AI endpoint.</li>
+                <li><strong>Dynamic Context Injection:</strong> Vapi queries <code>POST /api/vapi/webhook</code>. The server retrieves the contractor's profile and returns a dynamic system prompt containing their business name, technician name, service trade, and custom greeting.</li>
+                <li><strong>Conversational Guardrails:</strong> AI operates under strict voice UX rules: maximum 20 words per spoken sentence, mandatory phonetic street address read-back confirmation, and a 3-minute hard ceiling.</li>
+                <li><strong>Post-Call Dispatch:</strong> Once hung up, full audio transcript and extracted urgency metadata trigger automated lead alerts to the contractor and SMS booking confirmations to the homeowner.</li>
+            </ol>
+        </div>
+
+        <!-- Carrier MMI / USSD Table -->
+        <h3 style="font-size: 18px; margin: 24px 0 12px 0;">📡 Carrier Conditional Call Forwarding Matrix</h3>
+        <p style="color: var(--muted); font-size: 14px; margin-bottom: 14px;">
+            The Android app's <code>CarrierForwardingManager</code> auto-detects the active SIM carrier and triggers the native phone dialer with the appropriate MMI/USSD prefix:
+        </p>
+
+        <table>
+            <thead>
+                <tr>
+                    <th>Carrier / MVNO</th>
+                    <th>Forwarding Prefix (Activation)</th>
+                    <th>Deactivation Code</th>
+                    <th>Behavior</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr>
+                    <td><strong>Verizon / Visible / US Cellular</strong></td>
+                    <td><code>*71{10-digit-number}</code></td>
+                    <td><code>*73</code></td>
+                    <td>Rings handset for 15s; forwards on no-answer or busy.</td>
+                </tr>
+                <tr>
+                    <td><strong>AT&T / Cricket / Consumer Cellular</strong></td>
+                    <td><code>*004*{10-digit-number}#</code></td>
+                    <td><code>##004#</code></td>
+                    <td>Conditional forwarding for unanswered, busy, or unreachable calls.</td>
+                </tr>
+                <tr>
+                    <td><strong>T-Mobile / Mint Mobile / Metro</strong></td>
+                    <td><code>**61*{10-digit-number}**15#</code></td>
+                    <td><code>##004#</code></td>
+                    <td>Explicit 15-second timer before forwarding to AI endpoint.</td>
+                </tr>
+                <tr>
+                    <td><strong>Generic US Carrier / Landline</strong></td>
+                    <td><code>*71{10-digit-number}</code></td>
+                    <td><code>*73</code></td>
+                    <td>Standard North American conditional call forwarding standard.</td>
+                </tr>
+            </tbody>
+        </table>
+
+        <!-- API Reference -->
+        <h3 style="font-size: 18px; margin: 30px 0 12px 0;">⚡ AI Voice Webhook Endpoints</h3>
+
+        <div class="grid-2">
+            <!-- Endpoint 1 -->
+            <div class="feat-box">
+                <div style="display: flex; align-items: center; gap: 8px; margin-bottom: 8px;">
+                    <span style="background: rgba(0, 230, 118, 0.15); color: var(--primary); font-weight: bold; font-size: 11px; padding: 2px 8px; border-radius: 4px;">POST</span>
+                    <code style="color: #FFF; font-size: 13px;">/api/vapi/webhook</code>
+                </div>
+                <p style="font-size: 13px; line-height: 1.5; color: var(--muted);">
+                    Invoked in real-time by Vapi on call initiation (<code>assistant-request</code>) and call termination (<code>end-of-call-report</code>). Dynamically returns the tailored prompt and processes transcripts.
+                </p>
+            </div>
+
+            <!-- Endpoint 2 -->
+            <div class="feat-box">
+                <div style="display: flex; align-items: center; gap: 8px; margin-bottom: 8px;">
+                    <span style="background: rgba(0, 230, 118, 0.15); color: var(--primary); font-weight: bold; font-size: 11px; padding: 2px 8px; border-radius: 4px;">POST</span>
+                    <code style="color: #FFF; font-size: 13px;">/api/vapi/custom-greeting</code>
+                </div>
+                <p style="font-size: 13px; line-height: 1.5; color: var(--muted);">
+                    Allows the mobile app or dashboard to customize the introductory sentence spoken by the AI receptionist and update business trade metadata.
+                </p>
+            </div>
+
+            <!-- Endpoint 3 -->
+            <div class="feat-box">
+                <div style="display: flex; align-items: center; gap: 8px; margin-bottom: 8px;">
+                    <span style="background: rgba(168, 85, 247, 0.15); color: #C084FC; font-weight: bold; font-size: 11px; padding: 2px 8px; border-radius: 4px;">POST</span>
+                    <code style="color: #FFF; font-size: 13px;">/api/vapi/cancel-subscription</code>
+                </div>
+                <p style="font-size: 13px; line-height: 1.5; color: var(--muted);">
+                    1-click self-service endpoint that terminates the recurring $29/mo Stripe subscription and returns the carrier deactivation code (<code>*73</code> or <code>##004#</code>) for immediate dialer rollback.
+                </p>
+            </div>
+
+            <!-- Endpoint 4 -->
+            <div class="feat-box">
+                <div style="display: flex; align-items: center; gap: 8px; margin-bottom: 8px;">
+                    <span style="background: rgba(56, 189, 248, 0.15); color: #38BDF8; font-weight: bold; font-size: 11px; padding: 2px 8px; border-radius: 4px;">POST</span>
+                    <code style="color: #FFF; font-size: 13px;">/api/voice/provision</code>
+                </div>
+                <p style="font-size: 13px; line-height: 1.5; color: var(--muted);">
+                    Internal provisioning hook triggered by Stripe checkout webhook when a contractor purchases the Turnkey Voice Pro ($29/mo) plan.
+                </p>
+            </div>
+        </div>
+
+        <!-- Code Snippet -->
+        <h4 style="margin: 24px 0 8px 0; font-size: 15px;">Example: Updating Custom Greeting & Voice Profile</h4>
+        <div class="code-container">
+            <div class="code-tabs">
+                <button class="code-tab active" onclick="switchSnippet('voice', 'curl')">cURL</button>
+                <button class="code-tab" onclick="switchSnippet('voice', 'node')">Node.js</button>
+                <button class="code-tab" onclick="switchSnippet('voice', 'py')">Python</button>
+            </div>
+            <div id="voice-curl" class="code-snippet active" style="padding: 16px; font-family: monospace; font-size: 13px; color: #CBD5E0; overflow-x: auto; position: relative;">
+                <button class="btn-copy" onclick="copySnippet('voice-curl')" style="position: absolute; top: 12px; right: 12px; background: #1F2937; color: #FFF; border: 1px solid #374151; padding: 4px 10px; border-radius: 6px; font-size: 11px; cursor: pointer;">Copy</button>
+curl -X POST https://missedcallautosms.com/api/vapi/custom-greeting \
+  -H "Content-Type: application/json" \
+  -d '{
+    "businessName": "Apex Plumbing & Heating",
+    "ownerName": "Dave Miller",
+    "serviceTrade": "Emergency Plumbing & Water Heaters",
+    "customGreeting": "Thanks for calling Apex Plumbing! Our technicians are on a service job. How can I help you right now?"
+  }'
+            </div>
+            <div id="voice-node" class="code-snippet" style="padding: 16px; font-family: monospace; font-size: 13px; color: #CBD5E0; overflow-x: auto; display: none; position: relative;">
+                <button class="btn-copy" onclick="copySnippet('voice-node')" style="position: absolute; top: 12px; right: 12px; background: #1F2937; color: #FFF; border: 1px solid #374151; padding: 4px 10px; border-radius: 6px; font-size: 11px; cursor: pointer;">Copy</button>
+const response = await fetch('https://missedcallautosms.com/api/vapi/custom-greeting', {
+  method: 'POST',
+  headers: { 'Content-Type': 'application/json' },
+  body: JSON.stringify({
+    businessName: 'Apex Plumbing & Heating',
+    ownerName: 'Dave Miller',
+    serviceTrade: 'Emergency Plumbing & Water Heaters',
+    customGreeting: 'Thanks for calling Apex Plumbing! Our technicians are on a service job. How can I help you right now?'
+  })
+});
+const data = await response.json();
+console.log('Voice receptionist configured:', data);
+            </div>
+            <div id="voice-py" class="code-snippet" style="padding: 16px; font-family: monospace; font-size: 13px; color: #CBD5E0; overflow-x: auto; display: none; position: relative;">
+                <button class="btn-copy" onclick="copySnippet('voice-py')" style="position: absolute; top: 12px; right: 12px; background: #1F2937; color: #FFF; border: 1px solid #374151; padding: 4px 10px; border-radius: 6px; font-size: 11px; cursor: pointer;">Copy</button>
+import requests
+
+url = "https://missedcallautosms.com/api/vapi/custom-greeting"
+payload = {
+    "businessName": "Apex Plumbing & Heating",
+    "ownerName": "Dave Miller",
+    "serviceTrade": "Emergency Plumbing & Water Heaters",
+    "customGreeting": "Thanks for calling Apex Plumbing! Our technicians are on a service job. How can I help you right now?"
+}
+res = requests.post(url, json=payload)
+print(res.json())
+            </div>
+        </div>
     </div>
 
     <!-- Ready to Automate CTA -->

@@ -1,0 +1,104 @@
+[
+  {
+    "id": "queue_sms_1789832670085_122",
+    "callId": "call_test_1789832670083",
+    "recipient": "+1 (404) 555-7721",
+    "message": "Hey Marcus Vance, Dave here from Apex. Got your note about Major main water pipe burst in the crawlspace! Water pooling fast.. Headed over shortly!",
+    "urgency": "HIGH",
+    "status": "SENT",
+    "attempts": 0,
+    "createdAt": "2026-09-19T15:44:30.085Z",
+    "sentAt": "2026-09-19T15:44:30.091Z"
+  },
+  {
+    "id": "queue_sms_1789832670097_421",
+    "callId": "spam_call_1_1789832670092",
+    "recipient": "+1 (404) 555-0199",
+    "message": "Hey Robocaller, Dave here from Apex. Got your note about Robocall survey. Headed over shortly!",
+    "urgency": "NORMAL",
+    "status": "PENDING",
+    "attempts": 0,
+    "createdAt": "2026-09-19T15:44:30.097Z"
+  },
+  {
+    "id": "queue_sms_1789832670103_355",
+    "callId": "spam_call_2_1789832670099",
+    "recipient": "+1 (404) 555-0199",
+    "message": "Hey Robocaller, Dave here from Apex. Got your note about Robocall survey. Headed over shortly!",
+    "urgency": "NORMAL",
+    "status": "PENDING",
+    "attempts": 0,
+    "createdAt": "2026-09-19T15:44:30.103Z"
+  },
+  {
+    "id": "queue_sms_1789832670109_576",
+    "callId": "spam_call_3_1789832670105",
+    "recipient": "+1 (404) 555-0199",
+    "message": "Hey Robocaller, Dave here from Apex. Got your note about Robocall survey. Headed over shortly!",
+    "urgency": "NORMAL",
+    "status": "PENDING",
+    "attempts": 0,
+    "createdAt": "2026-09-19T15:44:30.109Z"
+  },
+  {
+    "id": "queue_sms_1789832670115_807",
+    "callId": "spam_call_4_1789832670110",
+    "recipient": "+1 (404) 555-0199",
+    "message": "Hey Robocaller, Dave here from Apex. Got your note about Robocall survey. Headed over shortly!",
+    "urgency": "NORMAL",
+    "status": "PENDING",
+    "attempts": 0,
+    "createdAt": "2026-09-19T15:44:30.115Z"
+  },
+  {
+    "id": "queue_sms_1789832748499_321",
+    "callId": "call_test_1789832748496",
+    "recipient": "+1 (404) 555-7721",
+    "message": "Hey Marcus Vance, Dave here from Apex. Got your note about Major main water pipe burst in the crawlspace! Water pooling fast.. Headed over shortly!",
+    "urgency": "HIGH",
+    "status": "SENT",
+    "attempts": 0,
+    "createdAt": "2026-09-19T15:45:48.499Z",
+    "sentAt": "2026-09-19T15:45:48.504Z"
+  },
+  {
+    "id": "queue_sms_1789832748510_514",
+    "callId": "spam_call_1_1789832748506",
+    "recipient": "+1 (404) 555-0199",
+    "message": "Hey Robocaller, Dave here from Apex. Got your note about Robocall survey. Headed over shortly!",
+    "urgency": "NORMAL",
+    "status": "PENDING",
+    "attempts": 0,
+    "createdAt": "2026-09-19T15:45:48.510Z"
+  },
+  {
+    "id": "queue_sms_1789832748516_593",
+    "callId": "spam_call_2_1789832748512",
+    "recipient": "+1 (404) 555-0199",
+    "message": "Hey Robocaller, Dave here from Apex. Got your note about Robocall survey. Headed over shortly!",
+    "urgency": "NORMAL",
+    "status": "PENDING",
+    "attempts": 0,
+    "createdAt": "2026-09-19T15:45:48.516Z"
+  },
+  {
+    "id": "queue_sms_1789832748522_896",
+    "callId": "spam_call_3_1789832748518",
+    "recipient": "+1 (404) 555-0199",
+    "message": "Hey Robocaller, Dave here from Apex. Got your note about Robocall survey. Headed over shortly!",
+    "urgency": "NORMAL",
+    "status": "PENDING",
+    "attempts": 0,
+    "createdAt": "2026-09-19T15:45:48.522Z"
+  },
+  {
+    "id": "queue_sms_1789833384442_833",
+    "callId": "call_test_1789833384440",
+    "recipient": "+14045559876",
+    "message": "Hey Alex Johnson, Dave here from Apex. Got your note about Emergency water heater burst and flooded garage!. Headed over shortly!",
+    "urgency": "HIGH",
+    "status": "PENDING",
+    "attempts": 0,
+    "createdAt": "2026-09-19T15:56:24.442Z"
+  }
+]

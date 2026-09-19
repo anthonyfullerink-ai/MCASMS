@@ -30,5 +30,9 @@ data class AppSettings(
     val outboundWebhookEnabled: Boolean = false,
     val muteNativeAutoReply: Boolean = false,
     val selectedOutboundWebhookUrl: String = "",
-    val savedOutboundWebhooks: List<String> = emptyList()
+    val savedOutboundWebhooks: List<String> = emptyList(),
+    val voiceReceptionistEnabled: Boolean = false,
+    val voiceReceptionistForwardingNumber: String = "+18005550199",
+    val voiceReceptionistGreeting: String = "",
+    val voiceSubscriptionActive: Boolean = false
 )

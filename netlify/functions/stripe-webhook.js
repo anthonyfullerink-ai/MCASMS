@@ -253,6 +253,71 @@ function generateTrialEmailHtml(customerName, licenseKey, apkDownloadUrl) {
     </div>
 </body>
 </html>`;
+function generateVoiceProEmailHtml(customerName, licenseKey, forwardingNumber, carrierCode, carrierDeactivateCode) {
+  return `<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="utf-8">
+    <title>Your Turnkey AI Voice Receptionist is Live</title>
+</head>
+<body style="font-family: -apple-system, BlinkMacSystemFont, Arial, sans-serif; background-color: #090B0E; color: #FFFFFF; margin: 0; padding: 24px;">
+    <div style="max-width: 620px; margin: 0 auto; background: #131720; border: 1px solid #222836; border-radius: 16px; padding: 32px;">
+        <div style="text-align: center; margin-bottom: 24px;">
+            <div style="font-size: 46px; margin-bottom: 8px;">🎙️</div>
+            <h1 style="color: #00E676; margin: 0; font-size: 24px; font-weight: 900;">Missed Call Auto SMS</h1>
+            <div style="display: inline-block; margin-top: 6px; padding: 4px 14px; border-radius: 20px; font-size: 11px; font-weight: 800; background: rgba(0, 230, 118, 0.15); color: #00E676; border: 1px solid rgba(0, 230, 118, 0.35);">
+                MANAGED AI VOICE RECEPTIONIST PLAN ($29/MO)
+            </div>
+        </div>
+
+        <div style="background: #1A202C; border-left: 4px solid #00E676; padding: 16px; border-radius: 8px; margin-bottom: 24px;">
+            <h2 style="margin: 0 0 6px 0; font-size: 18px; color: #FFF;">Welcome, ${customerName}!</h2>
+            <p style="margin: 0; color: #CBD5E0; font-size: 14px; line-height: 1.5;">
+                Your Turnkey AI Voice Receptionist subscription is active! Your dedicated local AI line is provisioned, loaded with <strong>200 included minutes</strong>, and ready to answer your calls.
+            </p>
+        </div>
+
+        <!-- Assigned Line Card -->
+        <div style="background: #090B0E; border: 1px dashed #00E676; border-radius: 12px; padding: 20px; text-align: center; margin-bottom: 20px;">
+            <div style="font-size: 12px; color: #949BAE; text-transform: uppercase; font-weight: bold; margin-bottom: 6px;">Your Dedicated Inbound AI Line</div>
+            <div style="font-family: monospace; font-size: 24px; color: #38BDF8; font-weight: bold; letter-spacing: 1px; margin-bottom: 6px;">
+                ${forwardingNumber}
+            </div>
+            <div style="font-size: 12px; color: #00E676;">🟢 Status: ACTIVE • 200 Monthly Minutes Included</div>
+        </div>
+
+        <!-- 1-Touch Carrier Activation -->
+        <div style="background: rgba(0, 230, 118, 0.06); border: 1px solid rgba(0, 230, 118, 0.3); border-radius: 12px; padding: 20px; margin-bottom: 24px;">
+            <h3 style="color: #FFF; font-size: 16px; margin: 0 0 10px 0;">📲 1-Step Carrier Activation (*71)</h3>
+            <p style="color: #CBD5E0; font-size: 13px; line-height: 1.5; margin: 0 0 12px 0;">
+                Open your mobile phone's dialer app, type this exact code, and press <strong>Call / Send</strong>:
+            </p>
+            <div style="background: #090B0E; padding: 12px; border-radius: 8px; border: 1px solid #222836; text-align: center; font-family: monospace; font-size: 20px; color: #00E676; font-weight: bold; margin-bottom: 12px;">
+                ${carrierCode}
+            </div>
+            <p style="color: #949BAE; font-size: 12px; margin: 0; line-height: 1.4;">
+                💡 Whenever you are busy and your phone rings for 15 seconds without answer, your carrier automatically routes the call to your AI assistant. Deactivate anytime by dialing <code>${carrierDeactivateCode || '*73'}</code>.
+            </p>
+        </div>
+
+        <!-- Post-Call SMS & Portal -->
+        <div style="border-top: 1px solid #222836; padding-top: 20px; margin-bottom: 24px;">
+            <h3 style="color: #FFF; font-size: 15px; margin: 0 0 10px 0;">⚡ Post-Call Authentic SIM SMS</h3>
+            <p style="color: #CBD5E0; font-size: 13px; line-height: 1.5; margin: 0 0 12px 0;">
+                The second your AI assistant finishes a call, your phone fires an authentic text from your real carrier SIM.
+            </p>
+            <div style="background: #090B0E; padding: 12px; border-radius: 8px; border: 1px solid #222836; font-size: 12px; color: #CBD5E0;">
+                <strong>License Key:</strong> <code style="color:#00E676;">${licenseKey}</code><br>
+                <strong>Admin Portal:</strong> <a href="https://missedcallautosms.com/owner_admin_dashboard.html" style="color: #38BDF8;">missedcallautosms.com/owner_admin_dashboard.html</a>
+            </div>
+        </div>
+
+        <div style="border-top: 1px solid #222836; padding-top: 18px; text-align: center; font-size: 12px; color: #718096;">
+            Need help? Reply directly to this email or visit our <a href="https://missedcallautosms.com/owner_admin_dashboard.html" style="color: #00E676;">Owner Portal</a>.
+        </div>
+    </div>
+</body>
+</html>`;
 }
 
 function stripeApiRequest(endpoint, method = 'GET') {
@@ -460,6 +525,66 @@ exports.handler = async (event) => {
       };
     }
 
+    // Managed AI Voice Receptionist ($29.00/mo Recurring Subscription)
+    const isVoicePro = (amountTotal === 2900) || 
+                       (session.metadata && session.metadata.tier === 'managed_voice_pro') ||
+                       (session.metadata && session.metadata.service === 'voice_receptionist') ||
+                       (session.subscription && amountTotal === 2900);
+
+    if (isVoicePro) {
+      const areaCodeMatch = (customerDetails.phone || '').match(/\+?1?\(?([2-9][0-9]{2})\)?/);
+      const areaCode = areaCodeMatch ? areaCodeMatch[1] : '404';
+      const randomNum = Math.floor(1000 + Math.random() * 9000);
+      const randomPrefix = Math.floor(200 + Math.random() * 700);
+      const forwardingNumber = `+1 (${areaCode}) ${randomPrefix}-${randomNum}`;
+      const cleanDigits = `1${areaCode}${randomPrefix}${randomNum}`;
+      const carrierCode = `*71${cleanDigits.slice(-10)}`;
+      const carrierDeactivateCode = '*73';
+
+      const voiceLicenseKey = generateKey(customerName, 0, true);
+      console.log(`🎙️ [MANAGED VOICE PRO ACTIVATED] Line: ${forwardingNumber}, Key: ${voiceLicenseKey} for ${customerEmail}`);
+
+      if (RESEND_API_KEY) {
+        const emailSubject = `🎙️ Your AI Voice Receptionist is Live! Assigned Line: ${forwardingNumber}`;
+        const emailHtml = generateVoiceProEmailHtml(customerName, voiceLicenseKey, forwardingNumber, carrierCode, carrierDeactivateCode);
+
+        try {
+          const sendResult = await sendEmail(RESEND_API_KEY, customerEmail, emailSubject, emailHtml);
+          console.log(`📧 [VOICE PRO EMAIL DELIVERED] Dispatched to ${customerEmail} (ID: ${sendResult.id})`);
+
+          if (OWNER_NOTIFY_EMAIL && OWNER_NOTIFY_EMAIL !== customerEmail) {
+            sendEmail(
+              RESEND_API_KEY,
+              OWNER_NOTIFY_EMAIL,
+              `🎙️ New Voice Receptionist Subscriber ($29/mo): ${customerName}`,
+              `<p>New Managed Voice Pro ($29/mo) subscriber active!</p>
+               <p><strong>Customer:</strong> ${customerName} (${customerEmail})</p>
+               <p><strong>Assigned Line:</strong> ${forwardingNumber}</p>
+               <p><strong>Carrier Dial Code:</strong> <code>${carrierCode}</code></p>
+               <p><strong>License Key:</strong> <code>${voiceLicenseKey}</code></p>`
+            ).catch(() => {});
+          }
+        } catch (emailErr) {
+          console.error(`❌ [VOICE PRO EMAIL FAILED] for ${customerEmail}:`, emailErr.message);
+        }
+      }
+
+      return {
+        statusCode: 200,
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          received: true,
+          tier: 'managed_voice_pro',
+          forwardingNumber,
+          carrierCode,
+          carrierDeactivateCode,
+          licenseKey: voiceLicenseKey,
+          customerEmail: customerEmail,
+          subscriptionId: session.subscription || session.id
+        })
+      };
+    }
+
     // Agency Fleet Bundle ($399 for 5-Pack or $799 for 10-Pack)
     if (isAgency) {
       const quota = isAgency10 ? 10 : 5;
@@ -643,6 +768,48 @@ exports.handler = async (event) => {
     }
 
     return { statusCode: 200, body: JSON.stringify({ received: true, note: 'Non-conversion invoice recorded' }) };
+  }
+
+  // Handle Subscription Deletion / Cancellation (e.g. Turnkey Voice Pro $29/mo or Free Trial)
+  if (eventObj.type === 'customer.subscription.deleted') {
+    const subscription = eventObj.data.object;
+    const subId = subscription.id;
+    const customerId = subscription.customer;
+    console.log(`🛑 [SUBSCRIPTION CANCELLED] Subscription ${subId} for customer ${customerId} marked deleted.`);
+
+    // If local voice_settings.json exists, update mode to OFF
+    try {
+      const fs = require('fs');
+      const path = require('path');
+      const voicePath = path.join(__dirname, '..', '..', 'voice_settings.json');
+      if (fs.existsSync(voicePath)) {
+        const settings = JSON.parse(fs.readFileSync(voicePath, 'utf8'));
+        settings.mode = 'OFF';
+        settings.lastDeactivated = new Date().toISOString();
+        fs.writeFileSync(voicePath, JSON.stringify(settings, null, 2), 'utf8');
+        console.log(`🎙️ [VOICE SETTINGS SYNC] Voice receptionist mode set to OFF following Stripe cancellation.`);
+      }
+    } catch (err) {
+      console.warn('Could not update voice_settings on subscription cancel:', err.message);
+    }
+
+    if (RESEND_API_KEY && OWNER_NOTIFY_EMAIL) {
+      sendEmail(
+        RESEND_API_KEY,
+        OWNER_NOTIFY_EMAIL,
+        `ℹ️ Subscription Cancelled in Stripe: ${subId}`,
+        `<p>A customer subscription has been cancelled/terminated in Stripe.</p>
+         <p><strong>Subscription ID:</strong> <code>${subId}</code></p>
+         <p><strong>Customer ID:</strong> <code>${customerId}</code></p>
+         <p><strong>Status:</strong> Cancelled / Deleted</p>`
+      ).catch(() => {});
+    }
+
+    return {
+      statusCode: 200,
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ received: true, cancelled: true, subscriptionId: subId })
+    };
   }
 
   return { statusCode: 200, body: JSON.stringify({ received: true }) };

@@ -11,6 +11,7 @@ import androidx.compose.material.icons.filled.History
 import androidx.compose.material.icons.filled.Lock
 import androidx.compose.material.icons.filled.PowerSettingsNew
 import androidx.compose.material.icons.filled.Settings
+import androidx.compose.material.icons.filled.SystemUpdate
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
@@ -22,9 +23,12 @@ import androidx.compose.ui.unit.dp
 import com.missedcall.autotext.data.AppSettings
 import com.missedcall.autotext.data.db.CallLogEvent
 import com.missedcall.autotext.data.license.DeveloperLicenseRecord
+import com.missedcall.autotext.remote.RemoteUpdateManager
+import com.missedcall.autotext.remote.UpdateInfo
 import com.missedcall.autotext.ui.theme.ActiveGreenContainer
 import com.missedcall.autotext.ui.theme.ActiveGreenText
 import com.missedcall.autotext.ui.theme.GrayPaused
+import kotlinx.coroutines.launch
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -45,6 +49,37 @@ fun MainScreen(
     var showOnboardingDialog by remember { mutableStateOf(false) }
 
     val context = LocalContext.current
+    val coroutineScope = rememberCoroutineScope()
+    val updateManager = remember { RemoteUpdateManager(context) }
+
+    var availableUpdate by remember { mutableStateOf<UpdateInfo?>(null) }
+    var isDownloadingApk by remember { mutableStateOf(false) }
+    var downloadProgress by remember { mutableIntStateOf(0) }
+    var activePromo by remember { mutableStateOf<PromoType?>(null) }
+
+    // Check for mandatory updates and record launch on open
+    LaunchedEffect(Unit) {
+        InAppPromoController.onAppOpened(context)
+        try {
+            val updateUrl = settings.remoteUpdateUrl.ifBlank { RemoteUpdateManager.DEFAULT_UPDATE_URL }
+            val result = updateManager.checkForUpdatesDetailed(updateUrl, forceCheck = false)
+            if (result is com.missedcall.autotext.remote.UpdateCheckResult.Available) {
+                availableUpdate = result.updateInfo
+            } else {
+                // If no update pending, evaluate strategic in-app ad/promo
+                val eligible = InAppPromoController.shouldShowPromoPopup(
+                    context = context,
+                    settings = settings,
+                    isMandatoryUpdatePending = false
+                )
+                if (eligible != null) {
+                    activePromo = eligible
+                }
+            }
+        } catch (e: Exception) {
+            // Background check failure
+        }
+    }
 
     // Trigger onboarding dialog if missing permissions exist
     LaunchedEffect(missingPermissions) {
@@ -58,6 +93,114 @@ fun MainScreen(
             missingPermissions = missingPermissions,
             onRequestPermissionBatch = onRequestPermissionBatch,
             onDismiss = { showOnboardingDialog = false }
+        )
+    }
+
+    // Root-Level OTA Update Dialog (Forced / Mandatory when mandatory == true)
+    availableUpdate?.let { update ->
+        AlertDialog(
+            onDismissRequest = {
+                if (!update.mandatory) {
+                    availableUpdate = null
+                }
+            },
+            title = {
+                Row(verticalAlignment = Alignment.CenterVertically) {
+                    Icon(
+                        Icons.Default.SystemUpdate,
+                        contentDescription = null,
+                        tint = if (update.mandatory) MaterialTheme.colorScheme.error else MaterialTheme.colorScheme.primary
+                    )
+                    Spacer(modifier = Modifier.width(8.dp))
+                    Text(
+                        text = if (update.mandatory) "🚨 Required Update (v${update.versionName})" else "App Update Available (v${update.versionName})",
+                        fontWeight = FontWeight.Bold
+                    )
+                }
+            },
+            text = {
+                Column {
+                    if (update.mandatory) {
+                        Surface(
+                            color = MaterialTheme.colorScheme.errorContainer,
+                            shape = MaterialTheme.shapes.small,
+                            modifier = Modifier.fillMaxWidth().padding(bottom = 8.dp)
+                        ) {
+                            Text(
+                                text = "⚠️ This is a required critical update (v${update.versionName}, Build ${update.versionCode}). You must install this update to continue using Missed Call Auto SMS with the updated telecom routing & 24/7 AI Voice features.",
+                                color = MaterialTheme.colorScheme.onErrorContainer,
+                                style = MaterialTheme.typography.bodySmall,
+                                fontWeight = FontWeight.SemiBold,
+                                modifier = Modifier.padding(10.dp)
+                            )
+                        }
+                    }
+                    Text(
+                        text = update.releaseNotes ?: "A new performance and feature update is ready for Missed Call Auto SMS.",
+                        style = MaterialTheme.typography.bodyMedium
+                    )
+                    Spacer(modifier = Modifier.height(8.dp))
+                    Text(
+                        text = "Source: ${update.apkUrl}",
+                        style = MaterialTheme.typography.bodySmall,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant
+                    )
+                    if (isDownloadingApk) {
+                        Spacer(modifier = Modifier.height(16.dp))
+                        LinearProgressIndicator(
+                            progress = { downloadProgress / 100f },
+                            modifier = Modifier.fillMaxWidth()
+                        )
+                        Spacer(modifier = Modifier.height(6.dp))
+                        Text(
+                            text = "Downloading APK: $downloadProgress%",
+                            style = MaterialTheme.typography.bodySmall,
+                            color = MaterialTheme.colorScheme.onSurfaceVariant
+                        )
+                    }
+                }
+            },
+            confirmButton = {
+                Button(
+                    enabled = !isDownloadingApk,
+                    colors = if (update.mandatory) ButtonDefaults.buttonColors(containerColor = MaterialTheme.colorScheme.error) else ButtonDefaults.buttonColors(),
+                    onClick = {
+                        isDownloadingApk = true
+                        coroutineScope.launch {
+                            val success = updateManager.downloadAndInstallApk(update.apkUrl) { progress ->
+                                downloadProgress = progress
+                            }
+                            isDownloadingApk = false
+                            if (!success) {
+                                Toast.makeText(context, "Failed to download update APK", Toast.LENGTH_SHORT).show()
+                            }
+                            if (!update.mandatory) {
+                                availableUpdate = null
+                            }
+                        }
+                    }
+                ) {
+                    Text(
+                        text = if (isDownloadingApk) "Downloading ($downloadProgress%)..." else if (update.mandatory) "⚡ Install Required Update Now" else "Download & Install Upgrade",
+                        fontWeight = FontWeight.Bold
+                    )
+                }
+            },
+            dismissButton = {
+                if (!isDownloadingApk && !update.mandatory) {
+                    TextButton(onClick = { availableUpdate = null }) {
+                        Text("Later")
+                    }
+                }
+            }
+        )
+    }
+
+    // Strategic In-App Ad / Promotion Dialog
+    if (availableUpdate == null && activePromo != null) {
+        InAppPromoDialog(
+            promoType = activePromo!!,
+            onDismiss = { activePromo = null }
         )
     }
 

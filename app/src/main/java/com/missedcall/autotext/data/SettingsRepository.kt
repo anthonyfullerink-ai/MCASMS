@@ -43,6 +43,10 @@ class SettingsRepository(private val context: Context) {
         val MUTE_NATIVE_AUTO_REPLY = booleanPreferencesKey("mute_native_auto_reply")
         val SELECTED_OUTBOUND_WEBHOOK_URL = stringPreferencesKey("selected_outbound_webhook_url")
         val SAVED_OUTBOUND_WEBHOOKS_JSON = stringPreferencesKey("saved_outbound_webhooks_json")
+        val VOICE_RECEPTIONIST_ENABLED = booleanPreferencesKey("voice_receptionist_enabled")
+        val VOICE_FORWARDING_NUMBER = stringPreferencesKey("voice_forwarding_number")
+        val VOICE_GREETING = stringPreferencesKey("voice_greeting")
+        val VOICE_SUBSCRIPTION_ACTIVE = booleanPreferencesKey("voice_subscription_active")
     }
 
     val settingsFlow: Flow<AppSettings> = context.dataStore.data.map { preferences ->
@@ -92,7 +96,11 @@ class SettingsRepository(private val context: Context) {
             outboundWebhookEnabled = preferences[OUTBOUND_WEBHOOK_ENABLED] ?: false,
             muteNativeAutoReply = preferences[MUTE_NATIVE_AUTO_REPLY] ?: false,
             selectedOutboundWebhookUrl = preferences[SELECTED_OUTBOUND_WEBHOOK_URL] ?: "",
-            savedOutboundWebhooks = savedWebhooks
+            savedOutboundWebhooks = savedWebhooks,
+            voiceReceptionistEnabled = preferences[VOICE_RECEPTIONIST_ENABLED] ?: false,
+            voiceReceptionistForwardingNumber = preferences[VOICE_FORWARDING_NUMBER] ?: "+18005550199",
+            voiceReceptionistGreeting = preferences[VOICE_GREETING] ?: "",
+            voiceSubscriptionActive = preferences[VOICE_SUBSCRIPTION_ACTIVE] ?: false
         )
     }
 
@@ -160,6 +168,10 @@ class SettingsRepository(private val context: Context) {
             preferences[MUTE_NATIVE_AUTO_REPLY] = settings.muteNativeAutoReply
             preferences[SELECTED_OUTBOUND_WEBHOOK_URL] = settings.selectedOutboundWebhookUrl
             preferences[SAVED_OUTBOUND_WEBHOOKS_JSON] = gson.toJson(settings.savedOutboundWebhooks)
+            preferences[VOICE_RECEPTIONIST_ENABLED] = settings.voiceReceptionistEnabled
+            preferences[VOICE_FORWARDING_NUMBER] = settings.voiceReceptionistForwardingNumber
+            preferences[VOICE_GREETING] = settings.voiceReceptionistGreeting
+            preferences[VOICE_SUBSCRIPTION_ACTIVE] = settings.voiceSubscriptionActive
         }
     }
 }

@@ -24,7 +24,8 @@ data class UpdateInfo(
     @SerializedName("downloadUrl", alternate = ["apkUrl"])
     val apkUrl: String,
     val releaseNotes: String? = null,
-    val mandatory: Boolean = false
+    val mandatory: Boolean = false,
+    val minSupportedVersion: Int = 1
 )
 
 sealed class UpdateCheckResult {
@@ -120,7 +121,8 @@ class RemoteUpdateManager(private val context: Context) {
                     if (updateInfo != null && updateInfo.versionCode > 0) {
                         Log.i(TAG, "Retrieved update manifest from $targetUrl: remote v${updateInfo.versionName} (${updateInfo.versionCode}) vs current v$currentVersionName ($currentVersionCode)")
                         val resolvedApk = resolveApkUrl(updateInfo.apkUrl, targetUrl)
-                        val finalUpdateInfo = updateInfo.copy(apkUrl = resolvedApk)
+                        val isMandatory = updateInfo.mandatory || (currentVersionCode < updateInfo.minSupportedVersion)
+                        val finalUpdateInfo = updateInfo.copy(apkUrl = resolvedApk, mandatory = isMandatory)
 
                         if (updateInfo.versionCode > currentVersionCode || forceCheck) {
                             return@withContext UpdateCheckResult.Available(finalUpdateInfo, targetUrl)

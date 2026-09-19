@@ -378,6 +378,67 @@
                     Upgraded to a new phone? You can reset your hardware device binding via the <a href="/#checkout" style="color: var(--primary); text-decoration: underline;">Self-Service Portal</a> or request an automatic hardware reset ticket below.
                 </p>
             </div>
+
+            <div class="diag-card" style="border-left: 3px solid #C084FC;">
+                <h3 style="color: #C084FC;">🎙️ 4. AI Receptionist Call Forwarding</h3>
+                <p>
+                    Unanswered calls not forwarding? Toggle the <strong>AI Voice Receptionist</strong> switch OFF and ON in the app. Make sure to tap the green <strong>Call</strong> button when your carrier dialer opens with <code>*71</code>, <code>*004*</code>, or <code>**61*</code>.
+                </p>
+            </div>
+
+            <div class="diag-card" style="border-left: 3px solid #C084FC;">
+                <h3 style="color: #C084FC;">📞 5. Carrier Forwarding Codes</h3>
+                <p>
+                    Need to manually disable forwarding? Dial <code>*73</code> (Verizon/Visible/US Cellular) or <code>##004#</code> (AT&T/T-Mobile/Cricket/Mint). Forwarding will immediately revert to your normal carrier voicemail.
+                </p>
+            </div>
+
+            <div class="diag-card" style="border-left: 3px solid #C084FC;">
+                <h3 style="color: #C084FC;">💬 6. Customizing AI Greeting</h3>
+                <p>
+                    Want to customize how your AI answers? Open the app, tap <strong>Manage Account & Subscription</strong> ➔ <strong>AI Voice Receptionist Greeting</strong>, type your opening message, and tap <strong>Save Greeting</strong>.
+                </p>
+            </div>
+        </div>
+    </div>
+
+    <!-- AI Voice Receptionist Help & FAQ Section -->
+    <div style="background: var(--card-bg); border: 1px solid var(--card-border); border-radius: 16px; padding: 28px; margin-bottom: 40px;">
+        <h2 style="font-size: 22px; margin: 0 0 8px 0; color: #FFF; display: flex; align-items: center; gap: 10px;">
+            🎙️ AI Voice Receptionist ($29/mo) — Help & Common Questions
+        </h2>
+        <div style="color: var(--muted); font-size: 14px; margin-bottom: 20px;">
+            Everything you need to know about setting up, modifying, and canceling the Turnkey Managed AI Voice Receptionist.
+        </div>
+
+        <div style="display: flex; flex-direction: column; gap: 16px;">
+            <div style="background: #0A0E17; border: 1px solid var(--card-border); border-radius: 10px; padding: 16px;">
+                <h4 style="margin: 0 0 6px 0; font-size: 15px; color: #FFF;">Does the AI Voice Receptionist replace my cell phone number?</h4>
+                <p style="margin: 0; color: var(--muted); font-size: 14px; line-height: 1.6;">
+                    No. Your customers still call your existing business cell phone number. When someone calls, your phone rings normally for 15 seconds so you have full opportunity to answer. Only if you miss the call or are on another line does the carrier forward the call to your dedicated AI receptionist.
+                </p>
+            </div>
+
+            <div style="background: #0A0E17; border: 1px solid var(--card-border); border-radius: 10px; padding: 16px;">
+                <h4 style="margin: 0 0 6px 0; font-size: 15px; color: #FFF;">How do I turn call forwarding off if I want normal voicemail back?</h4>
+                <p style="margin: 0; color: var(--muted); font-size: 14px; line-height: 1.6;">
+                    Simply flip the <strong>AI Voice Receptionist</strong> toggle to <strong>OFF</strong> on your app dashboard. The app will automatically launch your dialer with your carrier's deactivation code pre-filled (<code>*73</code> for Verizon, <code>##004#</code> for AT&T and T-Mobile). Tap Call once, and calls will route back to your standard carrier voicemail.
+                </p>
+            </div>
+
+            <div style="background: #0A0E17; border: 1px solid var(--card-border); border-radius: 10px; padding: 16px;">
+                <h4 style="margin: 0 0 6px 0; font-size: 15px; color: #FFF;">How does 1-click subscription cancellation work?</h4>
+                <p style="margin: 0; color: var(--muted); font-size: 14px; line-height: 1.6;">
+                    You can cancel anytime directly inside the app without calling support. Open <strong>Manage Account & Subscription</strong>, scroll to <strong>Voice Pro ($29/mo)</strong>, and tap <strong>Cancel Voice Pro</strong>. The app immediately terminates the Stripe subscription ($0 future renewals) and launches your phone dialer with the rollback code so your carrier stops forwarding calls.
+                </p>
+            </div>
+
+            <div style="background: #0A0E17; border: 1px solid var(--card-border); border-radius: 10px; padding: 16px;">
+                <h4 style="margin: 0 0 6px 0; font-size: 15px; color: #FFF;">Do I need to create my own Vapi or Twilio account?</h4>
+                <p style="margin: 0; color: var(--muted); font-size: 14px; line-height: 1.6;">
+                    No. The $29/mo Voice Pro plan is completely turnkey and fully managed. We handle the AI voice infrastructure, server webhooks, telephony routing, and speech-to-text models. You only enter your business name and optional custom greeting in the app.
+                </p>
+            </div>
         </div>
     </div>
 
@@ -403,6 +464,7 @@
                     <div class="form-group">
                         <label for="category">Inquiry Category *</label>
                         <select id="category" name="category" required>
+                            <option value="AI Voice Receptionist ($29/mo) & Call Forwarding">AI Voice Receptionist ($29/mo) & Call Forwarding</option>
                             <option value="Webhook / API Integration">Webhook & Cloud Relay Integration (n8n / Make)</option>
                             <option value="License Key & Device Reset">License Key & Device Hardware Reset</option>
                             <option value="SMS Delivery / Carrier Issue">SMS Delivery & Carrier Troubleshooting</option>
