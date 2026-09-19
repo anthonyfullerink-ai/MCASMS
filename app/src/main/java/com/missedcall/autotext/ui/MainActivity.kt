@@ -58,6 +58,7 @@ class MainActivity : ComponentActivity() {
         val settingsRepo = app.settingsRepository
         val devRegistry = app.developerLicenseRegistry
         val dao = app.database.callLogDao()
+        val voiceDao = app.database.voiceCallDao()
 
         // Sync FCM token with Central Webhook Bridge
         try {
@@ -90,6 +91,7 @@ class MainActivity : ComponentActivity() {
                 ) {
                     val settings by settingsRepo.settingsFlow.collectAsState(initial = AppSettings())
                     val logs by dao.getAllLogsFlow().collectAsState(initial = emptyList())
+                    val voiceCalls by voiceDao.getAllVoiceCallsFlow().collectAsState(initial = emptyList())
                     val devRecords by devRegistry.recordsFlow.collectAsState(initial = emptyList())
 
                     MainScreen(
@@ -111,6 +113,17 @@ class MainActivity : ComponentActivity() {
                         onClearLogs = {
                             lifecycleScope.launch {
                                 dao.clearLogs()
+                            }
+                        },
+                        voiceCalls = voiceCalls,
+                        onMarkVoiceCallRead = { callId ->
+                            lifecycleScope.launch {
+                                voiceDao.markAsRead(callId)
+                            }
+                        },
+                        onClearVoiceCalls = {
+                            lifecycleScope.launch {
+                                voiceDao.clearAll()
                             }
                         },
                         devRecords = devRecords,

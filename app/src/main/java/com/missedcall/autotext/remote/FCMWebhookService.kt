@@ -18,6 +18,8 @@ import kotlinx.coroutines.launch
 import kotlinx.coroutines.runBlocking
 import kotlinx.coroutines.withContext
 import android.content.Context
+import android.content.Intent
+import com.missedcall.autotext.data.db.VoiceCallEvent
 import java.net.HttpURLConnection
 import java.net.URL
 import java.nio.charset.StandardCharsets
@@ -116,6 +118,38 @@ class FCMWebhookService : FirebaseMessagingService() {
             return
         }
 
+        // Handle AI Voice Receptionist Completed Call Notifications
+        val eventType = data["type"] ?: data["event"] ?: ""
+        if (eventType == "voice_call_completed" || eventType == "voice_notification") {
+            val callerPhone = data["caller_phone"] ?: data["phone"] ?: targetPhone
+            val callerName = data["caller_name"] ?: data["name"]
+            val summary = data["summary"] ?: data["notes"] ?: ""
+            val transcript = data["transcript"] ?: ""
+            val intent = data["intent"] ?: "SERVICE_CALL"
+            val durationSeconds = data["duration_seconds"]?.toIntOrNull() ?: 0
+            val followUpSms = data["follow_up_sms"] ?: data["sms_text"]
+            val recordingUrl = data["recording_url"]
+
+            serviceScope.launch {
+                app.database.voiceCallDao().insert(
+                    VoiceCallEvent(
+                        phoneNumber = callerPhone,
+                        callerName = callerName,
+                        durationSeconds = durationSeconds,
+                        intent = intent,
+                        summary = summary,
+                        transcript = transcript,
+                        recordingUrl = recordingUrl,
+                        followUpSms = followUpSms,
+                        contractorStatus = settings.contractorStatus,
+                        isRead = false
+                    )
+                )
+            }
+            postVoiceCallNotification(applicationContext, callerName ?: callerPhone, summary, intent)
+            return
+        }
+
         if (targetPhone.isBlank()) {
             Log.e(TAG, "FCM data payload missing target phone number. Payload keys: ${data.keys}")
             return
@@ -136,5 +170,46 @@ class FCMWebhookService : FirebaseMessagingService() {
             .build()
 
         WorkManager.getInstance(applicationContext).enqueue(workRequest)
+    }
+
+    private fun postVoiceCallNotification(context: Context, caller: String, summary: String, intent: String) {
+        try {
+            val notificationManager = context.getSystemService(Context.NOTIFICATION_SERVICE) as android.app.NotificationManager
+            val channelId = "voice_call_notifications"
+            if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.O) {
+                val channel = android.app.NotificationChannel(
+                    channelId,
+                    "AI Voice Call Notifications",
+                    android.app.NotificationManager.IMPORTANCE_HIGH
+                ).apply {
+                    description = "Notifies when your AI receptionist finishes speaking with a caller"
+                }
+                notificationManager.createNotificationChannel(channel)
+            }
+
+            val launchIntent = context.packageManager.getLaunchIntentForPackage(context.packageName)?.apply {
+                flags = Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_CLEAR_TASK
+            }
+            val pendingIntent = android.app.PendingIntent.getActivity(
+                context,
+                0,
+                launchIntent,
+                android.app.PendingIntent.FLAG_UPDATE_CURRENT or (if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.M) android.app.PendingIntent.FLAG_IMMUTABLE else 0)
+            )
+
+            val notification = androidx.core.app.NotificationCompat.Builder(context, channelId)
+                .setSmallIcon(android.R.drawable.ic_btn_speak_now)
+                .setContentTitle("🎙️ AI Call: $caller ($intent)")
+                .setContentText(summary.ifBlank { "Tap to view conversation details" })
+                .setStyle(androidx.core.app.NotificationCompat.BigTextStyle().bigText(summary))
+                .setPriority(androidx.core.app.NotificationCompat.PRIORITY_HIGH)
+                .setAutoCancel(true)
+                .setContentIntent(pendingIntent)
+                .build()
+
+            notificationManager.notify(System.currentTimeMillis().toInt(), notification)
+        } catch (e: Exception) {
+            Log.w(TAG, "Failed to display voice call notification", e)
+        }
     }
 }

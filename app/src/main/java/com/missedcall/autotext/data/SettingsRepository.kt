@@ -47,6 +47,13 @@ class SettingsRepository(private val context: Context) {
         val VOICE_FORWARDING_NUMBER = stringPreferencesKey("voice_forwarding_number")
         val VOICE_GREETING = stringPreferencesKey("voice_greeting")
         val VOICE_SUBSCRIPTION_ACTIVE = booleanPreferencesKey("voice_subscription_active")
+        val VAPI_MODE = stringPreferencesKey("vapi_mode")
+        val VAPI_API_KEY = stringPreferencesKey("vapi_api_key")
+        val VAPI_ASSISTANT_ID = stringPreferencesKey("vapi_assistant_id")
+        val VAPI_PHONE_NUMBER_ID = stringPreferencesKey("vapi_phone_number_id")
+        val CONTRACTOR_STATUS = stringPreferencesKey("contractor_status")
+        val CONTRACTOR_GOAL = stringPreferencesKey("contractor_goal")
+        val CONTRACTOR_GOAL_LINK = stringPreferencesKey("contractor_goal_link")
     }
 
     val settingsFlow: Flow<AppSettings> = context.dataStore.data.map { preferences ->
@@ -100,7 +107,14 @@ class SettingsRepository(private val context: Context) {
             voiceReceptionistEnabled = preferences[VOICE_RECEPTIONIST_ENABLED] ?: false,
             voiceReceptionistForwardingNumber = preferences[VOICE_FORWARDING_NUMBER] ?: "+18005550199",
             voiceReceptionistGreeting = preferences[VOICE_GREETING] ?: "",
-            voiceSubscriptionActive = preferences[VOICE_SUBSCRIPTION_ACTIVE] ?: false
+            voiceSubscriptionActive = preferences[VOICE_SUBSCRIPTION_ACTIVE] ?: false,
+            vapiMode = preferences[VAPI_MODE] ?: "MANAGED",
+            vapiApiKey = preferences[VAPI_API_KEY] ?: "",
+            vapiAssistantId = preferences[VAPI_ASSISTANT_ID] ?: "",
+            vapiPhoneNumberId = preferences[VAPI_PHONE_NUMBER_ID] ?: "",
+            contractorStatus = preferences[CONTRACTOR_STATUS] ?: "AVAILABLE",
+            contractorGoal = preferences[CONTRACTOR_GOAL] ?: "BOOKING_LINK",
+            contractorGoalLink = preferences[CONTRACTOR_GOAL_LINK] ?: ""
         )
     }
 
@@ -172,6 +186,13 @@ class SettingsRepository(private val context: Context) {
             preferences[VOICE_FORWARDING_NUMBER] = settings.voiceReceptionistForwardingNumber
             preferences[VOICE_GREETING] = settings.voiceReceptionistGreeting
             preferences[VOICE_SUBSCRIPTION_ACTIVE] = settings.voiceSubscriptionActive
+            preferences[VAPI_MODE] = settings.vapiMode
+            preferences[VAPI_API_KEY] = settings.vapiApiKey
+            preferences[VAPI_ASSISTANT_ID] = settings.vapiAssistantId
+            preferences[VAPI_PHONE_NUMBER_ID] = settings.vapiPhoneNumberId
+            preferences[CONTRACTOR_STATUS] = settings.contractorStatus
+            preferences[CONTRACTOR_GOAL] = settings.contractorGoal
+            preferences[CONTRACTOR_GOAL_LINK] = settings.contractorGoalLink
         }
     }
 }

@@ -995,6 +995,28 @@ Request content:
                     Internal provisioning hook triggered by Stripe checkout webhook when a contractor purchases the Turnkey Voice Pro ($29/mo) plan.
                 </p>
             </div>
+
+            <!-- Endpoint 5 -->
+            <div class="feat-box">
+                <div style="display: flex; align-items: center; gap: 8px; margin-bottom: 8px;">
+                    <span style="background: rgba(0, 230, 118, 0.15); color: var(--primary); font-weight: bold; font-size: 11px; padding: 2px 8px; border-radius: 4px;">POST</span>
+                    <code style="color: #FFF; font-size: 13px;">/api/create-voice-pro-checkout</code>
+                </div>
+                <p style="font-size: 13px; line-height: 1.5; color: var(--muted);">
+                    Creates a Stripe subscription checkout session with <code>trial_period_days: 14</code> ($0 charged today; auto-bills $29/mo after 14 days).
+                </p>
+            </div>
+
+            <!-- Endpoint 6 -->
+            <div class="feat-box">
+                <div style="display: flex; align-items: center; gap: 8px; margin-bottom: 8px;">
+                    <span style="background: rgba(168, 85, 247, 0.15); color: #C084FC; font-weight: bold; font-size: 11px; padding: 2px 8px; border-radius: 4px;">GET / POST</span>
+                    <code style="color: #FFF; font-size: 13px;">/api/support/gateway-settings</code>
+                </div>
+                <p style="font-size: 13px; line-height: 1.5; color: var(--muted);">
+                    Owner Live Support Gateway. Toggles website live chat between direct SMS to Anthony's handset (0 AI credits) and the 24/7 AI Voice & Text support assistant.
+                </p>
+            </div>
         </div>
 
         <!-- Code Snippet -->

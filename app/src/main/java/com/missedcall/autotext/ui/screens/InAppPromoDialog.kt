@@ -52,8 +52,10 @@ object InAppPromoController {
         if (isMandatoryUpdatePending) return null
 
         val trimmedKey = settings.licenseKey.trim().uppercase()
-        // If already has Voice Pro, don't show any ads
-        if (trimmedKey.contains("VOICE-PRO")) return null
+        val hasVoice = trimmedKey.contains("VOICE-PRO") || settings.voiceSubscriptionActive || settings.voiceReceptionistEnabled || (settings.vapiMode == "BYOK" && settings.vapiApiKey.isNotBlank())
+        // If already has Voice Pro or BYOK, don't show any voice ads
+        val isPro = trimmedKey.contains("PRO") || com.missedcall.autotext.BuildConfig.IS_PRO_EDITION
+        if (isPro && hasVoice) return null
 
         val prefs = context.getSharedPreferences(PREFS_NAME, Context.MODE_PRIVATE)
         val launches = prefs.getInt(KEY_LAUNCH_COUNT, 1)
@@ -64,14 +66,17 @@ object InAppPromoController {
         val now = System.currentTimeMillis()
         if ((now - lastShown) < COOLDOWN_HOURS_MS) return null
 
-        val isPro = trimmedKey.contains("PRO") || com.missedcall.autotext.BuildConfig.IS_PRO_EDITION
         return if (isPro) {
-            // Pro user who doesn't have Voice Pro yet
-            PromoType.SUBSCRIBE_VOICE_PRO
+            // Pro user who doesn't have Voice Pro yet - NEVER show upgrade to pro
+            if (!hasVoice) PromoType.SUBSCRIBE_VOICE_PRO else null
         } else {
-            // $49 user: alternate between Voice Pro and Pro Automation
-            val index = prefs.getInt(KEY_PROMO_INDEX, 0)
-            if (index % 2 == 0) PromoType.SUBSCRIBE_VOICE_PRO else PromoType.UPGRADE_TO_PRO
+            // $49 standard user: if has voice, only show Pro upgrade; otherwise alternate
+            if (hasVoice) {
+                PromoType.UPGRADE_TO_PRO
+            } else {
+                val index = prefs.getInt(KEY_PROMO_INDEX, 0)
+                if (index % 2 == 0) PromoType.SUBSCRIBE_VOICE_PRO else PromoType.UPGRADE_TO_PRO
+            }
         }
     }
 
@@ -293,11 +298,14 @@ fun InAppPromoBannerCard(
     if (isDismissedForSession) return
 
     val trimmedKey = settings.licenseKey.trim().uppercase()
-    val isVoicePro = trimmedKey.contains("VOICE-PRO")
     val isPro = isProEdition || trimmedKey.contains("PRO")
+    val hasVoice = trimmedKey.contains("VOICE-PRO") || settings.voiceSubscriptionActive || settings.voiceReceptionistEnabled || (settings.vapiMode == "BYOK" && settings.vapiApiKey.isNotBlank())
 
-    // If user has Voice Pro, display an active badge card instead of an ad
-    if (isVoicePro) {
+    // If user already has both Pro and Voice, no ads to show
+    if (isPro && hasVoice) return
+
+    // If user has Voice Pro, display an active badge card instead of a Voice ad
+    if (hasVoice) {
         Card(
             colors = CardDefaults.cardColors(containerColor = ActiveGreenContainer.copy(alpha = 0.15f)),
             border = BorderStroke(1.dp, ActiveGreenText.copy(alpha = 0.3f)),
@@ -328,8 +336,8 @@ fun InAppPromoBannerCard(
         return
     }
 
-    // Determine target campaign
-    val targetIsVoice = isPro // If already Pro, target Voice; if standard, target Voice or Pro
+    // Pro users must NEVER see "Upgrade to Pro Automation"
+    val targetIsVoice = isPro // If already Pro, target Voice only
     val accent = if (targetIsVoice) Color(0xFF00E676) else Color(0xFFA855F7)
     val url = if (targetIsVoice) InAppPromoController.STRIPE_VOICE_PRO_URL else InAppPromoController.STRIPE_PRO_UPGRADE_URL
 

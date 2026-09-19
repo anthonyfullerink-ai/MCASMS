@@ -158,7 +158,11 @@ fun CustomerAccountPortalDialog(
                                 horizontalArrangement = Arrangement.SpaceBetween,
                                 verticalAlignment = Alignment.CenterVertically
                             ) {
-                                Column {
+                                Column(
+                                    modifier = Modifier
+                                        .weight(1f, fill = false)
+                                        .padding(end = 12.dp)
+                                ) {
                                     Text(
                                         text = "SUBSCRIPTION & LICENSE",
                                         style = MaterialTheme.typography.labelSmall,
@@ -202,6 +206,8 @@ fun CustomerAccountPortalDialog(
                                         color = if (isTrial) Color.Black else Color.White,
                                         fontWeight = FontWeight.Black,
                                         fontSize = 11.sp,
+                                        maxLines = 1,
+                                        softWrap = false,
                                         modifier = Modifier.padding(horizontal = 8.dp, vertical = 4.dp)
                                     )
                                 }
@@ -560,7 +566,12 @@ fun CustomerAccountPortalDialog(
                                     horizontalArrangement = Arrangement.SpaceBetween,
                                     verticalAlignment = Alignment.CenterVertically
                                 ) {
-                                    Row(verticalAlignment = Alignment.CenterVertically) {
+                                    Row(
+                                        modifier = Modifier
+                                            .weight(1f, fill = false)
+                                            .padding(end = 8.dp),
+                                        verticalAlignment = Alignment.CenterVertically
+                                    ) {
                                         Icon(Icons.Default.PhoneForwarded, contentDescription = null, tint = MaterialTheme.colorScheme.primary)
                                         Spacer(modifier = Modifier.width(8.dp))
                                         Text(
@@ -579,6 +590,8 @@ fun CustomerAccountPortalDialog(
                                             color = if (settings.voiceSubscriptionActive || settings.voiceReceptionistEnabled) ActiveGreenText else MaterialTheme.colorScheme.onSurfaceVariant,
                                             fontWeight = FontWeight.Bold,
                                             fontSize = 10.sp,
+                                            maxLines = 1,
+                                            softWrap = false,
                                             modifier = Modifier.padding(horizontal = 8.dp, vertical = 4.dp)
                                         )
                                     }

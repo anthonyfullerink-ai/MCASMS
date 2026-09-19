@@ -34,5 +34,12 @@ data class AppSettings(
     val voiceReceptionistEnabled: Boolean = false,
     val voiceReceptionistForwardingNumber: String = "+18005550199",
     val voiceReceptionistGreeting: String = "",
-    val voiceSubscriptionActive: Boolean = false
+    val voiceSubscriptionActive: Boolean = false,
+    val vapiMode: String = "MANAGED", // "MANAGED", "BYOK", "OFF"
+    val vapiApiKey: String = "",
+    val vapiAssistantId: String = "",
+    val vapiPhoneNumberId: String = "",
+    val contractorStatus: String = "AVAILABLE", // "AVAILABLE", "AFTER_HOURS", "EMERGENCY"
+    val contractorGoal: String = "BOOKING_LINK", // "BOOKING_LINK", "CALLBACK_PROMISE", "QUOTE_FORM"
+    val contractorGoalLink: String = ""
 )

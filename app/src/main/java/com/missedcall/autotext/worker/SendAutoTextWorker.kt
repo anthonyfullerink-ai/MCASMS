@@ -138,6 +138,19 @@ class SendAutoTextWorker(
             )
         }
 
+        // 5.5 Check AI Voice Receptionist Forwarding (Smart Handover: prevent double-text clash)
+        if (!isRemoteTrigger && settings.voiceReceptionistEnabled) {
+            Log.i(TAG, "AI Voice Receptionist is ACTIVE. Call routed to Vapi agent; suppressing native canned SMS for $targetNumber")
+            dao.insertLog(
+                CallLogEvent(
+                    phoneNumber = targetNumber,
+                    status = LogStatus.FORWARDED_TO_WEBHOOK,
+                    messageSent = "[Muted - Handed over to AI Voice Receptionist]"
+                )
+            )
+            return Result.success()
+        }
+
         // 6. Check Mute Native Auto-Reply (If user uses n8n to respond, avoid double-texting)
         if (!isRemoteTrigger && settings.muteNativeAutoReply) {
             Log.i(TAG, "Native auto-reply template is MUTED (n8n automation active). Skipping local SMS for $targetNumber")

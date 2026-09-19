@@ -10,6 +10,7 @@ import androidx.compose.material.icons.filled.Dashboard
 import androidx.compose.material.icons.filled.History
 import androidx.compose.material.icons.filled.Lock
 import androidx.compose.material.icons.filled.PowerSettingsNew
+import androidx.compose.material.icons.filled.RecordVoiceOver
 import androidx.compose.material.icons.filled.Settings
 import androidx.compose.material.icons.filled.SystemUpdate
 import androidx.compose.material3.*
@@ -22,6 +23,7 @@ import androidx.compose.ui.text.input.PasswordVisualTransformation
 import androidx.compose.ui.unit.dp
 import com.missedcall.autotext.data.AppSettings
 import com.missedcall.autotext.data.db.CallLogEvent
+import com.missedcall.autotext.data.db.VoiceCallEvent
 import com.missedcall.autotext.data.license.DeveloperLicenseRecord
 import com.missedcall.autotext.remote.RemoteUpdateManager
 import com.missedcall.autotext.remote.UpdateInfo
@@ -42,7 +44,10 @@ fun MainScreen(
     onToggleDevRevoke: (String) -> Unit,
     missingPermissions: List<String>,
     onRequestPermissions: () -> Unit,
-    onRequestPermissionBatch: (List<String>) -> Unit = {}
+    onRequestPermissionBatch: (List<String>) -> Unit = {},
+    voiceCalls: List<VoiceCallEvent> = emptyList(),
+    onMarkVoiceCallRead: (Long) -> Unit = {},
+    onClearVoiceCalls: () -> Unit = {}
 ) {
     var selectedTab by remember { mutableIntStateOf(0) }
     var showCustomerPortalDialog by remember { mutableStateOf(false) }
@@ -280,6 +285,8 @@ fun MainScreen(
             )
         }
     ) { innerPadding ->
+        val unreadVoiceCalls = remember(voiceCalls) { voiceCalls.count { !it.isRead } }
+
         Column(
             modifier = Modifier
                 .fillMaxSize()
@@ -295,12 +302,20 @@ fun MainScreen(
                 Tab(
                     selected = selectedTab == 1,
                     onClick = { selectedTab = 1 },
-                    text = { Text("Settings") },
-                    icon = { Icon(Icons.Default.Settings, contentDescription = null) }
+                    text = {
+                        Text(if (unreadVoiceCalls > 0) "Voice ($unreadVoiceCalls)" else "AI Voice")
+                    },
+                    icon = { Icon(Icons.Default.RecordVoiceOver, contentDescription = null) }
                 )
                 Tab(
                     selected = selectedTab == 2,
                     onClick = { selectedTab = 2 },
+                    text = { Text("Settings") },
+                    icon = { Icon(Icons.Default.Settings, contentDescription = null) }
+                )
+                Tab(
+                    selected = selectedTab == 3,
+                    onClick = { selectedTab = 3 },
                     text = { Text("Log (${logs.size})") },
                     icon = { Icon(Icons.Default.History, contentDescription = null) }
                 )
@@ -312,13 +327,20 @@ fun MainScreen(
                     onSettingsChanged = onSettingsChanged,
                     logs = logs
                 )
-                1 -> SettingsScreen(
+                1 -> VoiceHubScreen(
+                    settings = settings,
+                    onSettingsChanged = onSettingsChanged,
+                    voiceCalls = voiceCalls,
+                    onMarkVoiceCallRead = onMarkVoiceCallRead,
+                    onClearVoiceCalls = onClearVoiceCalls
+                )
+                2 -> SettingsScreen(
                     settings = settings,
                     onSettingsChanged = onSettingsChanged,
                     missingPermissions = missingPermissions,
                     onRequestPermissions = onRequestPermissions
                 )
-                2 -> ActivityLogScreen(
+                3 -> ActivityLogScreen(
                     logs = logs,
                     onClearLogs = onClearLogs
                 )

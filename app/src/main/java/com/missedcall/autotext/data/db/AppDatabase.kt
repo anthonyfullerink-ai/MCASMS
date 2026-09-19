@@ -19,11 +19,12 @@ class LogStatusConverter {
     }
 }
 
-@Database(entities = [CallLogEvent::class], version = 1, exportSchema = false)
+@Database(entities = [CallLogEvent::class, VoiceCallEvent::class], version = 2, exportSchema = false)
 @TypeConverters(LogStatusConverter::class)
 abstract class AppDatabase : RoomDatabase() {
 
     abstract fun callLogDao(): CallLogDao
+    abstract fun voiceCallDao(): VoiceCallDao
 
     companion object {
         @Volatile

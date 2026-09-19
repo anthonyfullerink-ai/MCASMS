@@ -181,6 +181,50 @@ function escapeHtml(str) {
 const VOICE_SETTINGS_FILE = path.join(__dirname, 'data', 'voice_settings.json');
 const VOICE_CALL_LOGS_FILE = path.join(__dirname, 'data', 'voice_call_logs.json');
 const VOICE_SMS_QUEUE_FILE = path.join(__dirname, 'data', 'voice_sms_queue.json');
+const DEVELOPER_CHATS_FILE = path.join(__dirname, 'data', 'developer_support_chats.json');
+const SUPPORT_GATEWAY_SETTINGS_FILE = path.join(__dirname, 'data', 'support_gateway_settings.json');
+
+function getSupportGatewaySettings() {
+  const defaults = {
+    mode: 'AI_SUPPORT', // 'LIVE_SMS' | 'AI_SUPPORT'
+    developerPhone: '+1 (404) 555-0199',
+    developerEmail: 'contactus@offgridmediagroup.com',
+    onlineHoursStart: 8,
+    onlineHoursEnd: 22,
+    updatedAt: new Date().toISOString()
+  };
+  if (fs.existsSync(SUPPORT_GATEWAY_SETTINGS_FILE)) {
+    try {
+      return { ...defaults, ...JSON.parse(fs.readFileSync(SUPPORT_GATEWAY_SETTINGS_FILE, 'utf8')) };
+    } catch (e) {
+      return defaults;
+    }
+  }
+  return defaults;
+}
+
+function saveSupportGatewaySettings(settings) {
+  const dataDir = path.join(__dirname, 'data');
+  if (!fs.existsSync(dataDir)) fs.mkdirSync(dataDir, { recursive: true });
+  fs.writeFileSync(SUPPORT_GATEWAY_SETTINGS_FILE, JSON.stringify(settings, null, 2), 'utf8');
+}
+
+function getDeveloperSupportChats() {
+  if (fs.existsSync(DEVELOPER_CHATS_FILE)) {
+    try {
+      return JSON.parse(fs.readFileSync(DEVELOPER_CHATS_FILE, 'utf8'));
+    } catch (e) {
+      return {};
+    }
+  }
+  return {};
+}
+
+function saveDeveloperSupportChats(chats) {
+  const dataDir = path.join(__dirname, 'data');
+  if (!fs.existsSync(dataDir)) fs.mkdirSync(dataDir, { recursive: true });
+  fs.writeFileSync(DEVELOPER_CHATS_FILE, JSON.stringify(chats, null, 2), 'utf8');
+}
 
 // In-memory sliding window spam throttler: Map<phoneNumber, timestamp[]>
 const callerRateLimitMap = new Map();
@@ -1345,6 +1389,244 @@ const server = http.createServer((req, res) => {
             serviceTrade: settings.serviceTrade
           },
           prompt: newPrompt
+        }));
+      } catch (err) {
+        res.writeHead(400, { 'Content-Type': 'application/json; charset=utf-8', 'Access-Control-Allow-Origin': '*' });
+        res.end(JSON.stringify({ success: false, error: err.message }));
+      }
+    });
+    return;
+  }
+
+  // API: Create Turnkey Voice Pro 14-Day Free Trial Checkout Session
+  if ((relativePath === '/api/create-voice-pro-checkout' || relativePath === '/api/create-voice-pro-checkout/') && req.method === 'POST') {
+    let body = '';
+    req.on('data', chunk => body += chunk);
+    req.on('end', async () => {
+      try {
+        const payload = JSON.parse(body || '{}');
+        const customerEmail = (payload.email || '').trim();
+        const businessName = (payload.businessName || 'Apex Trade Services').trim();
+        const licenseKey = (payload.licenseKey || '').trim();
+
+        const postData = {
+          'mode': 'subscription',
+          'payment_method_types[0]': 'card',
+          'line_items[0][price_data][currency]': 'usd',
+          'line_items[0][price_data][product_data][name]': '24/7 AI Voice Receptionist (Turnkey Managed)',
+          'line_items[0][price_data][product_data][description]': '14-Day Free Trial ($0 today) • Auto-renews at $29/mo for 200 included minutes & carrier forwarding',
+          'line_items[0][price_data][unit_amount]': '2900',
+          'line_items[0][price_data][recurring][interval]': 'month',
+          'subscription_data[trial_period_days]': '14',
+          'subscription_data[metadata][tier]': 'managed_voice_pro',
+          'subscription_data[metadata][business_name]': businessName,
+          'subscription_data[metadata][license_key]': licenseKey,
+          'success_url': 'https://missedcallautosms.com/success.html?session_id={CHECKOUT_SESSION_ID}&tier=managed_voice_pro',
+          'cancel_url': 'https://missedcallautosms.com/#pricing'
+        };
+
+        if (customerEmail) {
+          postData['customer_email'] = customerEmail;
+        }
+
+        const session = await stripeApiRequest('/v1/checkout/sessions', 'POST', postData);
+        console.log(`💳 [STRIPE TRIAL CHECKOUT] Created 14-day trial checkout session: ${session.id} for ${customerEmail || 'prospective user'}`);
+        res.writeHead(200, { 'Content-Type': 'application/json; charset=utf-8', 'Access-Control-Allow-Origin': '*' });
+        res.end(JSON.stringify({
+          success: true,
+          checkoutUrl: session.url,
+          sessionId: session.id,
+          trialPeriodDays: 14
+        }));
+      } catch (err) {
+        console.error('Stripe trial checkout creation error:', err.message);
+        res.writeHead(500, { 'Content-Type': 'application/json; charset=utf-8', 'Access-Control-Allow-Origin': '*' });
+        res.end(JSON.stringify({ success: false, error: err.message }));
+      }
+    });
+    return;
+  }
+
+  // =====================================================================
+  // DEVELOPER WEB-TO-SMS LIVE CHAT GATEWAY (FOR ANTHONY / OWNER SALES)
+  // =====================================================================
+
+  // API: Website Visitor Sends Live Chat Message
+  if ((relativePath === '/api/support/visitor-message' || relativePath === '/api/support/visitor-message/') && req.method === 'POST') {
+    let body = '';
+    req.on('data', chunk => body += chunk);
+    req.on('end', () => {
+      try {
+        const payload = JSON.parse(body || '{}');
+        const visitorId = (payload.visitorId || `visitor_${Date.now()}`).trim();
+        const visitorName = (payload.visitorName || payload.name || 'Website Lead').trim();
+        const visitorEmail = (payload.email || '').trim();
+        const messageText = (payload.message || '').trim();
+
+        if (!messageText) {
+          res.writeHead(400, { 'Content-Type': 'application/json; charset=utf-8', 'Access-Control-Allow-Origin': '*' });
+          res.end(JSON.stringify({ success: false, error: 'Message text is required' }));
+          return;
+        }
+
+        const chats = getDeveloperSupportChats();
+        if (!chats[visitorId]) {
+          chats[visitorId] = {
+            visitorId,
+            visitorName,
+            visitorEmail,
+            createdAt: new Date().toISOString(),
+            messages: []
+          };
+        }
+
+        const msgObj = {
+          id: `msg_${Date.now()}_${Math.floor(Math.random()*1000)}`,
+          sender: 'visitor',
+          senderName: visitorName,
+          text: messageText,
+          timestamp: new Date().toISOString()
+        };
+
+        chats[visitorId].messages.push(msgObj);
+        chats[visitorId].lastActive = msgObj.timestamp;
+        saveDeveloperSupportChats(chats);
+
+        console.log(`💬 [DEVELOPER WEB-TO-SMS] Lead from ${visitorName}: "${messageText}" (Visitor ID: ${visitorId})`);
+
+        res.writeHead(200, { 'Content-Type': 'application/json; charset=utf-8', 'Access-Control-Allow-Origin': '*' });
+        res.end(JSON.stringify({
+          success: true,
+          visitorId,
+          messageId: msgObj.id,
+          sentToDeveloper: true
+        }));
+      } catch (err) {
+        res.writeHead(400, { 'Content-Type': 'application/json; charset=utf-8', 'Access-Control-Allow-Origin': '*' });
+        res.end(JSON.stringify({ success: false, error: err.message }));
+      }
+    });
+    return;
+  }
+
+  // API: Get Visitor Chat Thread (for Website Widget)
+  if ((relativePath === '/api/support/visitor-messages' || relativePath === '/api/support/visitor-messages/') && req.method === 'GET') {
+    const urlObj = new URL(req.url, `http://localhost:${PORT}`);
+    const visitorId = urlObj.searchParams.get('visitorId') || '';
+
+    const chats = getDeveloperSupportChats();
+    const thread = chats[visitorId] || { messages: [] };
+
+    res.writeHead(200, { 'Content-Type': 'application/json; charset=utf-8', 'Access-Control-Allow-Origin': '*' });
+    res.end(JSON.stringify({
+      success: true,
+      visitorId,
+      messages: thread.messages || []
+    }));
+    return;
+  }
+
+  // API: Developer Replies to Visitor
+  if ((relativePath === '/api/support/developer-reply' || relativePath === '/api/support/developer-reply/') && req.method === 'POST') {
+    let body = '';
+    req.on('data', chunk => body += chunk);
+    req.on('end', () => {
+      try {
+        const payload = JSON.parse(body || '{}');
+        const visitorId = (payload.visitorId || '').trim();
+        const replyText = (payload.replyMessage || payload.message || '').trim();
+
+        if (!visitorId || !replyText) {
+          res.writeHead(400, { 'Content-Type': 'application/json; charset=utf-8', 'Access-Control-Allow-Origin': '*' });
+          res.end(JSON.stringify({ success: false, error: 'visitorId and replyMessage are required' }));
+          return;
+        }
+
+        const chats = getDeveloperSupportChats();
+        if (!chats[visitorId]) {
+          chats[visitorId] = {
+            visitorId,
+            visitorName: 'Website Visitor',
+            createdAt: new Date().toISOString(),
+            messages: []
+          };
+        }
+
+        const replyObj = {
+          id: `reply_${Date.now()}_${Math.floor(Math.random()*1000)}`,
+          sender: 'developer',
+          senderName: 'Anthony (Developer)',
+          text: replyText,
+          timestamp: new Date().toISOString()
+        };
+
+        chats[visitorId].messages.push(replyObj);
+        chats[visitorId].lastActive = replyObj.timestamp;
+        saveDeveloperSupportChats(chats);
+
+        console.log(`💬 [DEVELOPER REPLIED TO LEAD] Anthony -> ${visitorId}: "${replyText}"`);
+
+        res.writeHead(200, { 'Content-Type': 'application/json; charset=utf-8', 'Access-Control-Allow-Origin': '*' });
+        res.end(JSON.stringify({
+          success: true,
+          visitorId,
+          replyId: replyObj.id,
+          delivered: true
+        }));
+      } catch (err) {
+        res.writeHead(400, { 'Content-Type': 'application/json; charset=utf-8', 'Access-Control-Allow-Origin': '*' });
+        res.end(JSON.stringify({ success: false, error: err.message }));
+      }
+    });
+    return;
+  }
+
+  // API: List Active Support Chat Threads (for Developer Admin View)
+  if ((relativePath === '/api/support/active-threads' || relativePath === '/api/support/active-threads/') && req.method === 'GET') {
+    const chats = getDeveloperSupportChats();
+    const list = Object.values(chats).sort((a, b) => new Date(b.lastActive || b.createdAt) - new Date(a.lastActive || a.createdAt));
+
+    res.writeHead(200, { 'Content-Type': 'application/json; charset=utf-8', 'Access-Control-Allow-Origin': '*' });
+    res.end(JSON.stringify({
+      success: true,
+      total: list.length,
+      threads: list
+    }));
+    return;
+  }
+
+  // API: Get Website Support Gateway Settings (Live Web-to-SMS vs 24/7 AI Voice/Text Support)
+  if ((relativePath === '/api/support/gateway-settings' || relativePath === '/api/support/gateway-settings/') && req.method === 'GET') {
+    const settings = getSupportGatewaySettings();
+    res.writeHead(200, { 'Content-Type': 'application/json; charset=utf-8', 'Access-Control-Allow-Origin': '*' });
+    res.end(JSON.stringify({
+      success: true,
+      settings
+    }));
+    return;
+  }
+
+  // API: Update Website Support Gateway Settings (Toggle Live Web-to-SMS vs AI Support)
+  if ((relativePath === '/api/support/gateway-settings' || relativePath === '/api/support/gateway-settings/') && req.method === 'POST') {
+    let body = '';
+    req.on('data', chunk => body += chunk);
+    req.on('end', () => {
+      try {
+        const payload = JSON.parse(body || '{}');
+        const current = getSupportGatewaySettings();
+        const updated = {
+          ...current,
+          ...payload,
+          mode: payload.mode === 'LIVE_SMS' ? 'LIVE_SMS' : 'AI_SUPPORT',
+          updatedAt: new Date().toISOString()
+        };
+        saveSupportGatewaySettings(updated);
+        console.log(`🔀 [SUPPORT GATEWAY TOGGLED] Website Live Chat Mode is now: ${updated.mode}`);
+        res.writeHead(200, { 'Content-Type': 'application/json; charset=utf-8', 'Access-Control-Allow-Origin': '*' });
+        res.end(JSON.stringify({
+          success: true,
+          message: `Support gateway mode updated to ${updated.mode}`,
+          settings: updated
         }));
       } catch (err) {
         res.writeHead(400, { 'Content-Type': 'application/json; charset=utf-8', 'Access-Control-Allow-Origin': '*' });

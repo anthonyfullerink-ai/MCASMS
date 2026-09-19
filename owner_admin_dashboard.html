@@ -804,6 +804,59 @@
             </div>
         </div>
 
+        <!-- DEVELOPER LIVE CHAT ROUTING GATEWAY (Anthony's Web-to-SMS vs 24/7 AI Assistant) -->
+        <div style="background: #090B0E; border: 1px solid var(--primary); border-radius: 14px; padding: 20px; margin-bottom: 24px; box-shadow: 0 0 24px rgba(0,230,118,0.12);">
+            <div style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 16px; border-bottom: 1px solid var(--card-border); padding-bottom: 16px; margin-bottom: 16px;">
+                <div>
+                    <div style="display: flex; align-items: center; gap: 10px;">
+                        <span style="font-size: 22px;">💬</span>
+                        <h3 style="margin: 0; color: #FFF; font-size: 18px; font-weight: 900;">Website Live Support Gateway (Anthony's Phone vs 24/7 AI)</h3>
+                        <span id="gatewayStatusBadge" class="badge" style="background: rgba(0,230,118,0.15); color: var(--primary); border: 1px solid var(--primary); font-size: 11px;">SYNCING...</span>
+                    </div>
+                    <div style="font-size: 13px; color: var(--muted); margin-top: 4px;">
+                        Control where live inquiries from <strong style="color: #FFF;">missedcallautosms.com</strong> go. Toggle between direct text messages to your phone (<strong style="color: #00E676;">0 AI Credits Used</strong>) or automatic 24/7 AI Voice & Text support.
+                    </div>
+                </div>
+                <div style="display: flex; align-items: center; gap: 12px;">
+                    <div style="font-size: 12px; font-weight: 700; color: var(--muted);">LIVE CHAT MODE:</div>
+                    <div style="display: inline-flex; background: #161B22; border: 1px solid var(--card-border); border-radius: 30px; padding: 4px; gap: 4px;">
+                        <button id="btnGatewayLiveSms" class="btn-action" style="border: 1px solid transparent; border-radius: 20px; padding: 8px 16px; font-size: 12px; font-weight: 800; cursor: pointer; transition: all 0.2s; background: transparent; color: var(--muted);" onclick="setGatewayMode('LIVE_SMS')">
+                            🟢 Live Web-to-SMS (Anthony)
+                        </button>
+                        <button id="btnGatewayAiSupport" class="btn-action" style="border: 1px solid transparent; border-radius: 20px; padding: 8px 16px; font-size: 12px; font-weight: 800; cursor: pointer; transition: all 0.2s; background: transparent; color: var(--muted);" onclick="setGatewayMode('AI_SUPPORT')">
+                            🤖 24/7 AI Assistant
+                        </button>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Gateway Details & Configuration -->
+            <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 14px; margin-bottom: 16px;">
+                <div>
+                    <label style="font-size: 11px; color: var(--muted); font-weight: 700; text-transform: uppercase;">Anthony's SMS Notification Phone</label>
+                    <input id="inputGatewayPhone" type="text" value="+1 (404) 555-0199" style="width: 100%; background: #161B22; border: 1px solid var(--card-border); border-radius: 8px; color: #FFF; padding: 8px 12px; margin-top: 4px; font-family: monospace;" placeholder="+1 (xxx) xxx-xxxx">
+                </div>
+                <div>
+                    <label style="font-size: 11px; color: var(--muted); font-weight: 700; text-transform: uppercase;">Direct Escalation Email</label>
+                    <input id="inputGatewayEmail" type="text" value="contactus@offgridmediagroup.com" style="width: 100%; background: #161B22; border: 1px solid var(--card-border); border-radius: 8px; color: #FFF; padding: 8px 12px; margin-top: 4px; font-family: monospace;" placeholder="owner@domain.com">
+                </div>
+                <div style="display: flex; align-items: flex-end;">
+                    <button class="btn-action btn-primary-action" style="width: 100%; padding: 10px;" onclick="saveSupportGatewayConfig()">💾 Save Gateway Settings</button>
+                </div>
+            </div>
+
+            <!-- Active Live Visitor Conversations Panel -->
+            <div style="background: #161B22; border: 1px solid var(--card-border); border-radius: 10px; padding: 16px;">
+                <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px;">
+                    <span style="font-size: 12px; font-weight: 800; color: #FFF; text-transform: uppercase; letter-spacing: 0.5px;">Live Website Visitor Conversations (<span id="supportChatThreadCount">0</span>)</span>
+                    <button class="btn-action" style="padding: 4px 10px; font-size: 11px;" onclick="loadSupportChats()">🔄 Refresh Chat Threads</button>
+                </div>
+                <div id="liveSupportChatsContainer" style="max-height: 280px; overflow-y: auto;">
+                    <div style="text-align: center; color: var(--muted); font-size: 12px; padding: 16px;">Loading visitor chats...</div>
+                </div>
+            </div>
+        </div>
+
         <div style="display: grid; grid-template-columns: repeat(4, 1fr); gap: 14px; margin-bottom: 20px;">
             <div style="background: #090B0E; border: 1px solid var(--card-border); border-radius: 10px; padding: 14px;">
                 <div style="font-size: 11px; color: var(--muted); font-weight: 700; text-transform: uppercase;">Total Tickets</div>
@@ -2523,6 +2576,193 @@ Return your response STRICTLY as a raw JSON object (no extra commentary) matchin
         } catch (e) {
             tbody.innerHTML = `<tr><td colspan="6" style="text-align: center; color: var(--danger); padding: 24px;">Failed to load tickets: ${escapeHtml(e.message)}</td></tr>`;
         }
+
+        // Also fetch live support gateway settings and visitor chat threads
+        loadSupportGatewaySettings();
+        loadSupportChats();
+    }
+
+    // =========================================================================
+    // DEVELOPER LIVE CHAT ROUTING GATEWAY (Anthony's Web-to-SMS vs 24/7 AI)
+    // =========================================================================
+    let currentSupportGatewayMode = 'AI_SUPPORT';
+
+    async function loadSupportGatewaySettings() {
+        const badge = document.getElementById('gatewayStatusBadge');
+        const phoneInput = document.getElementById('inputGatewayPhone');
+        const emailInput = document.getElementById('inputGatewayEmail');
+
+        try {
+            const data = await safeFetchJson('/api/support/gateway-settings');
+            const s = data.settings || {};
+            currentSupportGatewayMode = s.mode || 'AI_SUPPORT';
+
+            if (phoneInput && s.developerPhone) phoneInput.value = s.developerPhone;
+            if (emailInput && s.developerEmail) emailInput.value = s.developerEmail;
+
+            updateGatewayUiState(currentSupportGatewayMode);
+        } catch (e) {
+            console.warn('Failed to load gateway settings:', e);
+            if (badge) {
+                badge.innerText = 'OFFLINE / LOCAL';
+                badge.style.background = 'rgba(139, 148, 158, 0.15)';
+                badge.style.color = 'var(--muted)';
+                badge.style.borderColor = 'var(--muted)';
+            }
+        }
+    }
+
+    function updateGatewayUiState(mode) {
+        const badge = document.getElementById('gatewayStatusBadge');
+        const btnSms = document.getElementById('btnGatewayLiveSms');
+        const btnAi = document.getElementById('btnGatewayAiSupport');
+
+        if (mode === 'LIVE_SMS') {
+            if (badge) {
+                badge.innerText = '🟢 LIVE WEB-TO-SMS (ANTHONY)';
+                badge.style.background = 'rgba(0, 230, 118, 0.15)';
+                badge.style.color = 'var(--primary)';
+                badge.style.borderColor = 'var(--primary)';
+            }
+            if (btnSms) {
+                btnSms.style.background = 'var(--primary)';
+                btnSms.style.color = '#000';
+                btnSms.style.borderColor = 'var(--primary)';
+            }
+            if (btnAi) {
+                btnAi.style.background = 'transparent';
+                btnAi.style.color = 'var(--muted)';
+                btnAi.style.borderColor = 'transparent';
+            }
+        } else {
+            if (badge) {
+                badge.innerText = '🤖 24/7 AI ASSISTANT';
+                badge.style.background = 'rgba(56, 189, 248, 0.15)';
+                badge.style.color = '#38BDF8';
+                badge.style.borderColor = '#38BDF8';
+            }
+            if (btnAi) {
+                btnAi.style.background = '#38BDF8';
+                btnAi.style.color = '#000';
+                btnAi.style.borderColor = '#38BDF8';
+            }
+            if (btnSms) {
+                btnSms.style.background = 'transparent';
+                btnSms.style.color = 'var(--muted)';
+                btnSms.style.borderColor = 'transparent';
+            }
+        }
+    }
+
+    async function setGatewayMode(mode) {
+        currentSupportGatewayMode = mode;
+        updateGatewayUiState(mode);
+        try {
+            const phone = document.getElementById('inputGatewayPhone')?.value || '';
+            const email = document.getElementById('inputGatewayEmail')?.value || '';
+            const res = await safeFetchJson('/api/support/gateway-settings', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ mode, developerPhone: phone, developerEmail: email })
+            });
+            if (res.success) {
+                alert(`Website Live Chat Mode switched to: ${mode === 'LIVE_SMS' ? '🟢 Live Web-to-SMS (Direct to Anthony)' : '🤖 24/7 AI Voice & Text Support'}`);
+            }
+        } catch (e) {
+            alert('Failed to update live chat mode: ' + e.message);
+        }
+    }
+
+    async function saveSupportGatewayConfig() {
+        const phone = document.getElementById('inputGatewayPhone')?.value || '';
+        const email = document.getElementById('inputGatewayEmail')?.value || '';
+        try {
+            const res = await safeFetchJson('/api/support/gateway-settings', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                    mode: currentSupportGatewayMode,
+                    developerPhone: phone,
+                    developerEmail: email
+                })
+            });
+            if (res.success) {
+                alert('Support Gateway Settings saved successfully!');
+            }
+        } catch (e) {
+            alert('Error saving gateway settings: ' + e.message);
+        }
+    }
+
+    async function loadSupportChats() {
+        const container = document.getElementById('liveSupportChatsContainer');
+        const countBadge = document.getElementById('supportChatThreadCount');
+        if (!container) return;
+
+        try {
+            const data = await safeFetchJson('/api/support/active-threads');
+            const threads = data.threads || [];
+            if (countBadge) countBadge.innerText = threads.length;
+
+            if (threads.length === 0) {
+                container.innerHTML = '<div style="text-align: center; color: var(--muted); font-size: 13px; padding: 20px;">No live visitor conversations recorded yet. Inquiries from the website chat widget will stream here in real-time.</div>';
+                return;
+            }
+
+            container.innerHTML = threads.map(th => {
+                const lastMsg = th.messages && th.messages.length > 0 ? th.messages[th.messages.length - 1] : null;
+                const timeStr = th.lastActive ? new Date(th.lastActive).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }) : 'Recently';
+                return `
+                    <div style="background: #090B0E; border: 1px solid var(--card-border); border-radius: 8px; padding: 12px; margin-bottom: 10px;">
+                        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 6px;">
+                            <div>
+                                <strong style="color: #FFF; font-size: 13px;">${escapeHtml(th.visitorName || 'Website Visitor')}</strong>
+                                <span style="font-size: 11px; color: var(--muted); margin-left: 8px;">(${escapeHtml(th.visitorId)})</span>
+                                ${th.visitorEmail ? `<span style="font-size: 11px; color: #38BDF8; margin-left: 6px;">${escapeHtml(th.visitorEmail)}</span>` : ''}
+                            </div>
+                            <span style="font-size: 11px; color: var(--muted);">${timeStr}</span>
+                        </div>
+                        ${lastMsg ? `
+                            <div style="font-size: 12px; color: ${lastMsg.sender === 'developer' ? 'var(--primary)' : '#CBD5E0'}; background: #161B22; padding: 8px 12px; border-radius: 6px; margin-bottom: 8px;">
+                                <strong>${lastMsg.sender === 'developer' ? 'Anthony:' : 'Visitor:'}</strong> ${escapeHtml(lastMsg.text)}
+                            </div>
+                        ` : ''}
+                        <div style="display: flex; gap: 8px;">
+                            <input id="replyInput_${th.visitorId}" type="text" placeholder="Type quick SMS / Web reply as Anthony..." style="flex: 1; background: #161B22; border: 1px solid var(--card-border); border-radius: 6px; color: #FFF; padding: 6px 10px; font-size: 12px;">
+                            <button class="btn-action btn-primary-action" style="padding: 6px 14px; font-size: 12px;" onclick="sendDeveloperReply('${escapeHtml(th.visitorId)}')">Send Reply</button>
+                        </div>
+                    </div>
+                `;
+            }).join('');
+        } catch (e) {
+            container.innerHTML = `<div style="text-align: center; color: var(--danger); font-size: 12px; padding: 12px;">Failed to load live chats: ${escapeHtml(e.message)}</div>`;
+        }
+    }
+
+    async function sendDeveloperReply(visitorId) {
+        const input = document.getElementById(`replyInput_${visitorId}`);
+        if (!input) return;
+        const text = input.value.trim();
+        if (!text) {
+            alert('Please type a message before replying.');
+            return;
+        }
+
+        try {
+            const res = await safeFetchJson('/api/support/developer-reply', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ visitorId, replyMessage: text })
+            });
+            if (res.success) {
+                input.value = '';
+                loadSupportChats();
+            }
+        } catch (e) {
+            alert('Failed to send reply: ' + e.message);
+        }
+    }
+
     // =========================================================================
     // TAB 5: AI VOICE RECEPTIONIST & VAPI ENGINE CONTROLS
     // =========================================================================
