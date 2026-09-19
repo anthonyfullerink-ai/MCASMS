@@ -14,8 +14,8 @@ android {
         applicationId = "com.missedcall.autotext"
         minSdk = 26
         targetSdk = 35
-        versionCode = 9
-        versionName = "1.3.0"
+        versionCode = 10
+        versionName = "1.4.0"
 
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
         manifestPlaceholders["appName"] = "Missed Call Auto SMS"
@@ -49,6 +49,9 @@ android {
     }
 
     buildTypes {
+        debug {
+            signingConfig = signingConfigs.getByName("release")
+        }
         release {
             isMinifyEnabled = false
             signingConfig = signingConfigs.getByName("release")
