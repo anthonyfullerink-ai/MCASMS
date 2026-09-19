@@ -36,10 +36,18 @@ jobs:
         uses: actions/setup-node@v4
         with:
           node-version: 20
+          cache: 'npm'
+
+      - name: Install Dependencies
+        run: |
+          npm ci --prefer-offline --no-audit || npm install --production
 
       - name: Run Autonomous Blog Generator
         env:
           GEMINI_API_KEY: ${{ secrets.GEMINI_API_KEY }}
+          META_PAGE_ACCESS_TOKEN: ${{ secrets.META_PAGE_ACCESS_TOKEN }}
+          FB_PAGE_ID: ${{ secrets.FB_PAGE_ID || '1248332278370968' }}
+          IG_USER_ID: ${{ secrets.IG_USER_ID || '17841428781387416' }}
         run: |
           echo "🚀 Initiating Daily Autonomous Blog Generation..."
           node scripts/generate_daily_blog.js
@@ -50,10 +58,10 @@ jobs:
           git config --global user.name "github-actions[bot]"
           git config --global user.email "github-actions[bot]@users.noreply.github.com"
           
-          # Check if any new blog post or sitemap updates were created
-          if [ -n "$(git status --porcelain blog sitemap.xml)" ]; then
+          # Check if any new blog post, image, or sitemap updates were created
+          if [ -n "$(git status --porcelain blog sitemap.xml assets/social)" ]; then
             echo "📝 New blog post detected! Staging and committing..."
-            git add blog/posts.json blog/posts/ sitemap.xml
+            git add blog/posts.json blog/posts/ sitemap.xml assets/social/
             git commit -m "feat(blog): publish autonomous daily AI blog article"
             git push origin main
             echo "✅ Successfully published to production website!"

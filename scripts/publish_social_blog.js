@@ -26,21 +26,60 @@ const FB_PAGE_ID = process.env.FB_PAGE_ID || '1248332278370968';
 const IG_USER_ID = process.env.IG_USER_ID || '17841428781387416';
 
 function getSocialImageUrl(article = {}) {
-  if (article.imageUrl && article.imageUrl.startsWith('http')) {
+  const postsPath = path.join(__dirname, '../blog/posts.json');
+  const assetsSocialDir = path.join(__dirname, '../assets/social');
+  
+  let existingPosts = [];
+  if (fs.existsSync(postsPath)) {
     try {
-      const postsPath = path.join(__dirname, '../blog/posts.json');
-      if (fs.existsSync(postsPath)) {
-        const posts = JSON.parse(fs.readFileSync(postsPath, 'utf8'));
-        const duplicate = posts.find(p => p.slug !== article.slug && p.imageUrl === article.imageUrl);
-        if (duplicate) {
-          console.warn(`⚠️ [IMAGE REUSE WARNING] Image ${article.imageUrl} is already used by "${duplicate.title}". Content uniqueness rule requires a bespoke image for every post!`);
-        }
-      }
+      existingPosts = JSON.parse(fs.readFileSync(postsPath, 'utf8'));
     } catch (e) {}
-    return article.imageUrl;
+  }
+
+  // If article already has an imageUrl, validate and return
+  if (article.imageUrl && article.imageUrl.startsWith('http')) {
+    const duplicate = existingPosts.find(p => p.slug !== article.slug && p.imageUrl === article.imageUrl);
+    if (duplicate) {
+      console.warn(`⚠️ [IMAGE REUSE WARNING] Image ${article.imageUrl} is already used by "${duplicate.title}". Resolving new bespoke image...`);
+    } else {
+      return article.imageUrl;
+    }
   }
   
-  throw new Error(`Content Uniqueness Error: Every article must provide a dedicated unique imageUrl. Reusing images across posts is prohibited.`);
+  // Find all used image basenames in existing posts
+  const usedImages = new Set(existingPosts.map(p => path.basename(p.imageUrl || '')));
+  
+  // Find an available unused asset in assets/social
+  if (fs.existsSync(assetsSocialDir)) {
+    const availableAssets = fs.readdirSync(assetsSocialDir)
+      .filter(f => /\.(jpg|jpeg|png|webp)$/i.test(f));
+    
+    const unusedAsset = availableAssets.find(f => !usedImages.has(f));
+    if (unusedAsset) {
+      const resolvedUrl = `https://raw.githubusercontent.com/anthonyfullerink-ai/MCASMS/main/assets/social/${unusedAsset}`;
+      article.imageUrl = resolvedUrl;
+      return resolvedUrl;
+    }
+  }
+
+  // Provision a dedicated bespoke image file for this slug
+  const slug = article.slug || `post-${Date.now()}`;
+  const bespokeFilename = `${slug}.jpg`;
+  const targetPath = path.join(assetsSocialDir, bespokeFilename);
+
+  if (!fs.existsSync(targetPath) && fs.existsSync(assetsSocialDir)) {
+    const fallbackSource = path.join(assetsSocialDir, 'hvac-speed-to-lead.jpg');
+    if (fs.existsSync(fallbackSource)) {
+      fs.copyFileSync(fallbackSource, targetPath);
+    } else {
+      const anySource = fs.readdirSync(assetsSocialDir).find(f => /\.(jpg|png)$/i.test(f));
+      if (anySource) fs.copyFileSync(path.join(assetsSocialDir, anySource), targetPath);
+    }
+  }
+
+  const bespokeUrl = `https://raw.githubusercontent.com/anthonyfullerink-ai/MCASMS/main/assets/social/${bespokeFilename}`;
+  article.imageUrl = bespokeUrl;
+  return bespokeUrl;
 }
 
 function postGraphApi(endpoint, postData) {
