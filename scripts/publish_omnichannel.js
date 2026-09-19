@@ -114,6 +114,56 @@ async function checkMetaTokenHealth() {
   }
 }
 
+function formatInlineMarkdown(str) {
+  return str
+    .replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>')
+    .replace(/\*(.*?)\*/g, '<em>$1</em>')
+    .replace(/`([^`]+)`/g, '<code>$1</code>');
+}
+
+function markdownToHtml(markdown) {
+  if (!markdown) return '';
+  const text = markdown.replace(/\r\n/g, '\n').trim();
+  const blocks = text.split(/\n{2,}/);
+
+  const htmlBlocks = blocks.map(block => {
+    block = block.trim();
+    if (!block) return '';
+
+    if (block.startsWith('#### ')) {
+      return `<h4>${formatInlineMarkdown(block.slice(5))}</h4>`;
+    }
+    if (block.startsWith('### ')) {
+      return `<h3>${formatInlineMarkdown(block.slice(4))}</h3>`;
+    }
+    if (block.startsWith('## ')) {
+      return `<h2>${formatInlineMarkdown(block.slice(3))}</h2>`;
+    }
+    if (block.startsWith('# ')) {
+      return `<h1>${formatInlineMarkdown(block.slice(2))}</h1>`;
+    }
+
+    if (block.startsWith('>')) {
+      const quoteText = block.split('\n').map(l => l.replace(/^>\s?/, '').trim()).join(' ');
+      return `<blockquote>${formatInlineMarkdown(quoteText)}</blockquote>`;
+    }
+
+    if (/^\d+\.\s+/.test(block)) {
+      const items = block.split('\n').map(l => l.replace(/^\d+\.\s+/, '').trim()).filter(Boolean);
+      return `<ol>\n${items.map(it => `  <li>${formatInlineMarkdown(it)}</li>`).join('\n')}\n</ol>`;
+    }
+
+    if (/^[-*]\s+/.test(block)) {
+      const items = block.split('\n').map(l => l.replace(/^[-*]\s+/, '').trim()).filter(Boolean);
+      return `<ul>\n${items.map(it => `  <li>${formatInlineMarkdown(it)}</li>`).join('\n')}\n</ul>`;
+    }
+
+    return `<p>${formatInlineMarkdown(block.replace(/\n/g, ' '))}</p>`;
+  });
+
+  return htmlBlocks.filter(Boolean).join('\n\n');
+}
+
 // 1. Morning Slot: Publish Blog to Website
 async function publishMorningBlog(bundle, isDryRun) {
   console.log('\n====================================================');
@@ -138,41 +188,82 @@ async function publishMorningBlog(bundle, isDryRun) {
   }
 
   const slug = bundle.blog.slug;
-  if (!posts.some(p => p.slug === slug)) {
-    const newPostEntry = {
-      slug: slug,
-      title: bundle.blog.title,
-      category: bundle.blog.category,
-      date: bundle.date,
-      readTime: bundle.blog.readTime,
-      excerpt: bundle.blog.excerpt,
-      imageUrl: `https://raw.githubusercontent.com/anthonyfullerink-ai/MCASMS/main/assets/social/contractor-speed-rule.jpg`
-    };
+  const dateStr = bundle.date || new Date().toISOString().split('T')[0];
+  const isoDate = bundle.blog.isoDate || `${dateStr}T08:00:00.000Z`;
+  const readTimeStr = typeof bundle.blog.readTime === 'number'
+    ? `${bundle.blog.readTime} min read`
+    : (bundle.blog.readTime || '4 min read').includes('min')
+      ? bundle.blog.readTime
+      : `${bundle.blog.readTime} min read`;
+  const tags = bundle.blog.tags || [bundle.trade || 'Field Services', 'Speed-to-Lead', 'Contractor ROI', 'No Monthly Fees'];
+  const tagsStr = Array.isArray(tags) ? tags.join(', ') : tags;
 
-    posts.unshift(newPostEntry);
-    fs.writeFileSync(postsJsonPath, JSON.stringify(posts, null, 2), 'utf8');
-    console.log(`✔ Updated blog/posts.json (Total articles: ${posts.length})`);
+  const defaultTakeaways = [
+    `When hands are occupied on jobsites or with clients, picking up the phone is physically impossible.`,
+    `Over 78% of customers hire or book with the first business that responds; missed calls default to competitors.`,
+    `Direct-SIM auto-replies operate 100% compliant through your physical phone carrier, immune to A2P 10DLC spam filters.`,
+    `One-time lifetime appliance model saves over $3,500/year compared to recurring SaaS or answering service fees.`
+  ];
+  const takeaways = (bundle.blog.takeaways && bundle.blog.takeaways.length) ? bundle.blog.takeaways : defaultTakeaways;
+  const takeawaysHtml = takeaways.map(t => `<li>${t}</li>`).join('\n');
 
-    // Render HTML page
-    if (fs.existsSync(templatePath)) {
-      const template = fs.readFileSync(templatePath, 'utf8');
-      const rendered = template
-        .replace(/\{\{TITLE\}\}/g, bundle.blog.title)
-        .replace(/\{\{EXCERPT\}\}/g, bundle.blog.excerpt)
-        .replace(/\{\{CATEGORY\}\}/g, bundle.blog.category)
-        .replace(/\{\{DATE\}\}/g, bundle.date)
-        .replace(/\{\{READ_TIME\}\}/g, bundle.blog.readTime)
-        .replace(/\{\{IMAGE_URL\}\}/g, newPostEntry.imageUrl)
-        .replace(/\{\{CONTENT_HTML\}\}/g, bundle.blog.contentMarkdown.replace(/\n\n/g, '<br><br>'));
-      
-      const outPostPath = path.join(__dirname, `../blog/posts/${slug}.html`);
-      fs.mkdirSync(path.dirname(outPostPath), { recursive: true });
-      fs.writeFileSync(outPostPath, rendered, 'utf8');
-      console.log(`✔ Generated static article page: blog/posts/${slug}.html`);
-    }
+  const contentHtml = bundle.blog.contentHtml || markdownToHtml(bundle.blog.contentMarkdown);
+
+  const newPostEntry = {
+    slug: slug,
+    title: bundle.blog.title,
+    category: bundle.blog.category || 'Speed-to-Lead',
+    date: dateStr,
+    isoDate: isoDate,
+    readTime: readTimeStr,
+    tags: tags,
+    excerpt: bundle.blog.excerpt,
+    metaDescription: bundle.blog.excerpt,
+    imageUrl: `https://raw.githubusercontent.com/anthonyfullerink-ai/MCASMS/main/assets/social/contractor-speed-rule.jpg`
+  };
+
+  const existingIdx = posts.findIndex(p => p.slug === slug);
+  if (existingIdx >= 0) {
+    posts[existingIdx] = newPostEntry;
+    console.log(`✔ Updated existing blog post entry in posts.json: ${slug}`);
   } else {
-    console.log(`ℹ️ Article with slug "${slug}" already exists in blog/posts.json`);
+    posts.unshift(newPostEntry);
+    console.log(`✔ Added new blog post entry to posts.json: ${slug}`);
   }
+  fs.writeFileSync(postsJsonPath, JSON.stringify(posts, null, 2), 'utf8');
+
+  // Render HTML page
+  if (fs.existsSync(templatePath)) {
+    const template = fs.readFileSync(templatePath, 'utf8');
+    const rendered = template
+      .replace(/\{\{TITLE\}\}/g, bundle.blog.title)
+      .replace(/\{\{DESCRIPTION\}\}/g, bundle.blog.excerpt || bundle.blog.title)
+      .replace(/\{\{SLUG\}\}/g, slug)
+      .replace(/\{\{ISO_DATE\}\}/g, isoDate)
+      .replace(/\{\{CATEGORY\}\}/g, bundle.blog.category || 'Speed-to-Lead')
+      .replace(/\{\{DATE\}\}/g, dateStr)
+      .replace(/\{\{READ_TIME\}\}/g, readTimeStr)
+      .replace(/\{\{TAGS\}\}/g, tagsStr)
+      .replace(/\{\{IMAGE_URL\}\}/g, newPostEntry.imageUrl)
+      .replace(/\{\{TAKEAWAYS_HTML\}\}/g, takeawaysHtml)
+      .replace(/\{\{CONTENT_HTML\}\}/g, contentHtml);
+
+    const outPostPath = path.join(__dirname, `../blog/posts/${slug}.html`);
+    fs.mkdirSync(path.dirname(outPostPath), { recursive: true });
+    fs.writeFileSync(outPostPath, rendered, 'utf8');
+    console.log(`✔ Generated static article page: blog/posts/${slug}.html`);
+  }
+
+  // Update sitemap.xml
+  let sitemapXml = `<?xml version="1.0" encoding="UTF-8"?>\n<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">\n  <url>\n    <loc>https://missedcallautosms.com/</loc>\n    <changefreq>daily</changefreq>\n    <priority>1.0</priority>\n  </url>\n  <url>\n    <loc>https://missedcallautosms.com/blog</loc>\n    <changefreq>daily</changefreq>\n    <priority>0.9</priority>\n  </url>\n`;
+
+  posts.forEach(p => {
+    sitemapXml += `  <url>\n    <loc>https://missedcallautosms.com/blog/${p.slug}</loc>\n    <lastmod>${(p.isoDate || p.date || new Date().toISOString()).split('T')[0]}</lastmod>\n    <changefreq>monthly</changefreq>\n    <priority>0.8</priority>\n  </url>\n`;
+  });
+
+  sitemapXml += `</urlset>\n`;
+  fs.writeFileSync(sitemapPath, sitemapXml, 'utf8');
+  console.log(`✔ Updated sitemap.xml with ${posts.length + 2} URLs`);
 
   return { status: 'published' };
 }

@@ -214,6 +214,13 @@ function generateOfflineFallback(pillarConfig, trend, dateStr) {
       category: isSell ? "Appliance vs. SaaS" : "Speed-to-Lead",
       readTime: "4 min read",
       excerpt: `Whether you run a ${pillarConfig.trade} or mobile service, you cannot pick up the phone with your hands full. Here is how autonomous direct-SIM appliances protect your revenue.`,
+      tags: [pillarConfig.trade, "Speed-to-Lead", "Small Business Growth", "No Monthly Fees"],
+      takeaways: [
+        `When hands are occupied on jobsites or with clients, picking up the phone is physically impossible.`,
+        `Over 78% of customers hire or book with the first business that responds; missed calls default to competitors.`,
+        `Direct-SIM auto-replies operate 100% compliant through your physical phone carrier, immune to A2P 10DLC spam filters.`,
+        `One-time lifetime appliance model saves over $3,500/year compared to recurring SaaS or answering service fees.`
+      ],
       contentMarkdown: `## The Hands-Busy Reality of ${pillarConfig.trade}\n\nWhen your hands are occupied with tools, clippers, or a client, answering the phone is physically impossible.\n\nYet consumer behavior has fundamentally changed: **over 78% of customers hire or book with the first business that responds.** When an inquiry goes to voicemail, over 65% hang up and immediately dial the next competitor on Google.\n\n### Why Software Subscriptions and Answering Services Fall Short\n\n1. **High Ongoing Costs**: Third-party answering services charge $300-$500/month and lack domain expertise.\n2. **Carrier Spam Blocks**: Traditional SaaS tools route messages through virtual numbers (Twilio, GoHighLevel) requiring complex A2P 10DLC registration that frequently gets flagged.\n3. **Robotic Delays**: Delayed auto-replies look like impersonal corporate blasts.\n\n### The Autonomous Hardware Advantage\n\nMissed Call Auto SMS runs directly on an Android smartphone connected to a physical SIM card. Within 15 seconds of a dropped call, an authentic text message is dispatched directly from your real business number.\n\n**No monthly subscriptions. 100% carrier compliant. Own it for life.**`
     },
     feedPost: {
@@ -282,6 +289,13 @@ Generate a complete, cohesive multi-format daily publishing package in JSON with
     "category": "${pillarConfig.type === '30_SELL' ? 'Appliance vs. SaaS' : 'Speed-to-Lead'}",
     "readTime": "4 min read",
     "excerpt": "Punchy 2-sentence summary",
+    "tags": ["${pillarConfig.trade}", "Speed-to-Lead", "Small Business Growth", "No Monthly Fees"],
+    "takeaways": [
+      "Key actionable takeaway 1",
+      "Key actionable takeaway 2",
+      "Key actionable takeaway 3",
+      "Key actionable takeaway 4"
+    ],
     "contentMarkdown": "In-depth 800-word article explaining the missed call problem in ${pillarConfig.trade} and how 15-second direct SIM auto-text fixes it."
   },
   "feedPost": {
