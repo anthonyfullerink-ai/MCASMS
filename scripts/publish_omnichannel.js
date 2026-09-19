@@ -394,4 +394,15 @@ async function run() {
   console.log('\n🏁 Omnichannel execution finished.');
 }
 
-run().catch(console.error);
+if (require.main === module) {
+  run().catch(console.error);
+}
+
+module.exports = {
+  loadEnv,
+  checkMetaTokenHealth,
+  publishMorningBlog,
+  publishLunchFeedPost,
+  publishEveningReelAndStory,
+  run
+};
