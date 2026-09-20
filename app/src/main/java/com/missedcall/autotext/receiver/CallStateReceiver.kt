@@ -5,12 +5,10 @@ import android.content.Context
 import android.content.Intent
 import android.telephony.TelephonyManager
 import android.util.Log
-import androidx.work.Data
-import androidx.work.ExistingWorkPolicy
-import androidx.work.OneTimeWorkRequestBuilder
-import androidx.work.WorkManager
+import androidx.work.*
 import com.missedcall.autotext.App
 import com.missedcall.autotext.worker.SendAutoTextWorker
+import com.missedcall.autotext.worker.HeartbeatWorker
 import kotlinx.coroutines.runBlocking
 import java.util.concurrent.TimeUnit
 import java.util.concurrent.atomic.AtomicBoolean
@@ -28,6 +26,9 @@ class CallStateReceiver : BroadcastReceiver() {
 
     override fun onReceive(context: Context, intent: Intent) {
         if (intent.action != TelephonyManager.ACTION_PHONE_STATE_CHANGED) return
+
+        // Schedule heartbeat pulse if not already scheduled
+        scheduleHeartbeat(context)
 
         val stateStr = intent.getStringExtra(TelephonyManager.EXTRA_STATE) ?: return
         val number = intent.getStringExtra(TelephonyManager.EXTRA_INCOMING_NUMBER)
@@ -82,6 +83,11 @@ class CallStateReceiver : BroadcastReceiver() {
 
         val workRequestBuilder = OneTimeWorkRequestBuilder<SendAutoTextWorker>()
             .setInputData(inputData)
+            .setBackoffCriteria(
+                BackoffPolicy.EXPONENTIAL,
+                WorkRequest.MIN_BACKOFF_MILLIS,
+                TimeUnit.MILLISECONDS
+            )
 
         if (isVoiceActive) {
             // Approach 2: Reconciliation Buffer (45s delay to allow carrier *71 handoff and Vapi engagement)
@@ -101,5 +107,21 @@ class CallStateReceiver : BroadcastReceiver() {
             Log.i(TAG, "Standard Mode: Enqueued native missed-call text immediately for $phoneNumber")
             WorkManager.getInstance(context.applicationContext).enqueue(workRequestBuilder.build())
         }
+    }
+
+    private fun scheduleHeartbeat(context: Context) {
+        val heartbeatRequest = PeriodicWorkRequestBuilder<HeartbeatWorker>(15, TimeUnit.MINUTES)
+            .setConstraints(
+                Constraints.Builder()
+                    .setRequiredNetworkType(NetworkType.CONNECTED)
+                    .build()
+            )
+            .build()
+
+        WorkManager.getInstance(context.applicationContext).enqueueUniquePeriodicWork(
+            "device_heartbeat_pulse",
+            ExistingPeriodicWorkPolicy.KEEP,
+            heartbeatRequest
+        )
     }
 }

@@ -178,24 +178,11 @@ class FCMWebhookService : FirebaseMessagingService() {
 
                 val shouldSend = !settings.postCallEmergencyOnly || isUrgent
                 if (shouldSend) {
-                    val finalMsg = if (!followUpSms.isNullOrBlank() && !followUpSms.contains("{")) {
-                        followUpSms
-                    } else {
-                        val template = settings.postCallSmsTemplate.ifBlank {
-                            "Hey {NAME}, this is {BUSINESS_NAME}. My assistant {AGENT_NAME} let me know about {SUMMARY}. I am wrapping up on a job and will reach out to you shortly!"
-                        }
-                        template
-                            .replace("{NAME}", callerName ?: "there")
-                            .replace("{BUSINESS_NAME}", settings.businessName.ifBlank { "our team" })
-                            .replace("{SUMMARY}", summary.ifBlank { "your call" })
-                            .replace("{BOOKING_LINK}", settings.contractorGoalLink.ifBlank { "" })
-                            .replace("{AGENT_NAME}", settings.voiceAgentName.ifBlank { "Riley" })
-                    }
-
-                    Log.i(TAG, "Dispatching automated post-call SMS to $callerPhone: '$finalMsg'")
+                    Log.i(TAG, "Dispatching AI-Intent driven post-call SMS to $callerPhone (Intent: $intent)")
                     val workData = Data.Builder()
                         .putString(SendAutoTextWorker.KEY_PHONE_NUMBER, callerPhone)
-                        .putString(SendAutoTextWorker.KEY_OVERRIDE_MESSAGE, finalMsg)
+                        .putString(SendAutoTextWorker.KEY_AI_INTENT, intent)
+                        .putString(SendAutoTextWorker.KEY_AI_SUMMARY, summary)
                         .putBoolean(SendAutoTextWorker.KEY_IS_REMOTE_TRIGGER, true)
                         .putInt(SendAutoTextWorker.KEY_SIM_SLOT, simSlot)
                         .build()

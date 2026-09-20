@@ -32,6 +32,15 @@ class SendAutoTextWorker(
         const val KEY_IS_REMOTE_TRIGGER = "key_is_remote_trigger"
         const val KEY_CALLBACK_URL = "key_callback_url"
         const val KEY_SIM_SLOT = "key_sim_slot"
+        const val MAX_WEBHOOK_RETRIES = 5
+        const val KEY_AI_INTENT = "key_ai_intent"
+        const val KEY_AI_SUMMARY = "key_ai_summary"
+    }
+
+    sealed class WebhookResult {
+        object Success : WebhookResult()
+        object TransientFailure : WebhookResult()
+        object PermanentFailure : WebhookResult()
     }
 
     override suspend fun doWork(): Result {
@@ -129,13 +138,23 @@ class SendAutoTextWorker(
         // 5. Outbound Missed Call Forwarding (e.g. to n8n Webhook)
         if (!isRemoteTrigger && settings.outboundWebhookEnabled && settings.selectedOutboundWebhookUrl.isNotBlank()) {
             Log.i(TAG, "Forwarding missed call from $targetNumber to n8n webhook: ${settings.selectedOutboundWebhookUrl}")
-            sendOutboundMissedCallWebhook(
+            val webhookResult = sendOutboundMissedCallWebhook(
                 webhookUrl = settings.selectedOutboundWebhookUrl,
                 phoneNumber = targetNumber,
                 callerName = contactName ?: "Unknown",
                 simSlot = effectiveSimSlot,
                 deviceId = LicenseManager.getDeviceId(applicationContext)
             )
+            if (webhookResult is WebhookResult.TransientFailure) {
+                if (runAttemptCount < MAX_WEBHOOK_RETRIES) {
+                    Log.w(TAG, "Transient failure sending webhook for $targetNumber. Retrying (Attempt $runAttemptCount)...")
+                    return Result.retry()
+                } else {
+                    Log.e(TAG, "Max retries ($MAX_WEBHOOK_RETRIES) reached for outbound webhook for $targetNumber. Proceeding with SMS.")
+                }
+            } else if (webhookResult is WebhookResult.PermanentFailure) {
+                Log.e(TAG, "Permanent failure sending webhook for $targetNumber. Skipping retry.")
+            }
         }
 
         // 5.5 Check AI Voice Receptionist Forwarding (Approach 2: Event-Driven Reconciliation Buffer)
@@ -178,18 +197,39 @@ class SendAutoTextWorker(
 
         // Determine message body
         val displayName = contactName ?: "there"
+
+        // PRIORITY 1: Explicit Override Message (Direct API trigger)
         val messageBody = if (!overrideMessage.isNullOrBlank()) {
             overrideMessage
         } else {
-            val cleanAct = settings.contractorActivity.ifBlank { "hands full" }
-            val cleanLink = settings.contractorGoalLink.ifBlank { "https://missedcallautosms.com" }
-            val cleanAgent = settings.voiceAgentName.ifBlank { "Riley" }
-            settings.messageTemplate
-                .replace("{business_name}", settings.businessName, ignoreCase = true)
-                .replace("{name}", displayName, ignoreCase = true)
-                .replace("{activity}", cleanAct, ignoreCase = true)
-                .replace("{booking_link}", cleanLink, ignoreCase = true)
-                .replace("{agent_name}", cleanAgent, ignoreCase = true)
+            // PRIORITY 2: AI Intent-Based Template
+            val aiIntent = inputData.getString(KEY_AI_INTENT)
+            val aiSummary = inputData.getString(KEY_AI_SUMMARY)
+
+            if (!aiIntent.isNullOrBlank()) {
+                val category = com.missedcall.autotext.util.IntentMapper.mapIntentToCategory(aiIntent)
+                val clientId = settings.licenseKey // Using license key as clientId for Firestore mapping
+                val template = com.missedcall.autotext.data.repository.TemplateRepository.getTemplate(clientId, category)
+
+                template
+                    .replace("{business_name}", settings.businessName, ignoreCase = true)
+                    .replace("{name}", displayName, ignoreCase = true)
+                    .replace("{activity}", settings.contractorActivity.ifBlank { "hands full" }, ignoreCase = true)
+                    .replace("{booking_link}", settings.contractorGoalLink.ifBlank { "https://missedcallautosms.com" }, ignoreCase = true)
+                    .replace("{agent_name}", settings.voiceAgentName.ifBlank { "Riley" }, ignoreCase = true)
+                    .replace("{ai_summary}", aiSummary ?: "your call", ignoreCase = true)
+            } else {
+                // PRIORITY 3: Standard Canned Response
+                val cleanAct = settings.contractorActivity.ifBlank { "hands full" }
+                val cleanLink = settings.contractorGoalLink.ifBlank { "https://missedcallautosms.com" }
+                val cleanAgent = settings.voiceAgentName.ifBlank { "Riley" }
+                settings.messageTemplate
+                    .replace("{business_name}", settings.businessName, ignoreCase = true)
+                    .replace("{name}", displayName, ignoreCase = true)
+                    .replace("{activity}", cleanAct, ignoreCase = true)
+                    .replace("{booking_link}", cleanLink, ignoreCase = true)
+                    .replace("{agent_name}", cleanAgent, ignoreCase = true)
+            }
         }
 
 
@@ -227,7 +267,15 @@ class SendAutoTextWorker(
             )
 
             if (!callbackUrl.isNullOrBlank()) {
-                sendDeliveryCallback(callbackUrl, "SENT", targetNumber, messageBody, null, effectiveSimSlot)
+                val callbackResult = sendDeliveryCallback(callbackUrl, "SENT", targetNumber, messageBody, null, effectiveSimSlot)
+                if (callbackResult is WebhookResult.TransientFailure) {
+                    if (runAttemptCount < MAX_WEBHOOK_RETRIES) {
+                        Log.w(TAG, "Transient failure sending delivery callback for $targetNumber. Retrying (Attempt $runAttemptCount)...")
+                        return Result.retry()
+                    } else {
+                        Log.e(TAG, "Max retries reached for delivery callback for $targetNumber.")
+                    }
+                }
             }
 
             Result.success()
@@ -243,7 +291,15 @@ class SendAutoTextWorker(
             )
 
             if (!callbackUrl.isNullOrBlank()) {
-                sendDeliveryCallback(callbackUrl, "FAILED", targetNumber, messageBody, e.localizedMessage, effectiveSimSlot)
+                val callbackResult = sendDeliveryCallback(callbackUrl, "FAILED", targetNumber, messageBody, e.localizedMessage, effectiveSimSlot)
+                if (callbackResult is WebhookResult.TransientFailure) {
+                    if (runAttemptCount < MAX_WEBHOOK_RETRIES) {
+                        Log.w(TAG, "Transient failure sending failure callback for $targetNumber. Retrying (Attempt $runAttemptCount)...")
+                        return Result.retry()
+                    } else {
+                        Log.e(TAG, "Max retries reached for failure callback for $targetNumber.")
+                    }
+                }
             }
 
             Result.failure()
@@ -311,40 +367,50 @@ class SendAutoTextWorker(
         message: String?,
         reason: String?,
         simSlot: Int = 0
-    ) {
-        withContext(Dispatchers.IO) {
-            try {
-                Log.d(TAG, "Posting delivery callback to $callbackUrl with status $status (SIM Slot: $simSlot)...")
-                val url = URL(callbackUrl)
-                val conn = url.openConnection() as HttpURLConnection
-                conn.requestMethod = "POST"
-                conn.setRequestProperty("Content-Type", "application/json; utf-8")
-                conn.setRequestProperty("Accept", "application/json")
-                conn.doOutput = true
-                conn.connectTimeout = 8000
-                conn.readTimeout = 8000
+    ): WebhookResult = withContext(Dispatchers.IO) {
+        try {
+            Log.d(TAG, "Posting delivery callback to $callbackUrl with status $status (SIM Slot: $simSlot)...")
+            val url = URL(callbackUrl)
+            val conn = url.openConnection() as HttpURLConnection
+            conn.requestMethod = "POST"
+            conn.setRequestProperty("Content-Type", "application/json; utf-8")
+            conn.setRequestProperty("Accept", "application/json")
+            conn.doOutput = true
+            conn.connectTimeout = 8000
+            conn.readTimeout = 8000
 
-                val payloadMap = mutableMapOf<String, Any>(
-                    "status" to status,
-                    "phone" to phone,
-                    "timestamp" to System.currentTimeMillis()
-                )
-                if (simSlot > 0) payloadMap["sim_slot"] = simSlot
-                if (!message.isNullOrBlank()) payloadMap["message"] = message
-                if (!reason.isNullOrBlank()) payloadMap["reason"] = reason
+            val payloadMap = mutableMapOf<String, Any>(
+                "status" to status,
+                "phone" to phone,
+                "timestamp" to System.currentTimeMillis()
+            )
+            if (simSlot > 0) payloadMap["sim_slot"] = simSlot
+            if (!message.isNullOrBlank()) payloadMap["message"] = message
+            if (!reason.isNullOrBlank()) payloadMap["reason"] = reason
 
-                val jsonBody = Gson().toJson(payloadMap)
-                conn.outputStream.use { os ->
-                    val input = jsonBody.toByteArray(StandardCharsets.UTF_8)
-                    os.write(input, 0, input.size)
-                }
-
-                val responseCode = conn.responseCode
-                Log.i(TAG, "Delivery callback sent to $callbackUrl. HTTP response: $responseCode")
-                conn.disconnect()
-            } catch (e: Exception) {
-                Log.w(TAG, "Failed to send delivery callback to $callbackUrl: ${e.localizedMessage}")
+            val jsonBody = Gson().toJson(payloadMap)
+            conn.outputStream.use { os ->
+                val input = jsonBody.toByteArray(StandardCharsets.UTF_8)
+                os.write(input, 0, input.size)
             }
+
+            val responseCode = conn.responseCode
+            Log.i(TAG, "Delivery callback sent to $callbackUrl. HTTP response: $responseCode")
+            conn.disconnect()
+
+            if (responseCode in 200..299) {
+                WebhookResult.Success
+            } else if (responseCode >= 500) {
+                WebhookResult.TransientFailure
+            } else {
+                WebhookResult.PermanentFailure
+            }
+        } catch (e: java.io.IOException) {
+            Log.w(TAG, "Network error during delivery callback to $callbackUrl: ${e.localizedMessage}")
+            WebhookResult.TransientFailure
+        } catch (e: Exception) {
+            Log.e(TAG, "Unexpected error during delivery callback to $callbackUrl", e)
+            WebhookResult.PermanentFailure
         }
     }
 
@@ -354,7 +420,7 @@ class SendAutoTextWorker(
         callerName: String,
         simSlot: Int,
         deviceId: String
-    ) = withContext(Dispatchers.IO) {
+    ): WebhookResult = withContext(Dispatchers.IO) {
         try {
             val url = URL(webhookUrl)
             val conn = url.openConnection() as HttpURLConnection
@@ -383,8 +449,20 @@ class SendAutoTextWorker(
             val responseCode = conn.responseCode
             Log.i(TAG, "Outbound missed call event forwarded to $webhookUrl. HTTP response: $responseCode")
             conn.disconnect()
+
+            if (responseCode in 200..299) {
+                WebhookResult.Success
+            } else if (responseCode >= 500) {
+                WebhookResult.TransientFailure
+            } else {
+                WebhookResult.PermanentFailure
+            }
+        } catch (e: java.io.IOException) {
+            Log.w(TAG, "Network error forwarding missed call to $webhookUrl: ${e.localizedMessage}")
+            WebhookResult.TransientFailure
         } catch (e: Exception) {
-            Log.w(TAG, "Failed to forward missed call to $webhookUrl: ${e.localizedMessage}")
+            Log.e(TAG, "Unexpected error forwarding missed call to $webhookUrl", e)
+            WebhookResult.PermanentFailure
         }
     }
 }
