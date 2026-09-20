@@ -1,14 +1,29 @@
 const https = require('https');
 const crypto = require('crypto');
+const path = require('path');
 
 const STRIPE_SECRET_KEY = process.env.STRIPE_SECRET_KEY || '';
 const STRIPE_WEBHOOK_SECRET = process.env.STRIPE_WEBHOOK_SECRET || '';
 const RESEND_API_KEY = process.env.RESEND_API_KEY || '';
-const FROM_EMAIL = process.env.FROM_EMAIL || 'Missed Call Auto SMS <onboarding@resend.dev>';
+const FROM_EMAIL = process.env.FROM_EMAIL || 'Missed Call Auto SMS <support@missedcallautosms.com>';
 const OWNER_NOTIFY_EMAIL = process.env.OWNER_EMAIL || 'contactus@offgridmediagroup.com';
 
 const LICENSE_SECRET = "MCAT_SECRET_PROD_KEY_2026";
 const KEY_PREFIX = "MCAS-";
+
+// Lazy Firestore loader — gracefully skips if env keys are missing
+let _firestore = null;
+function getFirestore() {
+  if (_firestore) return _firestore;
+  try {
+    _firestore = require('../../lib/firestore');
+  } catch (e) {
+    console.warn('[stripe-webhook] Firestore module unavailable:', e.message);
+  }
+  return _firestore;
+}
+
+
 
 function generateKey(customerName, daysValid = 0, isPro = false) {
   const expiryTimestamp = daysValid === 0 ? 0 : Math.floor(Date.now() / 1000) + (daysValid * 86400);
@@ -86,6 +101,19 @@ function generateEmailHtml(customerName, licenseKey, apkDownloadUrl, amountPaid,
         </div>
         ` : ''}
 
+        ${isPro ? `
+        <!-- Optional Voice Add-On Upsell for Pro-Only Users -->
+        <div style="background: rgba(0, 230, 118, 0.04); border: 1px dashed rgba(0, 230, 118, 0.3); border-radius: 12px; padding: 18px; margin-bottom: 24px; text-align: center;">
+            <div style="font-size: 14px; font-weight: 800; color: #00E676; margin-bottom: 4px;">🎙️ Need 24/7 AI Voice Answering?</div>
+            <div style="font-size: 12px; color: #CBD5E0; margin-bottom: 12px; line-height: 1.4;">
+                As a Pro Automation licensee, your hardware is pre-cleared for our <strong>Turnkey 24/7 AI Voice Receptionist</strong> add-on ($29/mo with 14-day free trial). Never miss a call when you can't pick up.
+            </div>
+            <a href="https://missedcallautosms.com/sales_landing_page.html#voice-details" style="display: inline-block; background: rgba(0, 230, 118, 0.15); color: #00E676; border: 1px solid #00E676; font-weight: 700; font-size: 12px; padding: 8px 18px; border-radius: 20px; text-decoration: none;">
+                Learn More & Activate Voice Add-on →
+            </a>
+        </div>
+        ` : ''}
+
         <!-- 3-Step Quick Start -->
         <div style="border-top: 1px solid #222836; padding-top: 20px; margin-bottom: 24px;">
             <h3 style="color: #FFF; font-size: 16px; margin: 0 0 12px 0;">🚀 3-Step Instant Activation</h3>
@@ -102,6 +130,89 @@ function generateEmailHtml(customerName, licenseKey, apkDownloadUrl, amountPaid,
 
         <div style="border-top: 1px solid #222836; padding-top: 18px; text-align: center; font-size: 12px; color: #718096;">
             Need help or device transfer? Visit <a href="https://missedcallautosms.com/license_dashboard.html" style="color: ${themeTextColor};">Customer License Portal</a> or reply directly to this email.
+        </div>
+    </div>
+</body>
+</html>`;
+}
+
+function generateProPlusVoiceEmailHtml(customerName, licenseKey, apkDownloadUrl, forwardingNumber, carrierCode, carrierDeactivateCode) {
+  return `<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="utf-8">
+    <title>Your Missed Call Auto SMS Pro + 24/7 AI Voice Receptionist Setup Guide</title>
+</head>
+<body style="font-family: -apple-system, BlinkMacSystemFont, Arial, sans-serif; background-color: #090B0E; color: #FFFFFF; margin: 0; padding: 24px;">
+    <div style="max-width: 620px; margin: 0 auto; background: #131720; border: 1px solid #222836; border-radius: 16px; padding: 32px;">
+        <div style="text-align: center; margin-bottom: 24px;">
+            <div style="font-size: 44px; margin-bottom: 8px;">⚡🎙️</div>
+            <h1 style="color: #A855F7; margin: 0; font-size: 24px; font-weight: 900;">Missed Call Auto SMS</h1>
+            <div style="display: inline-block; margin-top: 6px; padding: 4px 14px; border-radius: 20px; font-size: 11px; font-weight: 800; background: rgba(168,85,247,0.15); color: #C084FC; border: 1px solid rgba(168,85,247,0.35);">
+                PRO AUTOMATION + 24/7 AI VOICE BUNDLE
+            </div>
+        </div>
+
+        <div style="background: #1A202C; border-left: 4px solid #A855F7; padding: 16px; border-radius: 8px; margin-bottom: 24px;">
+            <h2 style="margin: 0 0 6px 0; font-size: 18px; color: #FFF;">Welcome, ${customerName}!</h2>
+            <p style="margin: 0; color: #CBD5E0; font-size: 14px; line-height: 1.5;">
+                Your <strong>Pro Automation + 24/7 AI Voice Receptionist</strong> bundle is ready. Your lifetime Pro app license and dedicated inbound AI forwarding line are provisioned below.
+            </p>
+        </div>
+
+        <!-- License Key Box -->
+        <div style="background: #090B0E; border: 1px dashed #A855F7; border-radius: 12px; padding: 20px; text-align: center; margin-bottom: 20px;">
+            <div style="font-size: 12px; color: #949BAE; text-transform: uppercase; font-weight: bold; margin-bottom: 6px;">Your Pro Hardware License Key</div>
+            <div style="font-family: monospace; font-size: 22px; color: #C084FC; font-weight: bold; word-break: break-all; letter-spacing: 1px; margin-bottom: 6px;">
+                ${licenseKey}
+            </div>
+            <div style="font-size: 12px; color: #A0AEC0;">Lifetime Pro Automation • Dual SIM Routing • Unlimited Webhooks</div>
+        </div>
+
+        <!-- Assigned AI Line Box -->
+        <div style="background: #090B0E; border: 1px dashed #00E676; border-radius: 12px; padding: 20px; text-align: center; margin-bottom: 24px;">
+            <div style="font-size: 12px; color: #949BAE; text-transform: uppercase; font-weight: bold; margin-bottom: 6px;">Your Dedicated Inbound AI Line</div>
+            <div style="font-family: monospace; font-size: 24px; color: #38BDF8; font-weight: bold; letter-spacing: 1px; margin-bottom: 6px;">
+                ${forwardingNumber}
+            </div>
+            <div style="font-size: 12px; color: #00E676;">🟢 Status: ACTIVE • 200 Monthly Minutes Included</div>
+        </div>
+
+        <!-- Carrier Forwarding Step -->
+        <div style="background: rgba(0, 230, 118, 0.06); border: 1px solid rgba(0, 230, 118, 0.3); border-radius: 12px; padding: 20px; margin-bottom: 24px;">
+            <h3 style="color: #FFF; font-size: 16px; margin: 0 0 10px 0;">📲 1-Tap Carrier Forwarding (*71)</h3>
+            <p style="color: #CBD5E0; font-size: 13px; line-height: 1.5; margin: 0 0 12px 0;">
+                Open your phone dialer, call this code once, and your carrier will automatically route unanswered calls to your AI receptionist:
+            </p>
+            <div style="background: #090B0E; padding: 12px; border-radius: 8px; border: 1px solid #222836; text-align: center; font-family: monospace; font-size: 20px; color: #00E676; font-weight: bold; margin-bottom: 12px;">
+                ${carrierCode}
+            </div>
+            <p style="color: #949BAE; font-size: 12px; margin: 0; line-height: 1.4;">
+                💡 Unconditional ringing (15s) before transfer. Revert anytime by dialing <code>${carrierDeactivateCode || '*73'}</code>.
+            </p>
+        </div>
+
+        <!-- Pro APK Download -->
+        <div style="text-align: center; margin-bottom: 24px;">
+            <a href="${apkDownloadUrl}" style="display: inline-block; background: #A855F7; color: #FFFFFF; font-weight: 800; font-size: 16px; padding: 14px 36px; border-radius: 30px; text-decoration: none; box-shadow: 0 6px 20px rgba(168,85,247,0.35);">
+                📥 Download Pro Android App (.APK)
+            </a>
+            <div style="font-size: 12px; color: #949BAE; margin-top: 8px;">Direct Link: <a href="${apkDownloadUrl}" style="color:#C084FC;">${apkDownloadUrl}</a></div>
+        </div>
+
+        <!-- n8n Workflow Template Bonus for Pro -->
+        <div style="background: linear-gradient(180deg, #181126 0%, #0D1016 100%); border: 1px solid #7928CA; border-radius: 12px; padding: 18px; text-align: center; margin-bottom: 24px;">
+            <div style="font-size: 14px; font-weight: 800; color: #D8B4FE; margin-bottom: 4px;">⚡ Ready-to-Use n8n Workflow Included</div>
+            <div style="font-size: 12px; color: #CBD5E0; margin-bottom: 12px; line-height: 1.4;">
+                Connect incoming leads to your carrier SIM with two-way webhook delivery callbacks.
+            </div>
+            <a href="https://missedcallautosms.com/MissedCallAutoSMS_n8n_Workflow.json" download style="display: inline-block; background: #7928CA; color: #FFFFFF; font-weight: 700; font-size: 13px; padding: 10px 22px; border-radius: 20px; text-decoration: none; box-shadow: 0 4px 14px rgba(121,40,202,0.4);">
+                📦 Download n8n Workflow Template (.json)
+            </a>
+        </div>
+
+        <div style="border-top: 1px solid #222836; padding-top: 18px; text-align: center; font-size: 12px; color: #718096;">
+            Need help? Reply directly to this email or visit our <a href="https://missedcallautosms.com/owner_admin_dashboard.html" style="color: #A855F7;">Owner Portal</a>.
         </div>
     </div>
 </body>
@@ -253,7 +364,10 @@ function generateTrialEmailHtml(customerName, licenseKey, apkDownloadUrl) {
     </div>
 </body>
 </html>`;
+}
+
 function generateVoiceProEmailHtml(customerName, licenseKey, forwardingNumber, carrierCode, carrierDeactivateCode) {
+
   return `<!DOCTYPE html>
 <html>
 <head>
@@ -454,16 +568,7 @@ exports.handler = async (event) => {
     const customerDetails = session.customer_details || {};
     const customerEmail = customerDetails.email || session.customer_email;
     const customerName = customerDetails.name || 'Valued Customer';
-    // Managed AI Voice Receptionist ($29.00/mo Recurring Subscription / 14-Day Free Trial)
-    const isVoicePro = (session.metadata && session.metadata.tier === 'managed_voice_pro') ||
-                       (session.metadata && session.metadata.service === 'voice_receptionist') ||
-                       (amountTotal === 2900) ||
-                       (session.subscription && amountTotal === 2900);
-
-    const isTrial = !isVoicePro && (
-                    (amountTotal === 0) ||
-                    (session.subscription && amountTotal === 0) ||
-                    (session.metadata && session.metadata.tier === 'standard_trial'));
+    const amountTotal = (session.amount_total !== undefined && session.amount_total !== null) ? session.amount_total : 0;
     const amountPaid = (amountTotal / 100).toFixed(2);
 
     if (!customerEmail) {
@@ -471,30 +576,146 @@ exports.handler = async (event) => {
       return { statusCode: 200, body: JSON.stringify({ received: true, warning: 'No email found' }) };
     }
 
-    // Determine Tier: Agency 10-Pack ($799+) vs Agency 5-Pack ($399+) vs Pro ($149.99+) vs Standard ($49.99) vs Free Trial ($0.00)
-    const isAgency10 = !isTrial && !isVoicePro && ((amountTotal >= 70000) || (session.metadata && session.metadata.tier === 'agency_10'));
-    const isAgency5 = !isTrial && !isVoicePro && !isAgency10 && ((amountTotal >= 30000 && amountTotal < 70000) || (session.metadata && session.metadata.tier === 'agency_5'));
+    // 1. Pro + Voice Bundle ($178.99 or $149.99 upfront with 14-day free trial for $29/mo)
+    const isBundle = (session.metadata && (session.metadata.tier === 'pro_plus_voice' || session.metadata.include_voice === 'true')) ||
+                     (amountTotal === 17899);
+
+    // 2. Standalone Managed AI Voice Receptionist ($29.00/mo) - ONLY Voice
+    const isVoicePro = !isBundle && (
+      (session.metadata && (session.metadata.tier === 'managed_voice_pro' || session.metadata.service === 'voice_receptionist')) ||
+      (amountTotal === 2900 && (!session.metadata || !session.metadata.tier || !session.metadata.tier.includes('pro')))
+    );
+
+    // 3. 3-Day Free Trial ($0.00)
+    const isTrial = !isVoicePro && !isBundle && (
+      (amountTotal === 0 && (!session.metadata || session.metadata.tier !== 'pro_automation')) ||
+      (session.metadata && session.metadata.tier === 'standard_trial')
+    );
+
+    // 4. Agency Fleet Bundles ($399+ or $799+)
+    const isAgency10 = !isTrial && !isVoicePro && !isBundle && ((amountTotal >= 70000) || (session.metadata && session.metadata.tier === 'agency_10'));
+    const isAgency5 = !isTrial && !isVoicePro && !isBundle && !isAgency10 && ((amountTotal >= 30000 && amountTotal < 70000) || (session.metadata && session.metadata.tier === 'agency_5'));
     const isAgency = isAgency5 || isAgency10;
 
-    const isPro = !isTrial && !isVoicePro && !isAgency && (amountTotal >= 10000 ||
-                  (session.metadata && (session.metadata.tier === 'pro' || session.metadata.tier === 'pro_automation')) ||
-                  (session.client_reference_id && session.client_reference_id.toLowerCase().includes('pro')));
+    // 5. Pro Automation ONLY ($149.99) - NO VOICE RECEPTIONIST / NO VAPI ACCOUNT NEEDED
+    const isPro = !isTrial && !isVoicePro && !isBundle && !isAgency && (
+      (amountTotal >= 10000) ||
+      (session.metadata && (session.metadata.tier === 'pro' || session.metadata.tier === 'pro_automation')) ||
+      (session.client_reference_id && session.client_reference_id.toLowerCase().includes('pro'))
+    );
 
     const host = (event.headers && event.headers.host) || 'missedcallautosms.com';
-    const apkFileName = isPro ? 'MissedCallAutoSMS-Pro.apk' : 'MissedCallAutoSMS.apk';
+    const apkFileName = (isPro || isBundle) ? 'MissedCallAutoSMS-Pro.apk' : 'MissedCallAutoSMS.apk';
     const apkDownloadUrl = `https://${host}/${apkFileName}`;
 
+    // === BRANCH 1: PRO + VOICE BUNDLE ($149.99 upfront + $29/mo 14-day trial) ===
+    if (isBundle) {
+      // Real Live Vapi AI Receptionist Line
+      const forwardingNumber = process.env.VAPI_PRIMARY_PHONE_NUMBER || '+1 (732) 660-9121';
+      const cleanDigits = forwardingNumber.replace(/\D/g, '');
+      const carrierCode = `*71${cleanDigits.slice(-10)}`;
+      const carrierDeactivateCode = '*73';
+
+      const licenseKey = generateKey(customerName, 0, true);
+
+
+      // Persist to Firestore (replaces local .voice_pro_bindings.json which doesn't persist on Netlify)
+      const db = getFirestore();
+      if (db) {
+        try {
+          await db.saveVoiceBinding(licenseKey, {
+            subscriptionId: session.subscription || session.id,
+            customerId: session.customer || null,
+            stripeCustomerId: session.customer || null,
+            customerEmail,
+            customerName,
+            status: 'ACTIVE',
+            tier: 'PRO_PLUS_VOICE',
+            forwardingNumber,
+            carrierCode,
+            carrierDeactivateCode,
+            quotaMinutes: 200,
+            minutesUsed: 0,
+            boundAt: new Date().toISOString()
+          });
+
+          await db.saveMasterLicense({
+            key: licenseKey,
+            customer: customerName,
+            email: customerEmail,
+            tier: 'PRO',
+            type: 'PAID',
+            price: '178.99',
+            voiceActive: true,
+            voiceNumber: forwardingNumber,
+            carrierCode,
+            status: 'ACTIVE',
+            subscriptionId: session.subscription || session.id,
+            date: new Date().toISOString()
+          });
+        } catch (dbErr) {
+          console.error('[stripe-webhook] Firestore write failed (bundle):', dbErr.message);
+        }
+      } else {
+        console.warn('[stripe-webhook] Firestore unavailable — add FIREBASE_SERVICE_ACCOUNT_KEY to Netlify env.');
+      }
+
+
+
+      console.log(`⚡🎙️ [PRO + VOICE BUNDLE ACTIVATED] Line: ${forwardingNumber}, Pro Key: ${licenseKey} for ${customerEmail}`);
+
+      if (RESEND_API_KEY) {
+        const emailSubject = `⚡🎙️ Your Missed Call Auto SMS Pro + 24/7 AI Voice Receptionist Setup Guide`;
+        const emailHtml = generateProPlusVoiceEmailHtml(customerName, licenseKey, apkDownloadUrl, forwardingNumber, carrierCode, carrierDeactivateCode);
+
+        try {
+          const sendResult = await sendEmail(RESEND_API_KEY, customerEmail, emailSubject, emailHtml);
+          console.log(`📧 [BUNDLE EMAIL DELIVERED] Dispatched to ${customerEmail} (ID: ${sendResult.id})`);
+
+          if (OWNER_NOTIFY_EMAIL && OWNER_NOTIFY_EMAIL !== customerEmail) {
+            sendEmail(
+              RESEND_API_KEY,
+              OWNER_NOTIFY_EMAIL,
+              `⚡🎙️ New Pro + Voice Bundle Purchase: ${customerName}`,
+              `<p>New Pro + Voice Bundle subscriber active!</p>
+               <p><strong>Customer:</strong> ${customerName} (${customerEmail})</p>
+               <p><strong>Pro Key:</strong> <code>${licenseKey}</code></p>
+               <p><strong>Assigned Line:</strong> ${forwardingNumber}</p>
+               <p><strong>Carrier Dial Code:</strong> <code>${carrierCode}</code></p>
+               <p><strong>Subscription ID:</strong> <code>${session.subscription || session.id}</code></p>`
+            ).catch(() => {});
+          }
+        } catch (emailErr) {
+          console.error(`❌ [BUNDLE EMAIL FAILED] for ${customerEmail}:`, emailErr.message);
+        }
+      }
+
+      return {
+        statusCode: 200,
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          received: true,
+          tier: 'pro_plus_voice',
+          forwardingNumber,
+          carrierCode,
+          carrierDeactivateCode,
+          licenseKey: licenseKey,
+          customerEmail: customerEmail,
+          subscriptionId: session.subscription || session.id
+        })
+      };
+    }
+
+    // === BRANCH 2: MANAGED VOICE PRO STANDALONE ($29/mo) ===
     if (isVoicePro) {
-      const areaCodeMatch = (customerDetails.phone || '').match(/\+?1?\(?([2-9][0-9]{2})\)?/);
-      const areaCode = areaCodeMatch ? areaCodeMatch[1] : '404';
-      const randomNum = Math.floor(1000 + Math.random() * 9000);
-      const randomPrefix = Math.floor(200 + Math.random() * 700);
-      const forwardingNumber = `+1 (${areaCode}) ${randomPrefix}-${randomNum}`;
-      const cleanDigits = `1${areaCode}${randomPrefix}${randomNum}`;
+      // Real Live Vapi AI Receptionist Line
+      const forwardingNumber = process.env.VAPI_PRIMARY_PHONE_NUMBER || '+1 (732) 660-9121';
+      const cleanDigits = forwardingNumber.replace(/\D/g, '');
       const carrierCode = `*71${cleanDigits.slice(-10)}`;
       const carrierDeactivateCode = '*73';
 
       // Enforce binding to user's existing Pro license key:
+
       const candidateKey = (session.client_reference_id ||
                            (session.metadata && session.metadata.license_key) ||
                            (session.subscription_data && session.subscription_data.metadata && session.subscription_data.metadata.license_key) || '').trim().toUpperCase();
@@ -505,31 +726,50 @@ exports.handler = async (event) => {
         candidateKey.includes('PRO-DEMO')
       );
 
-      // Bind to user's existing Pro license key, or generate a Pro key if purchased in a bundle
+      // Bind to user's existing Pro license key, or generate a Pro key if none provided
       const voiceLicenseKey = isProCandidate ? candidateKey : generateKey(customerName, 0, true);
 
-      // Persist binding to prevent decoupling during device resets
-      try {
-        const voiceBindingsPath = path.join(__dirname, '../../.voice_pro_bindings.json');
-        let bindings = {};
-        if (fs.existsSync(voiceBindingsPath)) {
-          bindings = JSON.parse(fs.readFileSync(voiceBindingsPath, 'utf8'));
+      // Persist binding to Firestore (replaces local JSON file that doesn't persist on Netlify)
+      const db2 = getFirestore();
+      if (db2) {
+        try {
+          await db2.saveVoiceBinding(voiceLicenseKey, {
+            subscriptionId: session.subscription || session.id,
+            customerId: session.customer || null,
+            stripeCustomerId: session.customer || null,
+            customerEmail,
+            customerName,
+            status: 'ACTIVE',
+            tier: 'VOICE_PRO_STANDALONE',
+            forwardingNumber,
+            carrierCode,
+            carrierDeactivateCode,
+            quotaMinutes: 200,
+            minutesUsed: 0,
+            boundAt: new Date().toISOString()
+          });
+
+          await db2.saveMasterLicense({
+            key: voiceLicenseKey,
+            customer: customerName,
+            email: customerEmail,
+            tier: 'PRO',
+            type: 'SUBSCRIPTION',
+            price: '29.00/mo',
+            voiceActive: true,
+            voiceNumber: forwardingNumber,
+            carrierCode,
+            status: 'ACTIVE',
+            subscriptionId: session.subscription || session.id,
+            date: new Date().toISOString()
+          });
+        } catch (dbErr) {
+          console.error('[stripe-webhook] Firestore write failed (voice-pro):', dbErr.message);
         }
-        bindings[voiceLicenseKey] = {
-          licenseKey: voiceLicenseKey,
-          subscriptionId: session.subscription || session.id,
-          customerEmail: customerEmail,
-          customerName: customerName,
-          status: 'ACTIVE',
-          forwardingNumber: forwardingNumber,
-          carrierCode: carrierCode,
-          carrierDeactivateCode: carrierDeactivateCode,
-          boundAt: new Date().toISOString()
-        };
-        fs.writeFileSync(voiceBindingsPath, JSON.stringify(bindings, null, 2), 'utf8');
-      } catch (cacheErr) {
-        console.warn('Could not update voice pro bindings cache:', cacheErr.message);
+      } else {
+        console.warn('[stripe-webhook] Firestore unavailable — add FIREBASE_SERVICE_ACCOUNT_KEY to Netlify env.');
       }
+
 
       console.log(`🎙️ [MANAGED VOICE PRO BOUND TO PRO KEY] Line: ${forwardingNumber}, Pro Key: ${voiceLicenseKey} for ${customerEmail}`);
 
@@ -807,47 +1047,111 @@ exports.handler = async (event) => {
     return { statusCode: 200, body: JSON.stringify({ received: true, note: 'Non-conversion invoice recorded' }) };
   }
 
-  // Handle Subscription Deletion / Cancellation (e.g. Turnkey Voice Pro $29/mo or Free Trial)
+  // ── Item 5: Subscription Cancellation / Voice Deactivation ────────────────
   if (eventObj.type === 'customer.subscription.deleted') {
     const subscription = eventObj.data.object;
     const subId = subscription.id;
     const customerId = subscription.customer;
-    console.log(`🛑 [SUBSCRIPTION CANCELLED] Subscription ${subId} for customer ${customerId} marked deleted.`);
+    const cancelledAt = new Date().toISOString();
 
-    // If local voice_settings.json exists, update mode to OFF
-    try {
-      const fs = require('fs');
-      const path = require('path');
-      const voicePath = path.join(__dirname, '..', '..', 'voice_settings.json');
-      if (fs.existsSync(voicePath)) {
-        const settings = JSON.parse(fs.readFileSync(voicePath, 'utf8'));
-        settings.mode = 'OFF';
-        settings.lastDeactivated = new Date().toISOString();
-        fs.writeFileSync(voicePath, JSON.stringify(settings, null, 2), 'utf8');
-        console.log(`🎙️ [VOICE SETTINGS SYNC] Voice receptionist mode set to OFF following Stripe cancellation.`);
+    console.log(`🛑 [SUBSCRIPTION CANCELLED] Subscription ${subId} for customer ${customerId}`);
+
+    let deactivatedKey = null;
+    let customerEmail = null;
+    let customerName = null;
+    let forwardingNumber = null;
+
+    // 1. Deactivate in Firestore — find the binding by subscription ID and flip voiceActive=false
+    const dbCancel = getFirestore();
+    if (dbCancel) {
+      try {
+        deactivatedKey = await dbCancel.deactivateVoiceSubscriber(subId);
+
+        // 2. Update global voice_settings to OFF
+        await dbCancel.saveVoiceSettings({
+          mode: 'OFF',
+          status: 'CANCELLED',
+          lastDeactivated: cancelledAt
+        });
+
+        // 3. Try to fetch subscriber details for the notification email
+        if (deactivatedKey) {
+          const binding = await dbCancel.getVoiceBinding(deactivatedKey);
+          if (binding) {
+            customerEmail = binding.customerEmail;
+            customerName = binding.customerName;
+            forwardingNumber = binding.forwardingNumber;
+          }
+        }
+
+        console.log(`🎙️ [VOICE DEACTIVATED] Firestore binding cancelled for sub: ${subId}, key: ${deactivatedKey || 'not found'}`);
+      } catch (dbErr) {
+        console.error('[stripe-webhook] Firestore cancellation error:', dbErr.message);
       }
-    } catch (err) {
-      console.warn('Could not update voice_settings on subscription cancel:', err.message);
+    } else {
+      console.warn('[stripe-webhook] Firestore unavailable — cancellation not reflected in database.');
     }
 
+    // 4. Send deactivation email to customer (with *73 instructions to un-forward their line)
+    if (RESEND_API_KEY && customerEmail) {
+      const deactivationHtml = `<!DOCTYPE html>
+<html>
+<head><meta charset="utf-8"><title>Voice Receptionist Deactivated</title></head>
+<body style="font-family: -apple-system, BlinkMacSystemFont, Arial, sans-serif; background:#090B0E; color:#FFF; padding:24px; margin:0;">
+  <div style="max-width:600px; margin:0 auto; background:#131720; border:1px solid #222836; border-radius:16px; padding:32px;">
+    <div style="text-align:center; margin-bottom:24px;">
+      <div style="font-size:44px;">🎙️</div>
+      <h1 style="color:#94A3B8; margin:8px 0; font-size:22px;">AI Voice Receptionist Deactivated</h1>
+    </div>
+    <p>Hi ${customerName || 'there'},</p>
+    <p>Your <strong>Managed AI Voice Receptionist</strong> subscription has been cancelled and your dedicated line <strong>${forwardingNumber || 'assigned number'}</strong> has been released.</p>
+    <div style="background:#1E293B; border-radius:8px; padding:16px; margin:20px 0;">
+      <p style="margin:0 0 8px; font-weight:bold; color:#F59E0B;">⚠️ Action Required: Remove Call Forwarding</p>
+      <p style="margin:0;">To stop forwarding your business calls, dial the following code from your phone:</p>
+      <div style="background:#090B0E; border-radius:6px; padding:12px; margin:12px 0; text-align:center;">
+        <span style="font-family:monospace; font-size:28px; font-weight:bold; color:#00E676; letter-spacing:4px;">*73</span>
+      </div>
+      <p style="margin:0; font-size:13px; color:#94A3B8;">Dial <strong>*73</strong> from your business phone to deactivate unconditional call forwarding. This ensures your calls ring normally again.</p>
+    </div>
+    <p>If you'd like to reactivate your AI Voice Receptionist in the future, visit <a href="https://missedcallautosms.com" style="color:#00E676;">missedcallautosms.com</a>.</p>
+    <p style="color:#64748B; font-size:12px; margin-top:24px;">Subscription ID: ${subId}</p>
+  </div>
+</body>
+</html>`;
+
+      sendEmail(RESEND_API_KEY, customerEmail, '🎙️ Your AI Voice Receptionist Has Been Deactivated', deactivationHtml)
+        .then(() => console.log(`📧 [DEACTIVATION EMAIL SENT] to ${customerEmail}`))
+        .catch(e => console.warn('[stripe-webhook] Deactivation email failed:', e.message));
+    }
+
+    // 5. Notify owner
     if (RESEND_API_KEY && OWNER_NOTIFY_EMAIL) {
       sendEmail(
         RESEND_API_KEY,
         OWNER_NOTIFY_EMAIL,
-        `ℹ️ Subscription Cancelled in Stripe: ${subId}`,
-        `<p>A customer subscription has been cancelled/terminated in Stripe.</p>
+        `🛑 Voice Subscription Cancelled: ${customerName || customerId}`,
+        `<p>A Voice Pro subscription has been cancelled in Stripe.</p>
+         <p><strong>Customer:</strong> ${customerName || 'Unknown'} (${customerEmail || 'no email'})</p>
          <p><strong>Subscription ID:</strong> <code>${subId}</code></p>
-         <p><strong>Customer ID:</strong> <code>${customerId}</code></p>
-         <p><strong>Status:</strong> Cancelled / Deleted</p>`
+         <p><strong>Deactivated Key:</strong> <code>${deactivatedKey || 'not found in database'}</code></p>
+         <p><strong>Released Line:</strong> ${forwardingNumber || 'N/A'}</p>
+         <p><strong>Cancelled At:</strong> ${cancelledAt}</p>`
       ).catch(() => {});
     }
 
     return {
       statusCode: 200,
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ received: true, cancelled: true, subscriptionId: subId })
+      body: JSON.stringify({
+        received: true,
+        cancelled: true,
+        subscriptionId: subId,
+        deactivatedKey,
+        customerEmail
+      })
     };
   }
+
 
   return { statusCode: 200, body: JSON.stringify({ received: true }) };
 };

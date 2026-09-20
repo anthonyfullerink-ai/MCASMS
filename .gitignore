@@ -37,7 +37,13 @@ google-services.json
 # Simulated sent emails
 sent_emails/
 
-# Runtime token cache
+# Runtime token cache & bindings
 .device_tokens_cache.json
 .support_tickets_cache.json
 .*cache.json
+.voice_pro_bindings.json
+data/master_licenses.json
+data/voice_call_logs.json
+data/developer_support_chats.json
+data/voice_sms_queue.json
+

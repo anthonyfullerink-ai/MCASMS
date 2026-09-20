@@ -1318,8 +1318,21 @@ fun SettingsScreen(
                     ) {
                         RadioButton(
                             selected = isSelected,
-                            onClick = { onSettingsChanged(settings.copy(preferredSimSlot = slotValue)) }
+                            onClick = {
+                                // Resolve and cache the stable subscriptionId for this slot
+                                val resolvedSubId = if (slotValue == 0) {
+                                    -1 // Auto/default — no cached ID needed
+                                } else {
+                                    val targetSlotIndex = slotValue - 1
+                                    activeSimInfoList.firstOrNull { it.simSlotIndex == targetSlotIndex }?.subscriptionId ?: -1
+                                }
+                                onSettingsChanged(settings.copy(
+                                    preferredSimSlot = slotValue,
+                                    preferredSimSubscriptionId = resolvedSubId
+                                ))
+                            }
                         )
+
                         Spacer(modifier = Modifier.width(8.dp))
                         Text(
                             text = label,

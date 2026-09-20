@@ -39,6 +39,9 @@ class SettingsRepository(private val context: Context) {
         val WEBHOOK_API_SECRET = stringPreferencesKey("webhook_api_secret")
         val FCM_DEVICE_TOKEN = stringPreferencesKey("fcm_device_token")
         val PREFERRED_SIM_SLOT = intPreferencesKey("preferred_sim_slot")
+        /** Stable Android subscriptionId — does not change across reboots like slot index */
+        val PREFERRED_SIM_SUBSCRIPTION_ID = intPreferencesKey("preferred_sim_subscription_id")
+
         val OUTBOUND_WEBHOOK_ENABLED = booleanPreferencesKey("outbound_webhook_enabled")
         val MUTE_NATIVE_AUTO_REPLY = booleanPreferencesKey("mute_native_auto_reply")
         val SELECTED_OUTBOUND_WEBHOOK_URL = stringPreferencesKey("selected_outbound_webhook_url")
@@ -101,6 +104,8 @@ class SettingsRepository(private val context: Context) {
             webhookApiSecret = preferences[WEBHOOK_API_SECRET] ?: "",
             fcmDeviceToken = preferences[FCM_DEVICE_TOKEN] ?: "",
             preferredSimSlot = preferences[PREFERRED_SIM_SLOT] ?: 0,
+            preferredSimSubscriptionId = preferences[PREFERRED_SIM_SUBSCRIPTION_ID] ?: -1,
+
             outboundWebhookEnabled = preferences[OUTBOUND_WEBHOOK_ENABLED] ?: false,
             muteNativeAutoReply = preferences[MUTE_NATIVE_AUTO_REPLY] ?: false,
             selectedOutboundWebhookUrl = preferences[SELECTED_OUTBOUND_WEBHOOK_URL] ?: "",
@@ -180,6 +185,8 @@ class SettingsRepository(private val context: Context) {
             }
             preferences[FCM_DEVICE_TOKEN] = settings.fcmDeviceToken
             preferences[PREFERRED_SIM_SLOT] = settings.preferredSimSlot
+            preferences[PREFERRED_SIM_SUBSCRIPTION_ID] = settings.preferredSimSubscriptionId
+
             preferences[OUTBOUND_WEBHOOK_ENABLED] = settings.outboundWebhookEnabled
             preferences[MUTE_NATIVE_AUTO_REPLY] = settings.muteNativeAutoReply
             preferences[SELECTED_OUTBOUND_WEBHOOK_URL] = settings.selectedOutboundWebhookUrl

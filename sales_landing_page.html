@@ -2234,6 +2234,25 @@
     }
 
     function initiateStripeCheckout() {
+        openStandardUpgradeModal();
+    }
+
+    function openStandardUpgradeModal() {
+        const m = document.getElementById('standardUpgradeModal');
+        if (m) m.style.display = 'flex';
+    }
+
+    function closeStandardUpgradeModal() {
+        const m = document.getElementById('standardUpgradeModal');
+        if (m) m.style.display = 'none';
+    }
+
+    function upgradeFromStandardToProModal() {
+        closeStandardUpgradeModal();
+        openProCheckoutModal();
+    }
+
+    function proceedToFlagshipDirectCheckout() {
         window.location.href = "https://buy.stripe.com/3cI9AT49g2X07Q41ux2go0a";
     }
 
@@ -2250,7 +2269,81 @@
     }
 
     function initiateProStripeCheckout() {
-        window.location.href = "https://buy.stripe.com/cNi5kDdJQ558c6k2yB2go0b";
+        openProCheckoutModal();
+    }
+
+    function openProCheckoutModal() {
+        const m = document.getElementById('proCheckoutModal');
+        if (m) {
+            m.style.display = 'flex';
+            const chk = document.getElementById('checkProVoiceOrderBump');
+            if (chk) chk.checked = false;
+            onProOrderBumpToggle();
+        }
+    }
+
+    function closeProCheckoutModal() {
+        const m = document.getElementById('proCheckoutModal');
+        if (m) m.style.display = 'none';
+    }
+
+    function onProOrderBumpToggle() {
+        const chk = document.getElementById('checkProVoiceOrderBump');
+        const isChecked = chk && chk.checked;
+        const priceEl = document.getElementById('summaryVoiceAddonPrice');
+        const renewsEl = document.getElementById('summaryTotalRenews');
+        const btn = document.getElementById('btnProceedProCheckout');
+        const card = document.getElementById('orderBumpCard');
+
+        if (isChecked) {
+            if (priceEl) { priceEl.innerHTML = '<strong style="color: #00E676;">14-Day Free Trial ($0.00 Today)</strong>'; }
+            if (renewsEl) renewsEl.style.display = 'block';
+            if (btn) btn.innerHTML = 'Proceed to Checkout with Pro + Voice Trial ($149.99 Today) ➔';
+            if (card) {
+                card.style.borderColor = '#00E676';
+                card.style.background = 'linear-gradient(180deg, rgba(0,230,118,0.12) 0%, rgba(9,11,14,0.9) 100%)';
+            }
+        } else {
+            if (priceEl) { priceEl.innerText = 'Not Selected'; priceEl.style.color = '#64748B'; }
+            if (renewsEl) renewsEl.style.display = 'none';
+            if (btn) btn.innerHTML = 'Proceed to Checkout with Pro Only ($149.99) ➔';
+            if (card) {
+                card.style.borderColor = '#A855F7';
+                card.style.background = 'linear-gradient(180deg, rgba(168,85,247,0.12) 0%, rgba(9,11,14,0.85) 100%)';
+            }
+        }
+    }
+
+    async function proceedToProDynamicCheckout() {
+        const chk = document.getElementById('checkProVoiceOrderBump');
+        const includeVoice = chk && chk.checked;
+        const btn = document.getElementById('btnProceedProCheckout');
+        if (btn) {
+            btn.disabled = true;
+            btn.innerText = '⏳ Connecting to Secure Stripe Checkout...';
+        }
+
+        try {
+            const res = await fetch('/api/create-pro-checkout', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ includeVoice })
+            });
+            const data = await res.json();
+            if (data.success && data.checkoutUrl) {
+                window.location.href = data.checkoutUrl;
+                return;
+            }
+        } catch (e) {
+            console.warn('Dynamic session fallback:', e.message);
+        }
+
+        // Static fallback
+        if (includeVoice) {
+            window.location.href = "https://buy.stripe.com/4gMeVdcFMaps6M0b572go0f";
+        } else {
+            window.location.href = "https://buy.stripe.com/cNi5kDdJQ558c6k2yB2go0b";
+        }
     }
 
     // AI Support & Voice Assistant Logic
@@ -2864,6 +2957,126 @@
             <button onclick="closeVoiceAddonModal()" style="background: none; border: none; color: #64748B; font-size: 12px; cursor: pointer; text-decoration: underline;">
                 Cancel / Return to Features
             </button>
+        </div>
+    </div>
+</div>
+
+<!-- Standard to Pro Upsell Modal -->
+<div id="standardUpgradeModal" style="display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.85); backdrop-filter: blur(8px); z-index: 10000; align-items: center; justify-content: center; padding: 20px;">
+    <div style="background: #131720; border: 1px solid #38BDF8; border-radius: 16px; max-width: 580px; width: 100%; padding: 28px; box-shadow: 0 20px 50px rgba(0,0,0,0.7); position: relative; text-align: left; max-height: 90vh; overflow-y: auto;">
+        <button onclick="closeStandardUpgradeModal()" style="position: absolute; top: 16px; right: 16px; background: none; border: none; color: #949BAE; font-size: 24px; cursor: pointer; line-height: 1;">&times;</button>
+        
+        <div style="text-align: center; margin-bottom: 20px;">
+            <div style="display: inline-block; background: rgba(56,189,248,0.15); border: 1px solid rgba(56,189,248,0.4); color: #38BDF8; font-size: 11px; font-weight: 800; padding: 4px 12px; border-radius: 20px; margin-bottom: 8px; text-transform: uppercase;">
+                ⭐ Smart Contractor Upgrade
+            </div>
+            <h2 style="color: #FFF; margin: 0 0 8px 0; font-size: 22px; font-weight: 900;">Wait! Unlock Full Automation with Pro</h2>
+            <p style="color: #949BAE; font-size: 13px; margin: 0; line-height: 1.5;">
+                Before you check out with Standard ($49.99), see what contractors get by upgrading to <strong>Pro Automation Edition ($149.99)</strong>:
+            </p>
+        </div>
+
+        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin-bottom: 20px;">
+            <!-- Standard Column -->
+            <div style="background: #090B0E; border: 1px solid #222836; border-radius: 12px; padding: 14px;">
+                <div style="font-size: 12px; font-weight: 800; color: #949BAE; text-transform: uppercase; margin-bottom: 6px;">Standard ($49.99)</div>
+                <ul style="margin: 0; padding-left: 16px; font-size: 12px; color: #CBD5E0; line-height: 1.6;">
+                    <li>Instant Missed Call SMS</li>
+                    <li>Basic keyword auto-replies</li>
+                    <li>1 Android phone activation</li>
+                    <li style="color: #64748B; text-decoration: line-through;">No Webhook / Zapier sync</li>
+                    <li style="color: #64748B; text-decoration: line-through;">Incompatible with AI Voice</li>
+                </ul>
+            </div>
+
+            <!-- Pro Column -->
+            <div style="background: linear-gradient(180deg, rgba(168,85,247,0.15) 0%, rgba(9,11,14,0.9) 100%); border: 1px solid #A855F7; border-radius: 12px; padding: 14px;">
+                <div style="font-size: 12px; font-weight: 800; color: #C084FC; text-transform: uppercase; margin-bottom: 6px;">Pro Edition ($149.99) 🚀</div>
+                <ul style="margin: 0; padding-left: 16px; font-size: 12px; color: #FFF; line-height: 1.6;">
+                    <li>Instant Missed Call SMS</li>
+                    <li>Dual-SIM + Inbound Line Filter</li>
+                    <li>Full Webhook & CRM Pipelines</li>
+                    <li>Multi-Stage Lead Follow-Up</li>
+                    <li><strong style="color: #00E676;">Includes 24/7 AI Voice Eligibility!</strong></li>
+                </ul>
+            </div>
+        </div>
+
+        <!-- Highlight Callout -->
+        <div style="background: rgba(0, 230, 118, 0.08); border: 1px dashed #00E676; border-radius: 10px; padding: 12px; margin-bottom: 20px; font-size: 12px; color: #E2E8F0; line-height: 1.4;">
+            🎙️ <strong style="color: #00E676;">Important Note:</strong> Only Pro license holders can activate our <strong>24/7 AI Voice Receptionist</strong> (14-day free trial). The standard $49.99 license does not support voice integrations.
+        </div>
+
+        <div style="display: flex; flex-direction: column; gap: 10px; text-align: center;">
+            <button onclick="upgradeFromStandardToProModal()" style="background: linear-gradient(135deg, #7E22CE, #9333EA); color: #FFF; font-weight: 900; font-size: 15px; padding: 14px 20px; border: none; border-radius: 10px; cursor: pointer; box-shadow: 0 4px 15px rgba(126,34,206,0.5); transition: transform 0.15s ease;">
+                ⚡ Upgrade to Pro Automation Edition ($149.99) ➔
+            </button>
+            <button onclick="proceedToFlagshipDirectCheckout()" style="background: none; border: none; color: #949BAE; font-size: 12px; cursor: pointer; text-decoration: underline; padding: 6px;">
+                No thanks, continue with Standard Missed Call Auto SMS ($49.99)
+            </button>
+        </div>
+    </div>
+</div>
+
+<!-- Pro Automation Edition Checkout Modal with AI Voice Order Bump -->
+<div id="proCheckoutModal" style="display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.85); backdrop-filter: blur(8px); z-index: 10000; align-items: center; justify-content: center; padding: 20px;">
+    <div style="background: #131720; border: 1px solid #7928CA; border-radius: 16px; max-width: 560px; width: 100%; padding: 28px; box-shadow: 0 20px 50px rgba(0,0,0,0.8); position: relative; text-align: left; max-height: 90vh; overflow-y: auto;">
+        <button onclick="closeProCheckoutModal()" style="position: absolute; top: 16px; right: 16px; background: none; border: none; color: #949BAE; font-size: 24px; cursor: pointer; line-height: 1;">&times;</button>
+        
+        <div style="margin-bottom: 20px;">
+            <div style="display: inline-block; background: rgba(121,40,202,0.2); border: 1px solid #7928CA; color: #D8B4FE; font-size: 11px; font-weight: 800; padding: 4px 12px; border-radius: 20px; margin-bottom: 6px; text-transform: uppercase;">
+                ⚡ Lifetime Pro Automation License
+            </div>
+            <h2 style="color: #FFF; margin: 0 0 6px 0; font-size: 22px; font-weight: 900;">Pro Edition Checkout ($149.99)</h2>
+            <p style="color: #949BAE; font-size: 13px; margin: 0; line-height: 1.4;">
+                Permanent lifetime license with dedicated webhook pipelines, dual SIM support, and unlimited missed call auto-replies.
+            </p>
+        </div>
+
+        <!-- Optional Order Bump Card -->
+        <div id="orderBumpCard" style="background: linear-gradient(180deg, rgba(168,85,247,0.12) 0%, rgba(9,11,14,0.85) 100%); border: 2px dashed #A855F7; border-radius: 12px; padding: 16px; margin-bottom: 20px; transition: all 0.2s ease;">
+            <label style="display: flex; align-items: flex-start; gap: 12px; cursor: pointer;">
+                <input type="checkbox" id="checkProVoiceOrderBump" onchange="onProOrderBumpToggle()" style="margin-top: 3px; width: 20px; height: 20px; cursor: pointer; accent-color: #00E676; flex-shrink: 0;">
+                <div>
+                    <div style="display: flex; align-items: center; gap: 8px; flex-wrap: wrap;">
+                        <span style="background: #00E676; color: #000; font-size: 10px; font-weight: 900; padding: 2px 6px; border-radius: 4px; text-transform: uppercase;">SPECIAL ADD-ON</span>
+                        <span style="color: #FFF; font-weight: 800; font-size: 14px;">Add 24/7 AI Voice Receptionist</span>
+                    </div>
+                    <div style="font-size: 12px; color: #00E676; font-weight: 800; margin: 4px 0;">
+                        ⚡ 14-Day Free Trial ($0.00 today, then $29/mo)
+                    </div>
+                    <p style="margin: 0; font-size: 12px; color: #CBD5E0; line-height: 1.45;">
+                        Never lose a customer when your hands are full. Our conversational AI answers instantly in human voice, screens incoming jobs, collects caller details, and syncs directly with your Pro app. Bound to your Pro license with 1-click cancel anytime.
+                    </p>
+                </div>
+            </label>
+        </div>
+
+        <!-- Order Summary Box -->
+        <div style="background: #090B0E; border: 1px solid #222836; border-radius: 12px; padding: 14px; margin-bottom: 20px; font-size: 13px;">
+            <div style="display: flex; justify-content: space-between; margin-bottom: 8px; color: #CBD5E0;">
+                <span>Missed Call Auto SMS Pro License (Lifetime):</span>
+                <span style="font-weight: 800; color: #FFF;">$149.99</span>
+            </div>
+            <div style="display: flex; justify-content: space-between; margin-bottom: 8px; color: #CBD5E0;">
+                <span>24/7 Turnkey AI Voice Receptionist:</span>
+                <span id="summaryVoiceAddonPrice" style="color: #64748B;">Not Selected</span>
+            </div>
+            <div style="border-top: 1px solid #222836; padding-top: 8px; display: flex; justify-content: space-between; align-items: baseline;">
+                <span style="font-weight: 800; color: #FFF; font-size: 15px;">Due Today:</span>
+                <span style="font-weight: 900; color: #00E676; font-size: 20px;">$149.99</span>
+            </div>
+            <div id="summaryTotalRenews" style="display: none; font-size: 11px; color: #94A3B8; text-align: right; margin-top: 4px;">
+                Renews at $29/mo after 14-day free trial. Cancel anytime.
+            </div>
+        </div>
+
+        <button id="btnProceedProCheckout" onclick="proceedToProDynamicCheckout()" style="width: 100%; background: linear-gradient(135deg, #00E676, #00C853); color: #000; font-weight: 900; font-size: 15px; padding: 16px; border: none; border-radius: 12px; cursor: pointer; box-shadow: 0 4px 18px rgba(0,230,118,0.35); transition: transform 0.15s ease;">
+            Proceed to Checkout with Pro Only ($149.99) ➔
+        </button>
+
+        <div style="text-align: center; margin-top: 14px; font-size: 11px; color: #64748B;">
+            🔒 256-Bit Stripe Checkout • Instant License Key Delivery via SMS & Email • Cancel Add-On Anytime
         </div>
     </div>
 </div>

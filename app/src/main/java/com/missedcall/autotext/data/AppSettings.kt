@@ -27,6 +27,9 @@ data class AppSettings(
     val webhookApiSecret: String = "",
     val fcmDeviceToken: String = "",
     val preferredSimSlot: Int = 0,
+    /** Cached Android SubscriptionManager subscriptionId for the preferred SIM slot.
+     *  -1 = not set / use default. Stable across reboots unlike simSlotIndex. */
+    val preferredSimSubscriptionId: Int = -1,
     val outboundWebhookEnabled: Boolean = false,
     val muteNativeAutoReply: Boolean = false,
     val selectedOutboundWebhookUrl: String = "",
@@ -44,3 +47,4 @@ data class AppSettings(
     val contractorGoal: String = "BOOKING_LINK", // "BOOKING_LINK", "CALLBACK_PROMISE", "QUOTE_FORM"
     val contractorGoalLink: String = ""
 )
+

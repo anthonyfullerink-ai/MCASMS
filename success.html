@@ -169,14 +169,14 @@
 <body>
     <div class="container">
         <div class="card">
-            <div class="badge-success">🎉 14-Day Free Trial Activated ($0 Today)</div>
-            <h1>Your 24/7 AI Voice Receptionist is Live!</h1>
-            <div class="subtitle">
+            <div class="badge-success" id="successBadge">🎉 14-Day Free Trial Activated ($0 Today)</div>
+            <h1 id="successTitle">Your 24/7 AI Voice Receptionist is Live!</h1>
+            <div class="subtitle" id="successSubtitle">
                 Your dedicated inbound forwarding line has been provisioned. Unanswered calls will now be professionally triaged by your AI receptionist when your hands are full on a job.
             </div>
 
-            <!-- Provisioning Box -->
-            <div class="provision-box">
+            <!-- Provisioning Box (Shown for Voice / Pro Bundle) -->
+            <div class="provision-box" id="voiceProvisionBox">
                 <div style="font-size: 11px; text-transform: uppercase; color: var(--muted); font-weight: 800;">Your Dedicated Inbound Forwarding Line</div>
                 <div class="forwarding-line" id="displayForwardingNumber">+1 (555) 349-2810</div>
                 <div style="font-size: 12px; color: var(--muted); margin-bottom: 16px;">
@@ -191,27 +191,45 @@
                 </div>
             </div>
 
-            <a href="mcas://voice-hub" class="btn-app">
-                📱 Open Missed Call Auto SMS App
-            </a>
-            <a href="/MissedCallAutoSMS.apk" style="font-size: 12px; color: var(--primary); text-decoration: underline; display: inline-block; margin-top: 10px;">
-                Need to install on this phone? Download Android APK &rarr;
-            </a>
+            <!-- Post-Purchase Voice Upsell Card (Shown for Standalone Pro Customers) -->
+            <div id="postPurchaseVoiceCard" style="display: none; background: linear-gradient(180deg, rgba(168,85,247,0.15) 0%, rgba(9,11,14,0.95) 100%); border: 2px dashed #A855F7; border-radius: 16px; padding: 24px; margin-bottom: 28px; text-align: left;">
+                <div style="display: flex; align-items: center; gap: 8px; margin-bottom: 8px;">
+                    <span style="background: #00E676; color: #000; font-size: 11px; font-weight: 900; padding: 3px 8px; border-radius: 4px; text-transform: uppercase;">PRO EXCLUSIVE ADD-ON</span>
+                    <span style="color: #D8B4FE; font-size: 12px; font-weight: 800;">14-DAY FREE TRIAL</span>
+                </div>
+                <h3 style="color: #FFF; font-size: 18px; margin: 0 0 8px 0; font-weight: 900;">Complete Your Setup: Add 24/7 AI Voice Receptionist</h3>
+                <p style="color: #CBD5E0; font-size: 13px; line-height: 1.5; margin: 0 0 16px 0;">
+                    Because you purchased a Pro Automation license, you can pair our conversational AI receptionist with your phone number. It answers unanswered incoming calls in natural voice, captures client requests, and syncs summaries directly to your Pro app. <strong>$0.00 today</strong> (14 days free, then $29/mo, 1-click cancel anytime).
+                </p>
+                <a href="https://buy.stripe.com/4gMeVdcFMaps6M0b572go0f" style="display: block; width: 100%; background: linear-gradient(135deg, #7E22CE, #9333EA); color: #FFF; font-weight: 900; font-size: 15px; padding: 14px; border-radius: 12px; text-align: center; text-decoration: none; box-shadow: 0 4px 15px rgba(126,34,206,0.4);">
+                    🎙️ Activate 14-Day Free Voice Trial ($0 Today) ➔
+                </a>
+            </div>
 
-            <!-- 3 Simple Steps -->
+            <!-- APK Download Links -->
+            <a id="btnPrimaryDownload" href="/MissedCallAutoSMS-Pro.apk" class="btn-app" style="background: linear-gradient(135deg, #00E676, #00C853); color: #000; font-weight: 900; border: none; box-shadow: 0 4px 16px rgba(0,230,118,0.25);">
+                📥 Download MissedCallAutoSMS-Pro.apk
+            </a>
+            <div id="standardApkDownloadNotice" style="margin-top: 10px; font-size: 12px;">
+                <a id="subDownloadLink" href="/MissedCallAutoSMS.apk" style="color: var(--muted); text-decoration: underline;">
+                    Looking for Standard Edition APK instead? Download here &rarr;
+                </a>
+            </div>
+
+            <!-- Simple Steps Box -->
             <div class="steps-box">
-                <h3>🚀 3 Simple Steps to Finish Setup</h3>
-                <div class="step-row">
+                <h3 id="stepsHeader">🚀 3 Simple Steps to Finish Setup</h3>
+                <div class="step-row" id="step1Row">
                     <div class="step-num">1</div>
-                    <div><strong>Tap the Green Button Above</strong> to dial your carrier's forwarding code (<code style="color:var(--primary);">*71</code>). Tap Call once on your dialer to confirm.</div>
+                    <div id="step1Text"><strong>Tap the Green Button Above</strong> to dial your carrier's forwarding code (<code style="color:var(--primary);">*71</code>). Tap Call once on your dialer to confirm.</div>
                 </div>
-                <div class="step-row">
+                <div class="step-row" id="step2Row">
                     <div class="step-num">2</div>
-                    <div><strong>Open the Android App</strong> and tap the <strong>AI Voice</strong> tab to select your <strong>Status Dial</strong> (Available, On a Job, or After Hours).</div>
+                    <div id="step2Text"><strong>Install & Open the Android App</strong> and paste your license key received via SMS & email to activate.</div>
                 </div>
-                <div class="step-row">
+                <div class="step-row" id="step3Row">
                     <div class="step-num">3</div>
-                    <div><strong>You're Covered 24/7!</strong> When a customer calls and you miss it, your AI takes notes, books appointments, and sends an authentic text from your phone SIM.</div>
+                    <div id="step3Text"><strong>You're Covered 24/7!</strong> When a customer calls and you miss it, your app and AI handle triage, follow-ups, and lead capture automatically.</div>
                 </div>
             </div>
 
@@ -222,8 +240,9 @@
     </div>
 
     <script>
-        // Parse dynamic forwarding line from URL params or API
+        // Parse dynamic params from URL
         const urlParams = new URLSearchParams(window.location.search);
+        const tier = (urlParams.get('tier') || '').toLowerCase();
         const forwarding = urlParams.get('forwarding') || '+1 (555) 349-2810';
         const rawDigits = forwarding.replace(/[^0-9]/g, '').slice(-10);
         const carrierCode = `*71${rawDigits}`;
@@ -231,6 +250,62 @@
         document.getElementById('displayForwardingNumber').innerText = forwarding;
         document.getElementById('displayCarrierCode').innerText = carrierCode;
         document.getElementById('btnActivateCarrier').href = `tel:${encodeURIComponent(carrierCode)}`;
+
+        if (tier === 'pro') {
+            // Pro standalone purchase (Upsell to Voice add-on)
+            document.getElementById('successBadge').innerHTML = '⚡ Pro Automation Edition Activated';
+            document.getElementById('successBadge').style.borderColor = '#A855F7';
+            document.getElementById('successBadge').style.color = '#C084FC';
+            document.getElementById('successBadge').style.background = 'rgba(168,85,247,0.15)';
+            
+            document.getElementById('successTitle').innerText = 'Welcome to Pro Automation Edition!';
+            document.getElementById('successSubtitle').innerText = 'Your lifetime Pro license has been issued. Check your phone SMS & email for your permanent activation key.';
+            
+            // Hide forwarding box for standalone Pro, show upsell card
+            document.getElementById('voiceProvisionBox').style.display = 'none';
+            document.getElementById('postPurchaseVoiceCard').style.display = 'block';
+
+            document.getElementById('btnPrimaryDownload').href = '/MissedCallAutoSMS-Pro.apk';
+            document.getElementById('btnPrimaryDownload').innerText = '📥 Download MissedCallAutoSMS-Pro.apk';
+
+            document.getElementById('step1Text').innerHTML = '<strong>Download MissedCallAutoSMS-Pro.apk</strong> on your dedicated Android phone.';
+            document.getElementById('step2Text').innerHTML = '<strong>Enter Your Pro License Key</strong> sent to your SMS and email to unlock all features.';
+            document.getElementById('step3Text').innerHTML = '<strong>Configure Webhooks & Dual SIM:</strong> Connect your CRM or Zapier pipelines and set custom auto-reply rules.';
+        } else if (tier === 'pro_bundle') {
+            // Pro + Voice Add-on Bundle
+            document.getElementById('successBadge').innerHTML = '🎉 Pro Automation + 24/7 AI Voice Active';
+            document.getElementById('successBadge').style.borderColor = '#00E676';
+            document.getElementById('successBadge').style.color = '#00E676';
+            
+            document.getElementById('successTitle').innerText = 'Your Full Pro + AI Voice Suite is Ready!';
+            document.getElementById('successSubtitle').innerText = 'Your lifetime Pro software license is issued and your dedicated AI Voice forwarding line is provisioned.';
+
+            document.getElementById('voiceProvisionBox').style.display = 'block';
+            document.getElementById('postPurchaseVoiceCard').style.display = 'none';
+
+            document.getElementById('btnPrimaryDownload').href = '/MissedCallAutoSMS-Pro.apk';
+            document.getElementById('btnPrimaryDownload').innerText = '📥 Download MissedCallAutoSMS-Pro.apk';
+        } else if (tier === 'standard') {
+            // Standard $49.99 purchase
+            document.getElementById('successBadge').innerHTML = '✅ Standard Edition Activated';
+            document.getElementById('successTitle').innerText = 'Your Missed Call Auto SMS License is Ready!';
+            document.getElementById('successSubtitle').innerText = 'Check your phone SMS & email for your standard license key.';
+
+            document.getElementById('voiceProvisionBox').style.display = 'none';
+            document.getElementById('postPurchaseVoiceCard').style.display = 'none';
+
+            document.getElementById('btnPrimaryDownload').href = '/MissedCallAutoSMS.apk';
+            document.getElementById('btnPrimaryDownload').innerText = '📥 Download MissedCallAutoSMS.apk';
+            document.getElementById('subDownloadLink').style.display = 'none';
+
+            document.getElementById('step1Text').innerHTML = '<strong>Download MissedCallAutoSMS.apk</strong> on your Android phone.';
+            document.getElementById('step2Text').innerHTML = '<strong>Enter Your License Key</strong> to activate the appliance.';
+            document.getElementById('step3Text').innerHTML = '<strong>Set Your Auto-Reply Message</strong> and never miss another customer inquiry.';
+        } else {
+            // Default (Voice Receptionist trial direct or unspecified)
+            document.getElementById('btnPrimaryDownload').href = '/MissedCallAutoSMS-Pro.apk';
+            document.getElementById('btnPrimaryDownload').innerText = '📱 Download MissedCallAutoSMS-Pro.apk';
+        }
     </script>
 </body>
 </html>

@@ -44,6 +44,37 @@ exports.handler = async (event) => {
     const isPro = key.startsWith('MCAS-PRO-') || key.startsWith('MCAT-PRO-') || key.includes('PRO-DEMO');
     const isAgency = key.startsWith('MCAS-AGENCY-') || key.startsWith('MCAT-AGENCY-');
 
+    // Check Voice Pro Bindings (Cloud Firestore with local JSON fallback)
+    let voiceActive = false;
+    let voiceForwardingNumber = null;
+
+    try {
+      let _fsModule = null;
+      try { _fsModule = require('../../lib/firestore'); } catch (e) {}
+
+      if (_fsModule && process.env.FIREBASE_SERVICE_ACCOUNT_KEY) {
+        const binding = await _fsModule.getVoiceBinding(key);
+        if (binding && binding.status === 'ACTIVE' && binding.voiceActive !== false) {
+          voiceActive = true;
+          voiceForwardingNumber = binding.forwardingNumber;
+        }
+      } else {
+        const fs = require('fs');
+        const path = require('path');
+        const voiceBindingsFile = path.join(__dirname, '../../.voice_pro_bindings.json');
+        if (fs.existsSync(voiceBindingsFile)) {
+          const bindings = JSON.parse(fs.readFileSync(voiceBindingsFile, 'utf8'));
+          if (bindings[key] && bindings[key].active !== false && bindings[key].status !== 'CANCELLED') {
+            voiceActive = true;
+            voiceForwardingNumber = bindings[key].forwardingNumber;
+          }
+        }
+      }
+    } catch (e) {
+      console.warn('[verify-license] Voice binding check notice:', e.message);
+    }
+
+
     return {
       statusCode: 200,
       headers,
@@ -54,7 +85,8 @@ exports.handler = async (event) => {
         tier: isAgency ? 'AGENCY' : (isPro ? 'PRO' : 'STANDARD'),
         edition: isAgency ? 'Agency Fleet Management' : (isPro ? 'Pro Automation Edition ($149)' : 'Flagship Appliance Edition ($49.99)'),
         voiceEligible: isPro || isAgency,
-        voiceActive: isPro, // Pro edition enables turnkey voice receptionist eligibility
+        voiceActive: voiceActive,
+        voiceForwardingNumber: voiceForwardingNumber,
         type: key.includes('TRIAL') ? 'TRIAL' : (key.includes('DEMO') ? 'DEMO' : 'PAID'),
         deviceId: 'Protected (1 Physical Android Phone Bound)',
         features: {

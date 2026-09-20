@@ -1,7 +1,8 @@
 const https = require('https');
 
 const RESEND_API_KEY = process.env.RESEND_API_KEY || '';
-const FROM_EMAIL = process.env.FROM_EMAIL || 'Missed Call Auto SMS <onboarding@resend.dev>';
+const FROM_EMAIL = process.env.FROM_EMAIL || 'Missed Call Auto SMS <support@missedcallautosms.com>';
+
 
 function generateEmailHtml(name, licenseKey, apkDownloadUrl, isFree) {
   return `<!DOCTYPE html>

@@ -174,6 +174,7 @@ class SendAutoTextWorker(
                 .replace("{name}", displayName)
         }
 
+
         // Apply Random Jitter Delay (only if not explicit remote trigger)
         val delayMillis = if (!isRemoteTrigger) (settings.jitterDelaySeconds * 1000L).coerceAtLeast(0L) else 0L
         if (delayMillis > 0) {
@@ -185,8 +186,9 @@ class SendAutoTextWorker(
         com.missedcall.autotext.util.SmsRateLimiter.acquireSendSlot(isRemoteTrigger)
 
         // Dispatch SMS using SmsManager with multi-part and Dual SIM support
+        // Item 8: Pass cached subscriptionId to bypass fragile slot-index lookup
         return try {
-            val smsManager = getSmsManager(effectiveSimSlot)
+            val smsManager = getSmsManager(effectiveSimSlot, settings.preferredSimSubscriptionId)
 
             val parts = smsManager.divideMessage(messageBody)
             if (parts.size > 1) {
@@ -230,7 +232,26 @@ class SendAutoTextWorker(
         }
     }
 
-    private fun getSmsManager(slot: Int): SmsManager {
+    private fun getSmsManager(slot: Int, cachedSubscriptionId: Int = -1): SmsManager {
+        // Item 8: Use cached subscriptionId directly if available (stable across reboots)
+        if (cachedSubscriptionId >= 0) {
+            Log.i(TAG, "Using cached subscriptionId: $cachedSubscriptionId (bypassing slot lookup)")
+            return try {
+                if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.S) {
+                    applicationContext.getSystemService(SmsManager::class.java).createForSubscriptionId(cachedSubscriptionId)
+                } else {
+                    @Suppress("DEPRECATION")
+                    SmsManager.getSmsManagerForSubscriptionId(cachedSubscriptionId)
+                }
+            } catch (e: Exception) {
+                Log.w(TAG, "Cached subscriptionId $cachedSubscriptionId is no longer valid: ${e.localizedMessage}. Falling back to slot lookup.")
+                getSmsManagerBySlot(slot)
+            }
+        }
+        return getSmsManagerBySlot(slot)
+    }
+
+    private fun getSmsManagerBySlot(slot: Int): SmsManager {
         if (slot > 0) {
             val targetSlotIndex = slot - 1
             try {
@@ -262,6 +283,8 @@ class SendAutoTextWorker(
             SmsManager.getDefault()
         }
     }
+
+
 
     private suspend fun sendDeliveryCallback(
         callbackUrl: String,

@@ -91,6 +91,66 @@ function stripeApiRequest(endpoint, method = 'GET', postData = null) {
   });
 }
 
+function getVapiConfig() {
+  const envPath = path.join(__dirname, '.env');
+  let privateKey = process.env.VAPI_PRIVATE_API_KEY || '';
+  let assistantId = process.env.VAPI_ASSISTANT_ID || '';
+  if (fs.existsSync(envPath)) {
+    const envContent = fs.readFileSync(envPath, 'utf8');
+    const km = envContent.match(/VAPI_PRIVATE_API_KEY=(.*)/);
+    if (km && km[1]) privateKey = km[1].trim();
+    const am = envContent.match(/VAPI_ASSISTANT_ID=(.*)/);
+    if (am && am[1]) assistantId = am[1].trim();
+  }
+  return { privateKey, assistantId };
+}
+
+function vapiApiRequest(endpoint, method = 'GET', postJson = null) {
+  return new Promise((resolve, reject) => {
+    const { privateKey } = getVapiConfig();
+    if (!privateKey) return reject(new Error('Vapi API key not configured'));
+
+    const options = {
+      hostname: 'api.vapi.ai',
+      port: 443,
+      path: endpoint,
+      method: method,
+      headers: {
+        'Authorization': `Bearer ${privateKey}`,
+        'Content-Type': 'application/json',
+        'User-Agent': 'MCASMS-Server/1.0'
+      }
+    };
+
+    let payload = '';
+    if (postJson) {
+      payload = JSON.stringify(postJson);
+      options.headers['Content-Length'] = Buffer.byteLength(payload);
+    }
+
+    const req = https.request(options, res => {
+      let body = '';
+      res.on('data', chunk => body += chunk);
+      res.on('end', () => {
+        try {
+          const parsed = JSON.parse(body || '{}');
+          if (res.statusCode >= 200 && res.statusCode < 300) {
+            resolve(parsed);
+          } else {
+            reject(new Error(parsed.message || parsed.error || `Vapi Error (${res.statusCode}): ${body}`));
+          }
+        } catch (e) {
+          reject(new Error(`Failed to parse Vapi response: ${body}`));
+        }
+      });
+    });
+
+    req.on('error', reject);
+    if (payload) req.write(payload);
+    req.end();
+  });
+}
+
 function generateLicenseEmailHtml(data) {
   const { customerName, customerEmail, licenseKey, licenseType, price } = data;
   const isPro = (licenseKey && (licenseKey.startsWith('MCAS-PRO-') || licenseKey.startsWith('MCAT-PRO-') || licenseKey.includes('PRO-DEMO'))) ||
@@ -156,6 +216,41 @@ function generateLicenseEmailHtml(data) {
             ${featuresHtml}
         </div>
 
+        ${data.voiceActive ? `
+        <!-- 24/7 AI Voice Receptionist Active Section -->
+        <div style="background: linear-gradient(180deg, rgba(121,40,202,0.2) 0%, rgba(9,11,14,0.9) 100%); border: 1px solid #7928CA; border-radius: 12px; padding: 20px; margin-bottom: 24px;">
+            <div style="display: flex; align-items: center; gap: 8px; margin-bottom: 8px;">
+                <span style="font-size: 22px;">🎙️</span>
+                <span style="font-weight: 800; color: #D8B4FE; font-size: 15px;">24/7 AI Voice Receptionist Active (14-Day Free Trial)</span>
+            </div>
+            <div style="font-size: 13px; color: #CBD5E0; line-height: 1.5; margin-bottom: 12px;">
+                Your dedicated inbound call forwarding line is provisioned: <strong style="color: #00E676; font-family: monospace;">${escapeHtml(data.voiceForwardingNumber || '+1 (555) 349-2810')}</strong>
+            </div>
+            <div style="background: #090B0E; border: 1px dashed #00E676; border-radius: 8px; padding: 14px; text-align: center; margin-bottom: 12px;">
+                <div style="font-size: 11px; color: #949BAE; text-transform: uppercase; font-weight: bold; margin-bottom: 4px;">Carrier Conditional Call Forwarding Code</div>
+                <div style="font-family: monospace; font-size: 18px; font-weight: 900; color: #00E676;">
+                    *71${(data.voiceForwardingNumber || '5553492810').replace(/\D/g, '').slice(-10)}
+                </div>
+            </div>
+            <div style="font-size: 12px; color: #949BAE; line-height: 1.5;">
+                📞 <strong>Quick Carrier Setup:</strong> Dial the code above once from your Android phone's dialer. Your phone rings normally for 15s. If you don't answer, your carrier automatically routes the call to your AI assistant. Revert anytime by dialing <code>*73</code>.
+            </div>
+        </div>
+        ` : ''}
+
+        ${(!data.voiceActive && isPro) ? `
+        <!-- Optional AI Voice Receptionist Add-On Notice for Pro-Only Users -->
+        <div style="background: rgba(168, 85, 247, 0.05); border: 1px dashed rgba(168, 85, 247, 0.35); border-radius: 12px; padding: 18px; margin-bottom: 24px; text-align: center;">
+            <div style="font-size: 14px; font-weight: 800; color: #C084FC; margin-bottom: 4px;">🎙️ Need 24/7 AI Voice Answering?</div>
+            <div style="font-size: 12px; color: #CBD5E0; margin-bottom: 12px; line-height: 1.5;">
+                Your Pro license is pre-cleared for our <strong>Turnkey 24/7 AI Voice Receptionist</strong> add-on ($29/mo with 14-day free trial). When you're ready, activate your dedicated AI line with 1-click *71 carrier forwarding anytime.
+            </div>
+            <a href="https://missedcallautosms.com/sales_landing_page.html#voice-details" style="display: inline-block; background: rgba(168, 85, 247, 0.2); color: #C084FC; border: 1px solid #A855F7; font-weight: 700; font-size: 12px; padding: 8px 20px; border-radius: 20px; text-decoration: none;">
+                Learn More & Add Voice Receptionist ($29/mo) →
+            </a>
+        </div>
+        ` : ''}
+
         <!-- APK Download Button -->
         <div style="text-align: center; margin-bottom: 30px;">
             <a href="${apkDownloadUrl}" style="display: inline-block; background: ${themeColor}; color: ${isPro ? '#FFFFFF' : '#000000'}; font-weight: bold; font-size: 16px; padding: 14px 32px; border-radius: 30px; text-decoration: none; box-shadow: 0 6px 20px rgba(168,85,247,0.3);">
@@ -214,6 +309,23 @@ const VOICE_CALL_LOGS_FILE = path.join(__dirname, 'data', 'voice_call_logs.json'
 const VOICE_SMS_QUEUE_FILE = path.join(__dirname, 'data', 'voice_sms_queue.json');
 const DEVELOPER_CHATS_FILE = path.join(__dirname, 'data', 'developer_support_chats.json');
 const SUPPORT_GATEWAY_SETTINGS_FILE = path.join(__dirname, 'data', 'support_gateway_settings.json');
+
+// ── Firebase/Firestore Dual-Write ─────────────────────────────────────────────
+// Local JSON files remain the fast synchronous read source for the local server.
+// All writes also asynchronously mirror to Firestore for production persistence.
+let _firestoreModule = null;
+function getFirestoreDb() {
+  if (_firestoreModule) return _firestoreModule;
+  try {
+    _firestoreModule = require('./lib/firestore');
+    return _firestoreModule;
+  } catch (e) {
+    console.warn('[Firestore] Module not loaded — add FIREBASE_SERVICE_ACCOUNT_KEY to .env:', e.message);
+    return null;
+  }
+}
+
+
 
 function getSupportGatewaySettings() {
   const defaults = {
@@ -276,12 +388,74 @@ function isCallerSpamThrottled(callerNumber) {
   return false;
 }
 
+function getVapiConfig() {
+  let apiKey = process.env.VAPI_PRIVATE_API_KEY || '';
+  let assistantId = process.env.VAPI_ASSISTANT_ID || '';
+  const envPath = path.join(__dirname, '.env');
+  if (fs.existsSync(envPath)) {
+    try {
+      const content = fs.readFileSync(envPath, 'utf8');
+      const keyMatch = content.match(/VAPI_PRIVATE_API_KEY=(.*)/);
+      const asstMatch = content.match(/VAPI_ASSISTANT_ID=(.*)/);
+      if (keyMatch && keyMatch[1]) apiKey = keyMatch[1].trim();
+      if (asstMatch && asstMatch[1]) assistantId = asstMatch[1].trim();
+    } catch (e) {}
+  }
+  return { apiKey, assistantId };
+}
+
+function vapiApiRequest(endpoint, method = 'GET', postJson = null) {
+  const { apiKey } = getVapiConfig();
+  if (!apiKey) {
+    return Promise.reject(new Error('VAPI_PRIVATE_API_KEY is not configured'));
+  }
+  return new Promise((resolve, reject) => {
+    const postData = postJson ? JSON.stringify(postJson) : null;
+    const options = {
+      hostname: 'api.vapi.ai',
+      port: 443,
+      path: endpoint,
+      method: method,
+      headers: {
+        'Authorization': `Bearer ${apiKey}`,
+        'Content-Type': 'application/json'
+      }
+    };
+    if (postData) {
+      options.headers['Content-Length'] = Buffer.byteLength(postData);
+    }
+    const req = https.request(options, res => {
+      let body = '';
+      res.on('data', chunk => body += chunk);
+      res.on('end', () => {
+        try {
+          const json = JSON.parse(body || '{}');
+          if (res.statusCode >= 200 && res.statusCode < 300) {
+            resolve(json);
+          } else {
+            reject(new Error(json.message || `HTTP ${res.statusCode}: ${body}`));
+          }
+        } catch (e) {
+          if (res.statusCode >= 200 && res.statusCode < 300) {
+            resolve({ raw: body });
+          } else {
+            reject(new Error(`HTTP ${res.statusCode}: ${body}`));
+          }
+        }
+      });
+    });
+    req.on('error', reject);
+    if (postData) req.write(postData);
+    req.end();
+  });
+}
+
 function getVoiceSettings() {
   const defaults = {
     mode: 'OFF', // 'OFF' | 'BYOK' | 'MANAGED_PRO'
     status: 'INACTIVE', // 'ACTIVE' | 'INACTIVE' | 'QUOTA_FALLBACK'
-    businessName: 'Apex Field Services',
-    ownerName: 'Dave',
+    businessName: "Anthony's Contractor Services",
+    ownerName: 'Anthony',
     serviceTrade: 'Contractor & Trade Services',
     emergencyKeywords: 'leak, outage, urgent, emergency, flooding, broken, sparking, freeze',
     forwardingNumber: '+1 (555) 349-2810',
@@ -318,7 +492,15 @@ function saveVoiceSettings(settings) {
   const dataDir = path.join(__dirname, 'data');
   if (!fs.existsSync(dataDir)) fs.mkdirSync(dataDir, { recursive: true });
   fs.writeFileSync(VOICE_SETTINGS_FILE, JSON.stringify(settings, null, 2), 'utf8');
+
+  // Async Firestore mirror (non-blocking, fail-safe)
+  const fdb = getFirestoreDb();
+  if (fdb) {
+    fdb.saveVoiceSettings(settings)
+      .catch(e => console.warn('[Firestore] saveVoiceSettings mirror error:', e.message));
+  }
 }
+
 
 function getVoiceCallLogs() {
   if (fs.existsSync(VOICE_CALL_LOGS_FILE)) {
@@ -394,6 +576,73 @@ function ackVoiceSms(id) {
   }
   return false;
 }
+
+const VOICE_BINDINGS_FILE = path.join(__dirname, '.voice_pro_bindings.json');
+const MASTER_LICENSES_FILE = path.join(__dirname, 'data', 'master_licenses.json');
+
+function getVoiceSubscribers() {
+  if (fs.existsSync(VOICE_BINDINGS_FILE)) {
+    try {
+      const bindings = JSON.parse(fs.readFileSync(VOICE_BINDINGS_FILE, 'utf8'));
+      return Object.keys(bindings).map(k => ({
+        licenseKey: k,
+        ...bindings[k]
+      }));
+    } catch (e) {
+      return [];
+    }
+  }
+  return [];
+}
+
+function saveVoiceSubscriber(licenseKey, data) {
+  let bindings = {};
+  if (fs.existsSync(VOICE_BINDINGS_FILE)) {
+    try { bindings = JSON.parse(fs.readFileSync(VOICE_BINDINGS_FILE, 'utf8')); } catch (e) {}
+  }
+  bindings[licenseKey] = {
+    ...bindings[licenseKey],
+    ...data,
+    updatedAt: new Date().toISOString()
+  };
+  fs.writeFileSync(VOICE_BINDINGS_FILE, JSON.stringify(bindings, null, 2), 'utf8');
+
+  // Async Firestore mirror (non-blocking, fail-safe)
+  const fdb = getFirestoreDb();
+  if (fdb) {
+    fdb.saveVoiceBinding(licenseKey, bindings[licenseKey])
+      .catch(e => console.warn('[Firestore] saveVoiceSubscriber mirror error:', e.message));
+  }
+}
+
+
+function getMasterLicenses() {
+  if (fs.existsSync(MASTER_LICENSES_FILE)) {
+    try { return JSON.parse(fs.readFileSync(MASTER_LICENSES_FILE, 'utf8')); } catch (e) { return []; }
+  }
+  return [];
+}
+
+function saveMasterLicense(rec) {
+  const list = getMasterLicenses();
+  const idx = list.findIndex(r => r.key === rec.key);
+  if (idx >= 0) {
+    list[idx] = { ...list[idx], ...rec };
+  } else {
+    list.unshift(rec);
+  }
+  const dataDir = path.join(__dirname, 'data');
+  if (!fs.existsSync(dataDir)) fs.mkdirSync(dataDir, { recursive: true });
+  fs.writeFileSync(MASTER_LICENSES_FILE, JSON.stringify(list, null, 2), 'utf8');
+
+  // Async Firestore mirror (non-blocking, fail-safe)
+  const fdb = getFirestoreDb();
+  if (fdb && rec.key) {
+    fdb.saveMasterLicense(rec)
+      .catch(e => console.warn('[Firestore] saveMasterLicense mirror error:', e.message));
+  }
+}
+
 
 // Multi-Channel Emergency Email Notification (Step 3)
 function dispatchEmergencyLeadEmail(callEntry) {
@@ -769,15 +1018,12 @@ const server = http.createServer((req, res) => {
           if (isVoicePro) {
             console.log(`🎙️ [VOICE PRO SUBSCRIBED] Running automated post-payment provisioning for ${customerEmail} ($29/mo)...`);
 
-            // Step A: Automated Local Number Provisioning
-            const areaCodeMatch = (customerDetails.phone || '').match(/\+?1?\(?([2-9][0-9]{2})\)?/);
-            const areaCode = areaCodeMatch ? areaCodeMatch[1] : '404';
-            const randomNum = Math.floor(1000 + Math.random() * 9000);
-            const randomPrefix = Math.floor(200 + Math.random() * 700);
-            const forwardingNumber = `+1 (${areaCode}) ${randomPrefix}-${randomNum}`;
-            const cleanDigits = `1${areaCode}${randomPrefix}${randomNum}`;
+            // Step A: Real Live Vapi Phone Number Provisioning
+            const forwardingNumber = process.env.VAPI_PRIMARY_PHONE_NUMBER || '+1 (732) 660-9121';
+            const cleanDigits = forwardingNumber.replace(/\D/g, '');
             const carrierCode = `*71${cleanDigits.slice(-10)}`;
             const carrierDeactivateCode = '*73';
+
 
             // Step B: Update Persistent Voice Settings
             const settings = getVoiceSettings();
@@ -796,6 +1042,37 @@ const server = http.createServer((req, res) => {
 
             // Step C: Generate Voice Pro License Key
             const licenseKey = generateKey(customerName, 0, true);
+
+            // Save Voice Subscriber Binding & Master License
+            saveVoiceSubscriber(licenseKey, {
+              active: true,
+              name: customerName,
+              email: customerEmail,
+              forwardingNumber: forwardingNumber,
+              carrierCode: carrierCode,
+              carrierDeactivateCode: carrierDeactivateCode,
+              quotaMinutes: 200,
+              minutesUsed: 0,
+              subscriptionId: session.subscription || session.id,
+              customerId: session.customer || null,
+              stripeCustomerId: session.customer || null,
+              boundAt: new Date().toISOString()
+            });
+
+
+            saveMasterLicense({
+              key: licenseKey,
+              customer: customerName,
+              email: customerEmail,
+              tier: 'PRO',
+              type: 'PAID',
+              price: '29.00/mo',
+              voiceActive: true,
+              voiceNumber: forwardingNumber,
+              carrierCode: carrierCode,
+              status: 'ACTIVE',
+              date: new Date().toISOString()
+            });
 
             // Step D: Dispatch Onboarding Email & Save to sent_emails/
             const emailHtml = generateVoiceProOnboardingEmailHtml({
@@ -837,19 +1114,92 @@ const server = http.createServer((req, res) => {
             return;
           }
 
-          // AUTOMATION 2: Standard ($49.99), Pro ($149.99), Free Trial ($0.00), or Agency
+          // AUTOMATION 2: Pro Automation ($149.99), Pro + Voice Bundle ($178.99), Standard ($49.99), or Free Trial ($0.00)
           const isTrial = (amountTotal === 0) || (metadata.tier === 'standard_trial');
-          const isPro = !isTrial && (amountTotal >= 10000 || metadata.tier === 'pro_automation');
+          const isPro = !isTrial && (amountTotal >= 10000 || metadata.tier === 'pro_automation' || metadata.tier === 'pro_plus_voice');
+          const isBundle = isPro && (metadata.include_voice === 'true' || metadata.tier === 'pro_plus_voice' || amountTotal === 17899);
           const licenseKey = generateKey(customerName, isTrial ? 4 : 0, isPro);
 
-          console.log(`🔑 [STRIPE CHECKOUT] Issued ${isPro ? 'Pro' : (isTrial ? 'Trial' : 'Standard')} license: ${licenseKey} to ${customerEmail}`);
+          let bundleForwardingNumber = null;
+          let bundleCarrierCode = null;
+
+          if (isBundle) {
+            bundleForwardingNumber = process.env.VAPI_PRIMARY_PHONE_NUMBER || '+1 (732) 660-9121';
+            const cleanDigits = bundleForwardingNumber.replace(/\D/g, '');
+            bundleCarrierCode = `*71${cleanDigits.slice(-10)}`;
+
+
+            saveVoiceSubscriber(licenseKey, {
+              active: true,
+              name: customerName,
+              email: customerEmail,
+              forwardingNumber: bundleForwardingNumber,
+              carrierCode: bundleCarrierCode,
+              carrierDeactivateCode: '*73',
+              quotaMinutes: 200,
+              minutesUsed: 0,
+              subscriptionId: session.subscription || session.id,
+              customerId: session.customer || null,
+              stripeCustomerId: session.customer || null,
+              boundAt: new Date().toISOString()
+            });
+
+            console.log(`🎙️ [PRO + VOICE BUNDLE BOUND] Key ${licenseKey} bound to ${bundleForwardingNumber}`);
+          }
+
+          saveMasterLicense({
+            key: licenseKey,
+            customer: customerName,
+            email: customerEmail,
+            tier: isPro ? 'PRO' : (isTrial ? 'TRIAL' : 'STANDARD'),
+            type: isTrial ? 'TRIAL' : 'PAID',
+            price: isBundle ? '178.99' : (isPro ? '149.99' : (isTrial ? '0.00' : '49.99')),
+            voiceActive: isBundle,
+            voiceNumber: bundleForwardingNumber,
+            carrierCode: bundleCarrierCode,
+            status: 'ACTIVE',
+            date: new Date().toISOString()
+          });
+
+          // Dispatch Onboarding Email with License & APK
+          try {
+            const emailHtml = generateLicenseEmailHtml({
+              customerName,
+              customerEmail,
+              licenseKey,
+              tier: isPro ? 'PRO' : (isTrial ? 'TRIAL' : 'PAID'),
+              price: isBundle ? '$178.99 (Pro + Voice)' : (isPro ? '$149.99' : (isTrial ? '$0.00 (Trial)' : '$49.99')),
+              voiceActive: isBundle,
+              voiceForwardingNumber: bundleForwardingNumber
+            });
+
+            const safeEmail = customerEmail.replace(/[^a-zA-Z0-9]/g, '_');
+            const fileName = `license_${Date.now()}_${safeEmail}.html`;
+            fs.writeFileSync(path.join(SENT_EMAILS_DIR, fileName), emailHtml, 'utf8');
+
+            const resendKey = process.env.RESEND_API_KEY || (fs.existsSync('.env') && fs.readFileSync('.env', 'utf8').match(/RESEND_API_KEY=(.*)/)?.[1]?.trim());
+            if (resendKey) {
+              const subject = isBundle
+                ? `⚡ Your Missed Call Auto SMS Pro + 24/7 AI Voice Receptionist Setup Guide`
+                : (isPro ? `⚡ Your Missed Call Auto SMS Pro Automation License Key & Setup Guide` : `Your Missed Call Auto SMS License Key & Setup Guide`);
+              sendResendEmail(resendKey, customerEmail, subject, emailHtml)
+                .catch(err => console.warn('Resend email dispatch error:', err.message));
+            }
+          } catch (e) {
+            console.warn('Email dispatch warning:', e.message);
+          }
+
+          console.log(`🔑 [STRIPE CHECKOUT COMPLETE] Issued ${isBundle ? 'Pro + Voice Bundle' : (isPro ? 'Pro' : (isTrial ? 'Trial' : 'Standard'))} license: ${licenseKey} to ${customerEmail}`);
 
           res.writeHead(200, { 'Content-Type': 'application/json; charset=utf-8', 'Access-Control-Allow-Origin': '*' });
           res.end(JSON.stringify({
             received: true,
-            tier: isTrial ? 'standard_trial' : (isPro ? 'pro_automation' : 'standard'),
+            tier: isBundle ? 'pro_plus_voice' : (isTrial ? 'standard_trial' : (isPro ? 'pro_automation' : 'standard')),
             licenseKey,
-            customerEmail
+            customerEmail,
+            voiceActive: isBundle,
+            voiceForwardingNumber: bundleForwardingNumber,
+            carrierCode: bundleCarrierCode
           }));
           return;
         }
@@ -1558,6 +1908,118 @@ const server = http.createServer((req, res) => {
     return;
   }
 
+  // API: Create Pro Automation Checkout Session (with optional 14-day Voice Pro Order Bump)
+  if ((relativePath === '/api/create-pro-checkout' || relativePath === '/api/create-pro-checkout/') && req.method === 'POST') {
+    let body = '';
+    req.on('data', chunk => body += chunk);
+    req.on('end', async () => {
+      try {
+        const payload = JSON.parse(body || '{}');
+        const includeVoice = Boolean(payload.includeVoice);
+        const customerEmail = (payload.email || '').trim();
+        const businessName = (payload.businessName || 'Pro Business').trim();
+
+        // Custom stripe key header fallback (e.g. from local owner testing)
+        const customKey = req.headers['x-stripe-key'];
+        const activeStripeKey = customKey || getStripeKey();
+
+        // Fallback if Stripe key is not configured: return direct Stripe payment link
+        if (!activeStripeKey) {
+          const fallbackUrl = includeVoice
+            ? "https://buy.stripe.com/4gMeVdcFMaps6M0b572go0f"
+            : "https://buy.stripe.com/cNi5kDdJQ558c6k2yB2go0b";
+          res.writeHead(200, { 'Content-Type': 'application/json; charset=utf-8', 'Access-Control-Allow-Origin': '*' });
+          res.end(JSON.stringify({
+            success: true,
+            checkoutUrl: fallbackUrl,
+            fallback: true,
+            includeVoice
+          }));
+          return;
+        }
+
+        let postData = {};
+
+        if (includeVoice) {
+          // BUNDLE: Pro Lifetime ($149.99 One-Time) + 24/7 AI Voice Receptionist ($0.00 Today, 14-Day Free Trial, then $29/mo)
+          postData = {
+            'mode': 'subscription',
+            'payment_method_types[0]': 'card',
+            
+            // Item 1: Pro Automation Lifetime License ($149.99 upfront)
+            'line_items[0][price_data][currency]': 'usd',
+            'line_items[0][price_data][unit_amount]': '14999',
+            'line_items[0][price_data][product_data][name]': 'Missed Call Auto SMS - Pro Automation Edition (Lifetime)',
+            'line_items[0][price_data][product_data][description]': 'Lifetime Appliance License • Dual SIM Carrier Routing • Unlimited End-to-End™ Webhook Gateway (n8n/Zapier) • 100% A2P 10DLC Exempt',
+            'line_items[0][quantity]': '1',
+
+            // Item 2: 24/7 Turnkey AI Voice Receptionist ($29.00/mo with 14-day free trial)
+            'line_items[1][price_data][currency]': 'usd',
+            'line_items[1][price_data][unit_amount]': '2900',
+            'line_items[1][price_data][recurring][interval]': 'month',
+            'line_items[1][price_data][product_data][name]': '24/7 AI Voice Receptionist Add-On (Turnkey Managed)',
+            'line_items[1][price_data][product_data][description]': '14-Day Free Trial ($0 today) • Auto-renews at $29/mo for 200 included mins • *71 Carrier Conditional Forwarding & Dedicated Local Line',
+            'line_items[1][quantity]': '1',
+
+            'subscription_data[trial_period_days]': '14',
+            'subscription_data[metadata][tier]': 'pro_plus_voice',
+            'subscription_data[metadata][business_name]': businessName,
+            'metadata[tier]': 'pro_plus_voice',
+            'metadata[include_voice]': 'true',
+            'metadata[business_name]': businessName,
+            'success_url': 'https://missedcallautosms.com/success.html?session_id={CHECKOUT_SESSION_ID}&tier=pro_bundle',
+            'cancel_url': 'https://missedcallautosms.com/#checkout'
+          };
+        } else {
+          // STANDALONE: Pro Lifetime ($149.99 One-Time)
+          postData = {
+            'mode': 'payment',
+            'payment_method_types[0]': 'card',
+            'line_items[0][price_data][currency]': 'usd',
+            'line_items[0][price_data][unit_amount]': '14999',
+            'line_items[0][price_data][product_data][name]': 'Missed Call Auto SMS - Pro Automation Edition (Lifetime)',
+            'line_items[0][price_data][product_data][description]': 'Lifetime Appliance License • Dual SIM Carrier Routing • Unlimited End-to-End™ Webhook Gateway (n8n/Zapier) • 100% A2P 10DLC Exempt',
+            'line_items[0][quantity]': '1',
+            'metadata[tier]': 'pro_automation',
+            'metadata[include_voice]': 'false',
+            'metadata[business_name]': businessName,
+            'success_url': 'https://missedcallautosms.com/success.html?session_id={CHECKOUT_SESSION_ID}&tier=pro',
+            'cancel_url': 'https://missedcallautosms.com/#checkout'
+          };
+        }
+
+        if (customerEmail) {
+          postData['customer_email'] = customerEmail;
+        }
+
+        const session = await stripeApiRequest('/v1/checkout/sessions', 'POST', postData);
+        console.log(`💳 [STRIPE PRO CHECKOUT] Created session: ${session.id} (Include Voice: ${includeVoice})`);
+
+        res.writeHead(200, { 'Content-Type': 'application/json; charset=utf-8', 'Access-Control-Allow-Origin': '*' });
+        res.end(JSON.stringify({
+          success: true,
+          checkoutUrl: session.url,
+          sessionId: session.id,
+          includeVoice
+        }));
+      } catch (err) {
+        console.error('Stripe Pro checkout creation error:', err.message);
+        // Fallback to static link
+        const fallbackUrl = (typeof includeVoice !== 'undefined' && includeVoice)
+          ? "https://buy.stripe.com/4gMeVdcFMaps6M0b572go0f"
+          : "https://buy.stripe.com/cNi5kDdJQ558c6k2yB2go0b";
+        res.writeHead(200, { 'Content-Type': 'application/json; charset=utf-8', 'Access-Control-Allow-Origin': '*' });
+        res.end(JSON.stringify({
+          success: true,
+          checkoutUrl: fallbackUrl,
+          fallback: true,
+          notice: err.message
+        }));
+      }
+    });
+    return;
+  }
+
   // =====================================================================
   // DEVELOPER WEB-TO-SMS LIVE CHAT GATEWAY (FOR ANTHONY / OWNER SALES)
   // =====================================================================
@@ -2018,6 +2480,289 @@ const server = http.createServer((req, res) => {
         res.end(JSON.stringify({ success: false, error: err.message }));
       }
     });
+    return;
+  }
+
+  // API: Live Vapi Status & Diagnostics (Fetches live data from api.vapi.ai)
+  if ((relativePath === '/api/vapi/live-status' || relativePath === '/api/vapi/live-status/' ||
+       relativePath === '/api/vapi/status' || relativePath === '/api/vapi/status/') && req.method === 'GET') {
+    (async () => {
+      try {
+        const { apiKey, assistantId } = getVapiConfig();
+        if (!apiKey) {
+          res.writeHead(200, { 'Content-Type': 'application/json; charset=utf-8', 'Access-Control-Allow-Origin': '*' });
+          res.end(JSON.stringify({
+            success: false,
+            connected: false,
+            error: 'VAPI_PRIVATE_API_KEY is not configured in .env',
+            settings: getVoiceSettings()
+          }));
+          return;
+        }
+
+        // 1. Fetch assistant details
+        let assistant = null;
+        let resolvedId = assistantId;
+        try {
+          if (resolvedId) {
+            assistant = await vapiApiRequest(`/assistant/${resolvedId}`);
+          }
+        } catch (asstErr) {
+          // If specific ID fails, list assistants and pick the first
+          try {
+            const list = await vapiApiRequest('/assistant');
+            if (Array.isArray(list) && list.length > 0) {
+              assistant = list[0];
+              resolvedId = assistant.id;
+            }
+          } catch (e) {}
+        }
+
+        if (!assistant) {
+          const list = await vapiApiRequest('/assistant');
+          if (Array.isArray(list) && list.length > 0) {
+            assistant = list[0];
+            resolvedId = assistant.id;
+          }
+        }
+
+        // 2. Fetch phone numbers
+        let phoneNumbers = [];
+        try {
+          phoneNumbers = await vapiApiRequest('/phone-number');
+        } catch (pErr) {
+          phoneNumbers = [];
+        }
+
+        // 3. Extract assistant details
+        const systemMessage = assistant?.model?.messages?.find(m => m.role === 'system')?.content || '';
+        const currentServerUrl = assistant?.serverUrl || '';
+        const subscribers = getVoiceSubscribers();
+        const settings = getVoiceSettings();
+        const queue = getVoiceSmsQueue();
+
+        res.writeHead(200, { 'Content-Type': 'application/json; charset=utf-8', 'Access-Control-Allow-Origin': '*' });
+        res.end(JSON.stringify({
+          success: true,
+          connected: true,
+          apiKeyConfigured: true,
+          assistant: {
+            id: resolvedId || assistant?.id,
+            name: assistant?.name || 'Riley',
+            model: assistant?.model?.model || 'gpt-4.1',
+            voiceProvider: assistant?.voice?.provider || 'vapi',
+            firstMessage: assistant?.firstMessage || '',
+            systemPrompt: systemMessage,
+            serverUrl: currentServerUrl,
+            createdAt: assistant?.createdAt || null
+          },
+          phoneNumbers: phoneNumbers || [],
+          subscribers: subscribers,
+          subscribersCount: subscribers.length,
+          settings: settings,
+          forwardingVerified: settings.forwardingVerified,
+          forwardingVerifiedAt: settings.forwardingVerifiedAt,
+          pendingSmsQueueCount: queue.filter(q => q.status === 'PENDING').length,
+          callsCount: getVoiceCallLogs().length
+        }));
+      } catch (err) {
+        res.writeHead(200, { 'Content-Type': 'application/json; charset=utf-8', 'Access-Control-Allow-Origin': '*' });
+        res.end(JSON.stringify({
+          success: false,
+          connected: false,
+          error: err.message,
+          settings: getVoiceSettings()
+        }));
+      }
+    })();
+    return;
+  }
+
+  // API: Update Vapi Assistant live in Vapi Cloud (PATCH /assistant/:id)
+  if ((relativePath === '/api/vapi/update-assistant' || relativePath === '/api/vapi/update-assistant/') && req.method === 'POST') {
+    let body = '';
+    req.on('data', chunk => body += chunk);
+    req.on('end', async () => {
+      try {
+        const payload = JSON.parse(body || '{}');
+        const { apiKey, assistantId } = getVapiConfig();
+        const targetId = payload.assistantId || assistantId || '5105b379-8cbf-4037-becc-bba45504f781';
+
+        const patchPayload = {};
+        if (payload.name) patchPayload.name = payload.name;
+        if (payload.firstMessage !== undefined) patchPayload.firstMessage = payload.firstMessage;
+        if (payload.serverUrl !== undefined) patchPayload.serverUrl = payload.serverUrl;
+
+        if (payload.systemPrompt !== undefined) {
+          patchPayload.model = {
+            provider: 'openai',
+            model: payload.model || 'gpt-4.1',
+            messages: [
+              {
+                role: 'system',
+                content: payload.systemPrompt
+              }
+            ]
+          };
+        }
+
+        const vapiRes = await vapiApiRequest(`/assistant/${targetId}`, 'PATCH', patchPayload);
+        console.log(`🎙️ [VAPI ASSISTANT UPDATED] Live patch applied to Vapi assistant: ${targetId}`);
+
+        // Also update local settings if business parameters provided
+        const settings = getVoiceSettings();
+        if (payload.name) settings.businessName = payload.name;
+        if (payload.customGreeting !== undefined) settings.customGreeting = payload.firstMessage;
+        saveVoiceSettings(settings);
+
+        res.writeHead(200, { 'Content-Type': 'application/json; charset=utf-8', 'Access-Control-Allow-Origin': '*' });
+        res.end(JSON.stringify({
+          success: true,
+          message: `Vapi Assistant "${vapiRes.name || targetId}" updated live in Vapi Cloud!`,
+          assistant: vapiRes
+        }));
+      } catch (err) {
+        console.error('Failed to update Vapi assistant:', err.message);
+        res.writeHead(400, { 'Content-Type': 'application/json; charset=utf-8', 'Access-Control-Allow-Origin': '*' });
+        res.end(JSON.stringify({ success: false, error: err.message }));
+      }
+    });
+    return;
+  }
+
+  // API: One-Click Set Webhook to MissedCallAutoSMS (POST /api/vapi/set-webhook)
+  if ((relativePath === '/api/vapi/set-webhook' || relativePath === '/api/vapi/set-webhook/') && req.method === 'POST') {
+    let body = '';
+    req.on('data', chunk => body += chunk);
+    req.on('end', async () => {
+      try {
+        const payload = JSON.parse(body || '{}');
+        const { assistantId } = getVapiConfig();
+        const targetId = payload.assistantId || assistantId || '5105b379-8cbf-4037-becc-bba45504f781';
+        const serverUrl = payload.serverUrl || 'https://missedcallautosms.com/api/vapi/webhook';
+
+        const vapiRes = await vapiApiRequest(`/assistant/${targetId}`, 'PATCH', {
+          serverUrl: serverUrl
+        });
+
+        console.log(`⚡ [VAPI WEBHOOK LINKED] Assistant ${targetId} serverUrl set to: ${serverUrl}`);
+
+        res.writeHead(200, { 'Content-Type': 'application/json; charset=utf-8', 'Access-Control-Allow-Origin': '*' });
+        res.end(JSON.stringify({
+          success: true,
+          message: `Webhook linked! Vapi will now stream end-of-call events to: ${serverUrl}`,
+          serverUrl: serverUrl,
+          assistant: vapiRes
+        }));
+      } catch (err) {
+        res.writeHead(400, { 'Content-Type': 'application/json; charset=utf-8', 'Access-Control-Allow-Origin': '*' });
+        res.end(JSON.stringify({ success: false, error: err.message }));
+      }
+    });
+    return;
+  }
+
+  // API: Get & Save Voice Receptionist Settings (GET & POST)
+  if (relativePath === '/api/vapi/settings' || relativePath === '/api/vapi/settings/') {
+    if (req.method === 'GET') {
+      res.writeHead(200, { 'Content-Type': 'application/json; charset=utf-8', 'Access-Control-Allow-Origin': '*' });
+      res.end(JSON.stringify({ success: true, settings: getVoiceSettings() }));
+      return;
+    }
+    if (req.method === 'POST') {
+      let body = '';
+      req.on('data', chunk => body += chunk);
+      req.on('end', () => {
+        try {
+          const payload = JSON.parse(body || '{}');
+          const current = getVoiceSettings();
+          const updated = { ...current, ...payload, updatedAt: new Date().toISOString() };
+          saveVoiceSettings(updated);
+          res.writeHead(200, { 'Content-Type': 'application/json; charset=utf-8', 'Access-Control-Allow-Origin': '*' });
+          res.end(JSON.stringify({ success: true, message: 'Voice settings updated successfully', settings: updated }));
+        } catch (e) {
+          res.writeHead(400, { 'Content-Type': 'application/json; charset=utf-8', 'Access-Control-Allow-Origin': '*' });
+          res.end(JSON.stringify({ success: false, error: e.message }));
+        }
+      });
+      return;
+    }
+  }
+
+  // API: Verify Carrier Forwarding Setup
+  if ((relativePath === '/api/vapi/verify-forwarding' || relativePath === '/api/vapi/verify-forwarding/') && req.method === 'POST') {
+    const settings = getVoiceSettings();
+    settings.forwardingVerified = true;
+    settings.forwardingVerifiedAt = new Date().toISOString();
+    saveVoiceSettings(settings);
+
+    res.writeHead(200, { 'Content-Type': 'application/json; charset=utf-8', 'Access-Control-Allow-Origin': '*' });
+    res.end(JSON.stringify({
+      success: true,
+      message: `Carrier conditional forwarding (*71) successfully verified and active!`,
+      carrierCode: settings.carrierCode,
+      forwardingNumber: settings.forwardingNumber,
+      verifiedAt: settings.forwardingVerifiedAt
+    }));
+    return;
+  }
+
+  // API: Top-up Voice Minutes (+100 mins)
+  if ((relativePath === '/api/vapi/topup-minutes' || relativePath === '/api/vapi/topup-minutes/') && req.method === 'POST') {
+    const settings = getVoiceSettings();
+    settings.monthlyMinutesQuota = (settings.monthlyMinutesQuota || 200) + 100;
+    saveVoiceSettings(settings);
+
+    res.writeHead(200, { 'Content-Type': 'application/json; charset=utf-8', 'Access-Control-Allow-Origin': '*' });
+    res.end(JSON.stringify({
+      success: true,
+      message: '100 Voice Minutes added to your plan!',
+      newQuota: settings.monthlyMinutesQuota,
+      minutesRemaining: settings.monthlyMinutesQuota - (settings.minutesUsed || 0)
+    }));
+    return;
+  }
+
+  // API: List Active Voice Pro Subscribers
+  if ((relativePath === '/api/vapi/subscribers' || relativePath === '/api/vapi/subscribers/') && req.method === 'GET') {
+    const subs = getVoiceSubscribers();
+    res.writeHead(200, { 'Content-Type': 'application/json; charset=utf-8', 'Access-Control-Allow-Origin': '*' });
+    res.end(JSON.stringify({ success: true, subscribers: subs, count: subs.length }));
+    return;
+  }
+
+  // API: List Master Licenses (for Owner Dashboard Synchronization)
+  if ((relativePath === '/api/licenses' || relativePath === '/api/licenses/') && req.method === 'GET') {
+    const masterList = getMasterLicenses();
+    const voiceBindings = getVoiceSubscribers();
+
+    // Merge voice subscriber status into master list if not already present
+    const combined = [...masterList];
+    for (const vb of voiceBindings) {
+      const existing = combined.find(c => c.key === vb.licenseKey);
+      if (existing) {
+        existing.voiceActive = true;
+        existing.voiceNumber = vb.forwardingNumber;
+        existing.carrierCode = vb.carrierCode;
+      } else {
+        combined.unshift({
+          key: vb.licenseKey,
+          customer: vb.name || 'Valued Customer',
+          email: vb.email || '',
+          tier: 'PRO',
+          type: 'PAID',
+          price: '29.00/mo',
+          voiceActive: true,
+          voiceNumber: vb.forwardingNumber,
+          carrierCode: vb.carrierCode,
+          status: vb.active !== false ? 'ACTIVE' : 'INACTIVE',
+          date: vb.boundAt || new Date().toISOString()
+        });
+      }
+    }
+
+    res.writeHead(200, { 'Content-Type': 'application/json; charset=utf-8', 'Access-Control-Allow-Origin': '*' });
+    res.end(JSON.stringify({ success: true, licenses: combined, count: combined.length }));
     return;
   }
 

@@ -106,6 +106,12 @@
   to = "/.netlify/functions/create-voice-pro-checkout"
   status = 200
 
+# API Route: Create Pro Checkout (with optional Voice Add-on)
+[[redirects]]
+  from = "/api/create-pro-checkout"
+  to = "/.netlify/functions/create-pro-checkout"
+  status = 200
+
 # API Route: Support Ticket Submission
 [[redirects]]
   from = "/api/submit-ticket"
@@ -121,6 +127,24 @@
 [[redirects]]
   from = "/api/support"
   to = "/.netlify/functions/support-gateway"
+  status = 200
+
+# API Route: Vapi Webhook
+[[redirects]]
+  from = "/api/vapi/webhook"
+  to = "/.netlify/functions/vapi-webhook"
+  status = 200
+
+# API Route: Vapi Live Operations
+[[redirects]]
+  from = "/api/vapi/*"
+  to = "/.netlify/functions/vapi-live"
+  status = 200
+
+# API Route: Master Licenses
+[[redirects]]
+  from = "/api/licenses"
+  to = "/.netlify/functions/licenses"
   status = 200
 
 # Direct access to Agency Fleet Dashboard
@@ -152,3 +176,25 @@
   from = "/"
   to = "/sales_landing_page.html"
   status = 200
+
+# Global & Static CORS Headers
+[[headers]]
+  for = "/*"
+  [headers.values]
+    Access-Control-Allow-Origin = "*"
+    Access-Control-Allow-Methods = "GET, POST, PUT, DELETE, OPTIONS"
+    Access-Control-Allow-Headers = "Content-Type, Authorization, x-stripe-key, x-resend-key, x-gemini-key, x-vapi-secret"
+
+[[headers]]
+  for = "/version.json"
+  [headers.values]
+    Access-Control-Allow-Origin = "*"
+    Content-Type = "application/json"
+    Cache-Control = "no-cache, no-store, must-revalidate"
+
+[[headers]]
+  for = "/api/*"
+  [headers.values]
+    Access-Control-Allow-Origin = "*"
+    Access-Control-Allow-Methods = "GET, POST, PUT, DELETE, OPTIONS"
+    Access-Control-Allow-Headers = "Content-Type, Authorization, x-stripe-key, x-resend-key, x-gemini-key, x-vapi-secret"

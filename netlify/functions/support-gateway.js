@@ -3,7 +3,8 @@ const path = require('path');
 const https = require('https');
 
 const RESEND_API_KEY = process.env.RESEND_API_KEY || '';
-const FROM_EMAIL = process.env.FROM_EMAIL || 'Missed Call Auto SMS <onboarding@resend.dev>';
+const FROM_EMAIL = process.env.FROM_EMAIL || 'Missed Call Auto SMS <support@missedcallautosms.com>';
+
 const OWNER_EMAIL = process.env.OWNER_EMAIL || 'contactus@offgridmediagroup.com';
 const LOCAL_SETTINGS_CACHE = path.join(__dirname, '../../data/support_gateway_settings.json');
 const LOCAL_CHATS_CACHE = path.join(__dirname, '../../data/developer_support_chats.json');
