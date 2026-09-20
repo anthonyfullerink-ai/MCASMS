@@ -58,7 +58,11 @@ class SettingsRepository(private val context: Context) {
         val CONTRACTOR_ACTIVITY = stringPreferencesKey("contractor_activity")
         val CONTRACTOR_GOAL = stringPreferencesKey("contractor_goal")
         val CONTRACTOR_GOAL_LINK = stringPreferencesKey("contractor_goal_link")
+        val POST_CALL_SMS_ENABLED = booleanPreferencesKey("post_call_sms_enabled")
+        val POST_CALL_SMS_TEMPLATE = stringPreferencesKey("post_call_sms_template")
+        val POST_CALL_EMERGENCY_ONLY = booleanPreferencesKey("post_call_emergency_only")
     }
+
 
     val settingsFlow: Flow<AppSettings> = context.dataStore.data.map { preferences ->
         val scheduleJson = preferences[SCHEDULE_JSON]
@@ -121,8 +125,12 @@ class SettingsRepository(private val context: Context) {
             contractorStatus = preferences[CONTRACTOR_STATUS] ?: "AVAILABLE",
             contractorActivity = preferences[CONTRACTOR_ACTIVITY] ?: "Hands Full",
             contractorGoal = preferences[CONTRACTOR_GOAL] ?: "BOOKING_LINK",
-            contractorGoalLink = preferences[CONTRACTOR_GOAL_LINK] ?: ""
+            contractorGoalLink = preferences[CONTRACTOR_GOAL_LINK] ?: "",
+            postCallSmsEnabled = preferences[POST_CALL_SMS_ENABLED] ?: true,
+            postCallSmsTemplate = preferences[POST_CALL_SMS_TEMPLATE] ?: "Hey {NAME}, this is {BUSINESS_NAME}. My AI assistant let me know about {SUMMARY}. I am wrapping up on a job and will reach out to you shortly!",
+            postCallEmergencyOnly = preferences[POST_CALL_EMERGENCY_ONLY] ?: false
         )
+
     }
 
     suspend fun getSettings(): AppSettings {
@@ -203,6 +211,10 @@ class SettingsRepository(private val context: Context) {
             preferences[CONTRACTOR_ACTIVITY] = settings.contractorActivity
             preferences[CONTRACTOR_GOAL] = settings.contractorGoal
             preferences[CONTRACTOR_GOAL_LINK] = settings.contractorGoalLink
+            preferences[POST_CALL_SMS_ENABLED] = settings.postCallSmsEnabled
+            preferences[POST_CALL_SMS_TEMPLATE] = settings.postCallSmsTemplate
+            preferences[POST_CALL_EMERGENCY_ONLY] = settings.postCallEmergencyOnly
         }
     }
+
 }

@@ -45,6 +45,10 @@ data class AppSettings(
     val contractorStatus: String = "AVAILABLE", // "AVAILABLE", "AFTER_HOURS", "EMERGENCY"
     val contractorActivity: String = "Hands Full", // "cutting hair", "on a job", "in a meeting", etc.
     val contractorGoal: String = "BOOKING_LINK", // "BOOKING_LINK", "CALLBACK_PROMISE", "QUOTE_FORM"
-    val contractorGoalLink: String = ""
+    val contractorGoalLink: String = "",
+    val postCallSmsEnabled: Boolean = true,
+    val postCallSmsTemplate: String = "Hey {NAME}, this is {BUSINESS_NAME}. My AI assistant let me know about {SUMMARY}. I am wrapping up on a job and will reach out to you shortly!",
+    val postCallEmergencyOnly: Boolean = false
 )
+
 

@@ -1,10 +1,10 @@
 {
-  "versionCode": 11,
-  "versionName": "1.4.1",
+  "versionCode": 12,
+  "versionName": "1.4.2",
   "downloadUrl": "https://raw.githubusercontent.com/anthonyfullerink-ai/MCASMS/main/MissedCallAutoSMS.apk",
   "proDownloadUrl": "https://raw.githubusercontent.com/anthonyfullerink-ai/MCASMS/main/MissedCallAutoSMS-Pro.apk",
-  "releaseNotes": "• 🎙️ 24/7 AI Voice Receptionist (*71 Carrier Call Forwarding & Live Assistant)\n• ⚡ Dual SIM & Pro Webhook Automation Bridge\n• 🤖 BYOK Multi-Agent & Inbound Line Selector in Setup\n• 🛠️ Developer Master Voice Mode & Simulated Inbound Testing\n• 💬 Direct Developer Web-to-SMS Live Chat Gateway Sync\n• ⚡ Instant Offline Outbound SIM SMS Recovery",
+  "releaseNotes": "• 📱 Custom AI Post-Call Follow-up SMS Template Editor with dynamic {NAME}, {SUMMARY}, & {BUSINESS_NAME} tags\n• 🎙️ 24/7 Live AI Voice Receptionist (*71 Carrier Call Forwarding to +1-732-660-9121)\n• 🔋 OEM Battery Optimization Exemption Wizard\n• ⚡ Dual-SIM Persistent Telephony Subscription ID Caching\n• 💳 Automated Stripe Post-Payment Provisioning & Metered Billing",
   "mandatory": true,
-  "minSupportedVersion": 11,
-  "updatedAt": "2026-09-19T21:00:00.000Z"
+  "minSupportedVersion": 12,
+  "updatedAt": "2026-09-20T01:00:00.000Z"
 }

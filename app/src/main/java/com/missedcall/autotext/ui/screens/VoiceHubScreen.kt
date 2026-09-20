@@ -848,7 +848,7 @@ fun CarrierForwardingControlCard(
 }
 
 /**
- * Contractor Outcome & Goal Card
+ * Contractor Outcome & Goal Card with Full AI Post-Call SMS Customizer
  */
 @Composable
 fun ContractorGoalCard(
@@ -857,6 +857,14 @@ fun ContractorGoalCard(
 ) {
     var isEditingLink by remember { mutableStateOf(false) }
     var linkInput by remember { mutableStateOf(settings.contractorGoalLink) }
+    var templateInput by remember { mutableStateOf(settings.postCallSmsTemplate) }
+
+    val defaultTemplate = "Hey {NAME}, this is {BUSINESS_NAME}. My AI assistant let me know about {SUMMARY}. I am wrapping up on a job and will reach out to you shortly!"
+
+    // Keep local input in sync if settings update from external source
+    LaunchedEffect(settings.postCallSmsTemplate) {
+        templateInput = settings.postCallSmsTemplate
+    }
 
     Card(
         colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.5f)),
@@ -864,6 +872,7 @@ fun ContractorGoalCard(
         modifier = Modifier.fillMaxWidth()
     ) {
         Column(modifier = Modifier.padding(16.dp)) {
+            // Header
             Row(
                 modifier = Modifier.fillMaxWidth(),
                 horizontalArrangement = Arrangement.SpaceBetween,
@@ -930,9 +939,192 @@ fun ContractorGoalCard(
                     color = MaterialTheme.colorScheme.onSurfaceVariant
                 )
             }
+
+            HorizontalDivider(modifier = Modifier.padding(vertical = 14.dp), color = MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.3f))
+
+            // ── AI Post-Call Follow-up SMS Customizer ─────────────────────────────
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.SpaceBetween,
+                verticalAlignment = Alignment.CenterVertically
+            ) {
+                Column(modifier = Modifier.weight(1f)) {
+                    Text(
+                        text = "📱 AI Post-Call Follow-up SMS",
+                        style = MaterialTheme.typography.titleSmall,
+                        fontWeight = FontWeight.Bold
+                    )
+                    Text(
+                        text = "Automatically text caller from this phone's SIM card after the AI finishes their call.",
+                        style = MaterialTheme.typography.bodySmall,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant
+                    )
+                }
+                Switch(
+                    checked = settings.postCallSmsEnabled,
+                    onCheckedChange = { onSettingsChanged(settings.copy(postCallSmsEnabled = it)) }
+                )
+            }
+
+            if (settings.postCallSmsEnabled) {
+                Spacer(modifier = Modifier.height(12.dp))
+
+                // Emergency Only Toggle
+                Surface(
+                    color = MaterialTheme.colorScheme.surface.copy(alpha = 0.6f),
+                    shape = RoundedCornerShape(10.dp),
+                    modifier = Modifier.fillMaxWidth()
+                ) {
+                    Row(
+                        modifier = Modifier.padding(horizontal = 12.dp, vertical = 8.dp),
+                        horizontalArrangement = Arrangement.SpaceBetween,
+                        verticalAlignment = Alignment.CenterVertically
+                    ) {
+                        Column(modifier = Modifier.weight(1f)) {
+                            Text(
+                                text = "🚨 Emergency Inquiries Only",
+                                style = MaterialTheme.typography.labelMedium,
+                                fontWeight = FontWeight.SemiBold
+                            )
+                            Text(
+                                text = "Only text callers if high-urgency keywords are detected in their call.",
+                                style = MaterialTheme.typography.labelSmall,
+                                color = MaterialTheme.colorScheme.onSurfaceVariant
+                            )
+                        }
+                        Switch(
+                            checked = settings.postCallEmergencyOnly,
+                            onCheckedChange = { onSettingsChanged(settings.copy(postCallEmergencyOnly = it)) }
+                        )
+                    }
+                }
+
+                Spacer(modifier = Modifier.height(12.dp))
+
+                // Template Multi-Line Editor
+                Text(
+                    text = "Custom Follow-up Message Template:",
+                    style = MaterialTheme.typography.labelMedium,
+                    fontWeight = FontWeight.Bold
+                )
+
+                Spacer(modifier = Modifier.height(6.dp))
+
+                OutlinedTextField(
+                    value = templateInput,
+                    onValueChange = {
+                        templateInput = it
+                        onSettingsChanged(settings.copy(postCallSmsTemplate = it))
+                    },
+                    modifier = Modifier.fillMaxWidth(),
+                    minLines = 3,
+                    maxLines = 6,
+                    placeholder = { Text(defaultTemplate) }
+                )
+
+                Spacer(modifier = Modifier.height(8.dp))
+
+                // One-Tap Variable Insertion Chips
+                Text(
+                    text = "Tap to Insert Dynamic Tags:",
+                    style = MaterialTheme.typography.labelSmall,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant
+                )
+
+                Spacer(modifier = Modifier.height(4.dp))
+
+                Row(
+                    modifier = Modifier.fillMaxWidth(),
+                    horizontalArrangement = Arrangement.spacedBy(6.dp)
+                ) {
+                    AssistChip(
+                        onClick = {
+                            val updated = templateInput + " {NAME}"
+                            templateInput = updated
+                            onSettingsChanged(settings.copy(postCallSmsTemplate = updated))
+                        },
+                        label = { Text("{NAME}", fontSize = 11.sp) }
+                    )
+                    AssistChip(
+                        onClick = {
+                            val updated = templateInput + " {SUMMARY}"
+                            templateInput = updated
+                            onSettingsChanged(settings.copy(postCallSmsTemplate = updated))
+                        },
+                        label = { Text("{SUMMARY}", fontSize = 11.sp) }
+                    )
+                    AssistChip(
+                        onClick = {
+                            val updated = templateInput + " {BUSINESS_NAME}"
+                            templateInput = updated
+                            onSettingsChanged(settings.copy(postCallSmsTemplate = updated))
+                        },
+                        label = { Text("{BUSINESS}", fontSize = 11.sp) }
+                    )
+                    AssistChip(
+                        onClick = {
+                            val updated = templateInput + " {BOOKING_LINK}"
+                            templateInput = updated
+                            onSettingsChanged(settings.copy(postCallSmsTemplate = updated))
+                        },
+                        label = { Text("{LINK}", fontSize = 11.sp) }
+                    )
+                }
+
+                // Reset to Default Button
+                if (templateInput.trim() != defaultTemplate.trim()) {
+                    TextButton(
+                        onClick = {
+                            templateInput = defaultTemplate
+                            onSettingsChanged(settings.copy(postCallSmsTemplate = defaultTemplate))
+                        },
+                        modifier = Modifier.align(Alignment.End)
+                    ) {
+                        Text("Reset to Default Template", fontSize = 11.sp, color = MaterialTheme.colorScheme.primary)
+                    }
+                }
+
+                Spacer(modifier = Modifier.height(8.dp))
+
+                // Live Dynamic Preview Box
+                Surface(
+                    color = MaterialTheme.colorScheme.primaryContainer.copy(alpha = 0.35f),
+                    shape = RoundedCornerShape(12.dp),
+                    border = BorderStroke(1.dp, MaterialTheme.colorScheme.primary.copy(alpha = 0.3f)),
+                    modifier = Modifier.fillMaxWidth()
+                ) {
+                    Column(modifier = Modifier.padding(12.dp)) {
+                        Row(verticalAlignment = Alignment.CenterVertically) {
+                            Text("💬", fontSize = 14.sp)
+                            Spacer(modifier = Modifier.width(6.dp))
+                            Text(
+                                text = "LIVE PREVIEW (HOW CALLER SEES IT)",
+                                style = MaterialTheme.typography.labelSmall,
+                                fontWeight = FontWeight.Bold,
+                                color = MaterialTheme.colorScheme.primary
+                            )
+                        }
+
+                        Spacer(modifier = Modifier.height(6.dp))
+
+                        val previewText = templateInput
+                            .replace("{NAME}", "Sarah")
+                            .replace("{BUSINESS_NAME}", settings.businessName.ifBlank { "Apex Services" })
+                            .replace("{SUMMARY}", "water heater leaking in basement")
+                            .replace("{BOOKING_LINK}", settings.contractorGoalLink.ifBlank { "https://missedcallautosms.com" })
+
+                        Text(
+                            text = previewText,
+                            style = MaterialTheme.typography.bodySmall,
+                            color = MaterialTheme.colorScheme.onSurface
+                        )
+                    }
+                }
+            }
         }
     }
 }
+
 
 @Composable
 fun GoalFilterChip(
