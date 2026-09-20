@@ -59,9 +59,16 @@ class SettingsRepository(private val context: Context) {
         val CONTRACTOR_GOAL = stringPreferencesKey("contractor_goal")
         val CONTRACTOR_GOAL_LINK = stringPreferencesKey("contractor_goal_link")
         val POST_CALL_SMS_ENABLED = booleanPreferencesKey("post_call_sms_enabled")
+
         val POST_CALL_SMS_TEMPLATE = stringPreferencesKey("post_call_sms_template")
         val POST_CALL_EMERGENCY_ONLY = booleanPreferencesKey("post_call_emergency_only")
+        val VOICE_AGENT_NAME = stringPreferencesKey("voice_agent_name")
+        val VOICE_INDUSTRY_TRADE = stringPreferencesKey("voice_industry_trade")
+        val VOICE_EMERGENCY_KEYWORDS = stringPreferencesKey("voice_emergency_keywords")
+        val VOICE_AFTER_HOURS_MODE = stringPreferencesKey("voice_after_hours_mode")
+        val VOICE_WIZARD_COMPLETED = booleanPreferencesKey("voice_wizard_completed")
     }
+
 
 
     val settingsFlow: Flow<AppSettings> = context.dataStore.data.map { preferences ->
@@ -128,8 +135,14 @@ class SettingsRepository(private val context: Context) {
             contractorGoalLink = preferences[CONTRACTOR_GOAL_LINK] ?: "",
             postCallSmsEnabled = preferences[POST_CALL_SMS_ENABLED] ?: true,
             postCallSmsTemplate = preferences[POST_CALL_SMS_TEMPLATE] ?: "Hey {NAME}, this is {BUSINESS_NAME}. My AI assistant let me know about {SUMMARY}. I am wrapping up on a job and will reach out to you shortly!",
-            postCallEmergencyOnly = preferences[POST_CALL_EMERGENCY_ONLY] ?: false
+            postCallEmergencyOnly = preferences[POST_CALL_EMERGENCY_ONLY] ?: false,
+            voiceAgentName = preferences[VOICE_AGENT_NAME] ?: "Riley",
+            voiceIndustryTrade = preferences[VOICE_INDUSTRY_TRADE] ?: "Home Services & Trades",
+            voiceEmergencyKeywords = preferences[VOICE_EMERGENCY_KEYWORDS] ?: "leak, flooding, no heat, sparking, gas smell, pipe burst",
+            voiceAfterHoursMode = preferences[VOICE_AFTER_HOURS_MODE] ?: "EMERGENCY_ONLY",
+            voiceWizardCompleted = preferences[VOICE_WIZARD_COMPLETED] ?: false
         )
+
 
     }
 
@@ -214,7 +227,13 @@ class SettingsRepository(private val context: Context) {
             preferences[POST_CALL_SMS_ENABLED] = settings.postCallSmsEnabled
             preferences[POST_CALL_SMS_TEMPLATE] = settings.postCallSmsTemplate
             preferences[POST_CALL_EMERGENCY_ONLY] = settings.postCallEmergencyOnly
+            preferences[VOICE_AGENT_NAME] = settings.voiceAgentName
+            preferences[VOICE_INDUSTRY_TRADE] = settings.voiceIndustryTrade
+            preferences[VOICE_EMERGENCY_KEYWORDS] = settings.voiceEmergencyKeywords
+            preferences[VOICE_AFTER_HOURS_MODE] = settings.voiceAfterHoursMode
+            preferences[VOICE_WIZARD_COMPLETED] = settings.voiceWizardCompleted
         }
     }
+
 
 }

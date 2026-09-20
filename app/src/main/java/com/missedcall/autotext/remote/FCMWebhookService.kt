@@ -118,8 +118,20 @@ class FCMWebhookService : FirebaseMessagingService() {
             return
         }
 
-        // Handle AI Voice Receptionist Completed Call Notifications
+        // Handle AI Voice Receptionist In-Progress Call Notification (Approach 2: Instant Cancellation)
         val eventType = data["type"] ?: data["event"] ?: ""
+        if (eventType == "voice_call_started") {
+            val callerPhone = data["caller_phone"] ?: data["phone"] ?: targetPhone
+            if (callerPhone.isNotBlank()) {
+                val cleanDigits = callerPhone.filter { it.isDigit() }.takeLast(10)
+                Log.i(TAG, "AI Call In-Progress from $callerPhone: Cancelling pending native missed-call auto-text for $cleanDigits")
+                WorkManager.getInstance(applicationContext).cancelUniqueWork("pending_missed_$cleanDigits")
+                WorkManager.getInstance(applicationContext).cancelAllWorkByTag("pending_missed_$cleanDigits")
+            }
+            return
+        }
+
+        // Handle AI Voice Receptionist Completed Call Notifications
         if (eventType == "voice_call_completed" || eventType == "voice_notification") {
             val callerPhone = data["caller_phone"] ?: data["phone"] ?: targetPhone
             val callerName = data["caller_name"] ?: data["name"]
@@ -129,6 +141,13 @@ class FCMWebhookService : FirebaseMessagingService() {
             val durationSeconds = data["duration_seconds"]?.toIntOrNull() ?: 0
             val followUpSms = data["follow_up_sms"] ?: data["sms_text"]
             val recordingUrl = data["recording_url"]
+
+            // Cancel any lingering pending native auto-text for this caller
+            val cleanDigits = callerPhone.filter { it.isDigit() }.takeLast(10)
+            if (cleanDigits.isNotEmpty()) {
+                WorkManager.getInstance(applicationContext).cancelUniqueWork("pending_missed_$cleanDigits")
+                WorkManager.getInstance(applicationContext).cancelAllWorkByTag("pending_missed_$cleanDigits")
+            }
 
             serviceScope.launch {
                 app.database.voiceCallDao().insert(
@@ -147,6 +166,47 @@ class FCMWebhookService : FirebaseMessagingService() {
                 )
             }
             postVoiceCallNotification(applicationContext, callerName ?: callerPhone, summary, intent)
+
+            // Automated Post-Call SMS Dispatch via Device SIM
+            if (settings.postCallSmsEnabled && callerPhone.isNotBlank()) {
+                val keywords = settings.voiceEmergencyKeywords
+                    .split(",")
+                    .map { it.trim().lowercase() }
+                    .filter { it.isNotEmpty() }
+                val content = "$summary $transcript".lowercase()
+                val isUrgent = keywords.any { content.contains(it) } || intent.equals("EMERGENCY", ignoreCase = true)
+
+                val shouldSend = !settings.postCallEmergencyOnly || isUrgent
+                if (shouldSend) {
+                    val finalMsg = if (!followUpSms.isNullOrBlank() && !followUpSms.contains("{")) {
+                        followUpSms
+                    } else {
+                        val template = settings.postCallSmsTemplate.ifBlank {
+                            "Hey {NAME}, this is {BUSINESS_NAME}. My assistant {AGENT_NAME} let me know about {SUMMARY}. I am wrapping up on a job and will reach out to you shortly!"
+                        }
+                        template
+                            .replace("{NAME}", callerName ?: "there")
+                            .replace("{BUSINESS_NAME}", settings.businessName.ifBlank { "our team" })
+                            .replace("{SUMMARY}", summary.ifBlank { "your call" })
+                            .replace("{BOOKING_LINK}", settings.contractorGoalLink.ifBlank { "" })
+                            .replace("{AGENT_NAME}", settings.voiceAgentName.ifBlank { "Riley" })
+                    }
+
+                    Log.i(TAG, "Dispatching automated post-call SMS to $callerPhone: '$finalMsg'")
+                    val workData = Data.Builder()
+                        .putString(SendAutoTextWorker.KEY_PHONE_NUMBER, callerPhone)
+                        .putString(SendAutoTextWorker.KEY_OVERRIDE_MESSAGE, finalMsg)
+                        .putBoolean(SendAutoTextWorker.KEY_IS_REMOTE_TRIGGER, true)
+                        .putInt(SendAutoTextWorker.KEY_SIM_SLOT, simSlot)
+                        .build()
+
+                    val workRequest = OneTimeWorkRequestBuilder<SendAutoTextWorker>()
+                        .setInputData(workData)
+                        .build()
+
+                    WorkManager.getInstance(applicationContext).enqueue(workRequest)
+                }
+            }
             return
         }
 

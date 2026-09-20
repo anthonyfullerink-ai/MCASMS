@@ -6,9 +6,13 @@ import android.content.Intent
 import android.telephony.TelephonyManager
 import android.util.Log
 import androidx.work.Data
+import androidx.work.ExistingWorkPolicy
 import androidx.work.OneTimeWorkRequestBuilder
 import androidx.work.WorkManager
+import com.missedcall.autotext.App
 import com.missedcall.autotext.worker.SendAutoTextWorker
+import kotlinx.coroutines.runBlocking
+import java.util.concurrent.TimeUnit
 import java.util.concurrent.atomic.AtomicBoolean
 
 class CallStateReceiver : BroadcastReceiver() {
@@ -62,14 +66,40 @@ class CallStateReceiver : BroadcastReceiver() {
     }
 
     private fun enqueueAutoTextWorker(context: Context, phoneNumber: String) {
+        val app = context.applicationContext as? App
+        val settings = try {
+            runBlocking { app?.settingsRepository?.getSettings() }
+        } catch (e: Exception) {
+            null
+        }
+
+        val cleanDigits = phoneNumber.filter { it.isDigit() }.takeLast(10)
+        val isVoiceActive = settings?.voiceReceptionistEnabled == true
+
         val inputData = Data.Builder()
             .putString(SendAutoTextWorker.KEY_PHONE_NUMBER, phoneNumber)
             .build()
 
-        val workRequest = OneTimeWorkRequestBuilder<SendAutoTextWorker>()
+        val workRequestBuilder = OneTimeWorkRequestBuilder<SendAutoTextWorker>()
             .setInputData(inputData)
-            .build()
 
-        WorkManager.getInstance(context.applicationContext).enqueue(workRequest)
+        if (isVoiceActive) {
+            // Approach 2: Reconciliation Buffer (45s delay to allow carrier *71 handoff and Vapi engagement)
+            workRequestBuilder
+                .setInitialDelay(45, TimeUnit.SECONDS)
+                .addTag("pending_missed_$cleanDigits")
+                .addTag("all_pending_missed_calls")
+
+            Log.i(TAG, "AI Voice Active: Queued native missed-call text for $cleanDigits with 45s reconciliation buffer (Tag: pending_missed_$cleanDigits)")
+
+            WorkManager.getInstance(context.applicationContext).enqueueUniqueWork(
+                "pending_missed_$cleanDigits",
+                ExistingWorkPolicy.REPLACE,
+                workRequestBuilder.build()
+            )
+        } else {
+            Log.i(TAG, "Standard Mode: Enqueued native missed-call text immediately for $phoneNumber")
+            WorkManager.getInstance(context.applicationContext).enqueue(workRequestBuilder.build())
+        }
     }
 }

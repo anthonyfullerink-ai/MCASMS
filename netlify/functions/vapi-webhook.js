@@ -19,6 +19,41 @@ const querystring = require('querystring');
 
 const STRIPE_SECRET_KEY = process.env.STRIPE_SECRET_KEY || '';
 
+let initializeApp, getApps, cert, getMessaging;
+try {
+  const adminApp = require('firebase-admin/app');
+  const adminMsg = require('firebase-admin/messaging');
+  initializeApp = adminApp.initializeApp;
+  getApps = adminApp.getApps;
+  cert = adminApp.cert;
+  getMessaging = adminMsg.getMessaging;
+} catch (e) {
+  initializeApp = null;
+}
+
+let messagingService = null;
+function getMessagingService() {
+  if (!initializeApp) return null;
+  try {
+    if (getApps().length === 0) {
+      if (process.env.FIREBASE_SERVICE_ACCOUNT) {
+        const sa = JSON.parse(process.env.FIREBASE_SERVICE_ACCOUNT);
+        initializeApp({
+          credential: cert(sa),
+          projectId: sa.project_id || 'offgrid-saas-core-1e97a9'
+        });
+      } else {
+        initializeApp({ projectId: 'offgrid-saas-core-1e97a9' });
+      }
+    }
+    if (!messagingService) messagingService = getMessaging();
+    return messagingService;
+  } catch (e) {
+    console.warn('[vapi-webhook] Firebase messaging init warning:', e.message);
+    return null;
+  }
+}
+
 function stripeApiRequest(endpoint, method = 'GET', postData = null) {
   return new Promise((resolve, reject) => {
     if (!STRIPE_SECRET_KEY) return reject(new Error('STRIPE_SECRET_KEY not set'));
@@ -159,7 +194,48 @@ exports.handler = async (event) => {
 
     const callId = callObj.id || `call_${Date.now()}`;
 
-    console.log(`📞 [NETLIFY VAPI WEBHOOK] Call ${callId} from ${callerNum} (${durationSec}s) - Urgency: ${isUrgent ? 'HIGH' : 'NORMAL'}`);
+    console.log(`📞 [NETLIFY VAPI WEBHOOK] Call ${callId} (${message.type || 'unknown'}) from ${callerNum} (${durationSec}s) - Urgency: ${isUrgent ? 'HIGH' : 'NORMAL'}`);
+
+    // ── Handle In-Progress / Ringing Call Status (Approach 2: Instant Cancellation) ──
+    if (message.type === 'status-update') {
+      const callStatus = message.status || callObj.status;
+      console.log(`🎙️ [VAPI STATUS UPDATE] Call ${callId} status: ${callStatus} from ${callerNum}`);
+
+      if (callStatus === 'in-progress' || callStatus === 'ringing') {
+        const fs = getFirestore();
+        const msg = getMessagingService();
+        if (fs && msg && inboundNumber) {
+          try {
+            const sub = await fs.getVoiceBinding(inboundNumber);
+            if (sub && sub.licenseKey) {
+              const deviceRecord = await fs.getDeviceBinding(sub.licenseKey);
+              if (deviceRecord && deviceRecord.fcm_token) {
+                await msg.send({
+                  token: deviceRecord.fcm_token,
+                  data: {
+                    type: 'voice_call_started',
+                    caller_phone: callerNum,
+                    call_id: String(callId),
+                    timestamp: String(Date.now()),
+                    source: 'vapi_status_update'
+                  },
+                  android: { priority: 'high' }
+                });
+                console.log(`⚡ [FCM CANCEL SENT] voice_call_started sent to device for ${sub.licenseKey} (Caller: ${callerNum})`);
+              }
+            }
+          } catch (pushErr) {
+            console.warn('[vapi-webhook] voice_call_started push warning:', pushErr.message);
+          }
+        }
+      }
+
+      return {
+        statusCode: 200,
+        headers,
+        body: JSON.stringify({ success: true, message: `Status ${callStatus} processed` })
+      };
+    }
 
     // ── Real-Time Monthly Minute Metering & Stripe Overage Billing ────────────
     let meterResult = null;
@@ -263,6 +339,38 @@ exports.handler = async (event) => {
       `;
       sendResendEmail(resendKey, ownerEmail, fromEmail, `🚨 Emergency Call Alert: ${callerNum}`, emailHtml)
         .catch(e => console.warn('[vapi-webhook] Emergency email send error:', e.message));
+    }
+    // ─────────────────────────────────────────────────────────────────────────
+
+    // ── Dispatch Completed Voice Call Push to Android Device ───────────────
+    const msg = getMessagingService();
+    if (fs && msg && inboundNumber) {
+      try {
+        const sub = await fs.getVoiceBinding(inboundNumber);
+        if (sub && sub.licenseKey) {
+          const deviceRecord = await fs.getDeviceBinding(sub.licenseKey);
+          if (deviceRecord && deviceRecord.fcm_token) {
+            await msg.send({
+              token: deviceRecord.fcm_token,
+              data: {
+                type: 'voice_call_completed',
+                caller_phone: callerNum,
+                caller_name: customer.name || '',
+                summary: summary,
+                transcript: transcript,
+                duration_seconds: String(durationSec),
+                intent: isUrgent ? 'EMERGENCY' : 'SERVICE_CALL',
+                timestamp: String(Date.now()),
+                source: 'central_cloud_relay'
+              },
+              android: { priority: 'high' }
+            });
+            console.log(`🚀 [FCM PUSH DELIVERED] voice_call_completed delivered to device for ${sub.licenseKey} (Caller: ${callerNum})`);
+          }
+        }
+      } catch (fcmErr) {
+        console.warn('[vapi-webhook] FCM completed call push error:', fcmErr.message);
+      }
     }
     // ─────────────────────────────────────────────────────────────────────────
 

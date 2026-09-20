@@ -138,17 +138,29 @@ class SendAutoTextWorker(
             )
         }
 
-        // 5.5 Check AI Voice Receptionist Forwarding (Smart Handover: prevent double-text clash)
+        // 5.5 Check AI Voice Receptionist Forwarding (Approach 2: Event-Driven Reconciliation Buffer)
         if (!isRemoteTrigger && settings.voiceReceptionistEnabled) {
-            Log.i(TAG, "AI Voice Receptionist is ACTIVE. Call routed to Vapi agent; suppressing native canned SMS for $targetNumber")
-            dao.insertLog(
-                CallLogEvent(
-                    phoneNumber = targetNumber,
-                    status = LogStatus.FORWARDED_TO_WEBHOOK,
-                    messageSent = "[Muted - Handed over to AI Voice Receptionist]"
+            val cleanDigits = targetNumber.filter { it.isDigit() }.takeLast(10)
+            val recentCutoff = System.currentTimeMillis() - 10 * 60 * 1000L // last 10 minutes
+            val hasRecentVoiceCall = try {
+                app.database.voiceCallDao().countRecentVoiceCalls(cleanDigits, recentCutoff) > 0
+            } catch (e: Exception) {
+                false
+            }
+
+            if (hasRecentVoiceCall) {
+                Log.i(TAG, "AI Voice Receptionist handled call for $targetNumber. Suppressing native canned SMS.")
+                dao.insertLog(
+                    CallLogEvent(
+                        phoneNumber = targetNumber,
+                        status = LogStatus.FORWARDED_TO_WEBHOOK,
+                        messageSent = "[Muted - Handed over to AI Voice Receptionist]"
+                    )
                 )
-            )
-            return Result.success()
+                return Result.success()
+            } else {
+                Log.i(TAG, "Reconciliation Buffer expired for $targetNumber: No AI voice session detected (caller hung up early). Proceeding with native auto-reply!")
+            }
         }
 
         // 6. Check Mute Native Auto-Reply (If user uses n8n to respond, avoid double-texting)
@@ -169,9 +181,15 @@ class SendAutoTextWorker(
         val messageBody = if (!overrideMessage.isNullOrBlank()) {
             overrideMessage
         } else {
+            val cleanAct = settings.contractorActivity.ifBlank { "hands full" }
+            val cleanLink = settings.contractorGoalLink.ifBlank { "https://missedcallautosms.com" }
+            val cleanAgent = settings.voiceAgentName.ifBlank { "Riley" }
             settings.messageTemplate
-                .replace("{business_name}", settings.businessName)
-                .replace("{name}", displayName)
+                .replace("{business_name}", settings.businessName, ignoreCase = true)
+                .replace("{name}", displayName, ignoreCase = true)
+                .replace("{activity}", cleanAct, ignoreCase = true)
+                .replace("{booking_link}", cleanLink, ignoreCase = true)
+                .replace("{agent_name}", cleanAgent, ignoreCase = true)
         }
 
 

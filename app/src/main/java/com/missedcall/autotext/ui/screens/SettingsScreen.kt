@@ -7,10 +7,12 @@ import android.os.PowerManager
 import android.provider.Settings
 import android.widget.Toast
 import androidx.compose.foundation.background
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
+import androidx.compose.foundation.BorderStroke
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.BatteryAlert
 import androidx.compose.material.icons.filled.Call
@@ -23,6 +25,10 @@ import androidx.compose.material.icons.filled.VerifiedUser
 import androidx.compose.material.icons.filled.Add
 import androidx.compose.material.icons.filled.ArrowDropDown
 import androidx.compose.material.icons.filled.Delete
+import androidx.compose.material.icons.filled.RecordVoiceOver
+import androidx.compose.material.icons.filled.ContentCopy
+import androidx.compose.material.icons.filled.Link
+import androidx.compose.material.icons.filled.Edit
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import com.google.gson.Gson
@@ -71,6 +77,8 @@ fun SettingsScreen(
     var newWebhookUrlInput by remember { mutableStateOf("") }
     var isPingingWebhook by remember { mutableStateOf(false) }
     var pingStatusMessage by remember { mutableStateOf<String?>(null) }
+    var showCustomActivityDialog by remember { mutableStateOf(false) }
+    var customActivityInput by remember { mutableStateOf(settings.contractorActivity) }
     val activeSimInfoList = remember {
         try {
             val sm = context.getSystemService(android.telephony.SubscriptionManager::class.java)
@@ -303,7 +311,7 @@ fun SettingsScreen(
             }
         }
 
-        // 4. Business Name Card
+        // 4. Business Name & Action Link Card
         Card(
             shape = RoundedCornerShape(16.dp),
             modifier = Modifier.fillMaxWidth()
@@ -322,7 +330,312 @@ fun SettingsScreen(
                     singleLine = true,
                     modifier = Modifier.fillMaxWidth()
                 )
+                Spacer(modifier = Modifier.height(10.dp))
+                OutlinedTextField(
+                    value = settings.contractorGoalLink,
+                    onValueChange = { onSettingsChanged(settings.copy(contractorGoalLink = it)) },
+                    label = { Text("Direct Booking / Website Link") },
+                    placeholder = { Text("https://yourbusiness.com/book") },
+                    leadingIcon = {
+                        Icon(Icons.Default.Link, contentDescription = null, tint = MaterialTheme.colorScheme.primary)
+                    },
+                    singleLine = true,
+                    modifier = Modifier.fillMaxWidth()
+                )
             }
+        }
+
+        // 4.1 Contractor Status Dial & Dynamic Voicemail Script Generator
+        val cleanActivity = settings.contractorActivity.ifBlank { "hands full" }
+        val effectiveStatus = if (settings.businessHoursEnabled && settings.contractorStatus != "EMERGENCY") {
+            val isWithinHours = com.missedcall.autotext.util.ScheduleUtils.isWithinBusinessHours(settings.schedule)
+            if (isWithinHours) "AVAILABLE" else "AFTER_HOURS"
+        } else {
+            settings.contractorStatus
+        }
+        val businessDisplay = settings.businessName.ifBlank { "our business" }
+        val bookingLinkDisplay = settings.contractorGoalLink.ifBlank { "https://missedcallautosms.com" }
+        val generatedVoicemailScript = when (effectiveStatus) {
+            "AFTER_HOURS" -> "Thanks for calling $businessDisplay! You have reached our after-hours line. Please leave your name, number, and message, or book directly online at $bookingLinkDisplay. We will contact you first thing when our office opens!"
+            "EMERGENCY" -> "Thanks for calling $businessDisplay! Our team is currently on emergency priority dispatch. If this is an urgent emergency, please leave your name, address, and the nature of the issue immediately or visit $bookingLinkDisplay for immediate dispatch."
+            else -> "Thanks for calling $businessDisplay! Everyone currently has their hands full $cleanActivity, but please leave a message or schedule directly at $bookingLinkDisplay. What day and time works best for you?"
+        }
+        val generatedSmsPreview = "Hey! Sorry we missed your call while $cleanActivity. Here is our direct booking link: $bookingLinkDisplay - $businessDisplay"
+
+        Card(
+            shape = RoundedCornerShape(16.dp),
+            modifier = Modifier.fillMaxWidth()
+        ) {
+            Column(modifier = Modifier.padding(16.dp)) {
+                Row(
+                    modifier = Modifier.fillMaxWidth(),
+                    horizontalArrangement = Arrangement.SpaceBetween,
+                    verticalAlignment = Alignment.CenterVertically
+                ) {
+                    Column {
+                        Text(
+                            text = "Contractor Status & Voicemail Script",
+                            style = MaterialTheme.typography.titleMedium,
+                            fontWeight = FontWeight.Bold
+                        )
+                        Text(
+                            text = "Quickly set your daily status, trade focus & voicemail script.",
+                            style = MaterialTheme.typography.bodySmall,
+                            color = MaterialTheme.colorScheme.onSurfaceVariant
+                        )
+                    }
+                }
+
+                Spacer(modifier = Modifier.height(14.dp))
+
+                // Status Chips: Available / After Hours / Emergency
+                Row(
+                    modifier = Modifier.fillMaxWidth(),
+                    horizontalArrangement = Arrangement.spacedBy(8.dp)
+                ) {
+                    // 1. Available
+                    val isAvail = effectiveStatus == "AVAILABLE" || effectiveStatus.isBlank()
+                    Surface(
+                        shape = RoundedCornerShape(12.dp),
+                        color = if (isAvail) Color(0xFF00E676).copy(alpha = 0.15f) else MaterialTheme.colorScheme.surfaceVariant,
+                        border = BorderStroke(1.dp, if (isAvail) Color(0xFF00E676) else MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.5f)),
+                        modifier = Modifier
+                            .weight(1f)
+                            .clickable { onSettingsChanged(settings.copy(contractorStatus = "AVAILABLE")) }
+                    ) {
+                        Column(
+                            modifier = Modifier.padding(10.dp),
+                            horizontalAlignment = Alignment.CenterHorizontally
+                        ) {
+                            Text("🟢", fontSize = 16.sp)
+                            Spacer(modifier = Modifier.height(2.dp))
+                            Text("Available", fontWeight = FontWeight.Bold, style = MaterialTheme.typography.labelMedium, color = if (isAvail) Color(0xFF00C853) else MaterialTheme.colorScheme.onSurface)
+                            Text(cleanActivity.replaceFirstChar { it.uppercase() }, style = MaterialTheme.typography.labelSmall, maxLines = 1, color = MaterialTheme.colorScheme.onSurfaceVariant)
+                        }
+                    }
+
+                    // 2. After Hours
+                    val isAfter = effectiveStatus == "AFTER_HOURS"
+                    Surface(
+                        shape = RoundedCornerShape(12.dp),
+                        color = if (isAfter) Color(0xFF38BDF8).copy(alpha = 0.15f) else MaterialTheme.colorScheme.surfaceVariant,
+                        border = BorderStroke(1.dp, if (isAfter) Color(0xFF38BDF8) else MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.5f)),
+                        modifier = Modifier
+                            .weight(1f)
+                            .clickable { onSettingsChanged(settings.copy(contractorStatus = "AFTER_HOURS")) }
+                    ) {
+                        Column(
+                            modifier = Modifier.padding(10.dp),
+                            horizontalAlignment = Alignment.CenterHorizontally
+                        ) {
+                            Text("🌙", fontSize = 16.sp)
+                            Spacer(modifier = Modifier.height(2.dp))
+                            Text("After Hours", fontWeight = FontWeight.Bold, style = MaterialTheme.typography.labelMedium, color = if (isAfter) Color(0xFF0284C7) else MaterialTheme.colorScheme.onSurface)
+                            Text("Closed", style = MaterialTheme.typography.labelSmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
+                        }
+                    }
+
+                    // 3. Emergency
+                    val isEmerg = effectiveStatus == "EMERGENCY"
+                    Surface(
+                        shape = RoundedCornerShape(12.dp),
+                        color = if (isEmerg) Color(0xFFEF4444).copy(alpha = 0.15f) else MaterialTheme.colorScheme.surfaceVariant,
+                        border = BorderStroke(1.dp, if (isEmerg) Color(0xFFEF4444) else MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.5f)),
+                        modifier = Modifier
+                            .weight(1f)
+                            .clickable { onSettingsChanged(settings.copy(contractorStatus = "EMERGENCY")) }
+                    ) {
+                        Column(
+                            modifier = Modifier.padding(10.dp),
+                            horizontalAlignment = Alignment.CenterHorizontally
+                        ) {
+                            Text("🚨", fontSize = 16.sp)
+                            Spacer(modifier = Modifier.height(2.dp))
+                            Text("Emergency", fontWeight = FontWeight.Bold, style = MaterialTheme.typography.labelMedium, color = if (isEmerg) Color(0xFFDC2626) else MaterialTheme.colorScheme.onSurface)
+                            Text("Priority", style = MaterialTheme.typography.labelSmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
+                        }
+                    }
+                }
+
+                Spacer(modifier = Modifier.height(14.dp))
+
+                // Trade Activity / Working Focus
+                Row(
+                    modifier = Modifier.fillMaxWidth(),
+                    horizontalArrangement = Arrangement.SpaceBetween,
+                    verticalAlignment = Alignment.CenterVertically
+                ) {
+                    Text(
+                        text = "Current Trade Activity:",
+                        style = MaterialTheme.typography.labelMedium,
+                        fontWeight = FontWeight.Bold,
+                        color = MaterialTheme.colorScheme.primary
+                    )
+                    TextButton(
+                        onClick = {
+                            customActivityInput = settings.contractorActivity
+                            showCustomActivityDialog = true
+                        },
+                        contentPadding = PaddingValues(horizontal = 4.dp, vertical = 0.dp)
+                    ) {
+                        Icon(Icons.Default.Edit, contentDescription = null, modifier = Modifier.size(13.dp))
+                        Spacer(modifier = Modifier.width(4.dp))
+                        Text("Custom", fontSize = 11.sp)
+                    }
+                }
+
+                val activityPresets = listOf("hands full", "on a job", "cutting hair", "on the road", "in a consultation")
+                FlowRow(
+                    horizontalArrangement = Arrangement.spacedBy(6.dp),
+                    verticalArrangement = Arrangement.spacedBy(4.dp)
+                ) {
+                    activityPresets.forEach { act ->
+                        val isSelected = cleanActivity.equals(act, ignoreCase = true)
+                        FilterChip(
+                            selected = isSelected,
+                            onClick = { onSettingsChanged(settings.copy(contractorActivity = act)) },
+                            label = {
+                                Text(
+                                    when (act) {
+                                        "hands full" -> "🛠️ Hands Full"
+                                        "on a job" -> "🏗️ On Job"
+                                        "cutting hair" -> "✂️ Hair"
+                                        "on the road" -> "🚗 Driving"
+                                        else -> "🤝 Meeting"
+                                    },
+                                    fontSize = 11.sp
+                                )
+                            }
+                        )
+                    }
+                }
+
+                Spacer(modifier = Modifier.height(14.dp))
+
+                // Dynamic Opening Voicemail Greeting Script Card
+                Surface(
+                    color = Color(0xFF673AB7).copy(alpha = 0.10f),
+                    shape = RoundedCornerShape(12.dp),
+                    border = BorderStroke(1.dp, Color(0xFF9C27B0).copy(alpha = 0.4f)),
+                    modifier = Modifier.fillMaxWidth()
+                ) {
+                    Column(modifier = Modifier.padding(12.dp)) {
+                        Row(
+                            modifier = Modifier.fillMaxWidth(),
+                            horizontalArrangement = Arrangement.SpaceBetween,
+                            verticalAlignment = Alignment.CenterVertically
+                        ) {
+                            Row(verticalAlignment = Alignment.CenterVertically) {
+                                Icon(
+                                    Icons.Default.RecordVoiceOver,
+                                    contentDescription = null,
+                                    tint = Color(0xFF9C27B0),
+                                    modifier = Modifier.size(18.dp)
+                                )
+                                Spacer(modifier = Modifier.width(6.dp))
+                                Text(
+                                    text = "Voicemail Greeting Script",
+                                    fontWeight = FontWeight.Bold,
+                                    style = MaterialTheme.typography.labelMedium,
+                                    color = Color(0xFF9C27B0)
+                                )
+                            }
+                            TextButton(
+                                onClick = {
+                                    val clipboard = context.getSystemService(Context.CLIPBOARD_SERVICE) as android.content.ClipboardManager
+                                    val clip = android.content.ClipData.newPlainText("Voicemail Greeting Script", generatedVoicemailScript)
+                                    clipboard.setPrimaryClip(clip)
+                                    Toast.makeText(context, "📋 Voicemail script copied to clipboard!", Toast.LENGTH_SHORT).show()
+                                },
+                                contentPadding = PaddingValues(horizontal = 6.dp, vertical = 0.dp)
+                            ) {
+                                Icon(Icons.Default.ContentCopy, contentDescription = null, modifier = Modifier.size(13.dp), tint = Color(0xFF9C27B0))
+                                Spacer(modifier = Modifier.width(4.dp))
+                                Text("Copy Script", fontSize = 11.sp, color = Color(0xFF9C27B0), fontWeight = FontWeight.Bold)
+                            }
+                        }
+
+                        Spacer(modifier = Modifier.height(6.dp))
+                        Text(
+                            text = "\"$generatedVoicemailScript\"",
+                            style = MaterialTheme.typography.bodySmall,
+                            color = MaterialTheme.colorScheme.onSurface
+                        )
+                        Spacer(modifier = Modifier.height(6.dp))
+                        Text(
+                            text = "💡 Read this greeting into your carrier voicemail recorder so callers hear an authentic message matching your active working status.",
+                            style = MaterialTheme.typography.labelSmall,
+                            color = MaterialTheme.colorScheme.onSurfaceVariant
+                        )
+                    }
+                }
+
+                Spacer(modifier = Modifier.height(10.dp))
+
+                // Dynamic SMS Preview Card
+                Surface(
+                    color = Color(0xFF00E676).copy(alpha = 0.08f),
+                    shape = RoundedCornerShape(10.dp),
+                    border = BorderStroke(1.dp, Color(0xFF00E676).copy(alpha = 0.3f)),
+                    modifier = Modifier.fillMaxWidth()
+                ) {
+                    Column(modifier = Modifier.padding(10.dp)) {
+                        Row(verticalAlignment = Alignment.CenterVertically) {
+                            Text("💬", fontSize = 12.sp)
+                            Spacer(modifier = Modifier.width(6.dp))
+                            Text("Auto-Reply SMS Preview", style = MaterialTheme.typography.labelSmall, fontWeight = FontWeight.Bold, color = Color(0xFF00C853))
+                        }
+                        Spacer(modifier = Modifier.height(4.dp))
+                        Text(
+                            text = generatedSmsPreview,
+                            style = MaterialTheme.typography.bodySmall,
+                            color = MaterialTheme.colorScheme.onSurfaceVariant
+                        )
+                    }
+                }
+            }
+        }
+
+        // Custom Activity Input Dialog
+        if (showCustomActivityDialog) {
+            AlertDialog(
+                onDismissRequest = { showCustomActivityDialog = false },
+                title = { Text("Set Custom Activity Focus") },
+                text = {
+                    Column {
+                        Text(
+                            text = "Enter what you or your crew are currently busy doing (e.g. 'installing AC unit', 'in a design review', 'painting siding'):",
+                            style = MaterialTheme.typography.bodySmall
+                        )
+                        Spacer(modifier = Modifier.height(8.dp))
+                        OutlinedTextField(
+                            value = customActivityInput,
+                            onValueChange = { customActivityInput = it },
+                            label = { Text("Working Activity") },
+                            singleLine = true,
+                            modifier = Modifier.fillMaxWidth()
+                        )
+                    }
+                },
+                confirmButton = {
+                    Button(
+                        onClick = {
+                            val trimmed = customActivityInput.trim()
+                            if (trimmed.isNotBlank()) {
+                                onSettingsChanged(settings.copy(contractorActivity = trimmed))
+                            }
+                            showCustomActivityDialog = false
+                        }
+                    ) {
+                        Text("Save")
+                    }
+                },
+                dismissButton = {
+                    TextButton(onClick = { showCustomActivityDialog = false }) {
+                        Text("Cancel")
+                    }
+                }
+            )
         }
 
         // 5. Message Template Card
@@ -344,7 +657,10 @@ fun SettingsScreen(
                 )
                 Spacer(modifier = Modifier.height(8.dp))
 
-                Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                FlowRow(
+                    horizontalArrangement = Arrangement.spacedBy(6.dp),
+                    verticalArrangement = Arrangement.spacedBy(4.dp)
+                ) {
                     FilterChip(
                         selected = false,
                         onClick = {
@@ -352,7 +668,7 @@ fun SettingsScreen(
                                 settings.copy(messageTemplate = settings.messageTemplate + " {business_name}")
                             )
                         },
-                        label = { Text("+ {business_name}") }
+                        label = { Text("+ {business_name}", fontSize = 11.sp) }
                     )
                     FilterChip(
                         selected = false,
@@ -361,7 +677,25 @@ fun SettingsScreen(
                                 settings.copy(messageTemplate = settings.messageTemplate + " {name}")
                             )
                         },
-                        label = { Text("+ {name}") }
+                        label = { Text("+ {name}", fontSize = 11.sp) }
+                    )
+                    FilterChip(
+                        selected = false,
+                        onClick = {
+                            onSettingsChanged(
+                                settings.copy(messageTemplate = settings.messageTemplate + " {activity}")
+                            )
+                        },
+                        label = { Text("+ {activity}", fontSize = 11.sp) }
+                    )
+                    FilterChip(
+                        selected = false,
+                        onClick = {
+                            onSettingsChanged(
+                                settings.copy(messageTemplate = settings.messageTemplate + " {booking_link}")
+                            )
+                        },
+                        label = { Text("+ {booking_link}", fontSize = 11.sp) }
                     )
                 }
 

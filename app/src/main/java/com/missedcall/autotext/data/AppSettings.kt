@@ -48,7 +48,13 @@ data class AppSettings(
     val contractorGoalLink: String = "",
     val postCallSmsEnabled: Boolean = true,
     val postCallSmsTemplate: String = "Hey {NAME}, this is {BUSINESS_NAME}. My AI assistant let me know about {SUMMARY}. I am wrapping up on a job and will reach out to you shortly!",
-    val postCallEmergencyOnly: Boolean = false
+    val postCallEmergencyOnly: Boolean = false,
+    val voiceAgentName: String = "Riley",
+    val voiceIndustryTrade: String = "Home Services & Trades",
+    val voiceEmergencyKeywords: String = "leak, flooding, no heat, sparking, gas smell, pipe burst",
+    val voiceAfterHoursMode: String = "EMERGENCY_ONLY", // "24_7_SAME", "EMERGENCY_ONLY", "MESSAGE_ONLY"
+    val voiceWizardCompleted: Boolean = false
 )
+
 
 

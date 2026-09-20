@@ -12,8 +12,10 @@ import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
+import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.*
 import androidx.compose.material3.*
@@ -56,9 +58,6 @@ fun VoiceHubScreen(
 ) {
     val context = LocalContext.current
     val coroutineScope = rememberCoroutineScope()
-    var showConfigDialog by remember { mutableStateOf(false) }
-    var selectedCallForDetail by remember { mutableStateOf<VoiceCallEvent?>(null) }
-
     val isDeveloperKey = settings.licenseKey.contains("DEV", ignoreCase = true) ||
             settings.licenseKey.startsWith("MCAS-DEV") ||
             settings.licenseKey.contains("DEMO", ignoreCase = true) ||
@@ -68,6 +67,10 @@ fun VoiceHubScreen(
     val hasByokConfigured = isByok && settings.vapiApiKey.isNotBlank()
     val isManagedActive = isDeveloperKey || settings.voiceSubscriptionActive || settings.licenseKey.contains("VOICE-PRO", ignoreCase = true)
     val isVoiceActive = isDeveloperKey || isManagedActive || hasByokConfigured || settings.voiceReceptionistEnabled
+
+    var showConfigDialog by remember { mutableStateOf(false) }
+    var showWizardDialog by remember { mutableStateOf(!settings.voiceWizardCompleted && isVoiceActive) }
+    var selectedCallForDetail by remember { mutableStateOf<VoiceCallEvent?>(null) }
 
     val carrier = remember { CarrierForwardingManager.detectCarrier(context) }
     val carrierCodes = remember(carrier, settings.voiceReceptionistForwardingNumber) {
@@ -117,12 +120,23 @@ fun VoiceHubScreen(
                         }
                     }
 
-                    IconButton(onClick = { showConfigDialog = true }) {
-                        Icon(
-                            Icons.Default.Tune,
-                            contentDescription = "Voice Settings",
-                            tint = MaterialTheme.colorScheme.primary
-                        )
+                    Row(verticalAlignment = Alignment.CenterVertically) {
+                        if (isVoiceActive) {
+                            IconButton(onClick = { showWizardDialog = true }) {
+                                Icon(
+                                    Icons.Default.AutoAwesome,
+                                    contentDescription = "Customize AI Receptionist Wizard",
+                                    tint = Color(0xFFAB47BC)
+                                )
+                            }
+                        }
+                        IconButton(onClick = { showConfigDialog = true }) {
+                            Icon(
+                                Icons.Default.Tune,
+                                contentDescription = "Voice Settings",
+                                tint = MaterialTheme.colorScheme.primary
+                            )
+                        }
                     }
                 }
             }
@@ -246,15 +260,93 @@ fun VoiceHubScreen(
                         }
                     )
                 }
-            } else {
+            }
+
+            // 0. Universal AI Agent Setup Wizard Card (Shown if not yet completed)
+            if (!settings.voiceWizardCompleted) {
+                    item {
+                        Card(
+                            colors = CardDefaults.cardColors(containerColor = Color(0xFF673AB7).copy(alpha = 0.15f)),
+                            border = BorderStroke(1.dp, Color(0xFF9C27B0).copy(alpha = 0.6f)),
+                            shape = RoundedCornerShape(16.dp),
+                            modifier = Modifier.fillMaxWidth().clickable { showWizardDialog = true }
+                        ) {
+                            Row(
+                                modifier = Modifier.padding(14.dp),
+                                verticalAlignment = Alignment.CenterVertically
+                            ) {
+                                Surface(
+                                    shape = CircleShape,
+                                    color = Color(0xFF9C27B0),
+                                    modifier = Modifier.size(38.dp)
+                                ) {
+                                    Box(contentAlignment = Alignment.Center) {
+                                        Icon(
+                                            Icons.Default.AutoAwesome,
+                                            contentDescription = null,
+                                            tint = Color.White,
+                                            modifier = Modifier.size(20.dp)
+                                        )
+                                    }
+                                }
+                                Spacer(modifier = Modifier.width(12.dp))
+                                Column(modifier = Modifier.weight(1f)) {
+                                    Text(
+                                        text = "Setup AI Voice Receptionist",
+                                        style = MaterialTheme.typography.titleSmall,
+                                        fontWeight = FontWeight.Bold,
+                                        color = MaterialTheme.colorScheme.onSurface
+                                    )
+                                    Text(
+                                        text = "Name your agent, set emergency filters & customize SMS follow-up.",
+                                        style = MaterialTheme.typography.bodySmall,
+                                        color = MaterialTheme.colorScheme.onSurfaceVariant
+                                    )
+                                }
+                                Button(
+                                    onClick = { showWizardDialog = true },
+                                    colors = ButtonDefaults.buttonColors(containerColor = Color(0xFF9C27B0)),
+                                    contentPadding = PaddingValues(horizontal = 12.dp, vertical = 6.dp)
+                                ) {
+                                    Text("Start", fontSize = 12.sp)
+                                }
+                            }
+                        }
+                    }
+                }
+
                 // 1. Quick Status Dial (Control Dial)
                 item {
-                    Text(
-                        text = "1. CONTRACTOR STATUS DIAL",
-                        style = MaterialTheme.typography.labelSmall,
-                        fontWeight = FontWeight.Bold,
-                        color = MaterialTheme.colorScheme.primary
-                    )
+                    Row(
+                        modifier = Modifier.fillMaxWidth(),
+                        horizontalArrangement = Arrangement.SpaceBetween,
+                        verticalAlignment = Alignment.CenterVertically
+                    ) {
+                        Text(
+                            text = "1. CONTRACTOR STATUS DIAL",
+                            style = MaterialTheme.typography.labelSmall,
+                            fontWeight = FontWeight.Bold,
+                            color = MaterialTheme.colorScheme.primary
+                        )
+                        TextButton(
+                            onClick = { showWizardDialog = true },
+                            contentPadding = PaddingValues(horizontal = 4.dp, vertical = 0.dp)
+                        ) {
+                            Icon(
+                                Icons.Default.AutoAwesome,
+                                contentDescription = null,
+                                tint = Color(0xFFAB47BC),
+                                modifier = Modifier.size(13.dp)
+                            )
+                            Spacer(modifier = Modifier.width(4.dp))
+                            Text(
+                                "Agent: ${settings.voiceAgentName}",
+                                fontSize = 11.sp,
+                                color = Color(0xFFAB47BC),
+                                fontWeight = FontWeight.SemiBold
+                            )
+                        }
+                    }
                     Spacer(modifier = Modifier.height(6.dp))
 
                     val isWithinHours = remember(settings.schedule, settings.businessHoursEnabled) {
@@ -313,7 +405,16 @@ fun VoiceHubScreen(
                         activateCode = carrierCodes.activateCode,
                         deactivateCode = carrierCodes.deactivateCode,
                         onToggle = { isChecked ->
-                            if (isChecked) {
+                            if (isChecked && !isVoiceActive) {
+                                Toast.makeText(context, "Voice Pro subscription required for carrier forwarding. Tap above to activate.", Toast.LENGTH_LONG).show()
+                                val targetUrl = if (settings.licenseKey.isNotBlank()) {
+                                    "${InAppPromoController.STRIPE_VOICE_PRO_URL}?client_reference_id=${settings.licenseKey}"
+                                } else {
+                                    InAppPromoController.STRIPE_VOICE_PRO_URL
+                                }
+                                val intent = Intent(Intent.ACTION_VIEW, Uri.parse(targetUrl))
+                                context.startActivity(intent)
+                            } else if (isChecked) {
                                 val codes = CarrierForwardingManager.activateConditionalForwarding(context, settings.voiceReceptionistForwardingNumber)
                                 onSettingsChanged(settings.copy(voiceReceptionistEnabled = true))
                                 Toast.makeText(context, "Opening dialer with ${codes.activateCode}. Press Call to enable 15s forward to AI.", Toast.LENGTH_LONG).show()
@@ -409,7 +510,6 @@ fun VoiceHubScreen(
                         )
                     }
                 }
-            }
 
             item { Spacer(modifier = Modifier.height(24.dp)) }
         }
@@ -432,7 +532,17 @@ fun VoiceHubScreen(
         VoiceReceptionistConfigDialog(
             settings = settings,
             onSettingsChanged = onSettingsChanged,
-            onDismiss = { showConfigDialog = false }
+            onDismiss = { showConfigDialog = false },
+            onLaunchWizard = { showWizardDialog = true }
+        )
+    }
+
+    // Universal Voice Agent Setup Wizard Dialog
+    if (showWizardDialog) {
+        VoiceAgentSetupWizardDialog(
+            settings = settings,
+            onSettingsChanged = onSettingsChanged,
+            onDismiss = { showWizardDialog = false }
         )
     }
 }
@@ -1047,6 +1157,14 @@ fun ContractorGoalCard(
                     )
                     AssistChip(
                         onClick = {
+                            val updated = templateInput + " {AGENT_NAME}"
+                            templateInput = updated
+                            onSettingsChanged(settings.copy(postCallSmsTemplate = updated))
+                        },
+                        label = { Text("{AGENT}", fontSize = 11.sp) }
+                    )
+                    AssistChip(
+                        onClick = {
                             val updated = templateInput + " {SUMMARY}"
                             templateInput = updated
                             onSettingsChanged(settings.copy(postCallSmsTemplate = updated))
@@ -1059,7 +1177,7 @@ fun ContractorGoalCard(
                             templateInput = updated
                             onSettingsChanged(settings.copy(postCallSmsTemplate = updated))
                         },
-                        label = { Text("{BUSINESS}", fontSize = 11.sp) }
+                        label = { Text("{BIZ}", fontSize = 11.sp) }
                     )
                     AssistChip(
                         onClick = {
@@ -1110,6 +1228,7 @@ fun ContractorGoalCard(
                         val previewText = templateInput
                             .replace("{NAME}", "Sarah")
                             .replace("{BUSINESS_NAME}", settings.businessName.ifBlank { "Apex Services" })
+                            .replace("{AGENT_NAME}", settings.voiceAgentName.ifBlank { "Riley" })
                             .replace("{SUMMARY}", "water heater leaking in basement")
                             .replace("{BOOKING_LINK}", settings.contractorGoalLink.ifBlank { "https://missedcallautosms.com" })
 
@@ -1576,7 +1695,8 @@ data class VapiPhoneNumberSummary(val id: String, val number: String, val name: 
 fun VoiceReceptionistConfigDialog(
     settings: AppSettings,
     onSettingsChanged: (AppSettings) -> Unit,
-    onDismiss: () -> Unit
+    onDismiss: () -> Unit,
+    onLaunchWizard: () -> Unit = {}
 ) {
     val context = LocalContext.current
     val coroutineScope = rememberCoroutineScope()
@@ -1919,6 +2039,25 @@ fun VoiceReceptionistConfigDialog(
 
                 Spacer(modifier = Modifier.height(14.dp))
 
+                OutlinedButton(
+                    onClick = {
+                        onDismiss()
+                        onLaunchWizard()
+                    },
+                    modifier = Modifier.fillMaxWidth()
+                ) {
+                    Icon(
+                        Icons.Default.AutoAwesome,
+                        contentDescription = null,
+                        tint = Color(0xFFAB47BC),
+                        modifier = Modifier.size(18.dp)
+                    )
+                    Spacer(modifier = Modifier.width(8.dp))
+                    Text("Launch AI Agent Setup Wizard (${settings.voiceAgentName})")
+                }
+
+                Spacer(modifier = Modifier.height(8.dp))
+
                 Button(
                     onClick = {
                         onSettingsChanged(
@@ -1939,6 +2078,696 @@ fun VoiceReceptionistConfigDialog(
                     Icon(Icons.Default.Save, contentDescription = null, modifier = Modifier.size(18.dp))
                     Spacer(modifier = Modifier.width(8.dp))
                     Text("Save Voice Settings")
+                }
+            }
+        }
+    }
+}
+
+/**
+ * Universal AI Voice Agent Setup Wizard Dialog
+ * 5 Universal Steps:
+ * 1. Agent Identity (Custom Name + Quick Chips) & Business Profile
+ * 2. Primary AI Call Objective & Destination Link
+ * 3. Emergency & High-Urgency Triage Policy with Trade Keywords
+ * 4. After-Hours & Weekend Strategy
+ * 5. Automated Post-Call SMS & Go Live
+ */
+@Composable
+fun VoiceAgentSetupWizardDialog(
+    settings: AppSettings,
+    onSettingsChanged: (AppSettings) -> Unit,
+    onDismiss: () -> Unit
+) {
+    val context = LocalContext.current
+    var currentStep by remember { mutableStateOf(1) }
+
+    // Step 1: Agent & Business Profile
+    var agentName by remember { mutableStateOf(settings.voiceAgentName.ifBlank { "Riley" }) }
+    var businessName by remember { mutableStateOf(settings.businessName.ifBlank { "Apex Services" }) }
+    var selectedTrade by remember { mutableStateOf(settings.voiceIndustryTrade.ifBlank { "Home Services & Trades" }) }
+
+    // Step 2: Primary Goal
+    var primaryGoal by remember { mutableStateOf(settings.contractorGoal.ifBlank { "CALLBACK_PROMISE" }) }
+    var goalLink by remember { mutableStateOf(settings.contractorGoalLink) }
+
+    // Step 3: Emergency Policy
+    var emergencyEnabled by remember { mutableStateOf(settings.postCallEmergencyOnly) }
+    var emergencyKeywords by remember {
+        mutableStateOf(
+            settings.voiceEmergencyKeywords.ifBlank {
+                "leak, flooding, no heat, sparking, gas smell, pipe burst"
+            }
+        )
+    }
+
+    // Step 4: After Hours Mode
+    var afterHoursMode by remember { mutableStateOf(settings.voiceAfterHoursMode.ifBlank { "EMERGENCY_ONLY" }) }
+
+    // Step 5: Post-Call SMS
+    var postCallSmsEnabled by remember { mutableStateOf(settings.postCallSmsEnabled) }
+    var postCallTemplate by remember {
+        mutableStateOf(
+            settings.postCallSmsTemplate.ifBlank {
+                "Hey {NAME}, this is {BUSINESS_NAME}. My assistant {AGENT_NAME} let me know about {SUMMARY}. I am wrapping up on a job and will reach out to you shortly!"
+            }
+        )
+    }
+
+    val scrollState = rememberScrollState()
+
+    fun getTradeDefaultKeywords(trade: String): String {
+        return when {
+            trade.contains("Home", ignoreCase = true) || trade.contains("Trade", ignoreCase = true) ->
+                "leak, flooding, no heat, sparking, gas smell, pipe burst"
+            trade.contains("Health", ignoreCase = true) || trade.contains("Dental", ignoreCase = true) ->
+                "severe pain, broken tooth, swelling, bleeding, emergency"
+            trade.contains("Auto", ignoreCase = true) || trade.contains("Tow", ignoreCase = true) ->
+                "stranded, accident, broken down, tow needed, highway"
+            trade.contains("Legal", ignoreCase = true) || trade.contains("Professional", ignoreCase = true) ->
+                "court date, deadline, emergency, arrest, subpoena"
+            trade.contains("Food", ignoreCase = true) || trade.contains("Hospitality", ignoreCase = true) ->
+                "catering emergency, large party, immediate booking, allergy"
+            else ->
+                "urgent, emergency, as soon as possible, ASAP, immediate"
+        }
+    }
+
+    Dialog(
+        onDismissRequest = onDismiss,
+        properties = DialogProperties(usePlatformDefaultWidth = false)
+    ) {
+        Surface(
+            modifier = Modifier
+                .fillMaxWidth(0.95f)
+                .fillMaxHeight(0.90f),
+            shape = RoundedCornerShape(20.dp),
+            color = MaterialTheme.colorScheme.surface,
+            tonalElevation = 8.dp
+        ) {
+            Column(
+                modifier = Modifier
+                    .fillMaxSize()
+                    .padding(20.dp)
+            ) {
+                // Header with Step Indicator and Close Button
+                Row(
+                    modifier = Modifier.fillMaxWidth(),
+                    horizontalArrangement = Arrangement.SpaceBetween,
+                    verticalAlignment = Alignment.CenterVertically
+                ) {
+                    Column {
+                        Row(verticalAlignment = Alignment.CenterVertically) {
+                            Icon(
+                                Icons.Default.AutoAwesome,
+                                contentDescription = null,
+                                tint = Color(0xFFAB47BC),
+                                modifier = Modifier.size(20.dp)
+                            )
+                            Spacer(modifier = Modifier.width(6.dp))
+                            Text(
+                                text = "Universal Voice Setup",
+                                style = MaterialTheme.typography.titleMedium,
+                                fontWeight = FontWeight.Bold
+                            )
+                        }
+                        Text(
+                            text = "Step $currentStep of 5: " + when (currentStep) {
+                                1 -> "Agent & Business Identity"
+                                2 -> "Primary Call Goal"
+                                3 -> "Emergency Triage"
+                                4 -> "After-Hours Strategy"
+                                else -> "Post-Call SMS & Go Live"
+                            },
+                            style = MaterialTheme.typography.labelSmall,
+                            color = MaterialTheme.colorScheme.primary,
+                            fontWeight = FontWeight.SemiBold
+                        )
+                    }
+                    IconButton(onClick = onDismiss) {
+                        Icon(Icons.Default.Close, contentDescription = "Close")
+                    }
+                }
+
+                Spacer(modifier = Modifier.height(10.dp))
+
+                // Progress Bar
+                LinearProgressIndicator(
+                    progress = { currentStep / 5f },
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .height(6.dp)
+                        .clip(RoundedCornerShape(3.dp)),
+                    color = Color(0xFF9C27B0),
+                    trackColor = MaterialTheme.colorScheme.surfaceVariant
+                )
+
+                Spacer(modifier = Modifier.height(16.dp))
+
+                // Step Content Scrollable Body
+                Column(
+                    modifier = Modifier
+                        .weight(1f)
+                        .verticalScroll(scrollState),
+                    verticalArrangement = Arrangement.spacedBy(14.dp)
+                ) {
+                    when (currentStep) {
+                        1 -> {
+                            // ── STEP 1: Agent Identity & Business Profile ──────────────────────
+                            Text(
+                                text = "Who is answering your phone calls, and for what business?",
+                                style = MaterialTheme.typography.titleSmall,
+                                fontWeight = FontWeight.Bold
+                            )
+                            Text(
+                                text = "Give your AI a name your callers will connect with and specify your business details.",
+                                style = MaterialTheme.typography.bodySmall,
+                                color = MaterialTheme.colorScheme.onSurfaceVariant
+                            )
+
+                            // Agent Name
+                            OutlinedTextField(
+                                value = agentName,
+                                onValueChange = { agentName = it },
+                                label = { Text("AI Agent Name") },
+                                placeholder = { Text("e.g. Riley, Alex, Jordan, Sam") },
+                                singleLine = true,
+                                modifier = Modifier.fillMaxWidth()
+                            )
+
+                            // Name suggestions chips
+                            Text(
+                                text = "Popular Agent Names:",
+                                style = MaterialTheme.typography.labelSmall,
+                                color = MaterialTheme.colorScheme.onSurfaceVariant
+                            )
+                            val nameOptions = listOf("Riley", "Alex", "Jordan", "Sam", "Taylor", "Morgan")
+                            Row(
+                                modifier = Modifier.fillMaxWidth(),
+                                horizontalArrangement = Arrangement.spacedBy(6.dp)
+                            ) {
+                                nameOptions.forEach { n ->
+                                    val isSelected = agentName.equals(n, ignoreCase = true)
+                                    FilterChip(
+                                        selected = isSelected,
+                                        onClick = { agentName = n },
+                                        label = { Text(n, fontSize = 11.sp) }
+                                    )
+                                }
+                            }
+
+                            HorizontalDivider(modifier = Modifier.padding(vertical = 4.dp), color = MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.3f))
+
+                            // Business Name
+                            OutlinedTextField(
+                                value = businessName,
+                                onValueChange = { businessName = it },
+                                label = { Text("Your Company / Business Name") },
+                                placeholder = { Text("e.g. Apex Plumbing, Fuller Law") },
+                                singleLine = true,
+                                modifier = Modifier.fillMaxWidth()
+                            )
+
+                            // Industry / Trade Focus
+                            Text(
+                                text = "Industry / Business Category:",
+                                style = MaterialTheme.typography.labelSmall,
+                                fontWeight = FontWeight.Bold
+                            )
+
+                            val trades = listOf(
+                                "Home Services & Trades" to "🛠️",
+                                "Professional & Legal" to "💼",
+                                "Health, Dental & Clinic" to "🩺",
+                                "Automotive & Towing" to "🚗",
+                                "Food & Hospitality" to "🍕",
+                                "General Business" to "🌐"
+                            )
+
+                            Column(verticalArrangement = Arrangement.spacedBy(6.dp)) {
+                                trades.forEach { (trade, emoji) ->
+                                    val isSelected = selectedTrade.equals(trade, ignoreCase = true)
+                                    Surface(
+                                        modifier = Modifier
+                                            .fillMaxWidth()
+                                            .clickable {
+                                                selectedTrade = trade
+                                                emergencyKeywords = getTradeDefaultKeywords(trade)
+                                            },
+                                        shape = RoundedCornerShape(10.dp),
+                                        color = if (isSelected) Color(0xFF673AB7).copy(alpha = 0.12f) else MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.3f),
+                                        border = BorderStroke(
+                                            if (isSelected) 2.dp else 1.dp,
+                                            if (isSelected) Color(0xFF9C27B0) else MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.4f)
+                                        )
+                                    ) {
+                                        Row(
+                                            modifier = Modifier.padding(12.dp),
+                                            verticalAlignment = Alignment.CenterVertically
+                                        ) {
+                                            Text(emoji, fontSize = 18.sp)
+                                            Spacer(modifier = Modifier.width(10.dp))
+                                            Text(
+                                                text = trade,
+                                                style = MaterialTheme.typography.bodyMedium,
+                                                fontWeight = if (isSelected) FontWeight.Bold else FontWeight.Normal,
+                                                color = if (isSelected) Color(0xFF9C27B0) else MaterialTheme.colorScheme.onSurface,
+                                                modifier = Modifier.weight(1f)
+                                            )
+                                            if (isSelected) {
+                                                Icon(Icons.Default.CheckCircle, contentDescription = null, tint = Color(0xFF9C27B0), modifier = Modifier.size(18.dp))
+                                            }
+                                        }
+                                    }
+                                }
+                            }
+                        }
+
+                        2 -> {
+                            // ── STEP 2: Primary AI Call Goal ──────────────────────────────────
+                            Text(
+                                text = "When a customer calls and you can't pick up, what should the AI drive them to do?",
+                                style = MaterialTheme.typography.titleSmall,
+                                fontWeight = FontWeight.Bold
+                            )
+                            Text(
+                                text = "Select the primary call outcome. $agentName will steer callers toward this result.",
+                                style = MaterialTheme.typography.bodySmall,
+                                color = MaterialTheme.colorScheme.onSurfaceVariant
+                            )
+
+                            val goals = listOf(
+                                Triple(
+                                    "BOOKING_LINK",
+                                    "📅 Direct Online Booking Link",
+                                    "Direct caller to your calendar link (Calendly, Cal.com, Housecall Pro, etc.)."
+                                ),
+                                Triple(
+                                    "CALLBACK_PROMISE",
+                                    "⏱️ Promise 15-30 Min Callback",
+                                    "Assure caller you are currently assisting a client and will call back promptly."
+                                ),
+                                Triple(
+                                    "QUOTE_FORM",
+                                    "📝 Instant Quote / Estimate Form",
+                                    "Direct caller to your online intake or quote form to submit their job specs."
+                                )
+                            )
+
+                            goals.forEach { (id, title, desc) ->
+                                val isSelected = primaryGoal == id
+                                Surface(
+                                    modifier = Modifier
+                                        .fillMaxWidth()
+                                        .clickable { primaryGoal = id },
+                                    shape = RoundedCornerShape(12.dp),
+                                    color = if (isSelected) Color(0xFF673AB7).copy(alpha = 0.12f) else MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.3f),
+                                    border = BorderStroke(
+                                        if (isSelected) 2.dp else 1.dp,
+                                        if (isSelected) Color(0xFF9C27B0) else MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.4f)
+                                    )
+                                ) {
+                                    Column(modifier = Modifier.padding(14.dp)) {
+                                        Row(
+                                            modifier = Modifier.fillMaxWidth(),
+                                            horizontalArrangement = Arrangement.SpaceBetween,
+                                            verticalAlignment = Alignment.CenterVertically
+                                        ) {
+                                            Text(
+                                                text = title,
+                                                style = MaterialTheme.typography.titleSmall,
+                                                fontWeight = FontWeight.Bold,
+                                                color = if (isSelected) Color(0xFF9C27B0) else MaterialTheme.colorScheme.onSurface
+                                            )
+                                            if (isSelected) {
+                                                Icon(Icons.Default.CheckCircle, contentDescription = null, tint = Color(0xFF9C27B0), modifier = Modifier.size(18.dp))
+                                            }
+                                        }
+                                        Spacer(modifier = Modifier.height(4.dp))
+                                        Text(text = desc, style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
+                                    }
+                                }
+                            }
+
+                            if (primaryGoal != "CALLBACK_PROMISE") {
+                                Spacer(modifier = Modifier.height(4.dp))
+                                OutlinedTextField(
+                                    value = goalLink,
+                                    onValueChange = { goalLink = it },
+                                    label = { Text("Your Booking / Quote Link") },
+                                    placeholder = { Text("https://cal.com/your-business") },
+                                    singleLine = true,
+                                    modifier = Modifier.fillMaxWidth()
+                                )
+                                Text(
+                                    text = "$agentName will automatically text this link to the caller right after the phone call ends.",
+                                    style = MaterialTheme.typography.labelSmall,
+                                    color = MaterialTheme.colorScheme.onSurfaceVariant
+                                )
+                            }
+                        }
+
+                        3 -> {
+                            // ── STEP 3: Emergency Triage Policy ───────────────────────────────
+                            Text(
+                                text = "How should urgent emergencies or high-priority jobs be handled?",
+                                style = MaterialTheme.typography.titleSmall,
+                                fontWeight = FontWeight.Bold
+                            )
+                            Text(
+                                text = "Configure smart triage so critical hazards bypass voicemail and alert you immediately 24/7.",
+                                style = MaterialTheme.typography.bodySmall,
+                                color = MaterialTheme.colorScheme.onSurfaceVariant
+                            )
+
+                            Surface(
+                                color = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.4f),
+                                shape = RoundedCornerShape(12.dp),
+                                modifier = Modifier.fillMaxWidth()
+                            ) {
+                                Row(
+                                    modifier = Modifier.padding(14.dp),
+                                    horizontalArrangement = Arrangement.SpaceBetween,
+                                    verticalAlignment = Alignment.CenterVertically
+                                ) {
+                                    Column(modifier = Modifier.weight(1f)) {
+                                        Text(
+                                            text = "🚨 24/7 Emergency Detection",
+                                            style = MaterialTheme.typography.labelLarge,
+                                            fontWeight = FontWeight.Bold
+                                        )
+                                        Text(
+                                            text = "Flag calls matching urgency keywords as HIGH PRIORITY with instant push & SMS alerts.",
+                                            style = MaterialTheme.typography.bodySmall,
+                                            color = MaterialTheme.colorScheme.onSurfaceVariant
+                                        )
+                                    }
+                                    Switch(
+                                        checked = emergencyEnabled,
+                                        onCheckedChange = { emergencyEnabled = it }
+                                    )
+                                }
+                            }
+
+                            Text(
+                                text = "Emergency Triggers for $selectedTrade:",
+                                style = MaterialTheme.typography.labelSmall,
+                                fontWeight = FontWeight.Bold
+                            )
+
+                            OutlinedTextField(
+                                value = emergencyKeywords,
+                                onValueChange = { emergencyKeywords = it },
+                                label = { Text("Comma-Separated Keywords") },
+                                modifier = Modifier.fillMaxWidth(),
+                                minLines = 2,
+                                maxLines = 4
+                            )
+
+                            Row(
+                                modifier = Modifier.fillMaxWidth(),
+                                horizontalArrangement = Arrangement.End
+                            ) {
+                                TextButton(
+                                    onClick = {
+                                        emergencyKeywords = getTradeDefaultKeywords(selectedTrade)
+                                    }
+                                ) {
+                                    Icon(Icons.Default.Refresh, contentDescription = null, modifier = Modifier.size(14.dp))
+                                    Spacer(modifier = Modifier.width(4.dp))
+                                    Text("Reset to $selectedTrade Presets", fontSize = 11.sp)
+                                }
+                            }
+                        }
+
+                        4 -> {
+                            // ── STEP 4: After-Hours & Weekend Strategy ────────────────────────
+                            Text(
+                                text = "What should your AI do when someone calls after hours or on weekends?",
+                                style = MaterialTheme.typography.titleSmall,
+                                fontWeight = FontWeight.Bold
+                            )
+                            Text(
+                                text = "Choose how $agentName adapts outside your scheduled business hours.",
+                                style = MaterialTheme.typography.bodySmall,
+                                color = MaterialTheme.colorScheme.onSurfaceVariant
+                            )
+
+                            val strategies = listOf(
+                                Triple(
+                                    "EMERGENCY_ONLY",
+                                    "🚨 Filter Emergencies Only (Recommended)",
+                                    "Politely inform routine callers that the office is closed, capturing details for morning callback. If an emergency is detected, immediately alert you 24/7."
+                                ),
+                                Triple(
+                                    "24_7_SAME",
+                                    "🟢 Full 24/7 Normal Receptionist",
+                                    "Provide the exact same greeting, booking flow, and intake round the clock, 365 days a year."
+                                ),
+                                Triple(
+                                    "MESSAGE_ONLY",
+                                    "🎙️ Closed Message & Intake Only",
+                                    "State business is currently closed, capture the caller's message and promise callback next business morning."
+                                )
+                            )
+
+                            strategies.forEach { (id, title, desc) ->
+                                val isSelected = afterHoursMode == id
+                                Surface(
+                                    modifier = Modifier
+                                        .fillMaxWidth()
+                                        .clickable { afterHoursMode = id },
+                                    shape = RoundedCornerShape(12.dp),
+                                    color = if (isSelected) Color(0xFF673AB7).copy(alpha = 0.12f) else MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.3f),
+                                    border = BorderStroke(
+                                        if (isSelected) 2.dp else 1.dp,
+                                        if (isSelected) Color(0xFF9C27B0) else MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.4f)
+                                    )
+                                ) {
+                                    Column(modifier = Modifier.padding(14.dp)) {
+                                        Row(
+                                            modifier = Modifier.fillMaxWidth(),
+                                            horizontalArrangement = Arrangement.SpaceBetween,
+                                            verticalAlignment = Alignment.CenterVertically
+                                        ) {
+                                            Text(
+                                                text = title,
+                                                style = MaterialTheme.typography.titleSmall,
+                                                fontWeight = FontWeight.Bold,
+                                                color = if (isSelected) Color(0xFF9C27B0) else MaterialTheme.colorScheme.onSurface
+                                            )
+                                            if (isSelected) {
+                                                Icon(Icons.Default.CheckCircle, contentDescription = null, tint = Color(0xFF9C27B0), modifier = Modifier.size(18.dp))
+                                            }
+                                        }
+                                        Spacer(modifier = Modifier.height(4.dp))
+                                        Text(text = desc, style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
+                                    }
+                                }
+                            }
+                        }
+
+                        5 -> {
+                            // ── STEP 5: Automated Post-Call SMS & Activation ──────────────────
+                            Text(
+                                text = "Review & activate your AI receptionist's instant follow-up text.",
+                                style = MaterialTheme.typography.titleSmall,
+                                fontWeight = FontWeight.Bold
+                            )
+                            Text(
+                                text = "When $agentName finishes speaking with a caller, your phone automatically sends this personalized SMS via your SIM card.",
+                                style = MaterialTheme.typography.bodySmall,
+                                color = MaterialTheme.colorScheme.onSurfaceVariant
+                            )
+
+                            Surface(
+                                color = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.4f),
+                                shape = RoundedCornerShape(12.dp),
+                                modifier = Modifier.fillMaxWidth()
+                            ) {
+                                Row(
+                                    modifier = Modifier.padding(14.dp),
+                                    horizontalArrangement = Arrangement.SpaceBetween,
+                                    verticalAlignment = Alignment.CenterVertically
+                                ) {
+                                    Column(modifier = Modifier.weight(1f)) {
+                                        Text(
+                                            text = "📱 Enable Automated Post-Call SMS",
+                                            style = MaterialTheme.typography.labelLarge,
+                                            fontWeight = FontWeight.Bold
+                                        )
+                                        Text(
+                                            text = "Sent instantly from your phone number after call ends.",
+                                            style = MaterialTheme.typography.bodySmall,
+                                            color = MaterialTheme.colorScheme.onSurfaceVariant
+                                        )
+                                    }
+                                    Switch(
+                                        checked = postCallSmsEnabled,
+                                        onCheckedChange = { postCallSmsEnabled = it }
+                                    )
+                                }
+                            }
+
+                            if (postCallSmsEnabled) {
+                                Text(
+                                    text = "Follow-Up Message Template:",
+                                    style = MaterialTheme.typography.labelSmall,
+                                    fontWeight = FontWeight.Bold
+                                )
+
+                                OutlinedTextField(
+                                    value = postCallTemplate,
+                                    onValueChange = { postCallTemplate = it },
+                                    modifier = Modifier.fillMaxWidth(),
+                                    minLines = 3,
+                                    maxLines = 5
+                                )
+
+                                // Dynamic tag chips
+                                Row(
+                                    modifier = Modifier.fillMaxWidth(),
+                                    horizontalArrangement = Arrangement.spacedBy(6.dp)
+                                ) {
+                                    AssistChip(
+                                        onClick = { postCallTemplate += " {NAME}" },
+                                        label = { Text("{NAME}", fontSize = 11.sp) }
+                                    )
+                                    AssistChip(
+                                        onClick = { postCallTemplate += " {AGENT_NAME}" },
+                                        label = { Text("{AGENT}", fontSize = 11.sp) }
+                                    )
+                                    AssistChip(
+                                        onClick = { postCallTemplate += " {BUSINESS_NAME}" },
+                                        label = { Text("{BIZ}", fontSize = 11.sp) }
+                                    )
+                                    AssistChip(
+                                        onClick = { postCallTemplate += " {SUMMARY}" },
+                                        label = { Text("{SUMMARY}", fontSize = 11.sp) }
+                                    )
+                                    AssistChip(
+                                        onClick = { postCallTemplate += " {BOOKING_LINK}" },
+                                        label = { Text("{LINK}", fontSize = 11.sp) }
+                                    )
+                                }
+
+                                // Live dynamic preview
+                                Surface(
+                                    color = MaterialTheme.colorScheme.primaryContainer.copy(alpha = 0.35f),
+                                    shape = RoundedCornerShape(12.dp),
+                                    border = BorderStroke(1.dp, MaterialTheme.colorScheme.primary.copy(alpha = 0.3f)),
+                                    modifier = Modifier.fillMaxWidth()
+                                ) {
+                                    Column(modifier = Modifier.padding(12.dp)) {
+                                        Row(verticalAlignment = Alignment.CenterVertically) {
+                                            Text("💬", fontSize = 14.sp)
+                                            Spacer(modifier = Modifier.width(6.dp))
+                                            Text(
+                                                text = "LIVE PREVIEW (WHAT CALLER RECEIVES)",
+                                                style = MaterialTheme.typography.labelSmall,
+                                                fontWeight = FontWeight.Bold,
+                                                color = MaterialTheme.colorScheme.primary
+                                            )
+                                        }
+                                        Spacer(modifier = Modifier.height(6.dp))
+                                        val preview = postCallTemplate
+                                            .replace("{NAME}", "Sarah")
+                                            .replace("{BUSINESS_NAME}", businessName.ifBlank { "Apex Services" })
+                                            .replace("{AGENT_NAME}", agentName.ifBlank { "Riley" })
+                                            .replace("{SUMMARY}", "water heater leaking in basement")
+                                            .replace("{BOOKING_LINK}", goalLink.ifBlank { "https://missedcallautosms.com" })
+
+                                        Text(
+                                            text = "\"$preview\"",
+                                            style = MaterialTheme.typography.bodySmall,
+                                            color = MaterialTheme.colorScheme.onSurface
+                                        )
+                                    }
+                                }
+                            }
+
+                            // Summary Box
+                            Surface(
+                                color = Color(0xFF673AB7).copy(alpha = 0.1f),
+                                shape = RoundedCornerShape(10.dp),
+                                modifier = Modifier.fillMaxWidth()
+                            ) {
+                                Column(modifier = Modifier.padding(12.dp), verticalArrangement = Arrangement.spacedBy(4.dp)) {
+                                    Text("🎯 AI Configuration Summary:", fontWeight = FontWeight.Bold, style = MaterialTheme.typography.labelMedium, color = Color(0xFFAB47BC))
+                                    Text("• Agent: $agentName", style = MaterialTheme.typography.bodySmall)
+                                    Text("• Business: $businessName ($selectedTrade)", style = MaterialTheme.typography.bodySmall)
+                                    Text("• Call Objective: ${if (primaryGoal == "BOOKING_LINK") "Booking Link" else if (primaryGoal == "QUOTE_FORM") "Quote Form" else "Fast Callback"}", style = MaterialTheme.typography.bodySmall)
+                                    Text("• After Hours: ${if (afterHoursMode == "EMERGENCY_ONLY") "Emergency Filter (24/7)" else if (afterHoursMode == "24_7_SAME") "24/7 Receptionist" else "Closed Voicemail"}", style = MaterialTheme.typography.bodySmall)
+                                }
+                            }
+                        }
+                    }
+                }
+
+                Spacer(modifier = Modifier.height(14.dp))
+
+                // Bottom Navigation Bar
+                Row(
+                    modifier = Modifier.fillMaxWidth(),
+                    horizontalArrangement = Arrangement.SpaceBetween,
+                    verticalAlignment = Alignment.CenterVertically
+                ) {
+                    if (currentStep > 1) {
+                        OutlinedButton(
+                            onClick = { currentStep-- },
+                            modifier = Modifier.weight(1f)
+                        ) {
+                            Icon(Icons.Default.ArrowBack, contentDescription = null, modifier = Modifier.size(16.dp))
+                            Spacer(modifier = Modifier.width(4.dp))
+                            Text("Back")
+                        }
+                    } else {
+                        Spacer(modifier = Modifier.weight(1f))
+                    }
+
+                    Spacer(modifier = Modifier.width(12.dp))
+
+                    if (currentStep < 5) {
+                        Button(
+                            onClick = { currentStep++ },
+                            modifier = Modifier.weight(1.2f),
+                            colors = ButtonDefaults.buttonColors(containerColor = Color(0xFF673AB7))
+                        ) {
+                            Text("Next Step")
+                            Spacer(modifier = Modifier.width(4.dp))
+                            Icon(Icons.Default.ArrowForward, contentDescription = null, modifier = Modifier.size(16.dp))
+                        }
+                    } else {
+                        Button(
+                            onClick = {
+                                val cleanAgent = agentName.trim().ifBlank { "Riley" }
+                                val cleanBusiness = businessName.trim().ifBlank { settings.businessName }
+                                val generatedGreeting = "Thanks for calling $cleanBusiness! My name is $cleanAgent, the digital receptionist. How can I help you today?"
+
+                                val updated = settings.copy(
+                                    voiceAgentName = cleanAgent,
+                                    businessName = cleanBusiness,
+                                    voiceIndustryTrade = selectedTrade,
+                                    contractorGoal = primaryGoal,
+                                    contractorGoalLink = goalLink.trim(),
+                                    postCallEmergencyOnly = emergencyEnabled,
+                                    voiceEmergencyKeywords = emergencyKeywords.trim(),
+                                    voiceAfterHoursMode = afterHoursMode,
+                                    postCallSmsEnabled = postCallSmsEnabled,
+                                    postCallSmsTemplate = postCallTemplate.trim(),
+                                    voiceWizardCompleted = true,
+                                    voiceReceptionistGreeting = generatedGreeting
+                                )
+                                onSettingsChanged(updated)
+                                Toast.makeText(context, "🎉 AI Receptionist '$cleanAgent' is active for $cleanBusiness!", Toast.LENGTH_LONG).show()
+                                onDismiss()
+                            },
+                            modifier = Modifier.weight(1.4f),
+                            colors = ButtonDefaults.buttonColors(containerColor = Color(0xFF00E676))
+                        ) {
+                            Text("🚀 Activate $agentName", color = Color.Black, fontWeight = FontWeight.Bold)
+                        }
+                    }
                 }
             }
         }

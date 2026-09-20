@@ -25,4 +25,7 @@ interface VoiceCallDao {
 
     @Query("DELETE FROM voice_call_events")
     suspend fun clearAll()
+
+    @Query("SELECT COUNT(*) FROM voice_call_events WHERE phone_number LIKE '%' || :phoneDigits || '%' AND timestamp >= :afterTimestamp")
+    suspend fun countRecentVoiceCalls(phoneDigits: String, afterTimestamp: Long): Int
 }
