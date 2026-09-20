@@ -272,7 +272,10 @@ fun CustomerAccountPortalDialog(
                                     horizontalArrangement = Arrangement.SpaceBetween,
                                     verticalAlignment = Alignment.CenterVertically
                                 ) {
-                                    Row(verticalAlignment = Alignment.CenterVertically) {
+                                    Row(
+                                        verticalAlignment = Alignment.CenterVertically,
+                                        modifier = Modifier.weight(1f, fill = false)
+                                    ) {
                                         Icon(Icons.Default.Timer, contentDescription = null, tint = Color(0xFF9333EA))
                                         Spacer(modifier = Modifier.width(8.dp))
                                         Text(
@@ -281,6 +284,7 @@ fun CustomerAccountPortalDialog(
                                             fontWeight = FontWeight.Bold
                                         )
                                     }
+                                    Spacer(modifier = Modifier.width(8.dp))
                                     Surface(
                                         color = if (liveOverageMinutes > 0) RedError else Color(0xFF9333EA),
                                         shape = RoundedCornerShape(6.dp)
@@ -290,6 +294,7 @@ fun CustomerAccountPortalDialog(
                                             color = Color.White,
                                             fontSize = 10.sp,
                                             fontWeight = FontWeight.Bold,
+                                            maxLines = 1,
                                             modifier = Modifier.padding(horizontal = 6.dp, vertical = 2.dp)
                                         )
                                     }

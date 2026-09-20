@@ -63,8 +63,19 @@ fun SettingsScreen(
     var newWebhookUrlInput by remember { mutableStateOf("") }
     var isPingingWebhook by remember { mutableStateOf(false) }
     var pingStatusMessage by remember { mutableStateOf<String?>(null) }
-    var showCustomActivityDialog by remember { mutableStateOf(false) }
-    var customActivityInput by remember { mutableStateOf(settings.contractorActivity) }
+    val updateManager = remember { com.missedcall.autotext.remote.RemoteUpdateManager(context) }
+    var isCheckingUpdate by remember { mutableStateOf(false) }
+    var availableUpdate by remember { mutableStateOf<com.missedcall.autotext.remote.UpdateInfo?>(null) }
+    var isDownloadingApk by remember { mutableStateOf(false) }
+    var downloadProgress by remember { mutableIntStateOf(0) }
+    val currentAppVersion = remember {
+        try {
+            val pInfo = context.packageManager.getPackageInfo(context.packageName, 0)
+            "v${pInfo.versionName} (Build ${pInfo.versionCode})"
+        } catch (e: Exception) {
+            "v1.6.0 (Build 14)"
+        }
+    }
     val activeSimInfoList = remember {
         try {
             val sm = context.getSystemService(android.telephony.SubscriptionManager::class.java)
@@ -331,344 +342,6 @@ fun SettingsScreen(
             }
         }
 
-        // 4.1 Contractor Status Dial & Dynamic Voicemail Script Generator
-        val cleanActivity = settings.contractorActivity.ifBlank { "hands full" }
-        val effectiveStatus = if (settings.businessHoursEnabled && settings.contractorStatus != "EMERGENCY") {
-            val isWithinHours = com.missedcall.autotext.util.ScheduleUtils.isWithinBusinessHours(settings.schedule)
-            if (isWithinHours) "AVAILABLE" else "AFTER_HOURS"
-        } else {
-            settings.contractorStatus
-        }
-        val businessDisplay = settings.businessName.ifBlank { "our business" }
-        val bookingLinkDisplay = settings.contractorGoalLink.ifBlank { "https://missedcallautosms.com" }
-        val generatedVoicemailScript = when (effectiveStatus) {
-            "AFTER_HOURS" -> "Thanks for calling $businessDisplay! You have reached our after-hours line. Please leave your name, number, and message, or book directly online at $bookingLinkDisplay. We will contact you first thing when our office opens!"
-            "EMERGENCY" -> "Thanks for calling $businessDisplay! Our team is currently on emergency priority dispatch. If this is an urgent emergency, please leave your name, address, and the nature of the issue immediately or visit $bookingLinkDisplay for immediate dispatch."
-            else -> "Thanks for calling $businessDisplay! Everyone currently has their hands full $cleanActivity, but please leave a message or schedule directly at $bookingLinkDisplay. What day and time works best for you?"
-        }
-        val generatedSmsPreview = "Hey! Sorry we missed your call while $cleanActivity. Here is our direct booking link: $bookingLinkDisplay - $businessDisplay"
-
-        Card(
-            shape = RoundedCornerShape(16.dp),
-            modifier = Modifier.fillMaxWidth()
-        ) {
-            Column(modifier = Modifier.padding(16.dp)) {
-                Row(
-                    modifier = Modifier.fillMaxWidth(),
-                    horizontalArrangement = Arrangement.SpaceBetween,
-                    verticalAlignment = Alignment.CenterVertically
-                ) {
-                    Column {
-                        Text(
-                            text = "Contractor Status & Voicemail Script",
-                            style = MaterialTheme.typography.titleMedium,
-                            fontWeight = FontWeight.Bold
-                        )
-                        Text(
-                            text = "Quickly set your daily status, trade focus & voicemail script.",
-                            style = MaterialTheme.typography.bodySmall,
-                            color = MaterialTheme.colorScheme.onSurfaceVariant
-                        )
-                    }
-                }
-
-                Spacer(modifier = Modifier.height(14.dp))
-
-                // Status Chips: Available / After Hours / Emergency
-                Row(
-                    modifier = Modifier.fillMaxWidth(),
-                    horizontalArrangement = Arrangement.spacedBy(8.dp)
-                ) {
-                    // 1. Available
-                    val isAvail = effectiveStatus == "AVAILABLE" || effectiveStatus.isBlank()
-                    Surface(
-                        shape = RoundedCornerShape(12.dp),
-                        color = if (isAvail) Color(0xFF00E676).copy(alpha = 0.15f) else MaterialTheme.colorScheme.surfaceVariant,
-                        border = BorderStroke(1.dp, if (isAvail) Color(0xFF00E676) else MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.5f)),
-                        modifier = Modifier
-                            .weight(1f)
-                            .clickable { onSettingsChanged(settings.copy(contractorStatus = "AVAILABLE")) }
-                    ) {
-                        Column(
-                            modifier = Modifier.padding(10.dp),
-                            horizontalAlignment = Alignment.CenterHorizontally
-                        ) {
-                            Text("🟢", fontSize = 16.sp)
-                            Spacer(modifier = Modifier.height(2.dp))
-                            Text("Available", fontWeight = FontWeight.Bold, style = MaterialTheme.typography.labelMedium, color = if (isAvail) Color(0xFF00C853) else MaterialTheme.colorScheme.onSurface)
-                            Text(cleanActivity.replaceFirstChar { it.uppercase() }, style = MaterialTheme.typography.labelSmall, maxLines = 1, color = MaterialTheme.colorScheme.onSurfaceVariant)
-                        }
-                    }
-
-                    // 2. After Hours
-                    val isAfter = effectiveStatus == "AFTER_HOURS"
-                    Surface(
-                        shape = RoundedCornerShape(12.dp),
-                        color = if (isAfter) Color(0xFF38BDF8).copy(alpha = 0.15f) else MaterialTheme.colorScheme.surfaceVariant,
-                        border = BorderStroke(1.dp, if (isAfter) Color(0xFF38BDF8) else MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.5f)),
-                        modifier = Modifier
-                            .weight(1f)
-                            .clickable { onSettingsChanged(settings.copy(contractorStatus = "AFTER_HOURS")) }
-                    ) {
-                        Column(
-                            modifier = Modifier.padding(10.dp),
-                            horizontalAlignment = Alignment.CenterHorizontally
-                        ) {
-                            Text("🌙", fontSize = 16.sp)
-                            Spacer(modifier = Modifier.height(2.dp))
-                            Text("After Hours", fontWeight = FontWeight.Bold, style = MaterialTheme.typography.labelMedium, color = if (isAfter) Color(0xFF0284C7) else MaterialTheme.colorScheme.onSurface)
-                            Text("Closed", style = MaterialTheme.typography.labelSmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
-                        }
-                    }
-
-                    // 3. Emergency
-                    val isEmerg = effectiveStatus == "EMERGENCY"
-                    Surface(
-                        shape = RoundedCornerShape(12.dp),
-                        color = if (isEmerg) Color(0xFFEF4444).copy(alpha = 0.15f) else MaterialTheme.colorScheme.surfaceVariant,
-                        border = BorderStroke(1.dp, if (isEmerg) Color(0xFFEF4444) else MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.5f)),
-                        modifier = Modifier
-                            .weight(1f)
-                            .clickable { onSettingsChanged(settings.copy(contractorStatus = "EMERGENCY")) }
-                    ) {
-                        Column(
-                            modifier = Modifier.padding(10.dp),
-                            horizontalAlignment = Alignment.CenterHorizontally
-                        ) {
-                            Text("🚨", fontSize = 16.sp)
-                            Spacer(modifier = Modifier.height(2.dp))
-                            Text("Emergency", fontWeight = FontWeight.Bold, style = MaterialTheme.typography.labelMedium, color = if (isEmerg) Color(0xFFDC2626) else MaterialTheme.colorScheme.onSurface)
-                            Text("Priority", style = MaterialTheme.typography.labelSmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
-                        }
-                    }
-                }
-
-                Spacer(modifier = Modifier.height(14.dp))
-
-                // Trade Activity / Working Focus
-                Row(
-                    modifier = Modifier.fillMaxWidth(),
-                    horizontalArrangement = Arrangement.SpaceBetween,
-                    verticalAlignment = Alignment.CenterVertically
-                ) {
-                    Text(
-                        text = "Current Trade Activity:",
-                        style = MaterialTheme.typography.labelMedium,
-                        fontWeight = FontWeight.Bold,
-                        color = MaterialTheme.colorScheme.primary
-                    )
-                    TextButton(
-                        onClick = {
-                            customActivityInput = settings.contractorActivity
-                            showCustomActivityDialog = true
-                        },
-                        contentPadding = PaddingValues(horizontal = 4.dp, vertical = 0.dp)
-                    ) {
-                        Icon(Icons.Default.Edit, contentDescription = null, modifier = Modifier.size(13.dp))
-                        Spacer(modifier = Modifier.width(4.dp))
-                        Text("Custom", fontSize = 11.sp)
-                    }
-                }
-
-                val activityPresets = listOf("hands full", "on a job", "cutting hair", "on the road", "in a consultation")
-                FlowRow(
-                    horizontalArrangement = Arrangement.spacedBy(6.dp),
-                    verticalArrangement = Arrangement.spacedBy(4.dp)
-                ) {
-                    activityPresets.forEach { act ->
-                        val isSelected = cleanActivity.equals(act, ignoreCase = true)
-                        FilterChip(
-                            selected = isSelected,
-                            onClick = { onSettingsChanged(settings.copy(contractorActivity = act)) },
-                            label = {
-                                Text(
-                                    when (act) {
-                                        "hands full" -> "🛠️ Hands Full"
-                                        "on a job" -> "🏗️ On Job"
-                                        "cutting hair" -> "✂️ Hair"
-                                        "on the road" -> "🚗 Driving"
-                                        else -> "🤝 Meeting"
-                                    },
-                                    fontSize = 11.sp
-                                )
-                            }
-                        )
-                    }
-                }
-
-                Spacer(modifier = Modifier.height(14.dp))
-
-                // Dynamic Opening Voicemail Greeting Script Card
-                Surface(
-                    color = Color(0xFF673AB7).copy(alpha = 0.10f),
-                    shape = RoundedCornerShape(12.dp),
-                    border = BorderStroke(1.dp, Color(0xFF9C27B0).copy(alpha = 0.4f)),
-                    modifier = Modifier.fillMaxWidth()
-                ) {
-                    Column(modifier = Modifier.padding(12.dp)) {
-                        Row(
-                            modifier = Modifier.fillMaxWidth(),
-                            horizontalArrangement = Arrangement.SpaceBetween,
-                            verticalAlignment = Alignment.CenterVertically
-                        ) {
-                            Row(verticalAlignment = Alignment.CenterVertically) {
-                                Icon(
-                                    Icons.Default.RecordVoiceOver,
-                                    contentDescription = null,
-                                    tint = Color(0xFF9C27B0),
-                                    modifier = Modifier.size(18.dp)
-                                )
-                                Spacer(modifier = Modifier.width(6.dp))
-                                Text(
-                                    text = "Voicemail Greeting Script",
-                                    fontWeight = FontWeight.Bold,
-                                    style = MaterialTheme.typography.labelMedium,
-                                    color = Color(0xFF9C27B0)
-                                )
-                            }
-                            TextButton(
-                                onClick = {
-                                    val clipboard = context.getSystemService(Context.CLIPBOARD_SERVICE) as android.content.ClipboardManager
-                                    val clip = android.content.ClipData.newPlainText("Voicemail Greeting Script", generatedVoicemailScript)
-                                    clipboard.setPrimaryClip(clip)
-                                    Toast.makeText(context, "📋 Voicemail script copied to clipboard!", Toast.LENGTH_SHORT).show()
-                                },
-                                contentPadding = PaddingValues(horizontal = 6.dp, vertical = 0.dp)
-                            ) {
-                                Icon(Icons.Default.ContentCopy, contentDescription = null, modifier = Modifier.size(13.dp), tint = Color(0xFF9C27B0))
-                                Spacer(modifier = Modifier.width(4.dp))
-                                Text("Copy Script", fontSize = 11.sp, color = Color(0xFF9C27B0), fontWeight = FontWeight.Bold)
-                            }
-                        }
-
-                        Spacer(modifier = Modifier.height(6.dp))
-                        Text(
-                            text = "\"$generatedVoicemailScript\"",
-                            style = MaterialTheme.typography.bodySmall,
-                            color = MaterialTheme.colorScheme.onSurface
-                        )
-                        Spacer(modifier = Modifier.height(6.dp))
-                        Text(
-                            text = "💡 Read this greeting into your carrier voicemail recorder so callers hear an authentic message matching your active working status.",
-                            style = MaterialTheme.typography.labelSmall,
-                            color = MaterialTheme.colorScheme.onSurfaceVariant
-                        )
-                    }
-                }
-
-                Spacer(modifier = Modifier.height(10.dp))
-
-                // Dynamic SMS Preview Card
-                Surface(
-                    color = Color(0xFF00E676).copy(alpha = 0.08f),
-                    shape = RoundedCornerShape(10.dp),
-                    border = BorderStroke(1.dp, Color(0xFF00E676).copy(alpha = 0.3f)),
-                    modifier = Modifier.fillMaxWidth()
-                ) {
-                    Column(modifier = Modifier.padding(10.dp)) {
-                        Row(verticalAlignment = Alignment.CenterVertically) {
-                            Text("💬", fontSize = 12.sp)
-                            Spacer(modifier = Modifier.width(6.dp))
-                            Text("Auto-Reply SMS Preview", style = MaterialTheme.typography.labelSmall, fontWeight = FontWeight.Bold, color = Color(0xFF00C853))
-                        }
-                        Spacer(modifier = Modifier.height(4.dp))
-                        Text(
-                            text = generatedSmsPreview,
-                            style = MaterialTheme.typography.bodySmall,
-                            color = MaterialTheme.colorScheme.onSurfaceVariant
-                        )
-                    }
-                }
-            }
-        }
-
-        // Custom Activity Input Dialog
-        if (showCustomActivityDialog) {
-            AlertDialog(
-                onDismissRequest = { showCustomActivityDialog = false },
-                title = { Text("Set Custom Activity Focus") },
-                text = {
-                    Column {
-                        Text(
-                            text = "Enter what you or your crew are currently busy doing (e.g. 'installing AC unit', 'in a design review', 'painting siding'):",
-                            style = MaterialTheme.typography.bodySmall
-                        )
-                        Spacer(modifier = Modifier.height(8.dp))
-                        OutlinedTextField(
-                            value = customActivityInput,
-                            onValueChange = { customActivityInput = it },
-                            label = { Text("Working Activity") },
-                            singleLine = true,
-                            modifier = Modifier.fillMaxWidth()
-                        )
-                    }
-                },
-                confirmButton = {
-                    Button(
-                        onClick = {
-                            val trimmed = customActivityInput.trim()
-                            if (trimmed.isNotBlank()) {
-                                onSettingsChanged(settings.copy(contractorActivity = trimmed))
-                            }
-                            showCustomActivityDialog = false
-                        }
-                    ) {
-                        Text("Save")
-                    }
-                },
-                dismissButton = {
-                    TextButton(onClick = { showCustomActivityDialog = false }) {
-                        Text("Cancel")
-                    }
-                }
-            )
-        }
-
-        // 5. Unified Prompt & Messaging Studio Banner
-        Card(
-            shape = RoundedCornerShape(16.dp),
-            colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.primaryContainer.copy(alpha = 0.25f)),
-            border = androidx.compose.foundation.BorderStroke(1.dp, MaterialTheme.colorScheme.primary.copy(alpha = 0.3f)),
-            modifier = Modifier.fillMaxWidth()
-        ) {
-            Column(modifier = Modifier.padding(16.dp)) {
-                Row(verticalAlignment = Alignment.CenterVertically) {
-                    Icon(Icons.Default.AutoAwesome, contentDescription = null, tint = MaterialTheme.colorScheme.primary)
-                    Spacer(modifier = Modifier.width(8.dp))
-                    Text(
-                        text = "Prompt & Messaging Studio",
-                        style = MaterialTheme.typography.titleMedium,
-                        fontWeight = FontWeight.Bold
-                    )
-                }
-                Spacer(modifier = Modifier.height(6.dp))
-                Text(
-                    text = "SMS auto-replies, AI Voice greetings, and follow-up templates are now unified in the new Prompts tab.",
-                    style = MaterialTheme.typography.bodySmall,
-                    color = MaterialTheme.colorScheme.onSurfaceVariant
-                )
-                Spacer(modifier = Modifier.height(10.dp))
-                Surface(
-                    shape = RoundedCornerShape(8.dp),
-                    color = MaterialTheme.colorScheme.surface,
-                    modifier = Modifier.fillMaxWidth()
-                ) {
-                    Text(
-                        text = "\"${settings.messageTemplate}\"",
-                        style = MaterialTheme.typography.bodySmall,
-                        modifier = Modifier.padding(10.dp),
-                        color = MaterialTheme.colorScheme.onSurface
-                    )
-                }
-                Spacer(modifier = Modifier.height(8.dp))
-                Text(
-                    text = "👉 Select the 'Prompts' tab at the top of the app to customize all SMS & AI personas with live simulation.",
-                    style = MaterialTheme.typography.labelSmall,
-                    color = MaterialTheme.colorScheme.primary,
-                    fontWeight = FontWeight.SemiBold
-                )
-            }
-        }
 
         // 6. Jitter Delay & Cooldown Window Card
         Card(
@@ -1662,6 +1335,216 @@ fun SettingsScreen(
                 }
             }
         }
+
+        // 10. Software & OTA Updates Card
+        Card(
+            colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface),
+            border = BorderStroke(1.dp, MaterialTheme.colorScheme.outlineVariant),
+            shape = RoundedCornerShape(16.dp),
+            modifier = Modifier.fillMaxWidth()
+        ) {
+            Column(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(16.dp)
+            ) {
+                Row(
+                    modifier = Modifier.fillMaxWidth(),
+                    horizontalArrangement = Arrangement.SpaceBetween,
+                    verticalAlignment = Alignment.CenterVertically
+                ) {
+                    Row(
+                        verticalAlignment = Alignment.CenterVertically,
+                        horizontalArrangement = Arrangement.spacedBy(8.dp)
+                    ) {
+                        Icon(
+                            imageVector = Icons.Default.SystemUpdate,
+                            contentDescription = null,
+                            tint = MaterialTheme.colorScheme.primary,
+                            modifier = Modifier.size(20.dp)
+                        )
+                        Text(
+                            text = "Software & OTA Updates",
+                            fontWeight = FontWeight.Bold,
+                            style = MaterialTheme.typography.titleSmall
+                        )
+                    }
+
+                    Surface(
+                        shape = RoundedCornerShape(8.dp),
+                        color = MaterialTheme.colorScheme.primary.copy(alpha = 0.12f),
+                        border = BorderStroke(1.dp, MaterialTheme.colorScheme.primary.copy(alpha = 0.35f))
+                    ) {
+                        Text(
+                            text = currentAppVersion,
+                            style = MaterialTheme.typography.labelSmall,
+                            color = MaterialTheme.colorScheme.primary,
+                            fontWeight = FontWeight.Bold,
+                            modifier = Modifier.padding(horizontal = 8.dp, vertical = 3.dp)
+                        )
+                    }
+                }
+
+                Spacer(modifier = Modifier.height(8.dp))
+
+                Text(
+                    text = "Check cloud servers for the latest feature releases, security updates, and instant over-the-air patches.",
+                    style = MaterialTheme.typography.bodySmall,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant
+                )
+
+                Spacer(modifier = Modifier.height(14.dp))
+
+                Row(
+                    modifier = Modifier.fillMaxWidth(),
+                    horizontalArrangement = Arrangement.spacedBy(10.dp)
+                ) {
+                    Button(
+                        modifier = Modifier.weight(1.25f),
+                        enabled = !isCheckingUpdate,
+                        shape = RoundedCornerShape(10.dp),
+                        onClick = {
+                            isCheckingUpdate = true
+                            coroutineScope.launch {
+                                val updateUrl = settings.remoteUpdateUrl.ifBlank { com.missedcall.autotext.remote.RemoteUpdateManager.DEFAULT_UPDATE_URL }
+                                when (val res = updateManager.checkForUpdatesDetailed(updateUrl, forceCheck = false)) {
+                                    is com.missedcall.autotext.remote.UpdateCheckResult.Available -> {
+                                        availableUpdate = res.updateInfo
+                                        Toast.makeText(context, "🚀 New Update Available: v${res.updateInfo.versionName} (Build ${res.updateInfo.versionCode})!", Toast.LENGTH_LONG).show()
+                                    }
+                                    is com.missedcall.autotext.remote.UpdateCheckResult.UpToDate -> {
+                                        Toast.makeText(context, "✅ App is up to date (v${res.currentVersionName}, Build ${res.currentVersionCode})!", Toast.LENGTH_SHORT).show()
+                                    }
+                                    is com.missedcall.autotext.remote.UpdateCheckResult.Error -> {
+                                        Toast.makeText(context, "⚠️ Update Check Failed: ${res.message}", Toast.LENGTH_LONG).show()
+                                    }
+                                }
+                                isCheckingUpdate = false
+                            }
+                        }
+                    ) {
+                        if (isCheckingUpdate) {
+                            CircularProgressIndicator(modifier = Modifier.size(16.dp), strokeWidth = 2.dp, color = Color.White)
+                            Spacer(modifier = Modifier.width(6.dp))
+                            Text("Checking...", style = MaterialTheme.typography.labelMedium)
+                        } else {
+                            Icon(Icons.Default.Refresh, contentDescription = null, modifier = Modifier.size(16.dp))
+                            Spacer(modifier = Modifier.width(6.dp))
+                            Text("Check Updates", style = MaterialTheme.typography.labelMedium)
+                        }
+                    }
+
+                    OutlinedButton(
+                        modifier = Modifier.weight(1f),
+                        enabled = !isCheckingUpdate,
+                        shape = RoundedCornerShape(10.dp),
+                        onClick = {
+                            isCheckingUpdate = true
+                            coroutineScope.launch {
+                                val updateUrl = settings.remoteUpdateUrl.ifBlank { com.missedcall.autotext.remote.RemoteUpdateManager.DEFAULT_UPDATE_URL }
+                                when (val res = updateManager.checkForUpdatesDetailed(updateUrl, forceCheck = true)) {
+                                    is com.missedcall.autotext.remote.UpdateCheckResult.Available -> {
+                                        availableUpdate = res.updateInfo
+                                        Toast.makeText(context, "🚀 Forcing OTA Update to v${res.updateInfo.versionName} (Build ${res.updateInfo.versionCode})!", Toast.LENGTH_LONG).show()
+                                    }
+                                    is com.missedcall.autotext.remote.UpdateCheckResult.Error -> {
+                                        Toast.makeText(context, "⚠️ Connection Error: ${res.message}", Toast.LENGTH_LONG).show()
+                                    }
+                                    is com.missedcall.autotext.remote.UpdateCheckResult.UpToDate -> {
+                                        Toast.makeText(context, "✅ App is on Build ${res.currentVersionCode}", Toast.LENGTH_SHORT).show()
+                                    }
+                                }
+                                isCheckingUpdate = false
+                            }
+                        }
+                    ) {
+                        Icon(Icons.Default.Download, contentDescription = null, modifier = Modifier.size(16.dp))
+                        Spacer(modifier = Modifier.width(4.dp))
+                        Text("Force OTA", style = MaterialTheme.typography.labelMedium)
+                    }
+                }
+            }
+        }
+
+        Spacer(modifier = Modifier.height(16.dp))
+    }
+
+    // OTA Update Modal Dialog if an update is initiated from Settings
+    availableUpdate?.let { update ->
+        AlertDialog(
+            onDismissRequest = {
+                if (!update.mandatory) {
+                    availableUpdate = null
+                }
+            },
+            title = {
+                Row(verticalAlignment = Alignment.CenterVertically) {
+                    Icon(
+                        Icons.Default.SystemUpdate, 
+                        contentDescription = null, 
+                        tint = if (update.mandatory) MaterialTheme.colorScheme.error else MaterialTheme.colorScheme.primary
+                    )
+                    Spacer(modifier = Modifier.width(8.dp))
+                    Text(if (update.mandatory) "Mandatory Update: v${update.versionName}" else "App Update Available (v${update.versionName})")
+                }
+            },
+            text = {
+                Column {
+                    Text(
+                        text = update.releaseNotes ?: "A new performance and feature update is ready for Missed Call Auto SMS.",
+                        style = MaterialTheme.typography.bodyMedium
+                    )
+                    Spacer(modifier = Modifier.height(8.dp))
+                    Text(
+                        text = "Source: ${update.apkUrl}",
+                        style = MaterialTheme.typography.bodySmall,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant
+                    )
+                    if (isDownloadingApk) {
+                        Spacer(modifier = Modifier.height(16.dp))
+                        LinearProgressIndicator(
+                            progress = { downloadProgress / 100f },
+                            modifier = Modifier.fillMaxWidth()
+                        )
+                        Spacer(modifier = Modifier.height(6.dp))
+                        Text(
+                            text = "Downloading APK: $downloadProgress%",
+                            style = MaterialTheme.typography.bodySmall,
+                            color = MaterialTheme.colorScheme.onSurfaceVariant
+                        )
+                    }
+                }
+            },
+            confirmButton = {
+                Button(
+                    enabled = !isDownloadingApk,
+                    onClick = {
+                        isDownloadingApk = true
+                        coroutineScope.launch {
+                            val success = updateManager.downloadAndInstallApk(update.apkUrl) { progress ->
+                                downloadProgress = progress
+                            }
+                            isDownloadingApk = false
+                            if (!success) {
+                                Toast.makeText(context, "Failed to download update APK", Toast.LENGTH_SHORT).show()
+                            }
+                            if (!update.mandatory) {
+                                availableUpdate = null
+                            }
+                        }
+                    }
+                ) {
+                    Text(if (isDownloadingApk) "Downloading..." else "Download & Install Upgrade")
+                }
+            },
+            dismissButton = {
+                if (!isDownloadingApk && !update.mandatory) {
+                    TextButton(onClick = { availableUpdate = null }) {
+                        Text("Later")
+                    }
+                }
+            }
+        )
     }
 }
 

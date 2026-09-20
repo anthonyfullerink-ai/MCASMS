@@ -339,14 +339,16 @@ fun MainScreen(
                 0 -> DashboardScreen(
                     settings = settings,
                     onSettingsChanged = onSettingsChanged,
-                    logs = logs
+                    logs = logs,
+                    onNavigateToTab = { selectedTab = it }
                 )
                 1 -> VoiceHubScreen(
                     settings = settings,
                     onSettingsChanged = onSettingsChanged,
                     voiceCalls = voiceCalls,
                     onMarkVoiceCallRead = onMarkVoiceCallRead,
-                    onClearVoiceCalls = onClearVoiceCalls
+                    onClearVoiceCalls = onClearVoiceCalls,
+                    onNavigateToPrompts = { selectedTab = 2 }
                 )
                 2 -> PromptStudioScreen(
                     settings = settings,

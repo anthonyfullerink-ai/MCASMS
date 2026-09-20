@@ -28,7 +28,7 @@ import com.missedcall.autotext.ui.theme.PurpleVariant
  * Consolidates all SMS auto-replies, voice receptionist greetings, system personas,
  * triage rules, and post-call summaries into one intuitive screen.
  */
-@OptIn(ExperimentalMaterial3Api::class)
+@OptIn(ExperimentalMaterial3Api::class, ExperimentalLayoutApi::class)
 @Composable
 fun PromptStudioScreen(
     settings: AppSettings,
@@ -131,9 +131,10 @@ fun PromptStudioScreen(
                                     fontWeight = FontWeight.SemiBold
                                 )
                                 Spacer(modifier = Modifier.height(6.dp))
-                                Row(
+                                FlowRow(
                                     modifier = Modifier.fillMaxWidth(),
-                                    horizontalArrangement = Arrangement.spacedBy(6.dp)
+                                    horizontalArrangement = Arrangement.spacedBy(8.dp),
+                                    verticalArrangement = Arrangement.spacedBy(6.dp)
                                 ) {
                                     PromptTagChip("+ {business_name}") {
                                         onSettingsChanged(settings.copy(messageTemplate = settings.messageTemplate + " {business_name}"))
@@ -261,9 +262,10 @@ fun PromptStudioScreen(
                                     fontWeight = FontWeight.SemiBold
                                 )
                                 Spacer(modifier = Modifier.height(6.dp))
-                                Row(
+                                FlowRow(
                                     modifier = Modifier.fillMaxWidth(),
-                                    horizontalArrangement = Arrangement.spacedBy(6.dp)
+                                    horizontalArrangement = Arrangement.spacedBy(8.dp),
+                                    verticalArrangement = Arrangement.spacedBy(6.dp)
                                 ) {
                                     StatusActivityChip("Hands Full", settings.contractorActivity) {
                                         onSettingsChanged(settings.copy(contractorActivity = "Hands Full"))
@@ -375,9 +377,10 @@ fun PromptStudioScreen(
                                     fontWeight = FontWeight.SemiBold
                                 )
                                 Spacer(modifier = Modifier.height(6.dp))
-                                Row(
+                                FlowRow(
                                     modifier = Modifier.fillMaxWidth(),
-                                    horizontalArrangement = Arrangement.spacedBy(6.dp)
+                                    horizontalArrangement = Arrangement.spacedBy(8.dp),
+                                    verticalArrangement = Arrangement.spacedBy(6.dp)
                                 ) {
                                     PromptTagChip("+ {NAME}") {
                                         onSettingsChanged(settings.copy(postCallSmsTemplate = settings.postCallSmsTemplate + " {NAME}"))

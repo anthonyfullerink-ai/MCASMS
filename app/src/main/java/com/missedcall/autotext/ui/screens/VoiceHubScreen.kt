@@ -54,7 +54,8 @@ fun VoiceHubScreen(
     onSettingsChanged: (AppSettings) -> Unit,
     voiceCalls: List<VoiceCallEvent>,
     onMarkVoiceCallRead: (Long) -> Unit,
-    onClearVoiceCalls: () -> Unit
+    onClearVoiceCalls: () -> Unit,
+    onNavigateToPrompts: () -> Unit = {}
 ) {
     val context = LocalContext.current
     val coroutineScope = rememberCoroutineScope()
@@ -315,84 +316,10 @@ fun VoiceHubScreen(
                     }
                 }
 
-                // 1. Quick Status Dial (Control Dial)
-                item {
-                    Row(
-                        modifier = Modifier.fillMaxWidth(),
-                        horizontalArrangement = Arrangement.SpaceBetween,
-                        verticalAlignment = Alignment.CenterVertically
-                    ) {
-                        Text(
-                            text = "1. CONTRACTOR STATUS DIAL",
-                            style = MaterialTheme.typography.labelSmall,
-                            fontWeight = FontWeight.Bold,
-                            color = MaterialTheme.colorScheme.primary
-                        )
-                        TextButton(
-                            onClick = { showWizardDialog = true },
-                            contentPadding = PaddingValues(horizontal = 4.dp, vertical = 0.dp)
-                        ) {
-                            Icon(
-                                Icons.Default.AutoAwesome,
-                                contentDescription = null,
-                                tint = Color(0xFFAB47BC),
-                                modifier = Modifier.size(13.dp)
-                            )
-                            Spacer(modifier = Modifier.width(4.dp))
-                            Text(
-                                "Agent: ${settings.voiceAgentName}",
-                                fontSize = 11.sp,
-                                color = Color(0xFFAB47BC),
-                                fontWeight = FontWeight.SemiBold
-                            )
-                        }
-                    }
-                    Spacer(modifier = Modifier.height(6.dp))
-
-                    val isWithinHours = remember(settings.schedule, settings.businessHoursEnabled) {
-                        com.missedcall.autotext.util.ScheduleUtils.isWithinBusinessHours(settings.schedule)
-                    }
-                    val effectiveStatus = if (settings.businessHoursEnabled && settings.contractorStatus != "EMERGENCY") {
-                        if (isWithinHours) "AVAILABLE" else "AFTER_HOURS"
-                    } else {
-                        settings.contractorStatus
-                    }
-
-                    ContractorStatusDial(
-                        currentStatus = effectiveStatus,
-                        businessHoursEnabled = settings.businessHoursEnabled,
-                        isWithinHours = isWithinHours,
-                        schedule = settings.schedule,
-                        contractorActivity = settings.contractorActivity,
-                        businessName = settings.businessName,
-                        contractorGoalLink = settings.contractorGoalLink,
-                        onStatusSelected = { newStatus ->
-                            onSettingsChanged(settings.copy(contractorStatus = newStatus))
-                            val label = when (newStatus) {
-                                "AVAILABLE" -> "🟢 Available"
-                                "AFTER_HOURS" -> "🌙 After Hours"
-                                else -> "🚨 Emergency Only"
-                            }
-                            Toast.makeText(context, "Status set to $label. AI greeting and triggers updated.", Toast.LENGTH_SHORT).show()
-                        },
-                        onActivitySelected = { newActivity ->
-                            val cleanAct = newActivity.trim().ifBlank { "hands full" }
-                            val generatedGreeting = "Thanks for calling ${settings.businessName}! Everyone currently has their hands full $cleanAct, but I'm the digital assistant and I can help book your appointment right now or take down your information for a prompt callback. What day works best for you?"
-                            onSettingsChanged(
-                                settings.copy(
-                                    contractorActivity = newActivity,
-                                    voiceReceptionistGreeting = generatedGreeting
-                                )
-                            )
-                            Toast.makeText(context, "Activity updated to '$newActivity'. AI voice intro updated!", Toast.LENGTH_SHORT).show()
-                        }
-                    )
-                }
-
-                // 2. Carrier Call Forwarding Switch
+                // 1. Carrier Call Forwarding Switch (*71)
                 item {
                     Text(
-                        text = "2. CARRIER CALL FORWARDING",
+                        text = "1. CARRIER CALL FORWARDING (*71)",
                         style = MaterialTheme.typography.labelSmall,
                         fontWeight = FontWeight.Bold,
                         color = MaterialTheme.colorScheme.primary
@@ -427,22 +354,127 @@ fun VoiceHubScreen(
                     )
                 }
 
-                // 3. Contractor Outcome & Dynamic Follow-Up Trigger
+                // 2. Active AI Receptionist Persona & Intake Summary Card
                 item {
                     Text(
-                        text = "3. AGENT OUTCOME & POST-CALL SMS",
+                        text = "2. ACTIVE AI VOICE PERSONA & RULES",
                         style = MaterialTheme.typography.labelSmall,
                         fontWeight = FontWeight.Bold,
                         color = MaterialTheme.colorScheme.primary
                     )
                     Spacer(modifier = Modifier.height(6.dp))
-                    ContractorGoalCard(
-                        settings = settings,
-                        onSettingsChanged = onSettingsChanged
-                    )
+                    Card(
+                        colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.5f)),
+                        shape = RoundedCornerShape(16.dp),
+                        border = BorderStroke(1.dp, MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.5f)),
+                        modifier = Modifier.fillMaxWidth()
+                    ) {
+                        Column(modifier = Modifier.padding(16.dp)) {
+                            Row(
+                                modifier = Modifier.fillMaxWidth(),
+                                horizontalArrangement = Arrangement.SpaceBetween,
+                                verticalAlignment = Alignment.CenterVertically
+                            ) {
+                                Row(verticalAlignment = Alignment.CenterVertically) {
+                                    Icon(Icons.Default.AutoAwesome, contentDescription = null, tint = Color(0xFF9C27B0), modifier = Modifier.size(20.dp))
+                                    Spacer(modifier = Modifier.width(8.dp))
+                                    Text(
+                                        text = "Agent: ${settings.voiceAgentName.ifBlank { "Riley" }}",
+                                        style = MaterialTheme.typography.titleSmall,
+                                        fontWeight = FontWeight.Bold
+                                    )
+                                }
+                                Surface(
+                                    shape = RoundedCornerShape(8.dp),
+                                    color = Color(0xFF9C27B0).copy(alpha = 0.15f)
+                                ) {
+                                    Text(
+                                        text = settings.voiceIndustryTrade.ifBlank { "General Service" },
+                                        fontSize = 11.sp,
+                                        fontWeight = FontWeight.Bold,
+                                        color = Color(0xFF9C27B0),
+                                        modifier = Modifier.padding(horizontal = 8.dp, vertical = 3.dp)
+                                    )
+                                }
+                            }
+
+                            Spacer(modifier = Modifier.height(10.dp))
+
+                            // 3-Pill Status Display
+                            Row(
+                                modifier = Modifier.fillMaxWidth(),
+                                horizontalArrangement = Arrangement.spacedBy(8.dp)
+                            ) {
+                                Surface(
+                                    shape = RoundedCornerShape(8.dp),
+                                    color = MaterialTheme.colorScheme.surface,
+                                    modifier = Modifier.weight(1f)
+                                ) {
+                                    Column(modifier = Modifier.padding(10.dp)) {
+                                        Text("STATUS", style = MaterialTheme.typography.labelSmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
+                                        Text(
+                                            when (settings.contractorStatus) {
+                                                "AFTER_HOURS" -> "🌙 Closed"
+                                                "EMERGENCY" -> "🚨 Urgent"
+                                                else -> "🟢 Available"
+                                            },
+                                            style = MaterialTheme.typography.bodySmall,
+                                            fontWeight = FontWeight.Bold
+                                        )
+                                    }
+                                }
+
+                                Surface(
+                                    shape = RoundedCornerShape(8.dp),
+                                    color = MaterialTheme.colorScheme.surface,
+                                    modifier = Modifier.weight(1f)
+                                ) {
+                                    Column(modifier = Modifier.padding(10.dp)) {
+                                        Text("GOAL", style = MaterialTheme.typography.labelSmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
+                                        Text(
+                                            when (settings.contractorGoal) {
+                                                "BOOKING_LINK" -> "📅 Link"
+                                                "CALLBACK_PROMISE" -> "⏱️ Callback"
+                                                else -> "📝 Quote"
+                                            },
+                                            style = MaterialTheme.typography.bodySmall,
+                                            fontWeight = FontWeight.Bold
+                                        )
+                                    }
+                                }
+
+                                Surface(
+                                    shape = RoundedCornerShape(8.dp),
+                                    color = MaterialTheme.colorScheme.surface,
+                                    modifier = Modifier.weight(1f)
+                                ) {
+                                    Column(modifier = Modifier.padding(10.dp)) {
+                                        Text("POST-CALL SMS", style = MaterialTheme.typography.labelSmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
+                                        Text(
+                                            if (settings.postCallSmsEnabled) "Active" else "Off",
+                                            style = MaterialTheme.typography.bodySmall,
+                                            fontWeight = FontWeight.Bold,
+                                            color = if (settings.postCallSmsEnabled) ActiveGreenText else MaterialTheme.colorScheme.onSurfaceVariant
+                                        )
+                                    }
+                                }
+                            }
+
+                            Spacer(modifier = Modifier.height(12.dp))
+
+                            OutlinedButton(
+                                onClick = onNavigateToPrompts,
+                                modifier = Modifier.fillMaxWidth()
+                            ) {
+                                Icon(Icons.Default.Tune, contentDescription = null, modifier = Modifier.size(16.dp))
+                                Spacer(modifier = Modifier.width(6.dp))
+                                Text("Customize AI Persona & Prompts ➔")
+                            }
+                        }
+                    }
                 }
 
-                // 4. Voice Call Notifications & Inbox Header
+                // 3. Voice Call Notifications & Inbox Header
                 item {
                     Row(
                         modifier = Modifier.fillMaxWidth(),
@@ -450,7 +482,7 @@ fun VoiceHubScreen(
                         verticalAlignment = Alignment.CenterVertically
                     ) {
                         Text(
-                            text = "4. CALL INBOX & NOTIFICATIONS (${voiceCalls.size})",
+                            text = "3. CALL INBOX & TRANSCRIPTS (${voiceCalls.size})",
                             style = MaterialTheme.typography.labelSmall,
                             fontWeight = FontWeight.Bold,
                             color = MaterialTheme.colorScheme.primary
@@ -547,332 +579,6 @@ fun VoiceHubScreen(
     }
 }
 
-/**
- * Contractor Status Dial (Available / After Hours / Emergency Only)
- */
-@Composable
-fun ContractorStatusDial(
-    currentStatus: String,
-    businessHoursEnabled: Boolean = false,
-    isWithinHours: Boolean = true,
-    schedule: com.missedcall.autotext.data.AppSchedule = com.missedcall.autotext.data.AppSchedule(),
-    contractorActivity: String = "Hands Full",
-    businessName: String = "My Business",
-    contractorGoalLink: String = "",
-    onStatusSelected: (String) -> Unit,
-    onActivitySelected: (String) -> Unit
-) {
-    var showCustomActivityDialog by remember { mutableStateOf(false) }
-    var customActivityInput by remember { mutableStateOf(contractorActivity) }
-
-    val cleanActivity = contractorActivity.ifBlank { "hands full" }
-    val generatedVoiceIntro = "Thanks for calling $businessName! Everyone currently has their hands full $cleanActivity, but I'm the digital assistant and I can help book your appointment right now or take down your information for a prompt callback. What day works best for you?"
-    val generatedSmsPreview = "Hey! Sorry we missed your call while $cleanActivity. Here is our direct booking link: ${contractorGoalLink.ifBlank { "https://missedcallautosms.com" }} - $businessName"
-
-    Card(
-        colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.5f)),
-        shape = RoundedCornerShape(16.dp),
-        modifier = Modifier.fillMaxWidth()
-    ) {
-        Column(modifier = Modifier.padding(14.dp)) {
-            if (businessHoursEnabled) {
-                Surface(
-                    color = if (isWithinHours) Color(0xFF00E676).copy(alpha = 0.12f) else Color(0xFF38BDF8).copy(alpha = 0.12f),
-                    shape = RoundedCornerShape(8.dp),
-                    modifier = Modifier.fillMaxWidth().padding(bottom = 10.dp)
-                ) {
-                    Row(
-                        modifier = Modifier.padding(horizontal = 8.dp, vertical = 6.dp),
-                        verticalAlignment = Alignment.CenterVertically
-                    ) {
-                        Text(if (isWithinHours) "⚡" else "🌙", fontSize = 12.sp)
-                        Spacer(modifier = Modifier.width(6.dp))
-                        Text(
-                            text = if (isWithinHours)
-                                "Auto-Sync: Open (${schedule.startTime} - ${schedule.endTime})"
-                            else
-                                "Auto-Sync: After Hours (Closed until ${schedule.startTime})",
-                            style = MaterialTheme.typography.labelSmall,
-                            fontWeight = FontWeight.SemiBold,
-                            color = if (isWithinHours) Color(0xFF00E676) else Color(0xFF38BDF8)
-                        )
-                    }
-                }
-            }
-
-            Row(
-                modifier = Modifier.fillMaxWidth(),
-                horizontalArrangement = Arrangement.spacedBy(8.dp)
-            ) {
-                // 1. Available / On a Job
-                StatusChip(
-                    modifier = Modifier.weight(1f),
-                    title = "Available",
-                    subtitle = cleanActivity.replaceFirstChar { if (it.isLowerCase()) it.titlecase(Locale.ROOT) else it.toString() },
-                    icon = "🟢",
-                    isSelected = currentStatus == "AVAILABLE" || currentStatus.isBlank(),
-                    activeColor = Color(0xFF00E676),
-                    onClick = { onStatusSelected("AVAILABLE") }
-                )
-
-                // 2. After Hours
-                StatusChip(
-                    modifier = Modifier.weight(1f),
-                    title = "After Hours",
-                    subtitle = if (businessHoursEnabled && !isWithinHours) "Auto-Active" else "Closed",
-                    icon = "🌙",
-                    isSelected = currentStatus == "AFTER_HOURS",
-                    activeColor = Color(0xFF38BDF8),
-                    onClick = { onStatusSelected("AFTER_HOURS") }
-                )
-
-                // 3. Emergency Only
-                StatusChip(
-                    modifier = Modifier.weight(1f),
-                    title = "Emergency",
-                    subtitle = "Priority",
-                    icon = "🚨",
-                    isSelected = currentStatus == "EMERGENCY",
-                    activeColor = Color(0xFFEF4444),
-                    onClick = { onStatusSelected("EMERGENCY") }
-                )
-            }
-
-            Spacer(modifier = Modifier.height(12.dp))
-
-            // When Available is selected, provide activity chooser & dynamic AI intro preview
-            if (currentStatus == "AVAILABLE" || currentStatus.isBlank()) {
-                Surface(
-                    color = MaterialTheme.colorScheme.surface,
-                    shape = RoundedCornerShape(12.dp),
-                    border = BorderStroke(1.dp, MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.6f)),
-                    modifier = Modifier.fillMaxWidth()
-                ) {
-                    Column(modifier = Modifier.padding(12.dp)) {
-                        Row(
-                            modifier = Modifier.fillMaxWidth(),
-                            horizontalArrangement = Arrangement.SpaceBetween,
-                            verticalAlignment = Alignment.CenterVertically
-                        ) {
-                            Text(
-                                text = "Current Activity / Trade Focus:",
-                                style = MaterialTheme.typography.labelSmall,
-                                fontWeight = FontWeight.Bold,
-                                color = MaterialTheme.colorScheme.primary
-                            )
-                            TextButton(
-                                onClick = {
-                                    customActivityInput = contractorActivity
-                                    showCustomActivityDialog = true
-                                },
-                                contentPadding = PaddingValues(horizontal = 4.dp, vertical = 0.dp)
-                            ) {
-                                Text("✏️ Custom", fontSize = 11.sp)
-                            }
-                        }
-
-                        // Preset trade chips
-                        val presets = listOf("cutting hair", "hands full", "on a job", "on the road", "in a consultation")
-                        Row(
-                            modifier = Modifier.fillMaxWidth(),
-                            horizontalArrangement = Arrangement.spacedBy(6.dp)
-                        ) {
-                            presets.forEach { act ->
-                                val isSelected = cleanActivity.equals(act, ignoreCase = true)
-                                FilterChip(
-                                    selected = isSelected,
-                                    onClick = { onActivitySelected(act) },
-                                    label = {
-                                        Text(
-                                            when (act) {
-                                                "cutting hair" -> "✂️ Hair"
-                                                "hands full" -> "🛠️ Hands Full"
-                                                "on a job" -> "🏗️ On Job"
-                                                "on the road" -> "🚗 Driving"
-                                                else -> "🤝 Meeting"
-                                            },
-                                            fontSize = 11.sp
-                                        )
-                                    },
-                                    modifier = Modifier.weight(1f)
-                                )
-                            }
-                        }
-
-                        Spacer(modifier = Modifier.height(10.dp))
-
-                        // Opening AI Voice Intro preview
-                        Surface(
-                            color = Color(0xFF673AB7).copy(alpha = 0.1f),
-                            shape = RoundedCornerShape(8.dp),
-                            modifier = Modifier.fillMaxWidth()
-                        ) {
-                            Column(modifier = Modifier.padding(10.dp)) {
-                                Row(verticalAlignment = Alignment.CenterVertically) {
-                                    Icon(Icons.Default.RecordVoiceOver, contentDescription = null, tint = Color(0xFFAB47BC), modifier = Modifier.size(14.dp))
-                                    Spacer(modifier = Modifier.width(6.dp))
-                                    Text("AI Opening Voice Greeting (Auto-Generated)", style = MaterialTheme.typography.labelSmall, fontWeight = FontWeight.Bold, color = Color(0xFFAB47BC))
-                                }
-                                Spacer(modifier = Modifier.height(4.dp))
-                                Text(
-                                    text = "\"$generatedVoiceIntro\"",
-                                    style = MaterialTheme.typography.bodySmall,
-                                    color = MaterialTheme.colorScheme.onSurfaceVariant
-                                )
-                            }
-                        }
-
-                        Spacer(modifier = Modifier.height(8.dp))
-
-                        // Context-aware SMS preview
-                        Surface(
-                            color = Color(0xFF00E676).copy(alpha = 0.08f),
-                            shape = RoundedCornerShape(8.dp),
-                            modifier = Modifier.fillMaxWidth()
-                        ) {
-                            Column(modifier = Modifier.padding(10.dp)) {
-                                Row(verticalAlignment = Alignment.CenterVertically) {
-                                    Icon(Icons.Default.Sms, contentDescription = null, tint = ActiveGreenText, modifier = Modifier.size(14.dp))
-                                    Spacer(modifier = Modifier.width(6.dp))
-                                    Text("Context-Aware Post-Call SMS", style = MaterialTheme.typography.labelSmall, fontWeight = FontWeight.Bold, color = ActiveGreenText)
-                                }
-                                Spacer(modifier = Modifier.height(4.dp))
-                                Text(
-                                    text = "\"$generatedSmsPreview\"",
-                                    style = MaterialTheme.typography.bodySmall,
-                                    color = MaterialTheme.colorScheme.onSurfaceVariant
-                                )
-                            }
-                        }
-                    }
-                }
-            } else if (currentStatus == "AFTER_HOURS") {
-                Surface(
-                    color = Color(0xFF38BDF8).copy(alpha = 0.08f),
-                    shape = RoundedCornerShape(8.dp),
-                    modifier = Modifier.fillMaxWidth()
-                ) {
-                    Column(modifier = Modifier.padding(10.dp)) {
-                        Row(verticalAlignment = Alignment.CenterVertically) {
-                            Text("🌙", fontSize = 14.sp)
-                            Spacer(modifier = Modifier.width(6.dp))
-                            Text("After Hours Closed Script Active", style = MaterialTheme.typography.labelSmall, fontWeight = FontWeight.Bold, color = Color(0xFF38BDF8))
-                        }
-                        Spacer(modifier = Modifier.height(4.dp))
-                        Text(
-                            text = "\"Thanks for calling $businessName! Our office is currently closed for the day. I can capture your request for our morning team or text you a priority booking link right now. What can we help you with?\"",
-                            style = MaterialTheme.typography.bodySmall,
-                            color = MaterialTheme.colorScheme.onSurfaceVariant
-                        )
-                    }
-                }
-            } else {
-                Surface(
-                    color = Color(0xFFEF4444).copy(alpha = 0.08f),
-                    shape = RoundedCornerShape(8.dp),
-                    modifier = Modifier.fillMaxWidth()
-                ) {
-                    Column(modifier = Modifier.padding(10.dp)) {
-                        Row(verticalAlignment = Alignment.CenterVertically) {
-                            Text("🚨", fontSize = 14.sp)
-                            Spacer(modifier = Modifier.width(6.dp))
-                            Text("Emergency Priority Filter Active", style = MaterialTheme.typography.labelSmall, fontWeight = FontWeight.Bold, color = Color(0xFFEF4444))
-                        }
-                        Spacer(modifier = Modifier.height(4.dp))
-                        Text(
-                            text = "\"Thanks for calling $businessName emergency line! Are you currently experiencing an active emergency hazard or urgent issue?\"",
-                            style = MaterialTheme.typography.bodySmall,
-                            color = MaterialTheme.colorScheme.onSurfaceVariant
-                        )
-                    }
-                }
-            }
-        }
-    }
-
-    if (showCustomActivityDialog) {
-        AlertDialog(
-            onDismissRequest = { showCustomActivityDialog = false },
-            title = { Text("Custom Trade Activity") },
-            text = {
-                Column {
-                    Text(
-                        "Enter what you or your staff are busy doing (e.g. 'cutting hair', 'under a sink', 'with a patient', 'operating crane'):",
-                        style = MaterialTheme.typography.bodySmall
-                    )
-                    Spacer(modifier = Modifier.height(10.dp))
-                    OutlinedTextField(
-                        value = customActivityInput,
-                        onValueChange = { customActivityInput = it },
-                        label = { Text("Busy Activity") },
-                        placeholder = { Text("cutting hair") },
-                        singleLine = true,
-                        modifier = Modifier.fillMaxWidth()
-                    )
-                }
-            },
-            confirmButton = {
-                Button(onClick = {
-                    val trimmed = customActivityInput.trim()
-                    if (trimmed.isNotBlank()) {
-                        onActivitySelected(trimmed)
-                    }
-                    showCustomActivityDialog = false
-                }) {
-                    Text("Save & Generate Intro")
-                }
-            },
-            dismissButton = {
-                TextButton(onClick = { showCustomActivityDialog = false }) {
-                    Text("Cancel")
-                }
-            }
-        )
-    }
-}
-
-@Composable
-fun StatusChip(
-    modifier: Modifier = Modifier,
-    title: String,
-    subtitle: String,
-    icon: String,
-    isSelected: Boolean,
-    activeColor: Color,
-    onClick: () -> Unit
-) {
-    Surface(
-        modifier = modifier.clickable { onClick() },
-        shape = RoundedCornerShape(12.dp),
-        color = if (isSelected) activeColor.copy(alpha = 0.15f) else MaterialTheme.colorScheme.surface,
-        border = BorderStroke(
-            width = if (isSelected) 2.dp else 1.dp,
-            color = if (isSelected) activeColor else MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.4f)
-        )
-    ) {
-        Column(
-            modifier = Modifier.padding(vertical = 10.dp, horizontal = 6.dp),
-            horizontalAlignment = Alignment.CenterHorizontally
-        ) {
-            Text(text = icon, fontSize = 20.sp)
-            Spacer(modifier = Modifier.height(4.dp))
-            Text(
-                text = title,
-                style = MaterialTheme.typography.labelMedium,
-                fontWeight = if (isSelected) FontWeight.Bold else FontWeight.Medium,
-                color = if (isSelected) activeColor else MaterialTheme.colorScheme.onSurface,
-                maxLines = 1
-            )
-            Text(
-                text = subtitle,
-                style = MaterialTheme.typography.labelSmall,
-                fontSize = 10.sp,
-                color = MaterialTheme.colorScheme.onSurfaceVariant,
-                maxLines = 1
-            )
-        }
-    }
-}
 
 /**
  * Carrier Call Forwarding Control Card
@@ -957,325 +663,6 @@ fun CarrierForwardingControlCard(
     }
 }
 
-/**
- * Contractor Outcome & Goal Card with Full AI Post-Call SMS Customizer
- */
-@Composable
-fun ContractorGoalCard(
-    settings: AppSettings,
-    onSettingsChanged: (AppSettings) -> Unit
-) {
-    var isEditingLink by remember { mutableStateOf(false) }
-    var linkInput by remember { mutableStateOf(settings.contractorGoalLink) }
-    var templateInput by remember { mutableStateOf(settings.postCallSmsTemplate) }
-
-    val defaultTemplate = "Hey {NAME}, this is {BUSINESS_NAME}. My AI assistant let me know about {SUMMARY}. I am wrapping up on a job and will reach out to you shortly!"
-
-    // Keep local input in sync if settings update from external source
-    LaunchedEffect(settings.postCallSmsTemplate) {
-        templateInput = settings.postCallSmsTemplate
-    }
-
-    Card(
-        colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.5f)),
-        shape = RoundedCornerShape(16.dp),
-        modifier = Modifier.fillMaxWidth()
-    ) {
-        Column(modifier = Modifier.padding(16.dp)) {
-            // Header
-            Row(
-                modifier = Modifier.fillMaxWidth(),
-                horizontalArrangement = Arrangement.SpaceBetween,
-                verticalAlignment = Alignment.CenterVertically
-            ) {
-                Row(verticalAlignment = Alignment.CenterVertically) {
-                    Icon(Icons.Default.Flag, contentDescription = null, tint = MaterialTheme.colorScheme.primary, modifier = Modifier.size(20.dp))
-                    Spacer(modifier = Modifier.width(8.dp))
-                    Text(
-                        text = "Primary AI Post-Call Goal",
-                        style = MaterialTheme.typography.titleSmall,
-                        fontWeight = FontWeight.Bold
-                    )
-                }
-
-                TextButton(onClick = { isEditingLink = !isEditingLink }) {
-                    Text(if (isEditingLink) "Close" else "Configure Link", fontSize = 11.sp)
-                }
-            }
-
-            Spacer(modifier = Modifier.height(8.dp))
-
-            Row(
-                modifier = Modifier.fillMaxWidth(),
-                horizontalArrangement = Arrangement.spacedBy(8.dp)
-            ) {
-                GoalFilterChip(
-                    modifier = Modifier.weight(1f),
-                    title = "📅 Booking Link",
-                    isSelected = settings.contractorGoal == "BOOKING_LINK",
-                    onClick = { onSettingsChanged(settings.copy(contractorGoal = "BOOKING_LINK")) }
-                )
-                GoalFilterChip(
-                    modifier = Modifier.weight(1f),
-                    title = "⏱️ 30m Callback",
-                    isSelected = settings.contractorGoal == "CALLBACK_PROMISE",
-                    onClick = { onSettingsChanged(settings.copy(contractorGoal = "CALLBACK_PROMISE")) }
-                )
-                GoalFilterChip(
-                    modifier = Modifier.weight(1f),
-                    title = "📝 Quote Form",
-                    isSelected = settings.contractorGoal == "QUOTE_FORM",
-                    onClick = { onSettingsChanged(settings.copy(contractorGoal = "QUOTE_FORM")) }
-                )
-            }
-
-            if (isEditingLink || (settings.contractorGoal != "CALLBACK_PROMISE" && settings.contractorGoalLink.isBlank())) {
-                Spacer(modifier = Modifier.height(10.dp))
-                OutlinedTextField(
-                    value = linkInput,
-                    onValueChange = {
-                        linkInput = it
-                        onSettingsChanged(settings.copy(contractorGoalLink = it))
-                    },
-                    label = { Text("Your Booking / Quote URL") },
-                    placeholder = { Text("https://cal.com/your-name") },
-                    singleLine = true,
-                    modifier = Modifier.fillMaxWidth()
-                )
-                Spacer(modifier = Modifier.height(4.dp))
-                Text(
-                    text = "The AI dynamically writes genuine SMS messages including this link when taking calls.",
-                    style = MaterialTheme.typography.labelSmall,
-                    color = MaterialTheme.colorScheme.onSurfaceVariant
-                )
-            }
-
-            HorizontalDivider(modifier = Modifier.padding(vertical = 14.dp), color = MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.3f))
-
-            // ── AI Post-Call Follow-up SMS Customizer ─────────────────────────────
-            Row(
-                modifier = Modifier.fillMaxWidth(),
-                horizontalArrangement = Arrangement.SpaceBetween,
-                verticalAlignment = Alignment.CenterVertically
-            ) {
-                Column(modifier = Modifier.weight(1f)) {
-                    Text(
-                        text = "📱 AI Post-Call Follow-up SMS",
-                        style = MaterialTheme.typography.titleSmall,
-                        fontWeight = FontWeight.Bold
-                    )
-                    Text(
-                        text = "Automatically text caller from this phone's SIM card after the AI finishes their call.",
-                        style = MaterialTheme.typography.bodySmall,
-                        color = MaterialTheme.colorScheme.onSurfaceVariant
-                    )
-                }
-                Switch(
-                    checked = settings.postCallSmsEnabled,
-                    onCheckedChange = { onSettingsChanged(settings.copy(postCallSmsEnabled = it)) }
-                )
-            }
-
-            if (settings.postCallSmsEnabled) {
-                Spacer(modifier = Modifier.height(12.dp))
-
-                // Emergency Only Toggle
-                Surface(
-                    color = MaterialTheme.colorScheme.surface.copy(alpha = 0.6f),
-                    shape = RoundedCornerShape(10.dp),
-                    modifier = Modifier.fillMaxWidth()
-                ) {
-                    Row(
-                        modifier = Modifier.padding(horizontal = 12.dp, vertical = 8.dp),
-                        horizontalArrangement = Arrangement.SpaceBetween,
-                        verticalAlignment = Alignment.CenterVertically
-                    ) {
-                        Column(modifier = Modifier.weight(1f)) {
-                            Text(
-                                text = "🚨 Emergency Inquiries Only",
-                                style = MaterialTheme.typography.labelMedium,
-                                fontWeight = FontWeight.SemiBold
-                            )
-                            Text(
-                                text = "Only text callers if high-urgency keywords are detected in their call.",
-                                style = MaterialTheme.typography.labelSmall,
-                                color = MaterialTheme.colorScheme.onSurfaceVariant
-                            )
-                        }
-                        Switch(
-                            checked = settings.postCallEmergencyOnly,
-                            onCheckedChange = { onSettingsChanged(settings.copy(postCallEmergencyOnly = it)) }
-                        )
-                    }
-                }
-
-                Spacer(modifier = Modifier.height(12.dp))
-
-                // Template Multi-Line Editor
-                Text(
-                    text = "Custom Follow-up Message Template:",
-                    style = MaterialTheme.typography.labelMedium,
-                    fontWeight = FontWeight.Bold
-                )
-
-                Spacer(modifier = Modifier.height(6.dp))
-
-                OutlinedTextField(
-                    value = templateInput,
-                    onValueChange = {
-                        templateInput = it
-                        onSettingsChanged(settings.copy(postCallSmsTemplate = it))
-                    },
-                    modifier = Modifier.fillMaxWidth(),
-                    minLines = 3,
-                    maxLines = 6,
-                    placeholder = { Text(defaultTemplate) }
-                )
-
-                Spacer(modifier = Modifier.height(8.dp))
-
-                // One-Tap Variable Insertion Chips
-                Text(
-                    text = "Tap to Insert Dynamic Tags:",
-                    style = MaterialTheme.typography.labelSmall,
-                    color = MaterialTheme.colorScheme.onSurfaceVariant
-                )
-
-                Spacer(modifier = Modifier.height(4.dp))
-
-                Row(
-                    modifier = Modifier.fillMaxWidth(),
-                    horizontalArrangement = Arrangement.spacedBy(6.dp)
-                ) {
-                    AssistChip(
-                        onClick = {
-                            val updated = templateInput + " {NAME}"
-                            templateInput = updated
-                            onSettingsChanged(settings.copy(postCallSmsTemplate = updated))
-                        },
-                        label = { Text("{NAME}", fontSize = 11.sp) }
-                    )
-                    AssistChip(
-                        onClick = {
-                            val updated = templateInput + " {AGENT_NAME}"
-                            templateInput = updated
-                            onSettingsChanged(settings.copy(postCallSmsTemplate = updated))
-                        },
-                        label = { Text("{AGENT}", fontSize = 11.sp) }
-                    )
-                    AssistChip(
-                        onClick = {
-                            val updated = templateInput + " {SUMMARY}"
-                            templateInput = updated
-                            onSettingsChanged(settings.copy(postCallSmsTemplate = updated))
-                        },
-                        label = { Text("{SUMMARY}", fontSize = 11.sp) }
-                    )
-                    AssistChip(
-                        onClick = {
-                            val updated = templateInput + " {BUSINESS_NAME}"
-                            templateInput = updated
-                            onSettingsChanged(settings.copy(postCallSmsTemplate = updated))
-                        },
-                        label = { Text("{BIZ}", fontSize = 11.sp) }
-                    )
-                    AssistChip(
-                        onClick = {
-                            val updated = templateInput + " {BOOKING_LINK}"
-                            templateInput = updated
-                            onSettingsChanged(settings.copy(postCallSmsTemplate = updated))
-                        },
-                        label = { Text("{LINK}", fontSize = 11.sp) }
-                    )
-                }
-
-                // Reset to Default Button
-                if (templateInput.trim() != defaultTemplate.trim()) {
-                    TextButton(
-                        onClick = {
-                            templateInput = defaultTemplate
-                            onSettingsChanged(settings.copy(postCallSmsTemplate = defaultTemplate))
-                        },
-                        modifier = Modifier.align(Alignment.End)
-                    ) {
-                        Text("Reset to Default Template", fontSize = 11.sp, color = MaterialTheme.colorScheme.primary)
-                    }
-                }
-
-                Spacer(modifier = Modifier.height(8.dp))
-
-                // Live Dynamic Preview Box
-                Surface(
-                    color = MaterialTheme.colorScheme.primaryContainer.copy(alpha = 0.35f),
-                    shape = RoundedCornerShape(12.dp),
-                    border = BorderStroke(1.dp, MaterialTheme.colorScheme.primary.copy(alpha = 0.3f)),
-                    modifier = Modifier.fillMaxWidth()
-                ) {
-                    Column(modifier = Modifier.padding(12.dp)) {
-                        Row(verticalAlignment = Alignment.CenterVertically) {
-                            Text("💬", fontSize = 14.sp)
-                            Spacer(modifier = Modifier.width(6.dp))
-                            Text(
-                                text = "LIVE PREVIEW (HOW CALLER SEES IT)",
-                                style = MaterialTheme.typography.labelSmall,
-                                fontWeight = FontWeight.Bold,
-                                color = MaterialTheme.colorScheme.primary
-                            )
-                        }
-
-                        Spacer(modifier = Modifier.height(6.dp))
-
-                        val previewText = templateInput
-                            .replace("{NAME}", "Sarah")
-                            .replace("{BUSINESS_NAME}", settings.businessName.ifBlank { "Apex Services" })
-                            .replace("{AGENT_NAME}", settings.voiceAgentName.ifBlank { "Riley" })
-                            .replace("{SUMMARY}", "water heater leaking in basement")
-                            .replace("{BOOKING_LINK}", settings.contractorGoalLink.ifBlank { "https://missedcallautosms.com" })
-
-                        Text(
-                            text = previewText,
-                            style = MaterialTheme.typography.bodySmall,
-                            color = MaterialTheme.colorScheme.onSurface
-                        )
-                    }
-                }
-            }
-        }
-    }
-}
-
-
-@Composable
-fun GoalFilterChip(
-    modifier: Modifier = Modifier,
-    title: String,
-    isSelected: Boolean,
-    onClick: () -> Unit
-) {
-    Surface(
-        modifier = modifier.clickable { onClick() },
-        shape = RoundedCornerShape(10.dp),
-        color = if (isSelected) MaterialTheme.colorScheme.primaryContainer else MaterialTheme.colorScheme.surface,
-        border = BorderStroke(
-            1.dp,
-            if (isSelected) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.5f)
-        )
-    ) {
-        Box(
-            modifier = Modifier.padding(vertical = 8.dp, horizontal = 4.dp),
-            contentAlignment = Alignment.Center
-        ) {
-            Text(
-                text = title,
-                style = MaterialTheme.typography.labelSmall,
-                fontWeight = if (isSelected) FontWeight.Bold else FontWeight.Normal,
-                color = if (isSelected) MaterialTheme.colorScheme.onPrimaryContainer else MaterialTheme.colorScheme.onSurface,
-                maxLines = 1,
-                overflow = TextOverflow.Ellipsis
-            )
-        }
-    }
-}
 
 /**
  * Call Inbox Card
