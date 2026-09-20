@@ -137,6 +137,8 @@ Product Concept:
   3. One-time $49.99 lifetime license with a 3-day free trial ($0 charged upfront).
   4. Human Jitter Delay (15 seconds) so messages feel personal and authentic, not like automated spam.
   5. Recovers lost revenue from expensive Google Local Services Ads (LSA), Google Ads, and Facebook Ads where missed calls result in burned ad spend.
+  6. CRITICAL PLATFORM RULES: Distributed strictly as an Android-only direct-download signed APK at https://missedcallautosms.com/#download. NEVER mention Apple, iPhone, iOS, App Store, or Google Play Store.
+  7. Version 1.5.0 Features: Contractor Status Dial (Available, After Hours, Emergency Only), Trade Presets (Hands Full, On Jobsite, Driving), 1-tap Voicemail Script Generator, and optional 24/7 AI Voice Receptionist Add-On.
 
 Existing Published Articles (DO NOT duplicate these topics or angles):
 ${existingTitles}

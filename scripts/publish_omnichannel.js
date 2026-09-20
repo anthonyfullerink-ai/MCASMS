@@ -281,8 +281,9 @@ async function publishLunchFeedPost(bundle, isDryRun) {
   console.log(`Headline: ${bundle.feedPost.headline}`);
   console.log(`Asset: ${bundle.feedPost.imageAsset} (${bundle.feedPost.aspectRatio})`);
 
-  // Resolve public image URL
-  const imageUrl = `https://raw.githubusercontent.com/anthonyfullerink-ai/MCASMS/main/assets/social/hvac-speed-to-lead.jpg`;
+  // Resolve public image URL dynamically
+  const assetName = bundle.feedPost.imageAsset ? path.basename(bundle.feedPost.imageAsset) : 'contractor-jobsite.jpg';
+  const imageUrl = `https://raw.githubusercontent.com/anthonyfullerink-ai/MCASMS/main/assets/social/${assetName}`;
 
   if (isDryRun) {
     console.log('✔ [DRY RUN] Facebook Feed Post simulated with payload:');

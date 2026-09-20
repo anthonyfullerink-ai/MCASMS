@@ -234,8 +234,8 @@ function generateOfflineFallback(pillarConfig, trend, dateStr) {
     },
     reelStory: {
       hook: `Every missed call during a client session is lost revenue down the street.`,
-      videoAsset: 'assets/ads/missed_call_auto_sms_reel_9x16.mp4',
-      coverAsset: 'assets/ads/scenes/scene_1.jpg',
+      videoAsset: 'assets/ads/v150_ai_voice_launch_reel_9x16.mp4',
+      coverAsset: 'assets/social/v1-5-0-ai-voice-assistant-launch.jpg',
       aspectRatio: '9:16',
       captionInstagram: `When your hands are full with a client, you can't touch the phone. Missed Call Auto SMS replies in 15 seconds directly from your real SIM. Zero monthly fees. Link in bio! 📲 #${pillarConfig.trade.replace(/[^a-zA-Z]/g, '').toLowerCase()} #speedtolead #smallbusiness`,
       captionFacebook: `Stop losing appointments and jobs to voicemail. Missed Call Auto SMS detects missed calls and texts back in 15 seconds. Try it free for 3 days at missedcallautosms.com!`
@@ -270,6 +270,11 @@ async function generateDailyContentBundle(options = {}) {
       console.log('📡 Generating single-shot daily multi-pack via Gemini...');
       const prompt = `
 You are the master content director for "Missed Call Auto SMS" (a $49.99 lifetime Android hardware appliance that auto-texts missed business calls within 15 seconds using the direct SIM card, bypassing carrier spam blocks with zero monthly fees).
+
+CRITICAL PLATFORM RULES:
+1. Pure Android hardware appliance distributed via direct-download signed APK at https://missedcallautosms.com/#download.
+2. NEVER mention Apple, iPhone, iOS, App Store, or Google Play Store.
+3. Feature v1.5.0 updates: Contractor Status Dial ("Available", "Hands Full", "On Jobsite"), 1-tap Voicemail Script Generator, and optional 24/7 AI Voice Assistant Add-On.
 
 Target Industry: ${pillarConfig.trade}
 Pain Point: ${pillarConfig.painPoint}
@@ -307,8 +312,8 @@ Generate a complete, cohesive multi-format daily publishing package in JSON with
   },
   "reelStory": {
     "hook": "1-sentence video hook tailored to ${pillarConfig.trade}",
-    "videoAsset": "assets/ads/missed_call_auto_sms_reel_9x16.mp4",
-    "coverAsset": "assets/ads/scenes/scene_1.jpg",
+    "videoAsset": "assets/ads/v150_ai_voice_launch_reel_9x16.mp4",
+    "coverAsset": "assets/social/v1-5-0-ai-voice-assistant-launch.jpg",
     "aspectRatio": "9:16",
     "captionInstagram": "Short punchy Reel caption with link in bio callout",
     "captionFacebook": "Engaging Facebook Reel caption"
