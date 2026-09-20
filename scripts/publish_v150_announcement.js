@@ -109,7 +109,7 @@ async function publishCampaign() {
   }
 
   const imageUrl = 'https://raw.githubusercontent.com/anthonyfullerink-ai/MCASMS/main/assets/social/v1-5-0-ai-voice-assistant-launch.jpg';
-  const videoUrl = 'https://raw.githubusercontent.com/anthonyfullerink-ai/MCASMS/main/assets/ads/missed_call_auto_sms_reel_9x16.mp4';
+  const videoUrl = 'https://raw.githubusercontent.com/anthonyfullerink-ai/MCASMS/main/assets/ads/v150_ai_voice_launch_reel_9x16.mp4';
   const blogUrl = 'https://missedcallautosms.com/blog/introducing-v1-5-0-ai-receptionist-status-dial';
 
   // 1. Facebook Feed Post Caption
