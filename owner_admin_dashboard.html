@@ -428,12 +428,12 @@
     <div id="tab0" class="tab-content card">
         <div class="card-header">
             <div>
-                <h2>👥 Sales & License Holders Directory</h2>
-                <div style="font-size: 12px; color: var(--muted); margin-top: 4px;">Real-time registry tracking Flagship ($49.99), Pro ($149.99), and Voice Pro ($29/mo) subscriptions.</div>
+                <h2>🔑 License Engine & Active Appliance Registry</h2>
+                <div style="font-size: 12px; color: var(--muted); margin-top: 4px;">Real-time registry tracking Flagship ($49.99), Pro Gateway ($299), Front Desk ($99/mo), and Standalone Voice ($29/$89/mo) subscriptions.</div>
             </div>
             <div style="display: flex; gap: 10px; flex-wrap: wrap;">
+                <button class="btn-action btn-pro-action" onclick="promptProLicense()">⚡ + Issue $299 Pro License</button>
                 <button class="btn-action" style="border-color: #38BDF8; color: #38BDF8;" onclick="syncMasterLicensesFromServer()">🔄 Sync Licenses</button>
-                <button class="btn-action btn-pro-action" onclick="promptProLicense()">⚡ + Issue $149.99 Pro License</button>
                 <button class="btn-action btn-primary-action" onclick="switchTab(1)">+ Issue Flagship ($49.99)</button>
                 <button class="btn-action btn-free-action" onclick="promptFreeLicense()">🎁 + Issue Comp Key ($0.00)</button>
                 <button class="btn-action" style="border-color: var(--primary); color: var(--primary);" onclick="switchTab(2); setTimeout(() => runFullSystemSimulation(), 250);">🧪 Audit All Systems</button>
@@ -463,7 +463,7 @@
         <!-- Generate License Card -->
         <div class="card">
             <h2>🔑 Issue New License Key</h2>
-            <div style="font-size: 13px; color: var(--muted); margin-bottom: 14px;">Generate cryptographically signed HMAC-SHA256 licenses for Flagship ($49.99), Pro Automation ($149.99), or Agency Fleets.</div>
+            <div style="font-size: 13px; color: var(--muted); margin-bottom: 14px;">Generate cryptographically signed HMAC-SHA256 licenses for Flagship ($49.99), Pro Gateway ($299), Front Desk ($99/mo), or Agency Fleets.</div>
 
             <label for="customerName">Customer / Colleague / Business Name:</label>
             <input type="text" id="customerName" placeholder="e.g. Apex Plumbing Services or John (Family)">
@@ -473,9 +473,10 @@
 
             <label for="licenseType">License Tier & Edition:</label>
             <select id="licenseType" onchange="onLicenseTypeChange(this.value)">
-                <option value="149.99|0|PRO" selected>⚡ Lifetime $149.99 Pro Automation License (MCAS-PRO-...)</option>
+                <option value="299.00|0|PRO" selected>⚡ $299.00 Pro Automation Gateway License (MCAS-PRO-...)</option>
+                <option value="99.00|0|AUTONOMOUS_FRONT_DESK">⚡ $99.00/mo Autonomous Front Desk Bundle (MCAS-PRO-...)</option>
                 <option value="49.99|0|PAID">📱 Lifetime $49.99 Flagship Appliance License (MCAS-...)</option>
-                <option value="0.00|0|FREE_PRO">⚡ Complimentary Pro Automation License ($0.00 Comp)</option>
+                <option value="0.00|0|FREE_PRO">⚡ Complimentary Pro Gateway License ($0.00 Comp)</option>
                 <option value="0.00|0|FREE">🎁 Complimentary Flagship License ($0.00 Comp)</option>
                 <option value="399.00|0|AGENCY_5">🏢 Agency Fleet 5-Pack ($399.00 Lifetime)</option>
                 <option value="799.00|0|AGENCY_10">🏢 Agency Fleet 10-Pack ($799.00 Lifetime)</option>
@@ -636,8 +637,9 @@
                 <div style="display: flex; gap: 10px; flex-wrap: wrap;">
                     <button class="btn-action" onclick="checkStripeConnectionLive()">⚡ Test Stripe Live API</button>
                     <button class="btn-action" onclick="testStripeWebhookLive()">📱 Test Flagship ($49.99) Webhook</button>
-                    <button class="btn-action btn-pro-action" onclick="testStripeProWebhookLive()">⚡ Test Pro ($149.99) Webhook</button>
-                    <button class="btn-action btn-primary-action" onclick="testStripeVoiceProWebhookLive()">🎙️ Test Voice Pro ($29/mo) Webhook</button>
+                    <button class="btn-action btn-pro-action" onclick="testStripeProWebhookLive()">⚡ Test Pro Gateway ($299) Webhook</button>
+                    <button class="btn-action btn-primary-action" onclick="testStripeFrontDeskWebhookLive()">⚡ Test Front Desk ($99/mo) Webhook</button>
+                    <button class="btn-action btn-primary-action" onclick="testStripeVoiceProWebhookLive()">🎙️ Test Voice Starter ($29/mo) Webhook</button>
                 </div>
             </div>
 
@@ -664,11 +666,15 @@
                     <input type="text" value="https://buy.stripe.com/3cI9AT49g2X07Q41ux2go0a" readonly onclick="this.select()" style="width: 100%; background: #090B0E; border: 1px solid var(--card-border); color: #FFF; padding: 10px; border-radius: 8px; font-size: 12px; font-family: monospace;">
                 </div>
                 <div>
-                    <label style="font-size: 13px; color: #D8B4FE; display: block; margin-bottom: 6px;">⚡ Stripe Pro Automation Direct Link ($149.99):</label>
+                    <label style="font-size: 13px; color: #D8B4FE; display: block; margin-bottom: 6px;">⚡ Stripe Pro Automation Direct Link ($299 Perpetual):</label>
                     <input type="text" value="https://buy.stripe.com/cNi5kDdJQ558c6k2yB2go0b" readonly onclick="this.select()" style="width: 100%; background: #090B0E; border: 1px solid #A855F7; color: #D8B4FE; padding: 10px; border-radius: 8px; font-size: 12px; font-family: monospace;">
                 </div>
                 <div>
-                    <label style="font-size: 13px; color: var(--primary); display: block; margin-bottom: 6px;">🎙️ Stripe Managed Voice Pro Link ($29/mo):</label>
+                    <label style="font-size: 13px; color: #00E676; display: block; margin-bottom: 6px;">⚡ Front Desk Bundle ($99/mo):</label>
+                    <input type="text" value="https://missedcallautosms.com/#pricing" readonly onclick="this.select()" style="width: 100%; background: #090B0E; border: 1px solid #00E676; color: #00E676; padding: 10px; border-radius: 8px; font-size: 12px; font-family: monospace;">
+                </div>
+                <div>
+                    <label style="font-size: 13px; color: var(--primary); display: block; margin-bottom: 6px;">🎙️ Stripe Managed Voice Link ($29/mo Starter):</label>
                     <input type="text" value="https://buy.stripe.com/4gMeVdcFMaps6M0b572go0f" readonly onclick="this.select()" style="width: 100%; background: #090B0E; border: 1px solid var(--primary); color: var(--primary); padding: 10px; border-radius: 8px; font-size: 12px; font-family: monospace;">
                 </div>
                 <div>
@@ -1088,8 +1094,8 @@
         <!-- Row 4: Active Managed Voice Subscribers Table -->
         <div class="card-header" style="border-top: 1px solid var(--card-border); padding-top: 20px; margin-top: 10px;">
             <div>
-                <h3 style="margin: 0; font-size: 16px; color: #FFF;">👥 Active Voice Pro Subscribers ($29/mo)</h3>
-                <div style="font-size: 12px; color: var(--muted); margin-top: 4px;">Subscribers provisioned via Stripe checkout or bundled with Pro Automation ($149.99).</div>
+                <h3 style="margin: 0; font-size: 16px; color: #FFF;">👥 Active Voice Subscribers (Front Desk $99/mo, Starter $29/mo, Business $89/mo)</h3>
+                <div style="font-size: 12px; color: var(--muted); margin-top: 4px;">Subscribers provisioned via Stripe checkout (Front Desk Bundle 250m, Business 300m, Starter 45m).</div>
             </div>
             <button class="btn-action" style="font-size: 12px;" onclick="loadVoiceDashboard()">🔄 Refresh Subscribers</button>
         </div>
@@ -1154,7 +1160,7 @@
             tier: "PRO",
             deviceId: null,
             status: "ACTIVE",
-            price: 149.99,
+            price: 299.00,
             type: "PRO",
             voiceActive: true,
             voiceNumber: "+1 (555) 349-2810"
@@ -1290,7 +1296,7 @@
             if (isAgency) {
                 tierBadge = `<span class="badge badge-agency">🏢 AGENCY FLEET</span>`;
             } else if (isPro) {
-                tierBadge = `<span class="badge badge-pro">⚡ PRO AUTOMATION ($149)</span>`;
+                tierBadge = `<span class="badge badge-pro">⚡ PRO GATEWAY ($299)</span>`;
             }
 
             let voiceDisplay = r.voiceActive
@@ -1714,7 +1720,7 @@
     async function testStripeProWebhookLive() {
         const title = document.getElementById("stripeStatusTitle");
         const detail = document.getElementById("stripeStatusDetail");
-        if (title) title.innerText = "Sending test Pro ($149.99) checkout event to /api/stripe-webhook...";
+        if (title) title.innerText = "Sending test Pro Gateway ($299) checkout event to /api/stripe-webhook...";
         try {
             const base = getApiBaseUrl();
             const res = await fetch(`${base}/api/stripe-webhook`, {
@@ -1726,13 +1732,13 @@
                     data: {
                         object: {
                             id: 'cs_pro_test_' + Date.now(),
-                            amount_total: 14999,
+                            amount_total: 29900,
                             customer_details: {
                                 email: 'contactus@offgridmediagroup.com',
-                                name: 'Pro Automation Subscriber Test'
+                                name: 'Pro Gateway Subscriber Test'
                             },
                             metadata: {
-                                tier: 'pro_edition'
+                                tier: 'pro_gateway'
                             }
                         }
                     }
@@ -1740,14 +1746,54 @@
             });
             const json = await res.json();
             if (res.ok && json.received) {
-                alert(`⚡ Pro Automation ($149.99) Webhook Test Succeeded!\n\nStatus: HTTP ${res.status} OK\nLicense Key Generated: ${json.licenseKey}\nTier: PRO AUTOMATION\nCustomer Email: ${json.customerEmail}\nAPK Link: ${json.apkDownloadUrl || '/MissedCallAutoSMS-Pro.apk'}\n\nPro Automation Stripe Webhook pipeline is 100% operational!`);
-                if (title) title.innerText = "Stripe Pro Webhook Verified & Responding 200 OK";
+                alert(`⚡ Pro Automation Gateway ($299) Webhook Test Succeeded!\n\nStatus: HTTP ${res.status} OK\nLicense Key Generated: ${json.licenseKey}\nTier: PRO AUTOMATION GATEWAY\nCustomer Email: ${json.customerEmail}\nAPK Link: ${json.apkDownloadUrl || '/MissedCallAutoSMS-Pro.apk'}\n\nPro Automation Stripe Webhook pipeline is 100% operational!`);
+                if (title) title.innerText = "Stripe Pro Gateway Webhook Verified & Responding 200 OK";
                 if (detail) detail.innerHTML = `Last Pro Test: Generated <code>${json.licenseKey}</code> (PRO) for ${json.customerEmail}`;
             } else {
                 alert(`Pro Webhook Test Response: HTTP ${res.status}\n${JSON.stringify(json, null, 2)}`);
             }
         } catch (e) {
             alert(`Pro Webhook Test Failed: ${e.message}`);
+        }
+    }
+
+    async function testStripeFrontDeskWebhookLive() {
+        const title = document.getElementById("stripeStatusTitle");
+        const detail = document.getElementById("stripeStatusDetail");
+        if (title) title.innerText = "Sending test Front Desk Bundle ($99/mo) checkout event to /api/stripe-webhook...";
+        try {
+            const base = getApiBaseUrl();
+            const res = await fetch(`${base}/api/stripe-webhook`, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                    id: 'evt_frontdesk_test_' + Date.now(),
+                    type: 'checkout.session.completed',
+                    data: {
+                        object: {
+                            id: 'cs_frontdesk_test_' + Date.now(),
+                            amount_total: 9900,
+                            customer_details: {
+                                email: 'contactus@offgridmediagroup.com',
+                                name: 'Front Desk Bundle Subscriber Test'
+                            },
+                            metadata: {
+                                tier: 'front_desk_bundle'
+                            }
+                        }
+                    }
+                })
+            });
+            const json = await res.json();
+            if (res.ok && json.received) {
+                alert(`⚡ Autonomous Front Desk Bundle ($99/mo) Webhook Test Succeeded!\n\nStatus: HTTP ${res.status} OK\nLicense Key Generated: ${json.licenseKey}\nTier: AUTONOMOUS_FRONT_DESK\nCustomer Email: ${json.customerEmail}\nQuota: 250 pooled minutes ($0.20/min overage)\nAPK Link: ${json.apkDownloadUrl || '/MissedCallAutoSMS-Pro.apk'}\n\nFront Desk Bundle Webhook pipeline is 100% operational!`);
+                if (title) title.innerText = "Front Desk Bundle Webhook Verified & Responding 200 OK";
+                if (detail) detail.innerHTML = `Last Front Desk Test: Generated <code>${json.licenseKey}</code> (250 mins) for ${json.customerEmail}`;
+            } else {
+                alert(`Front Desk Webhook Test Response: HTTP ${res.status}\n${JSON.stringify(json, null, 2)}`);
+            }
+        } catch (e) {
+            alert(`Front Desk Webhook Test Failed: ${e.message}`);
         }
     }
 
@@ -1938,8 +1984,8 @@
                 log("   ✖ FAIL: Standard HMAC checksum verification failed", "fail");
             }
 
-            // STEP 4: Cryptographic Pro Automation ($149.99) HMAC Generation & Verification
-            log("4/10 Testing Pro Automation ($149.99) HMAC Key generation & MCAS-PRO- prefix...");
+            // STEP 4: Cryptographic Pro Automation ($299) HMAC Generation & Verification
+            log("4/10 Testing Pro Automation Gateway ($299) HMAC Key generation & MCAS-PRO- prefix...");
             const testProName = "Apex Pro Contractor";
             const hexProName = stringToHex(testProName);
             const proPayload = `${hexProName}|0`;
@@ -1980,7 +2026,7 @@
                     customerEmail: "pro-contractor-test@offgridmediagroup.com",
                     licenseKey: proKey,
                     licenseType: "PRO",
-                    price: 149.99
+                    price: 299.00
                 })
             });
             if (emailData.success && emailData.apkDownloadUrl && emailData.apkDownloadUrl.includes("Pro")) {
@@ -2102,7 +2148,7 @@
         const key = record.key;
         const apkUrl = data.apkDownloadUrl || (isPro ? 'https://missedcallautosms.com/MissedCallAutoSMS-Pro.apk' : 'https://missedcallautosms.com/MissedCallAutoSMS.apk');
 
-        const tierName = isAgency ? "Agency Fleet Edition" : (isPro ? "Pro Automation Edition ($149.99)" : "Flagship Edition ($49.99)");
+        const tierName = isAgency ? "Agency Fleet Edition" : (isPro ? "Pro Automation Gateway ($299)" : "Flagship Edition ($49.99)");
         const subjectText = `Your Missed Call Auto SMS ${isPro ? 'Pro Automation' : ''} License Key & Setup Guide`;
         
         const proHighlights = isPro ? `
@@ -2113,63 +2159,109 @@
 • Turnkey AI Voice Receptionist (*71 Forwarding Enabled)
 ` : '';
 
-        const bodyText = `Hi ${name},
+        const proInstructions = isPro ? `
+PRO AUTOMATION ENGINE (NANOHTTPD & WEBHOOKS):
+1. Tap "Developer & Webhooks" in the navigation drawer.
+2. Toggle ON "Local NanoHTTPD Engine" to receive local LAN REST dispatches.
+3. Configure your outbound webhook forwarder URL to push live call events into n8n or Make.
+` : '';
+
+        const isVoiceActive = record.voiceActive || false;
+        const voiceNumber = record.voiceNumber || "+1 (555) 349-2810";
+        const carrierCode = "*71";
+
+        const voiceInstructions = isVoiceActive ? `
+24/7 AI VOICE RECEPTIONIST SETUP (*71 CONDITIONAL FORWARDING):
+1. Your dedicated local inbound line is: ${voiceNumber}
+2. Open your Android phone dialer and dial: ${carrierCode}
+3. Press CALL. You will hear a brief confirmation tone.
+4. From now on, whenever you are on another call, decline a call, or miss a call after 3 rings, your mobile carrier routes the caller to your 24/7 AI Receptionist.
+5. To deactivate carrier forwarding at any time, simply dial *73 (Verizon/AT&T) or ##004# (T-Mobile/GSM).
+` : '';
+
+        const bodyContent = `Hi ${name},
 
 Thank you for choosing Missed Call Auto SMS (${tierName})! Here are your hardware license key and setup details:
 
-🔑 YOUR HARDWARE LICENSE KEY:
+====================================================
+YOUR HARDWARE LICENSE KEY:
 ${key}
+====================================================
+TIER: ${isAgency ? 'AGENCY FLEET' : (isPro ? 'PRO AUTOMATION GATEWAY ($299)' : 'FLAGSHIP APPLIANCE ($49.99)')}
+STATUS: ACTIVE & CRYPTOGRAPHICALLY SIGNED
+HARDWARE LOCK: READY TO BIND ON FIRST LAUNCH
+====================================================
 
-📥 DOWNLOAD YOUR ANDROID APP (.APK):
+📥 DOWNLOAD YOUR ANDROID APPLIANCE:
 ${apkUrl}
-${proHighlights}
-🚀 3-STEP ACTIVATION:
-1. Download and install the APK on your Android phone.
-2. Open the app and paste your License Key (${key}).
-3. Grant standard SMS & Call Log permissions, then toggle Master Appliance ON!
 
-If you need any assistance, reply directly to this email or reach us anytime at contactus@offgridmediagroup.com.`;
+QUICK SETUP (3 STEPS):
+1. Tap the link above on your Android business phone to download the APK.
+2. Tap "Install" (if prompted, tap "Settings" and toggle "Allow from this source").
+3. Launch the app, enter your License Key above, grant SMS and Call Log permissions, and toggle "Master Appliance ON".
+${proHighlights}${proInstructions}${voiceInstructions}
+NEED ASSISTANCE?
+Our 24/7 technical team is standing by at contactus@offgridmediagroup.com or via https://missedcallautosms.com/support.
 
-        const mailtoLink = `mailto:${encodeURIComponent(email)}?subject=${encodeURIComponent(subjectText)}&body=${encodeURIComponent(bodyText)}`;
+Welcome aboard!
+The Missed Call Auto SMS Engineering Team
+https://missedcallautosms.com
+`;
 
         const copyText = `Hi ${name}! Here are your Missed Call Auto SMS (${tierName}) activation details:
 
 🔑 License Key: ${key}
-📥 Download Android App: ${apkUrl}
+📥 Android APK Download: ${apkUrl}
+${isVoiceActive ? `🎙️ AI Voice Receptionist Line: ${voiceNumber}\n📲 Activate Forwarding: Dial ${carrierCode} and tap call\n` : ''}
+⚡ Launch the app on your phone, paste your key, grant permissions, and toggle ON. Need help? Visit https://missedcallautosms.com/support`;
 
-Quick 3-Step Setup:
-1. Install the APK on your Android phone.
-2. Paste key (${key}).
-3. Toggle Master Appliance ON!`;
+        const modalEmailDisplay = document.getElementById("modalRecipient") || document.getElementById("modalEmailDisplay");
+        const modalKeyDisplay = document.getElementById("modalKey") || document.getElementById("modalKeyDisplay");
+        const btnMailto = document.getElementById("modalMailtoBtn") || document.getElementById("btnMailto");
+        const btnCopyEmail = document.getElementById("modalCopyBtn") || document.getElementById("btnCopyEmail");
+        const btnCopySMS = document.getElementById("btnCopySMS") || document.getElementById("modalCopySmsBtn");
 
-        document.getElementById("modalRecipient").innerText = email;
-        document.getElementById("modalKey").innerText = key;
+        if (modalEmailDisplay) modalEmailDisplay.innerText = email;
+        if (modalKeyDisplay) modalKeyDisplay.innerText = key;
+        if (btnMailto) btnMailto.href = `mailto:${encodeURIComponent(email)}?subject=${encodeURIComponent(subjectText)}&body=${encodeURIComponent(bodyContent)}`;
         
-        const mailtoBtn = document.getElementById("modalMailtoBtn");
-        mailtoBtn.href = mailtoLink;
-
-        const copyBtn = document.getElementById("modalCopyBtn");
-        copyBtn.onclick = () => {
-            navigator.clipboard.writeText(copyText).then(() => {
-                alert("📋 Copied license & setup instructions to clipboard! You can now paste into an SMS, WhatsApp, or email.");
-            });
-        };
-
-        const statusBanner = document.getElementById("modalStatusBanner");
-        if (data.cloudSent) {
-            statusBanner.style.background = "rgba(0, 230, 118, 0.15)";
-            statusBanner.style.borderColor = "var(--primary)";
-            statusBanner.innerHTML = `🟢 <strong>Delivered!</strong> ${tierName} email dispatched to <strong>${escapeHtml(email)}</strong> via Cloud Email API.`;
-        } else {
-            statusBanner.style.background = "rgba(255, 179, 0, 0.15)";
-            statusBanner.style.borderColor = "var(--warning)";
-            statusBanner.innerHTML = `ℹ️ <strong>License Created!</strong> Choose how to send the setup guide (${tierName}) to <strong>${escapeHtml(email)}</strong> below:`;
+        if (btnCopyEmail) {
+            btnCopyEmail.onclick = () => {
+                copyToClipboard(bodyContent);
+                btnCopyEmail.innerText = "✔ Email Guide Copied!";
+                setTimeout(() => { btnCopyEmail.innerText = "📋 Copy Full Email Guide"; }, 2500);
+            };
         }
 
-        modal.style.display = "flex";
+        if (btnCopySMS) {
+            btnCopySMS.onclick = () => {
+                copyToClipboard(copyText);
+                btnCopySMS.innerText = "✔ SMS Text Copied!";
+                setTimeout(() => { btnCopySMS.innerText = "📱 Copy SMS / WhatsApp Text"; }, 2500);
+            };
+        }
+
+        modal.style.display = 'flex';
+
+        const statusBanner = document.getElementById("modalStatusBanner");
+        if (statusBanner) {
+            if (data.cloudSent) {
+                statusBanner.style.display = 'block';
+                statusBanner.style.background = 'rgba(0, 230, 118, 0.1)';
+                statusBanner.style.borderColor = 'rgba(0, 230, 118, 0.4)';
+                statusBanner.style.color = '#00E676';
+                statusBanner.innerHTML = `🟢 <strong>Delivered!</strong> ${tierName} email dispatched to <strong>${escapeHtml(email)}</strong> via Cloud Email API.`;
+            } else {
+                statusBanner.style.display = 'block';
+                statusBanner.style.background = 'rgba(56, 189, 248, 0.1)';
+                statusBanner.style.borderColor = 'rgba(56, 189, 248, 0.4)';
+                statusBanner.style.color = '#38BDF8';
+                statusBanner.innerHTML = `ℹ️ <strong>License Created!</strong> Choose how to send the setup guide (${tierName}) to <strong>${escapeHtml(email)}</strong> below:`;
+            }
+        }
     }
 
-    function triggerEmailForKey(key) {
+    function resendFromStore(key) {
         const records = getStore();
         const rec = records.find(r => r.key === key);
         if (!rec) { alert('Record not found.'); return; }
@@ -2177,7 +2269,7 @@ Quick 3-Step Setup:
     }
 
     async function promptProLicense() {
-        const name = prompt("Enter Business / Contractor / Client Name for $149.99 Pro Automation License:");
+        const name = prompt("Enter Business / Contractor / Client Name for $299 Pro Automation Gateway License:");
         if (!name || !name.trim()) return;
 
         const email = prompt(`Enter Recipient Email Address for ${name.trim()} (e.g. user@gmail.com):`, "");
@@ -2214,7 +2306,7 @@ Quick 3-Step Setup:
             tier: "PRO",
             deviceId: null,
             status: "ACTIVE",
-            price: 149.99,
+            price: 299.00,
             type: "PRO",
             voiceActive: attachVoice,
             voiceNumber: attachVoice ? "+1 (555) 349-2810" : null
@@ -2290,9 +2382,9 @@ Quick 3-Step Setup:
         const rec = records.find(r => r.key === key);
         if (!rec) return;
 
-        const isPro = (rec.tier === "PRO" || (rec.key && rec.key.includes("PRO")));
+        const isPro = (rec.tier === "PRO" || (rec.key && rec.key.includes("PRO")) || rec.tier === "AUTONOMOUS_FRONT_DESK");
         if (!isPro) {
-            alert("The 24/7 AI Voice Receptionist ($29/mo add-on) can only be bound to a $149.99 Pro Automation license.");
+            alert("The 24/7 AI Voice Receptionist can only be bound to a Pro Gateway or Autonomous Front Desk license.");
             return;
         }
 
@@ -2445,7 +2537,7 @@ Quick 3-Step Setup:
         if (key === 'MCAS-PRO-DEMO-89F2') {
             showVerifyResult(true, `
                 Customer: <strong>Anthony Fuller (Pro Master Developer)</strong><br>
-                Tier: <span class="badge badge-pro" style="display:inline-block; margin: 4px 0;">⚡ PRO AUTOMATION ($149.99)</span><br>
+                Tier: <span class="badge badge-pro" style="display:inline-block; margin: 4px 0;">⚡ PRO AUTOMATION GATEWAY ($299.00)</span><br>
                 Features: <strong>Dual SIM + Webhook Forwarding + Instant Audio Chime + Turnkey AI Voice</strong><br>
                 Voice Receptionist: <span class="badge badge-voice">🎙️ BOUND & ACTIVE (+1 555-349-2810)</span><br>
                 Hardware Lock: <strong>Unbound (Ready for any device)</strong> • Status: <strong>ACTIVE</strong>
@@ -2508,7 +2600,7 @@ Quick 3-Step Setup:
             if (effectiveTier === "AGENCY") {
                 tierBadge = `<span class="badge badge-agency">🏢 AGENCY FLEET</span>`;
             } else if (effectiveTier === "PRO") {
-                tierBadge = `<span class="badge badge-pro">⚡ PRO AUTOMATION ($149)</span>`;
+                tierBadge = `<span class="badge badge-pro">⚡ PRO GATEWAY ($299)</span>`;
             }
 
             const voiceBadge = voiceActive 
@@ -3496,7 +3588,7 @@ OPERATIONAL PROTOCOL:
                             key: lic.key,
                             tier: lic.tier || 'PRO',
                             type: lic.type || 'PAID',
-                            price: lic.price || '$149.99',
+                            price: lic.price || '$299.00',
                             voiceActive: !!lic.voiceActive,
                             voiceNumber: lic.voiceNumber || '',
                             deviceId: lic.deviceId || null,

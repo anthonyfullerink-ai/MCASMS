@@ -70,7 +70,7 @@ object InAppPromoController {
             // Pro user who doesn't have Voice Pro yet -> show Voice Receptionist trial
             if (!hasVoice) PromoType.SUBSCRIBE_VOICE_PRO else null
         } else {
-            // Standard $49 user -> ONLY show Upgrade to Pro ($149), as Voice is strictly a Pro add-on
+            // Standard $49 user -> show Upgrade to Pro Gateway ($299)
             PromoType.UPGRADE_TO_PRO
         }
     }
@@ -200,7 +200,7 @@ fun InAppPromoDialog(
                             PromoFeatureRow(icon = "📞", title = "*71 Conditional Forwarding", desc = "Rings your cell for 15s; forwards to AI if unanswered")
                             PromoFeatureRow(icon = "🤖", title = "24/7 Voice AI Answering", desc = "Triages emergency repairs & captures phonetic address")
                             PromoFeatureRow(icon = "📲", title = "Real SIM SMS Text-Back", desc = "Auto-texts the caller from your real phone carrier number")
-                            PromoFeatureRow(icon = "⏱️", title = "200 Included Mins/Month", desc = "Turnkey zero-config setup with $0 overage protection")
+                            PromoFeatureRow(icon = "⏱️", title = "Pooled Voice Minutes", desc = "Turnkey zero-config setup with pooled minutes & overage protection")
                         } else {
                             PromoFeatureRow(icon = "⚡", title = "Multi-Step Sequences", desc = "Follow up after 15m, 2h, and 24h to lock in leads")
                             PromoFeatureRow(icon = "📅", title = "Calendar Booking Links", desc = "Embed your Calendly or Google booking link automatically")
@@ -233,7 +233,7 @@ fun InAppPromoDialog(
                         .height(50.dp)
                 ) {
                     Text(
-                        text = if (isVoice) "Activate AI Voice ($29/mo) ➔" else "Upgrade to Pro ($149 Lifetime) ➔",
+                        text = if (isVoice) "Activate AI Voice (From $29/mo) ➔" else "Upgrade to Pro Gateway ($299) ➔",
                         color = Color.Black,
                         fontWeight = FontWeight.Black,
                         fontSize = 15.sp
@@ -327,7 +327,7 @@ fun InAppPromoBannerCard(
                         color = ActiveGreenText
                     )
                     Text(
-                        text = "Unanswered calls forward via *71. 200 included minutes/mo active.",
+                        text = "Unanswered calls forward via *71. Pooled voice minutes active.",
                         style = MaterialTheme.typography.bodySmall,
                         color = MaterialTheme.colorScheme.onSurfaceVariant
                     )
@@ -363,7 +363,7 @@ fun InAppPromoBannerCard(
                     Text(if (targetIsVoice) "🎙️" else "🚀", fontSize = 18.sp)
                     Spacer(modifier = Modifier.width(8.dp))
                     Text(
-                        text = if (targetIsVoice) "Add 24/7 AI Voice Receptionist ($29/mo)" else "Upgrade to Pro Automation ($149)",
+                        text = if (targetIsVoice) "Add 24/7 AI Voice Receptionist ($29/mo)" else "Upgrade to Pro Gateway ($299)",
                         style = MaterialTheme.typography.titleSmall,
                         fontWeight = FontWeight.ExtraBold,
                         color = Color.White

@@ -90,28 +90,39 @@ exports.handler = async (event) => {
         headers,
         body: JSON.stringify({
           success: false,
-          error: 'The $29/mo AI Voice Receptionist is an exclusive add-on requiring MissedCallAutoSMS Pro ($149). Please provide your active Pro License Key (e.g. MCAS-PRO-...) or purchase the Pro Edition first.'
+          error: 'The AI Voice Receptionist is an exclusive add-on requiring MissedCallAutoSMS Pro. Please provide your active Pro License Key (e.g. MCAS-PRO-...) or choose our Autonomous Front Desk Bundle.'
         })
       };
     }
+
+    const tier = (payload.tier || 'starter').toLowerCase();
+    const isBusiness = tier.includes('biz') || tier.includes('business') || tier.includes('300');
+    const unitAmount = isBusiness ? '8900' : '2900';
+    const quotaMinutes = isBusiness ? 300 : 45;
+    const overageRate = isBusiness ? '0.20' : '0.25';
+    const tierName = isBusiness ? 'voice_business' : 'voice_starter';
+    const planTitle = isBusiness ? 'Business AI Voice Receptionist ($89/mo)' : 'Starter AI Voice Receptionist ($29/mo)';
 
     const postData = {
       'mode': 'subscription',
       'payment_method_types[0]': 'card',
       'line_items[0][price_data][currency]': 'usd',
-      'line_items[0][price_data][product_data][name]': '24/7 AI Voice Receptionist (Turnkey Managed)',
-      'line_items[0][price_data][product_data][description]': '14-Day Free Trial ($0 today) • Auto-renews at $29/mo for 200 included minutes & carrier forwarding (Bound to Pro Key ' + licenseKey + ')',
-      'line_items[0][price_data][unit_amount]': '2900', // $29.00
+      'line_items[0][price_data][product_data][name]': `24/7 ${planTitle}`,
+      'line_items[0][price_data][product_data][description]': `${quotaMinutes} Included Monthly Pooled Minutes ($${overageRate}/min overage) • *71 Carrier Conditional Forwarding (Bound to Pro Key ${licenseKey})`,
+      'line_items[0][price_data][unit_amount]': unitAmount,
       'line_items[0][price_data][recurring][interval]': 'month',
       'line_items[0][quantity]': '1',
-      'subscription_data[trial_period_days]': '14',      // 14-Day Auto-Billing Free Trial
-      'subscription_data[metadata][tier]': 'managed_voice_pro',
+      'subscription_data[metadata][tier]': tierName,
+      'subscription_data[metadata][quotaMinutes]': String(quotaMinutes),
+      'subscription_data[metadata][overageRate]': overageRate,
       'subscription_data[metadata][business_name]': businessName,
       'subscription_data[metadata][license_key]': licenseKey,
       'client_reference_id': licenseKey,
       'metadata[license_key]': licenseKey,
-      'metadata[tier]': 'managed_voice_pro',
-      'success_url': 'https://missedcallautosms.com/success.html?session_id={CHECKOUT_SESSION_ID}&tier=managed_voice_pro',
+      'metadata[tier]': tierName,
+      'metadata[quotaMinutes]': String(quotaMinutes),
+      'metadata[overageRate]': overageRate,
+      'success_url': `https://missedcallautosms.com/success.html?session_id={CHECKOUT_SESSION_ID}&tier=${tierName}`,
       'cancel_url': 'https://missedcallautosms.com/#pricing'
     };
 

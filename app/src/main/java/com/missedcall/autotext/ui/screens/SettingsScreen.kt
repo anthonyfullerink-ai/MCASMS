@@ -14,21 +14,7 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.foundation.BorderStroke
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.BatteryAlert
-import androidx.compose.material.icons.filled.Call
-import androidx.compose.material.icons.filled.CheckCircle
-import androidx.compose.material.icons.filled.Key
-import androidx.compose.material.icons.filled.PhoneAndroid
-import androidx.compose.material.icons.filled.Schedule
-import androidx.compose.material.icons.filled.Security
-import androidx.compose.material.icons.filled.VerifiedUser
-import androidx.compose.material.icons.filled.Add
-import androidx.compose.material.icons.filled.ArrowDropDown
-import androidx.compose.material.icons.filled.Delete
-import androidx.compose.material.icons.filled.RecordVoiceOver
-import androidx.compose.material.icons.filled.ContentCopy
-import androidx.compose.material.icons.filled.Link
-import androidx.compose.material.icons.filled.Edit
+import androidx.compose.material.icons.filled.*
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import com.google.gson.Gson
@@ -638,74 +624,48 @@ fun SettingsScreen(
             )
         }
 
-        // 5. Message Template Card
+        // 5. Unified Prompt & Messaging Studio Banner
         Card(
             shape = RoundedCornerShape(16.dp),
+            colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.primaryContainer.copy(alpha = 0.25f)),
+            border = androidx.compose.foundation.BorderStroke(1.dp, MaterialTheme.colorScheme.primary.copy(alpha = 0.3f)),
             modifier = Modifier.fillMaxWidth()
         ) {
             Column(modifier = Modifier.padding(16.dp)) {
+                Row(verticalAlignment = Alignment.CenterVertically) {
+                    Icon(Icons.Default.AutoAwesome, contentDescription = null, tint = MaterialTheme.colorScheme.primary)
+                    Spacer(modifier = Modifier.width(8.dp))
+                    Text(
+                        text = "Prompt & Messaging Studio",
+                        style = MaterialTheme.typography.titleMedium,
+                        fontWeight = FontWeight.Bold
+                    )
+                }
+                Spacer(modifier = Modifier.height(6.dp))
                 Text(
-                    text = "Auto-Reply Template",
-                    style = MaterialTheme.typography.titleMedium,
-                    fontWeight = FontWeight.Bold
-                )
-                Spacer(modifier = Modifier.height(8.dp))
-                Text(
-                    text = "Use token placeholders to dynamic replace text dynamically.",
+                    text = "SMS auto-replies, AI Voice greetings, and follow-up templates are now unified in the new Prompts tab.",
                     style = MaterialTheme.typography.bodySmall,
                     color = MaterialTheme.colorScheme.onSurfaceVariant
                 )
-                Spacer(modifier = Modifier.height(8.dp))
-
-                FlowRow(
-                    horizontalArrangement = Arrangement.spacedBy(6.dp),
-                    verticalArrangement = Arrangement.spacedBy(4.dp)
+                Spacer(modifier = Modifier.height(10.dp))
+                Surface(
+                    shape = RoundedCornerShape(8.dp),
+                    color = MaterialTheme.colorScheme.surface,
+                    modifier = Modifier.fillMaxWidth()
                 ) {
-                    FilterChip(
-                        selected = false,
-                        onClick = {
-                            onSettingsChanged(
-                                settings.copy(messageTemplate = settings.messageTemplate + " {business_name}")
-                            )
-                        },
-                        label = { Text("+ {business_name}", fontSize = 11.sp) }
-                    )
-                    FilterChip(
-                        selected = false,
-                        onClick = {
-                            onSettingsChanged(
-                                settings.copy(messageTemplate = settings.messageTemplate + " {name}")
-                            )
-                        },
-                        label = { Text("+ {name}", fontSize = 11.sp) }
-                    )
-                    FilterChip(
-                        selected = false,
-                        onClick = {
-                            onSettingsChanged(
-                                settings.copy(messageTemplate = settings.messageTemplate + " {activity}")
-                            )
-                        },
-                        label = { Text("+ {activity}", fontSize = 11.sp) }
-                    )
-                    FilterChip(
-                        selected = false,
-                        onClick = {
-                            onSettingsChanged(
-                                settings.copy(messageTemplate = settings.messageTemplate + " {booking_link}")
-                            )
-                        },
-                        label = { Text("+ {booking_link}", fontSize = 11.sp) }
+                    Text(
+                        text = "\"${settings.messageTemplate}\"",
+                        style = MaterialTheme.typography.bodySmall,
+                        modifier = Modifier.padding(10.dp),
+                        color = MaterialTheme.colorScheme.onSurface
                     )
                 }
-
                 Spacer(modifier = Modifier.height(8.dp))
-                OutlinedTextField(
-                    value = settings.messageTemplate,
-                    onValueChange = { onSettingsChanged(settings.copy(messageTemplate = it)) },
-                    minLines = 3,
-                    maxLines = 5,
-                    modifier = Modifier.fillMaxWidth()
+                Text(
+                    text = "👉 Select the 'Prompts' tab at the top of the app to customize all SMS & AI personas with live simulation.",
+                    style = MaterialTheme.typography.labelSmall,
+                    color = MaterialTheme.colorScheme.primary,
+                    fontWeight = FontWeight.SemiBold
                 )
             }
         }

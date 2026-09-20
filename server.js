@@ -155,13 +155,13 @@ function vapiApiRequest(endpoint, method = 'GET', postJson = null) {
 function generateLicenseEmailHtml(data) {
   const { customerName, customerEmail, licenseKey, licenseType, price } = data;
   const isPro = (licenseKey && (licenseKey.startsWith('MCAS-PRO-') || licenseKey.startsWith('MCAT-PRO-') || licenseKey.includes('PRO-DEMO'))) ||
-                licenseType === 'PRO' || price === 149.99 || data.isPro;
+                licenseType === 'PRO' || price === 299.00 || price === 149.99 || data.isPro;
   const apkDownloadUrl = isPro 
-    ? `http://localhost:8000/MissedCallAutoSMS-Pro.apk` 
-    : `http://localhost:8000/MissedCallAutoSMS.apk`;
+    ? `https://missedcallautosms.com/MissedCallAutoSMS-Pro.apk` 
+    : `https://missedcallautosms.com/MissedCallAutoSMS.apk`;
   const isFree = (price === 0 || licenseType === 'FREE');
 
-  const brandTitle = isPro ? "Missed Call Auto SMS • Pro Automation" : "Missed Call Auto SMS";
+  const brandTitle = isPro ? "Missed Call Auto SMS • Pro Automation Gateway" : "Missed Call Auto SMS";
   const brandIcon = isPro ? "⚡" : "📱";
   const themeColor = isPro ? "#A855F7" : "#00E676";
   const themeAccent = isPro ? "#C084FC" : "#00E676";
@@ -271,7 +271,7 @@ function generateLicenseEmailHtml(data) {
         </div>
 
         <div style="margin-top: 30px; border-top: 1px solid #222836; padding-top: 20px; text-align: center; font-size: 12px; color: #718096;">
-            Need help? Contact support or access your admin dashboard at <a href="http://localhost:8000/owner_admin_dashboard.html" style="color: ${themeColor};">MissedCallAutoSMS Admin</a>.
+            Need help? Contact support or access your admin dashboard at <a href="https://missedcallautosms.com/owner_admin_dashboard.html" style="color: ${themeColor};">MissedCallAutoSMS Admin</a>.
         </div>
     </div>
 </body>
@@ -1115,10 +1115,16 @@ const server = http.createServer((req, res) => {
             return;
           }
 
-          // AUTOMATION 2: Pro Automation ($149.99), Pro + Voice Bundle ($178.99), Standard ($49.99), or Free Trial ($0.00)
-          const isTrial = (amountTotal === 0) || (metadata.tier === 'standard_trial');
-          const isPro = !isTrial && (amountTotal >= 10000 || metadata.tier === 'pro_automation' || metadata.tier === 'pro_plus_voice');
-          const isBundle = isPro && (metadata.include_voice === 'true' || metadata.tier === 'pro_plus_voice' || amountTotal === 17899);
+          // AUTOMATION 2: Tier Determination (Front Desk $99/mo, Pro Gateway $299, Standalone Voice $29/$89, Standard $49.99, or Trial $0.00)
+          const tierMeta = (metadata.tier || '').toLowerCase();
+          const isFrontDesk = (amountTotal === 9900) || tierMeta === 'front_desk_bundle' || tierMeta === 'autonomous_front_desk';
+          const isVoiceBusiness = (amountTotal === 8900) || tierMeta === 'voice_business';
+          const isVoiceStarter = (amountTotal === 2900) || tierMeta === 'voice_starter';
+          const isProGateway = (amountTotal === 29900) || (amountTotal === 14999) || tierMeta === 'pro_gateway' || tierMeta === 'pro_automation';
+          const isTrial = (amountTotal === 0) || tierMeta === 'standard_trial';
+          const isPro = isFrontDesk || isProGateway;
+          const isBundle = isFrontDesk;
+
           const licenseKey = generateKey(customerName, isTrial ? 4 : 0, isPro);
 
           let bundleForwardingNumber = null;
@@ -1129,7 +1135,6 @@ const server = http.createServer((req, res) => {
             const cleanDigits = bundleForwardingNumber.replace(/\D/g, '');
             bundleCarrierCode = `*71${cleanDigits.slice(-10)}`;
 
-
             saveVoiceSubscriber(licenseKey, {
               active: true,
               name: customerName,
@@ -1137,7 +1142,8 @@ const server = http.createServer((req, res) => {
               forwardingNumber: bundleForwardingNumber,
               carrierCode: bundleCarrierCode,
               carrierDeactivateCode: '*73',
-              quotaMinutes: 200,
+              quotaMinutes: 250,
+              overageRatePerMinute: 0.20,
               minutesUsed: 0,
               subscriptionId: session.subscription || session.id,
               customerId: session.customer || null,
@@ -1145,16 +1151,17 @@ const server = http.createServer((req, res) => {
               boundAt: new Date().toISOString()
             });
 
-            console.log(`🎙️ [PRO + VOICE BUNDLE BOUND] Key ${licenseKey} bound to ${bundleForwardingNumber}`);
+            console.log(`🎙️ [FRONT DESK BUNDLE BOUND] Key ${licenseKey} bound to ${bundleForwardingNumber} (250 mins)`);
           }
 
+          const priceStr = isFrontDesk ? '99.00' : (isProGateway ? '299.00' : (isTrial ? '0.00' : '49.99'));
           saveMasterLicense({
             key: licenseKey,
             customer: customerName,
             email: customerEmail,
-            tier: isPro ? 'PRO' : (isTrial ? 'TRIAL' : 'STANDARD'),
-            type: isTrial ? 'TRIAL' : 'PAID',
-            price: isBundle ? '178.99' : (isPro ? '149.99' : (isTrial ? '0.00' : '49.99')),
+            tier: isFrontDesk ? 'AUTONOMOUS_FRONT_DESK' : (isProGateway ? 'PRO' : (isTrial ? 'TRIAL' : 'STANDARD')),
+            type: (isTrial || isFrontDesk) ? 'SUBSCRIPTION' : 'PAID',
+            price: priceStr,
             voiceActive: isBundle,
             voiceNumber: bundleForwardingNumber,
             carrierCode: bundleCarrierCode,
@@ -1168,8 +1175,8 @@ const server = http.createServer((req, res) => {
               customerName,
               customerEmail,
               licenseKey,
-              tier: isPro ? 'PRO' : (isTrial ? 'TRIAL' : 'PAID'),
-              price: isBundle ? '$178.99 (Pro + Voice)' : (isPro ? '$149.99' : (isTrial ? '$0.00 (Trial)' : '$49.99')),
+              tier: isFrontDesk ? 'AUTONOMOUS_FRONT_DESK' : (isProGateway ? 'PRO' : (isTrial ? 'TRIAL' : 'PAID')),
+              price: isFrontDesk ? '$99.00/mo (Front Desk Bundle)' : (isProGateway ? '$299.00 (Pro Gateway)' : (isTrial ? '$0.00 (Trial)' : '$49.99')),
               voiceActive: isBundle,
               voiceForwardingNumber: bundleForwardingNumber
             });
@@ -1261,7 +1268,7 @@ const server = http.createServer((req, res) => {
         console.log(`📧 [EMAIL SENT] License key ${licenseKey} & APK link dispatched to ${customerEmail}. Saved to: sent_emails/${fileName}`);
 
         const isPro = (payload.tier === 'PRO' || payload.licenseType === 'PRO' || (licenseKey && licenseKey.includes('PRO')));
-        const apkDownloadUrl = isPro ? `http://localhost:8000/MissedCallAutoSMS-Pro.apk` : `http://localhost:8000/MissedCallAutoSMS.apk`;
+        const apkDownloadUrl = isPro ? `https://missedcallautosms.com/MissedCallAutoSMS-Pro.apk` : `https://missedcallautosms.com/MissedCallAutoSMS.apk`;
 
         res.writeHead(200, {
           'Content-Type': 'application/json; charset=utf-8',
@@ -1326,7 +1333,7 @@ const server = http.createServer((req, res) => {
         licenseKey: key,
         status: 'ACTIVE',
         tier: isAgency ? 'AGENCY' : (isPro ? 'PRO' : 'STANDARD'),
-        edition: isAgency ? 'Agency Fleet Management' : (isPro ? 'Pro Automation Edition ($149)' : 'Flagship Appliance Edition ($49.99)'),
+        edition: isAgency ? 'Agency Fleet Management' : (isPro ? 'Pro Automation Gateway ($299)' : 'Flagship Appliance Edition ($49.99)'),
         voiceActive: voiceActive,
         voiceForwardingNumber: voiceForwardingNumber,
         voiceEligible: isPro || isAgency,
@@ -1942,46 +1949,37 @@ const server = http.createServer((req, res) => {
         let postData = {};
 
         if (includeVoice) {
-          // BUNDLE: Pro Lifetime ($149.99 One-Time) + 24/7 AI Voice Receptionist ($0.00 Today, 14-Day Free Trial, then $29/mo)
+          // BUNDLE: Autonomous Front Desk Bundle ($99/mo with 250 pooled minutes)
           postData = {
             'mode': 'subscription',
             'payment_method_types[0]': 'card',
             
-            // Item 1: Pro Automation Lifetime License ($149.99 upfront)
             'line_items[0][price_data][currency]': 'usd',
-            'line_items[0][price_data][unit_amount]': '14999',
-            'line_items[0][price_data][product_data][name]': 'Missed Call Auto SMS - Pro Automation Edition (Lifetime)',
-            'line_items[0][price_data][product_data][description]': 'Lifetime Appliance License • Dual SIM Carrier Routing • Unlimited End-to-End™ Webhook Gateway (n8n/Zapier) • 100% A2P 10DLC Exempt',
+            'line_items[0][price_data][unit_amount]': '9900',
+            'line_items[0][price_data][recurring][interval]': 'month',
+            'line_items[0][price_data][product_data][name]': 'Autonomous Front Desk Bundle (All-in-One)',
+            'line_items[0][price_data][product_data][description]': 'Hardware SIM Auto-Text + 24/7 AI Voice Receptionist • 250 Pooled Minutes ($0.20/min overage) • Dual SIM Confirmation Text • 100% A2P 10DLC Exempt',
             'line_items[0][quantity]': '1',
 
-            // Item 2: 24/7 Turnkey AI Voice Receptionist ($29.00/mo with 14-day free trial)
-            'line_items[1][price_data][currency]': 'usd',
-            'line_items[1][price_data][unit_amount]': '2900',
-            'line_items[1][price_data][recurring][interval]': 'month',
-            'line_items[1][price_data][product_data][name]': '24/7 AI Voice Receptionist Add-On (Turnkey Managed)',
-            'line_items[1][price_data][product_data][description]': '14-Day Free Trial ($0 today) • Auto-renews at $29/mo for 200 included mins • *71 Carrier Conditional Forwarding & Dedicated Local Line',
-            'line_items[1][quantity]': '1',
-
-            'subscription_data[trial_period_days]': '14',
-            'subscription_data[metadata][tier]': 'pro_plus_voice',
+            'subscription_data[metadata][tier]': 'front_desk_bundle',
             'subscription_data[metadata][business_name]': businessName,
-            'metadata[tier]': 'pro_plus_voice',
+            'metadata[tier]': 'front_desk_bundle',
             'metadata[include_voice]': 'true',
             'metadata[business_name]': businessName,
             'success_url': 'https://missedcallautosms.com/success.html?session_id={CHECKOUT_SESSION_ID}&tier=pro_bundle',
             'cancel_url': 'https://missedcallautosms.com/#checkout'
           };
         } else {
-          // STANDALONE: Pro Lifetime ($149.99 One-Time)
+          // STANDALONE: Pro Automation Gateway ($299.00 Perpetual)
           postData = {
             'mode': 'payment',
             'payment_method_types[0]': 'card',
             'line_items[0][price_data][currency]': 'usd',
-            'line_items[0][price_data][unit_amount]': '14999',
-            'line_items[0][price_data][product_data][name]': 'Missed Call Auto SMS - Pro Automation Edition (Lifetime)',
-            'line_items[0][price_data][product_data][description]': 'Lifetime Appliance License • Dual SIM Carrier Routing • Unlimited End-to-End™ Webhook Gateway (n8n/Zapier) • 100% A2P 10DLC Exempt',
+            'line_items[0][price_data][unit_amount]': '29900',
+            'line_items[0][price_data][product_data][name]': 'Missed Call Auto SMS - Pro Automation Gateway',
+            'line_items[0][price_data][product_data][description]': 'Perpetual Gateway License • 1-Year Cloud Relay API Maintenance • Dual SIM Carrier Routing • Unlimited End-to-End™ Webhook Gateway (n8n/Zapier) • 100% A2P 10DLC Exempt',
             'line_items[0][quantity]': '1',
-            'metadata[tier]': 'pro_automation',
+            'metadata[tier]': 'pro_gateway',
             'metadata[include_voice]': 'false',
             'metadata[business_name]': businessName,
             'success_url': 'https://missedcallautosms.com/success.html?session_id={CHECKOUT_SESSION_ID}&tier=pro',
@@ -2729,6 +2727,79 @@ const server = http.createServer((req, res) => {
     const subs = getVoiceSubscribers();
     res.writeHead(200, { 'Content-Type': 'application/json; charset=utf-8', 'Access-Control-Allow-Origin': '*' });
     res.end(JSON.stringify({ success: true, subscribers: subs, count: subs.length }));
+    return;
+  }
+
+  // API: Live Minute Quota & Usage Metering for Appliance Client
+  if ((relativePath === '/api/vapi/usage' || relativePath === '/api/vapi/usage/') && req.method === 'GET') {
+    const urlObj = new URL(req.url, `http://localhost:${PORT}`);
+    const licenseKey = (urlObj.searchParams.get('licenseKey') || urlObj.searchParams.get('key') || '').trim().toUpperCase();
+
+    if (!licenseKey) {
+      res.writeHead(400, { 'Content-Type': 'application/json; charset=utf-8', 'Access-Control-Allow-Origin': '*' });
+      res.end(JSON.stringify({ success: false, error: 'License key is required.' }));
+      return;
+    }
+
+    (async () => {
+      try {
+        const fsDb = getFirestoreDb();
+        if (fsDb && fsDb.getVoiceBinding) {
+          try {
+            subscriber = await fsDb.getVoiceBinding(licenseKey);
+          } catch (e) {}
+        }
+        if (!subscriber) {
+          const subs = getVoiceSubscribers();
+          subscriber = subs.find(s => s.licenseKey === licenseKey) || null;
+        }
+
+        const isPro = licenseKey.startsWith('MCAS-PRO-') || licenseKey.startsWith('MCAT-PRO-') || licenseKey.includes('PRO-DEMO');
+        const isDev = licenseKey.includes('DEV') || licenseKey.includes('MASTER');
+
+        const plan = subscriber?.plan || (isPro ? 'PRO_GATEWAY' : 'AUTONOMOUS_FRONT_DESK');
+        const planName = subscriber?.planName || (
+          plan === 'AUTONOMOUS_FRONT_DESK' ? 'Autonomous Front Desk Bundle' :
+          plan === 'VOICE_BUSINESS' ? 'Voice Business' :
+          plan === 'VOICE_STARTER' ? 'Voice Starter' :
+          plan === 'PRO_GATEWAY' ? 'Pro Automation Gateway' : 'Flagship Appliance'
+        );
+
+        const quotaMinutes = Number(subscriber?.quotaMinutes ?? (
+          plan === 'AUTONOMOUS_FRONT_DESK' ? 250 :
+          plan === 'VOICE_BUSINESS' ? 300 :
+          plan === 'VOICE_STARTER' ? 45 : 0
+        ));
+
+        const minutesUsed = Number(subscriber?.minutesUsed ?? 0);
+        const overageRatePerMinute = Number(subscriber?.overageRatePerMinute ?? (plan === 'VOICE_STARTER' ? 0.25 : 0.20));
+        const remainingMinutes = Math.max(0, quotaMinutes - minutesUsed);
+        const overageMinutes = Math.max(0, minutesUsed - quotaMinutes);
+        const overageAmount = Number((overageMinutes * overageRatePerMinute).toFixed(2));
+
+        res.writeHead(200, { 'Content-Type': 'application/json; charset=utf-8', 'Access-Control-Allow-Origin': '*' });
+        res.end(JSON.stringify({
+          success: true,
+          licenseKey,
+          status: subscriber?.status || (isDev ? 'ACTIVE' : 'ACTIVE'),
+          voiceActive: subscriber ? subscriber.voiceActive !== false : true,
+          plan,
+          planName,
+          quotaMinutes,
+          minutesUsed,
+          remainingMinutes,
+          overageMinutes,
+          overageRatePerMinute,
+          overageAmount,
+          billingCycleEnd: subscriber?.billingCycleEnd || new Date(Date.now() + 30 * 24 * 60 * 60 * 1000).toISOString(),
+          forwardingNumber: subscriber?.forwardingNumber || '+18005550199',
+          isUnlimitedGateway: plan === 'PRO_GATEWAY'
+        }));
+      } catch (err) {
+        res.writeHead(500, { 'Content-Type': 'application/json; charset=utf-8', 'Access-Control-Allow-Origin': '*' });
+        res.end(JSON.stringify({ success: false, error: err.message }));
+      }
+    })();
     return;
   }
 

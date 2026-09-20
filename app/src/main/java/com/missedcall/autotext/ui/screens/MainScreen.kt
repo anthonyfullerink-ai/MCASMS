@@ -5,14 +5,7 @@ import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.AccountCircle
-import androidx.compose.material.icons.filled.Dashboard
-import androidx.compose.material.icons.filled.History
-import androidx.compose.material.icons.filled.Lock
-import androidx.compose.material.icons.filled.PowerSettingsNew
-import androidx.compose.material.icons.filled.RecordVoiceOver
-import androidx.compose.material.icons.filled.Settings
-import androidx.compose.material.icons.filled.SystemUpdate
+import androidx.compose.material.icons.filled.*
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
@@ -21,6 +14,7 @@ import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.PasswordVisualTransformation
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.sp
 import com.missedcall.autotext.data.AppSettings
 import com.missedcall.autotext.data.db.CallLogEvent
 import com.missedcall.autotext.data.db.VoiceCallEvent
@@ -310,28 +304,34 @@ fun MainScreen(
                 Tab(
                     selected = selectedTab == 0,
                     onClick = { selectedTab = 0 },
-                    text = { Text("Dashboard") },
-                    icon = { Icon(Icons.Default.Dashboard, contentDescription = null) }
+                    text = { Text("Dashboard", fontSize = 11.sp) },
+                    icon = { Icon(Icons.Default.Dashboard, contentDescription = null, modifier = Modifier.size(20.dp)) }
                 )
                 Tab(
                     selected = selectedTab == 1,
                     onClick = { selectedTab = 1 },
                     text = {
-                        Text(if (unreadVoiceCalls > 0) "Voice ($unreadVoiceCalls)" else "AI Voice")
+                        Text(if (unreadVoiceCalls > 0) "Voice ($unreadVoiceCalls)" else "Voice", fontSize = 11.sp)
                     },
-                    icon = { Icon(Icons.Default.RecordVoiceOver, contentDescription = null) }
+                    icon = { Icon(Icons.Default.RecordVoiceOver, contentDescription = null, modifier = Modifier.size(20.dp)) }
                 )
                 Tab(
                     selected = selectedTab == 2,
                     onClick = { selectedTab = 2 },
-                    text = { Text("Settings") },
-                    icon = { Icon(Icons.Default.Settings, contentDescription = null) }
+                    text = { Text("Prompts", fontSize = 11.sp, fontWeight = FontWeight.Bold) },
+                    icon = { Icon(Icons.Default.AutoAwesome, contentDescription = null, modifier = Modifier.size(20.dp), tint = MaterialTheme.colorScheme.primary) }
                 )
                 Tab(
                     selected = selectedTab == 3,
                     onClick = { selectedTab = 3 },
-                    text = { Text("Log (${logs.size})") },
-                    icon = { Icon(Icons.Default.History, contentDescription = null) }
+                    text = { Text("Settings", fontSize = 11.sp) },
+                    icon = { Icon(Icons.Default.Settings, contentDescription = null, modifier = Modifier.size(20.dp)) }
+                )
+                Tab(
+                    selected = selectedTab == 4,
+                    onClick = { selectedTab = 4 },
+                    text = { Text("Logs", fontSize = 11.sp) },
+                    icon = { Icon(Icons.Default.History, contentDescription = null, modifier = Modifier.size(20.dp)) }
                 )
             }
 
@@ -348,13 +348,17 @@ fun MainScreen(
                     onMarkVoiceCallRead = onMarkVoiceCallRead,
                     onClearVoiceCalls = onClearVoiceCalls
                 )
-                2 -> SettingsScreen(
+                2 -> PromptStudioScreen(
+                    settings = settings,
+                    onSettingsChanged = onSettingsChanged
+                )
+                3 -> SettingsScreen(
                     settings = settings,
                     onSettingsChanged = onSettingsChanged,
                     missingPermissions = missingPermissions,
                     onRequestPermissions = onRequestPermissions
                 )
-                3 -> ActivityLogScreen(
+                4 -> ActivityLogScreen(
                     logs = logs,
                     onClearLogs = onClearLogs
                 )

@@ -1641,7 +1641,7 @@ fun VoiceReceptionistPromoCard(
                         }
                         Spacer(modifier = Modifier.height(4.dp))
                         Text(
-                            text = "The AI Voice Receptionist add-on is exclusive to MissedCallAutoSMS Pro ($149). Standard Edition ($49) does not support telephony routing or webhooks.",
+                            text = "The AI Voice Receptionist is available with the Autonomous Front Desk Bundle ($99/mo), Standalone Voice ($29/mo Starter or $89/mo Business), or Pro Gateway ($299).",
                             style = MaterialTheme.typography.bodySmall,
                             color = Color(0xFFE2E8F0)
                         )
@@ -1657,7 +1657,7 @@ fun VoiceReceptionistPromoCard(
                 ) {
                     Icon(Icons.Default.RocketLaunch, contentDescription = null, modifier = Modifier.size(18.dp))
                     Spacer(modifier = Modifier.width(8.dp))
-                    Text("⚡ Upgrade to Pro Automation ($149.99)")
+                    Text("⚡ Explore Front Desk Bundle & Pro Gateway")
                 }
             }
 

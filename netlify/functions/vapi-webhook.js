@@ -284,18 +284,20 @@ exports.handler = async (event) => {
             }
           }
 
-          // Case B: If this call pushed the user into overage (beyond 200 included mins),
-          // automatically bill the overage increment ($0.15/minute) onto their upcoming monthly invoice
+          // Case B: If this call pushed the user into overage (beyond their included pooled quota),
+          // automatically bill the overage increment ($0.20 or $0.25/minute) onto their upcoming monthly invoice
           if (newOverageMinutes > 0 && customerId) {
-            const overageRateCents = 15; // $0.15 per minute
+            const rawRate = sub.overageRatePerMinute || sub.overageRate || (sub.plan === 'VOICE_STARTER' || sub.tier === 'VOICE_STARTER' ? 0.25 : 0.20);
+            const overageRateCents = Math.round(parseFloat(rawRate) * 100);
             const amountCents = newOverageMinutes * overageRateCents;
+            const rateFormatted = (overageRateCents / 100).toFixed(2);
 
             try {
               const invoiceItemData = {
                 customer: customerId,
                 amount: amountCents,
                 currency: 'usd',
-                description: `24/7 AI Voice Receptionist Overage: ${newOverageMinutes} min(s) @ $0.15/min (Call from ${callerNum})`
+                description: `24/7 AI Voice Receptionist Overage: ${newOverageMinutes} min(s) @ $${rateFormatted}/min (Call from ${callerNum})`
               };
               if (subscriptionId && subscriptionId.startsWith('sub_')) {
                 invoiceItemData.subscription = subscriptionId;
@@ -304,7 +306,7 @@ exports.handler = async (event) => {
               const invoiceItem = await stripeApiRequest('/v1/invoice_items', 'POST', invoiceItemData);
               stripeBilled = true;
               stripeInvoiceItemId = invoiceItem.id;
-              console.log(`💳 [STRIPE OVERAGE BILLED] Billed ${newOverageMinutes} min(s) ($${(amountCents/100).toFixed(2)}) to customer ${customerId} (Invoice Item: ${invoiceItem.id})`);
+              console.log(`💳 [STRIPE OVERAGE BILLED] Billed ${newOverageMinutes} min(s) ($${(amountCents/100).toFixed(2)} @ $${rateFormatted}/m) to customer ${customerId} (Invoice Item: ${invoiceItem.id})`);
             } catch (invErr) {
               console.error('❌ [STRIPE OVERAGE BILLING ERROR]:', invErr.message);
             }

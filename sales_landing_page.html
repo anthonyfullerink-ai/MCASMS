@@ -1338,8 +1338,8 @@
 <!-- Top Launch Banner for 24/7 AI Voice Receptionist -->
 <div style="background: linear-gradient(90deg, #090B0E, #151D24, #090B0E); border-bottom: 1px solid rgba(0, 230, 118, 0.35); padding: 9px 16px; text-align: center; font-size: 13px; color: #CBD5E0; z-index: 1000; position: relative;">
     <span style="background: rgba(0, 230, 118, 0.2); color: var(--primary); padding: 3px 8px; border-radius: 6px; font-weight: 800; font-size: 11px; margin-right: 8px; border: 1px solid var(--primary); letter-spacing: 0.5px;">NEW LAUNCH</span>
-    <strong>24/7 AI Voice Receptionist Add-On is Live!</strong> Forward unanswered calls via <code>*71</code> when your hands are full on a job.
-    <a href="#voice-edition" style="color: var(--primary); font-weight: 800; margin-left: 8px; text-decoration: underline;">Explore & Activate ($29/mo) &rarr;</a>
+    <strong>Autonomous Front Desk Bundle ($99/mo) is Live!</strong> 24/7 AI Voice Receptionist + Native SIM Auto-Text + 250 Pooled Monthly Minutes.
+    <a href="#voice-edition" style="color: var(--primary); font-weight: 800; margin-left: 8px; text-decoration: underline;">Explore & Activate &rarr;</a>
 </div>
 
 <div class="container">
@@ -1350,8 +1350,10 @@
         </a>
         <div class="nav-links">
             <a href="#features">Features</a>
-            <a href="#pro-edition" style="color: #C084FC; font-weight: 800;">⚡ Pro Edition ($149.99)</a>
-            <a href="#voice-edition" style="color: var(--primary); font-weight: 800;">🎙️ AI Voice ($29/mo)</a>
+            <a href="#voice-edition" style="color: #00E676; font-weight: 800;">⚡ Front Desk ($99/mo)</a>
+            <a href="#checkout" style="color: #38BDF8; font-weight: 800;">📱 Flagship ($49.99)</a>
+            <a href="#pro-edition" style="color: #C084FC; font-weight: 800;">🛠️ Pro Gateway ($299)</a>
+            <a href="#voice-edition" style="color: var(--primary); font-weight: 700;">🎙️ AI Voice ($29/mo)</a>
             <a href="/agency" style="color: #38BDF8; font-weight: 800;">🏢 Agency Fleet</a>
             <a href="/developers" style="color: #38BDF8; font-weight: 700;">API & Docs</a>
             <a href="/support" style="color: var(--primary); font-weight: 700;">Support</a>
@@ -1370,8 +1372,9 @@
     </nav>
     <!-- Mobile Navigation Drawer -->
     <div id="mobileNavDrawer" class="mobile-nav-drawer">
-        <a href="#features" class="mobile-nav-link" onclick="closeMobileMenu()">⚡ Flagship App Features <span>&rsaquo;</span></a>
-        <a href="#pro-edition" class="mobile-nav-link" onclick="closeMobileMenu()" style="color: #D8B4FE; font-weight: bold;">🚀 NEW: Pro Automation Edition ($149.99) <span>&rsaquo;</span></a>
+        <a href="#voice-edition" class="mobile-nav-link" onclick="closeMobileMenu()" style="color: #00E676; font-weight: bold;">⚡ Autonomous Front Desk Bundle ($99/mo) <span>&rsaquo;</span></a>
+        <a href="#checkout" class="mobile-nav-link" onclick="closeMobileMenu()" style="color: #38BDF8; font-weight: bold;">📱 Founder's Flagship Appliance ($49.99) <span>&rsaquo;</span></a>
+        <a href="#pro-edition" class="mobile-nav-link" onclick="closeMobileMenu()" style="color: #D8B4FE; font-weight: bold;">🛠️ Pro Automation Gateway ($299) <span>&rsaquo;</span></a>
         <a href="#voice-edition" class="mobile-nav-link" onclick="closeMobileMenu()" style="color: var(--primary); font-weight: bold;">🎙️ 24/7 AI Voice Receptionist ($29/mo) <span>&rsaquo;</span></a>
         <a href="/agency" class="mobile-nav-link" onclick="closeMobileMenu()" style="color: #38BDF8; font-weight: bold;">🏢 Agency & Reseller Fleet Pack ($399+) <span>&rsaquo;</span></a>
         <a href="/developers" class="mobile-nav-link" onclick="closeMobileMenu()" style="color: #38BDF8; font-weight: bold;">⚡ Developer API & Webhook Docs <span>&rsaquo;</span></a>
@@ -1383,9 +1386,10 @@
         <a href="/blog" class="mobile-nav-link" onclick="closeMobileMenu()" style="color: var(--primary);">📚 Blog & Conversion Playbooks <span>&rsaquo;</span></a>
         <a href="/license_dashboard.html" class="mobile-nav-link" onclick="closeMobileMenu()" style="color: #949BAE;">🔑 Customer License Portal <span>&rsaquo;</span></a>
         <div class="mobile-nav-actions">
-            <button class="cta-btn" style="background: var(--warning); color: #000; padding: 13px; font-size: 15px;" onclick="closeMobileMenu(); initiateFreeTrialCheckout();">🎁 Start 3-Day Free Trial ($0 Today)</button>
-            <button class="cta-btn" style="padding: 13px; font-size: 15px;" onclick="closeMobileMenu(); initiateStripeCheckout();">Get Flagship Lifetime ($49.99)</button>
-            <button class="cta-btn" style="background: linear-gradient(135deg, #7E22CE, #9333EA); color: #FFF; padding: 13px; font-size: 15px;" onclick="closeMobileMenu(); initiateProStripeCheckout();">⚡ Get Pro Automation ($149.99)</button>
+            <button class="cta-btn" style="background: linear-gradient(135deg, #00E676, #00B0FF); color: #000; padding: 13px; font-size: 15px; font-weight: 900;" onclick="closeMobileMenu(); openProCheckoutModal(true);">⚡ Front Desk Bundle ($99/mo)</button>
+            <button class="cta-btn" style="padding: 13px; font-size: 15px;" onclick="closeMobileMenu(); initiateStripeCheckout();">📱 Founder's Flagship ($49.99)</button>
+            <button class="cta-btn" style="background: linear-gradient(135deg, #7E22CE, #9333EA); color: #FFF; padding: 13px; font-size: 15px;" onclick="closeMobileMenu(); initiateProStripeCheckout();">🛠️ Pro Gateway ($299)</button>
+            <button class="cta-btn" style="background: var(--warning); color: #000; padding: 13px; font-size: 15px;" onclick="closeMobileMenu(); initiateFreeTrialCheckout();">🎁 3-Day Free Trial ($0)</button>
         </div>
     </div>
 
@@ -1393,23 +1397,24 @@
     <section class="hero">
         <div class="badge-tag">⚡ NO MONTHLY FEES • KEEP YOUR 15-YEAR NUMBER • 100% A2P EXEMPT</div>
         <div style="margin-bottom: 12px;">
-            <span class="pro-badge-header">🚀 NEW: PRO AUTOMATION EDITION AVAILABLE • END-TO-END™ UNLIMITED AUTOMATIONS</span>
+            <span class="pro-badge-header">🚀 NEW: AUTONOMOUS FRONT DESK BUNDLE ($99/MO) • AI PHONE ANSWERING + SIM SMS</span>
         </div>
         <h1>Never Lose Another Client to a Missed Call. <span>Use Your Phone Number.</span></h1>
         <div class="subtitle">
-            <strong>Missed Call Auto SMS</strong> turns your Android phone into an autonomous communication appliance using your existing business SIM line. Choose our <strong>Flagship Appliance ($49.99)</strong> for automated missed call recovery, or upgrade to <strong>Pro Automation Edition ($149.99)</strong> for trademarked <strong>End-to-End™ Integration</strong> with unlimited webhooks, n8n, and CRM automations.
+            <strong>Missed Call Auto SMS</strong> turns your Android phone into an autonomous communication appliance using your existing business SIM line. Choose our <strong>Founder's Flagship Appliance ($49.99 One-Time)</strong> for automated missed call recovery, our <strong>Autonomous Front Desk Bundle ($99/mo)</strong> for 24/7 AI phone answering + 250 pooled minutes, or our <strong>Pro Automation Gateway ($299 Perpetual)</strong> for trademarked <strong>End-to-End™ Integration</strong> with unlimited webhooks, n8n, and CRM automations.
         </div>
 
         <div style="display: flex; gap: 14px; justify-content: center; flex-wrap: wrap; margin-bottom: 16px;">
-            <button class="cta-btn" style="background: var(--warning); color: #000;" onclick="initiateFreeTrialCheckout()">🎁 Start 3-Day Free Trial ($0 Today)</button>
-            <button class="cta-btn" onclick="initiateStripeCheckout()">Get Flagship ($49.99)</button>
-            <button class="cta-btn" style="background: linear-gradient(135deg, #7E22CE, #9333EA); color: #FFF; box-shadow: 0 4px 20px rgba(147, 51, 234, 0.4);" onclick="initiateProStripeCheckout()">⚡ Get Pro Automation ($149.99)</button>
+            <button class="cta-btn" style="background: linear-gradient(135deg, #00E676, #00B0FF); color: #000; font-weight: 900; box-shadow: 0 4px 20px rgba(0, 230, 118, 0.4);" onclick="openProCheckoutModal(true)">⚡ Front Desk Bundle ($99/mo)</button>
+            <button class="cta-btn" onclick="initiateStripeCheckout()">📱 Founder's Flagship ($49.99)</button>
+            <button class="cta-btn" style="background: linear-gradient(135deg, #7E22CE, #9333EA); color: #FFF; box-shadow: 0 4px 20px rgba(147, 51, 234, 0.4);" onclick="initiateProStripeCheckout()">🛠️ Pro Gateway ($299)</button>
+            <button class="cta-btn" style="background: var(--warning); color: #000;" onclick="initiateFreeTrialCheckout()">🎁 3-Day Free Trial ($0)</button>
         </div>
         
         <div class="guarantee-text">
             <span>🔒 30-Day Money-Back Guarantee</span>
             <span>⚡ Instant License Key Delivery</span>
-            <span>📱 Works on any Android Phone</span>
+            <span>📱 Dedicated Android Hardware Appliance</span>
         </div>
 
         <!-- Video Demo: 30-Second Walkthrough -->
@@ -1566,11 +1571,11 @@
         </div>
     </section>
 
-    <!-- Dedicated PRO Automation Edition ($149.99) Showcase -->
+    <!-- Dedicated PRO Automation Gateway ($299 Perpetual) Showcase -->
     <section id="pro-edition" class="pro-section">
         <div style="text-align: center; max-width: 820px; margin: 0 auto;">
             <div class="pro-badge-header">
-                <span>🔥</span> NEW FLAGSHIP RELEASE: PRO AUTOMATION SUITE
+                <span>🔥</span> FOR AUTOMATION ENGINEERS: PRO GATEWAY
             </div>
 
             <!-- Trademarked Logo & Title -->
@@ -1580,17 +1585,17 @@
                     <path d="M7 12h10M13 8l4 4-4 4" stroke="#00E676"></path>
                 </svg>
                 <div style="text-align: left;">
-                    <div style="font-size: 11px; font-weight: 900; letter-spacing: 1px; color: #C084FC; text-transform: uppercase;">TRADEMARKED ARCHITECTURE</div>
-                    <div style="font-size: 19px; font-weight: 900; color: #FFF; letter-spacing: -0.5px;">End-to-End™ Automation Engine</div>
+                    <div style="font-size: 11px; font-weight: 900; letter-spacing: 1px; color: #C084FC; text-transform: uppercase;">A2P 10DLC BYPASS GATEWAY</div>
+                    <div style="font-size: 19px; font-weight: 900; color: #FFF; letter-spacing: -0.5px;">Pro Automation Gateway ($299)</div>
                 </div>
             </div>
 
             <h2 style="font-size: clamp(26px, 5.5vw, 42px); font-weight: 900; color: #FFF; line-height: 1.2; margin: 0 0 16px 0;">
-                Connect Any Workflow. <br><span style="background: linear-gradient(135deg, #C084FC, #00E676); -webkit-background-clip: text; -webkit-text-fill-color: transparent;">Unlimited Automations. Zero Twilio Fees.</span>
+                Connect n8n, Make &amp; CRMs. <br><span style="background: linear-gradient(135deg, #C084FC, #00E676); -webkit-background-clip: text; -webkit-text-fill-color: transparent;">Bypass Carrier A2P 10DLC. Zero Twilio Fees.</span>
             </h2>
 
             <p style="color: #CBD5E1; font-size: clamp(15px, 3.5vw, 18px); line-height: 1.6; margin-bottom: 24px;">
-                The <strong>Pro Automation Edition ($149.99)</strong> features our proprietary <strong>End-to-End™ Webhook Gateway</strong>. Trigger custom, instant SMS text messages directly through your phone's SIM card from <strong>n8n, Zapier, Make, website contact forms, or your CRM</strong>—even when your phone is locked and asleep in your pocket.
+                The <strong>Pro Automation Gateway ($299.00 Perpetual)</strong> features our proprietary <strong>End-to-End™ Webhook Gateway</strong> with <strong>1-Year Cloud Relay API Maintenance included</strong>. Trigger custom, instant SMS text messages directly through your phone's carrier SIM card from <strong>n8n, Zapier, Make, website contact forms, or your CRM</strong>—even when your phone is locked and asleep in your pocket.
             </p>
 
             <!-- Trademarked Badges Bar -->
@@ -1599,7 +1604,7 @@
                 <span class="e2e-badge">✨ Unlimited Automations™</span>
                 <span class="e2e-badge">🔒 SIM-Gateway™ Technology</span>
                 <span class="e2e-badge">🌙 Deep-Sleep FCM Engine™</span>
-                <span class="e2e-badge">🛡️ Cryptographic Key Auth™</span>
+                <span class="e2e-badge">🛡️ 1-Yr Cloud Relay API</span>
                 <span class="e2e-badge">🚫 Zero-A2P 10DLC Fees™</span>
             </div>
         </div>
@@ -1642,12 +1647,12 @@
         <!-- 4 Pro Features Grid -->
         <div class="pro-features-grid">
             <div class="pro-feature-card">
-                <h4><span>🔗</span> Native n8n, Zapier & Webhook Ready</h4>
+                <h4><span>🔗</span> Native n8n, Zapier &amp; Webhook Ready</h4>
                 <p>Send an HTTP POST from any workflow tool with your API secret, phone number, and custom message text. Simple 3-line payload setup.</p>
             </div>
 
             <div class="pro-feature-card">
-                <h4><span>🤖</span> Dynamic AI Quote & Response Injection</h4>
+                <h4><span>🤖</span> Dynamic AI Quote &amp; Response Injection</h4>
                 <p>Don't just send canned templates—generate custom personalized messages, job quotes, or appointment reminders on the fly.</p>
             </div>
 
@@ -1678,10 +1683,10 @@
 
         <div style="text-align: center; margin-top: 36px;">
             <button class="cta-btn" style="background: linear-gradient(135deg, #7E22CE, #9333EA); color: #FFF; font-size: 16px; padding: 15px 32px; box-shadow: 0 4px 25px rgba(147, 51, 234, 0.45);" onclick="initiateProStripeCheckout()">
-                ⚡ Get Pro Automation Edition ($149.99 Lifetime)
+                🛠️ Get Pro Automation Gateway ($299.00 Perpetual)
             </button>
             <div style="color: var(--muted); font-size: 12px; margin-top: 8px;">
-                0 Monthly Fees • Unlimited Automations™ • 30-Day Money-Back Guarantee
+                Perpetual License • 1-Year Cloud Relay API Included • 100% A2P 10DLC Bypass
             </div>
         </div>
     </section>
@@ -1774,58 +1779,60 @@
                 <thead>
                     <tr>
                         <th>Feature / Capability</th>
-                        <th>Cloud SaaS (GoHighLevel / Twilio)</th>
-                        <th>Flagship Standard ($49.99)</th>
-                        <th style="background: #181124; color: #D8B4FE; border-left: 2px solid #A855F7;">⚡ Pro Automation ($149.99)</th>
+                        <th>Legacy Services (Ruby / GoHighLevel)</th>
+                        <th>Founder's Flagship ($49.99)</th>
+                        <th style="background: rgba(0, 230, 118, 0.15); color: #00E676; border-left: 2px solid #00E676; border-right: 2px solid #00E676;">⚡ Front Desk Bundle ($99/mo)</th>
+                        <th style="background: #181124; color: #D8B4FE; border-left: 2px solid #A855F7;">🛠️ Pro Gateway ($299)</th>
                     </tr>
                 </thead>
                 <tbody>
                     <tr>
                         <td class="feature-name">Pricing Model</td>
-                        <td class="saas-bad">❌ $97 – $297 / month + SMS fees</td>
-                        <td class="appliance-good">🟢 $49.99 Lifetime License</td>
-                        <td style="background: rgba(168, 85, 247, 0.08); font-weight: bold; color: #D8B4FE; border-left: 2px solid #A855F7;">⚡ $149.99 Lifetime License</td>
+                        <td class="saas-bad">❌ $297 – $600+ / mo + per-min markup</td>
+                        <td class="appliance-good">🟢 $49.99 One-Time</td>
+                        <td style="background: rgba(0, 230, 118, 0.08); font-weight: bold; color: #00E676; border-left: 2px solid #00E676; border-right: 2px solid #00E676;">⚡ $99.00 / month</td>
+                        <td style="background: rgba(168, 85, 247, 0.08); font-weight: bold; color: #D8B4FE; border-left: 2px solid #A855F7;">⚡ $299.00 Perpetual</td>
+                    </tr>
+                    <tr>
+                        <td class="feature-name">24/7 AI Voice Phone Receptionist</td>
+                        <td class="saas-bad">❌ $3.50/min human or unmanaged cloud</td>
+                        <td style="color: var(--muted);">⚪ Local Auto-Text Only</td>
+                        <td style="background: rgba(0, 230, 118, 0.08); font-weight: bold; color: #00E676; border-left: 2px solid #00E676; border-right: 2px solid #00E676;">🟢 250 Pooled Mins ($0.20/min overage)</td>
+                        <td style="background: rgba(168, 85, 247, 0.08); font-weight: bold; color: #D8B4FE; border-left: 2px solid #A855F7;">⚪ Optional Voice Add-On ($29/mo)</td>
                     </tr>
                     <tr>
                         <td class="feature-name">Phone Number Used</td>
                         <td class="saas-bad">❌ Forces buying random 833 or VoIP number</td>
                         <td class="appliance-good">🟢 Your Established SIM Number</td>
-                        <td style="background: rgba(168, 85, 247, 0.08); font-weight: bold; color: #D8B4FE; border-left: 2px solid #A855F7;">🟢 Your Established SIM Number</td>
+                        <td style="background: rgba(0, 230, 118, 0.08); font-weight: bold; color: #00E676; border-left: 2px solid #00E676; border-right: 2px solid #00E676;">🟢 Real SIM SMS + *71 Forwarding</td>
+                        <td style="background: rgba(168, 85, 247, 0.08); font-weight: bold; color: #D8B4FE; border-left: 2px solid #A855F7;">🟢 Dual SIM Carrier Routing</td>
                     </tr>
                     <tr>
                         <td class="feature-name">A2P 10DLC Carrier Registration</td>
-                        <td class="saas-bad">❌ Weeks of rejections & carrier fees</td>
+                        <td class="saas-bad">❌ Weeks of rejections &amp; carrier surcharges</td>
                         <td class="appliance-good">🟢 100% Exempt (Native SIM Carrier)</td>
+                        <td style="background: rgba(0, 230, 118, 0.08); font-weight: bold; color: #00E676; border-left: 2px solid #00E676; border-right: 2px solid #00E676;">🟢 100% Exempt (Native SIM Carrier)</td>
                         <td style="background: rgba(168, 85, 247, 0.08); font-weight: bold; color: #D8B4FE; border-left: 2px solid #A855F7;">🟢 100% Exempt (Native SIM Carrier)</td>
                     </tr>
                     <tr>
                         <td class="feature-name">Missed Call Auto-Text</td>
-                        <td class="saas-bad">⚠️ Cloud webhook latency</td>
-                        <td class="appliance-good">🟢 Instant Local Dispatch (3s)</td>
-                        <td style="background: rgba(168, 85, 247, 0.08); font-weight: bold; color: #D8B4FE; border-left: 2px solid #A855F7;">🟢 Instant Local Dispatch (3s)</td>
+                        <td class="saas-bad">⚠️ Cloud webhook latency (15-45s)</td>
+                        <td class="appliance-good">🟢 Instant Local Dispatch (&lt;3s)</td>
+                        <td style="background: rgba(0, 230, 118, 0.08); font-weight: bold; color: #00E676; border-left: 2px solid #00E676; border-right: 2px solid #00E676;">🟢 Instant Local Dispatch (&lt;3s)</td>
+                        <td style="background: rgba(168, 85, 247, 0.08); font-weight: bold; color: #D8B4FE; border-left: 2px solid #A855F7;">🟢 Instant Local Dispatch (&lt;3s)</td>
                     </tr>
                     <tr>
-                        <td class="feature-name">End-to-End™ Webhook Engine</td>
-                        <td class="saas-bad">❌ Expensive usage billing</td>
+                        <td class="feature-name">n8n, Zapier &amp; CRM Webhook Gateway</td>
+                        <td class="saas-bad">❌ High per-task connector fees</td>
                         <td style="color: var(--muted);">⚪ Missed Calls Only</td>
-                        <td style="background: rgba(168, 85, 247, 0.08); font-weight: bold; color: #00E676; border-left: 2px solid #A855F7;">⚡ Unlimited Automations™</td>
+                        <td style="background: rgba(0, 230, 118, 0.08); font-weight: bold; color: #00E676; border-left: 2px solid #00E676; border-right: 2px solid #00E676;">⚡ Included with Pro APK</td>
+                        <td style="background: rgba(168, 85, 247, 0.08); font-weight: bold; color: #00E676; border-left: 2px solid #A855F7;">⚡ Unlimited Automations™ (FCM Push)</td>
                     </tr>
                     <tr>
-                        <td class="feature-name">n8n, Zapier & CRM Automations</td>
-                        <td class="saas-bad">❌ Third-party connector fees</td>
-                        <td style="color: var(--muted);">⚪ Not Included</td>
-                        <td style="background: rgba(168, 85, 247, 0.08); font-weight: bold; color: #00E676; border-left: 2px solid #A855F7;">⚡ Native End-to-End™ FCM Gateway</td>
-                    </tr>
-                    <tr>
-                        <td class="feature-name">Dynamic Message Ingestion (AI/Forms)</td>
-                        <td class="saas-bad">❌ $0.03-$0.07 per message markup</td>
-                        <td style="color: var(--muted);">⚪ Dynamic Tokens Only</td>
-                        <td style="background: rgba(168, 85, 247, 0.08); font-weight: bold; color: #D8B4FE; border-left: 2px solid #A855F7;">⚡ Custom AI Text & Payload Overrides</td>
-                    </tr>
-                    <tr>
-                        <td class="feature-name">Security & Privacy</td>
-                        <td class="saas-bad">❌ Cloud servers store your client logs</td>
+                        <td class="feature-name">Security &amp; Local On-Device Execution</td>
+                        <td class="saas-bad">❌ Cloud servers store all customer conversations</td>
                         <td class="appliance-good">🟢 100% Local On-Device Storage</td>
+                        <td style="background: rgba(0, 230, 118, 0.08); font-weight: bold; color: #00E676; border-left: 2px solid #00E676; border-right: 2px solid #00E676;">🟢 100% Local Appliance Execution</td>
                         <td style="background: rgba(168, 85, 247, 0.08); font-weight: bold; color: #D8B4FE; border-left: 2px solid #A855F7;">🟢 16-Char Cryptographic Key Auth™</td>
                     </tr>
                 </tbody>
@@ -1970,18 +1977,19 @@
                 <span class="faq-icon">▼</span>
             </div>
             <div class="faq-answer">
-                <strong>Yes!</strong> While Missed Call Auto SMS is built as a 100% subscription-free SMS appliance ($49.99 lifetime), we offer an optional <strong>AI Voice Receptionist add-on</strong> powered by Vapi. When your phone rings for 15 seconds without answer, your carrier automatically forwards the call via native <code>*71</code> to your AI assistant. You can choose our <strong>Turnkey Managed Plan ($29/mo)</strong> with 200 included minutes and a dedicated local number, or connect your own Vapi API key for <strong>$0/mo (Free BYOK)</strong>. When the call ends, your phone automatically fires an authentic follow-up text from your real business SIM card!
+                <strong>Yes!</strong> While Missed Call Auto SMS is built as a 100% subscription-free SMS appliance ($49.99 lifetime), we offer an optional <strong>AI Voice Receptionist add-on</strong> powered by Vapi. When your phone rings for 15 seconds without answer, your carrier automatically forwards the call via native <code>*71</code> to your AI assistant. You can choose our <strong>Autonomous Front Desk Bundle ($99/mo)</strong> with 250 included minutes, our <strong>Standalone Voice Plans</strong> ($29/mo Starter with 45 mins or $89/mo Business with 300 mins), or connect your own Vapi/Twilio credentials for <strong>$0/mo (Free BYOK)</strong>. When the call ends, your phone automatically fires an authentic follow-up text from your real business SIM card!
             </div>
         </div>
 
         <div class="faq-item" onclick="toggleFaq(this)">
             <div class="faq-question">
-                <span>What is the difference between Flagship Standard ($49.99) and Pro Automation ($149.99)?</span>
+                <span>What is the difference between Founder's Flagship ($49.99), Front Desk Bundle ($99/mo), and Pro Gateway ($299)?</span>
                 <span class="faq-icon">▼</span>
             </div>
             <div class="faq-answer">
-                <strong>Flagship Standard ($49.99)</strong> is our autonomous hardware appliance built exclusively to detect missed business calls and reply with instant SMS texts via your carrier SIM card.<br><br>
-                <strong>Pro Automation Edition ($149.99)</strong> includes all Flagship features PLUS our proprietary <strong>End-to-End™ Webhook Gateway</strong>. It connects n8n, Zapier, Make, your website quote forms, and your CRM to dispatch unlimited automated custom text messages from your real phone number with zero Twilio fees.
+                <strong>Founder's Flagship ($49.99 One-Time)</strong> is our pure local hardware appliance built exclusively to detect unanswered incoming calls and reply with instant authentic SMS texts from your carrier SIM card with zero monthly software bills forever.<br><br>
+                <strong>Autonomous Front Desk Bundle ($99/mo)</strong> is our all-in-one flagship package. It includes 24/7 AI Voice Phone Answering, 250 monthly pooled minutes ($0.20/min overage), 1-tap <code>*71</code> conditional call forwarding, instant dual SIM confirmation texts, and the complete Pro Automation APK.<br><br>
+                <strong>Pro Automation Gateway ($299 Perpetual)</strong> is engineered for automation engineers, agencies, and high-volume operations. It provides our proprietary <strong>End-to-End™ Webhook Gateway</strong> (n8n, Make, Zapier, custom CRMs) with 1-Year Cloud Relay API maintenance included to completely bypass carrier A2P 10DLC restrictions.
             </div>
         </div>
 
@@ -2069,101 +2077,143 @@
             </div>
         </div>
 
-        <div style="display: flex; gap: 20px; justify-content: center; flex-wrap: wrap; max-width: 1080px; margin: 0 auto 28px auto;">
-            <!-- Tier 1: 3-Day Free Trial -->
-            <div style="flex: 1; min-width: 280px; background: var(--card-bg); border: 2px solid var(--warning); border-radius: 16px; padding: 28px; text-align: center; display: flex; flex-direction: column;">
-                <div style="font-size: 11px; font-weight: 900; color: var(--warning); text-transform: uppercase; letter-spacing: 0.5px;">RISK-FREE TRIAL</div>
-                <h3 style="font-size: 22px; margin: 8px 0 4px 0;">3-Day Free Trial</h3>
-                <div style="font-size: 32px; font-weight: 900; color: #FFF; margin-bottom: 4px;">$0.00 <span style="font-size: 14px; color: var(--muted);">Today</span></div>
-                <p style="font-size: 13px; color: var(--muted); margin-bottom: 18px;">Card verified at checkout. Auto-charges $49.99 on Day 4. 24/7 1-click cancel with AI Assistant.</p>
-                
-                <div style="text-align: left; font-size: 12px; color: var(--muted); margin-bottom: 20px; flex-grow: 1; display: flex; flex-direction: column; gap: 8px;">
-                    <div>✓ Full Missed Call Auto-Text Engine</div>
-                    <div>✓ Native SIM Carrier Sending (0 Twilio Fees)</div>
-                    <div>✓ Custom Template & Jitter Delay</div>
-                    <div>✓ Schedule & Contact Filter</div>
-                </div>
-
-                <button class="cta-btn" style="width: 100%; background: var(--warning); color: #000;" onclick="initiateFreeTrialCheckout()">Start 3-Day Trial ($0)</button>
-            </div>
-
-            <!-- Tier 2: Flagship Lifetime -->
-            <div style="flex: 1; min-width: 280px; background: var(--card-bg); border: 1px solid var(--card-border); border-radius: 16px; padding: 28px; text-align: center; display: flex; flex-direction: column;">
-                <div style="font-size: 11px; font-weight: 900; color: var(--primary); text-transform: uppercase; letter-spacing: 0.5px;">FLAGSHIP APPLIANCE</div>
+        <div style="display: flex; gap: 20px; justify-content: center; flex-wrap: wrap; max-width: 1100px; margin: 0 auto 20px auto;">
+            <!-- Tier 1: Flagship Lifetime ($49.99) -->
+            <div style="flex: 1; min-width: 290px; max-width: 350px; background: var(--card-bg); border: 1px solid var(--card-border); border-radius: 16px; padding: 28px; text-align: center; display: flex; flex-direction: column;">
+                <div style="font-size: 11px; font-weight: 900; color: #38BDF8; text-transform: uppercase; letter-spacing: 0.5px;">FOUNDER'S APPLIANCE</div>
                 <h3 style="font-size: 22px; margin: 8px 0 4px 0;">Flagship Lifetime</h3>
                 <div style="font-size: 32px; font-weight: 900; color: #FFF; margin-bottom: 4px;">$49.99 <span style="font-size: 14px; color: var(--muted);">One-Time</span></div>
-                <p style="font-size: 13px; color: var(--muted); margin-bottom: 18px;">0 Monthly fees forever. Direct download. Includes 30-day money-back guarantee.</p>
+                <p style="font-size: 13px; color: var(--muted); margin-bottom: 18px;">First 100 operators only. 0 Monthly fees forever. Direct APK download with 30-day money-back guarantee.</p>
                 
                 <div style="text-align: left; font-size: 12px; color: var(--muted); margin-bottom: 20px; flex-grow: 1; display: flex; flex-direction: column; gap: 8px;">
-                    <div>✓ Missed Call Auto-Text Appliance</div>
-                    <div>✓ Uses Your Real Business Cell SIM</div>
-                    <div>✓ 100% A2P 10DLC Carrier Ban Exempt</div>
-                    <div>✓ Anti-Spam Caller Cooldown Window</div>
-                    <div>✓ Free Lifetime In-App OTA Updates</div>
+                    <div>✓ <strong>Pure Hardware SIM Appliance:</strong> Uses your cell</div>
+                    <div>✓ <strong>100% A2P 10DLC Carrier Exempt:</strong> Zero forms</div>
+                    <div>✓ <strong>Anti-Spam Caller Cooldown Window</strong></div>
+                    <div>✓ <strong>Custom Dynamic Auto-Reply Templates</strong></div>
+                    <div>✓ <strong>Free Lifetime In-App OTA Updates</strong></div>
                 </div>
 
                 <button class="cta-btn" style="width: 100%;" onclick="initiateStripeCheckout()">Buy Flagship ($49.99)</button>
             </div>
 
-            <!-- Tier 3: PRO Automation Edition ($149.99) -->
-            <div style="flex: 1; min-width: 300px; background: linear-gradient(180deg, #1A1228 0%, #0D1016 100%); border: 2px solid #A855F7; border-radius: 16px; padding: 28px; text-align: center; position: relative; box-shadow: 0 8px 32px rgba(168, 85, 247, 0.25); display: flex; flex-direction: column;">
-                <div style="position: absolute; top: -12px; left: 50%; transform: translateX(-50%); background: linear-gradient(135deg, #A855F7, #00E676); color: #000; font-size: 11px; font-weight: 900; padding: 3px 14px; border-radius: 20px; text-transform: uppercase; letter-spacing: 0.5px; white-space: nowrap;">
-                    🔥 NEW • UNLIMITED AUTOMATIONS™
+            <!-- Tier 2: Autonomous Front Desk Bundle ($99/mo) - RECOMMENDED -->
+            <div style="flex: 1; min-width: 310px; max-width: 370px; background: linear-gradient(180deg, #11261D 0%, #0D1016 100%); border: 2px solid #00E676; border-radius: 16px; padding: 28px; text-align: center; position: relative; box-shadow: 0 8px 32px rgba(0, 230, 118, 0.25); display: flex; flex-direction: column;">
+                <div style="position: absolute; top: -12px; left: 50%; transform: translateX(-50%); background: linear-gradient(135deg, #00E676, #00B0FF); color: #000; font-size: 11px; font-weight: 900; padding: 3px 14px; border-radius: 20px; text-transform: uppercase; letter-spacing: 0.5px; white-space: nowrap;">
+                    ⭐ MOST POPULAR • ALL-IN-ONE
                 </div>
-                <div style="display: flex; justify-content: center; align-items: center; gap: 6px; margin: 4px 0 2px 0;">
-                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#C084FC" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
-                        <polyline points="16 3 21 3 21 8"></polyline>
-                        <line x1="4" y1="20" x2="21" y2="3"></line>
-                        <polyline points="21 16 21 21 16 21"></polyline>
-                        <line x1="15" y1="15" x2="21" y2="21"></line>
-                        <line x1="4" y1="4" x2="9" y2="9"></line>
-                    </svg>
-                    <span style="font-size: 11px; font-weight: 900; color: #C084FC; text-transform: uppercase;">END-TO-END™ SUITE</span>
+                <div style="font-size: 11px; font-weight: 900; color: #00E676; text-transform: uppercase; letter-spacing: 0.5px; margin-top: 4px;">AUTONOMOUS FRONT DESK</div>
+                <h3 style="font-size: 22px; margin: 6px 0 4px 0; color: #FFF;">Front Desk Bundle</h3>
+                <div style="font-size: 32px; font-weight: 900; color: #FFF; margin-bottom: 4px;">$99.00 <span style="font-size: 14px; color: var(--muted);">/ month</span></div>
+                <p style="font-size: 13px; color: #A7F3D0; margin-bottom: 18px;">24/7 AI Voice Receptionist + Authentic Carrier SIM Auto-Text. Replaces $600/mo answering services.</p>
+                
+                <div style="text-align: left; font-size: 12px; color: #E2E8F0; margin-bottom: 20px; flex-grow: 1; display: flex; flex-direction: column; gap: 8px; background: rgba(0,0,0,0.3); padding: 14px; border-radius: 12px; border: 1px solid rgba(0, 230, 118, 0.3);">
+                    <div>🎙️ <strong>24/7 AI Voice Phone Receptionist</strong></div>
+                    <div>⏱️ <strong>250 Monthly Pooled Minutes</strong> ($0.20/min overage)</div>
+                    <div>📲 <strong>1-Tap *71 Conditional Forwarding</strong></div>
+                    <div>💬 <strong>Instant Dual SIM Confirmation SMS</strong></div>
+                    <div>🚀 <strong>Includes Full Pro Automation APK</strong></div>
+                    <div>🛡️ <strong>100% A2P 10DLC Carrier Exempt</strong></div>
                 </div>
-                <h3 style="font-size: 22px; margin: 4px 0 4px 0;">Pro Automation Edition</h3>
-                <div style="font-size: 32px; font-weight: 900; color: #FFF; margin-bottom: 4px;">$149.99 <span style="font-size: 14px; color: var(--muted);">One-Time</span></div>
-                <p style="font-size: 13px; color: var(--muted); margin-bottom: 18px;">Everything in Flagship, plus End-to-End™ Webhook Gateway for unlimited automations.</p>
+
+                <button class="cta-btn" style="width: 100%; background: linear-gradient(135deg, #00E676, #00B0FF); color: #000; font-weight: 900; box-shadow: 0 4px 18px rgba(0, 230, 118, 0.4);" onclick="openProCheckoutModal(true)">
+                    Get Front Desk Bundle ($99/mo) ➔
+                </button>
+            </div>
+
+            <!-- Tier 3: Pro Automation Gateway ($299 Perpetual) -->
+            <div style="flex: 1; min-width: 300px; max-width: 350px; background: linear-gradient(180deg, #1A1228 0%, #0D1016 100%); border: 2px solid #A855F7; border-radius: 16px; padding: 28px; text-align: center; position: relative; box-shadow: 0 8px 32px rgba(168, 85, 247, 0.25); display: flex; flex-direction: column;">
+                <div style="position: absolute; top: -12px; left: 50%; transform: translateX(-50%); background: linear-gradient(135deg, #A855F7, #C084FC); color: #000; font-size: 11px; font-weight: 900; padding: 3px 14px; border-radius: 20px; text-transform: uppercase; letter-spacing: 0.5px; white-space: nowrap;">
+                    🛠️ FOR AUTOMATION ENGINEERS
+                </div>
+                <div style="font-size: 11px; font-weight: 900; color: #C084FC; text-transform: uppercase; letter-spacing: 0.5px; margin-top: 4px;">A2P 10DLC BYPASS GATEWAY</div>
+                <h3 style="font-size: 22px; margin: 6px 0 4px 0; color: #FFF;">Pro Automation Gateway</h3>
+                <div style="font-size: 32px; font-weight: 900; color: #FFF; margin-bottom: 4px;">$299.00 <span style="font-size: 14px; color: var(--muted);">Perpetual</span></div>
+                <p style="font-size: 13px; color: var(--muted); margin-bottom: 18px;">Hardware webhook bridge for n8n, Make &amp; CRMs. 1-Year Cloud Relay API maintenance included.</p>
                 
                 <div style="text-align: left; font-size: 12px; color: #E2E8F0; margin-bottom: 20px; flex-grow: 1; display: flex; flex-direction: column; gap: 8px; background: rgba(0,0,0,0.3); padding: 14px; border-radius: 12px; border: 1px solid rgba(168, 85, 247, 0.25);">
-                    <div>⚡ <strong>End-to-End™ Webhook Engine</strong></div>
-                    <div>🔗 <strong>Unlimited Automations™:</strong> n8n, Zapier, Webhooks</div>
-                    <div>📱 <strong>Dual SIM Outbound Selector:</strong> Business eSIM line</div>
-                    <div>🛡️ <strong>SIM Burn Safeguard™:</strong> Auto carrier queue pacing</div>
-                    <div>🌙 <strong>Deep-Sleep FCM Gateway:</strong> Wakes phone asleep</div>
-                    <div>💬 <strong>Dynamic AI Quotes & Message Overrides</strong></div>
-                    <div>✨ <strong>Includes All Flagship Features</strong></div>
+                    <div>⚡ <strong>End-to-End™ Webhook Gateway</strong></div>
+                    <div>🔗 <strong>Unlimited Automations™:</strong> n8n, Zapier, Make</div>
+                    <div>🛡️ <strong>1-Year Cloud Relay API Maintenance</strong></div>
+                    <div>📱 <strong>Dual SIM Outbound Carrier Selector</strong></div>
+                    <div>🌙 <strong>Deep-Sleep FCM Wakeup Engine</strong></div>
+                    <div>🛡️ <strong>SIM Burn Safeguard™ Auto Queue Pacing</strong></div>
                 </div>
 
                 <button class="cta-btn" style="width: 100%; background: linear-gradient(135deg, #7E22CE, #9333EA); color: #FFF; box-shadow: 0 4px 18px rgba(147, 51, 234, 0.45);" onclick="initiateProStripeCheckout()">
-                    Get Pro Automation ($149.99) ➔
+                    Get Pro Gateway ($299) ➔
                 </button>
-                <div style="font-size: 11px; color: var(--muted); margin-top: 10px; line-height: 1.4;">
-                    * Designed for high-velocity 1-to-1 conversational triggers (new lead alerts, appointment reminders, quote replies), not bulk mass spamming.
-                </div>
             </div>
         </div>
 
-        <!-- Optional AI Voice Receptionist Add-On ($29/mo or Free BYOK) -->
-        <div id="voice-edition" style="max-width: 1080px; margin: 24px auto 0 auto; background: linear-gradient(135deg, rgba(168, 85, 247, 0.15), rgba(0, 230, 118, 0.08)); border: 1px solid rgba(168, 85, 247, 0.4); border-radius: 16px; padding: 24px; text-align: left; display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 16px;">
-            <div style="flex: 1; min-width: 290px;">
-                <div style="display: inline-flex; align-items: center; gap: 6px; background: rgba(168, 85, 247, 0.2); color: #C084FC; padding: 3px 10px; border-radius: 20px; font-size: 11px; font-weight: 800; text-transform: uppercase;">
-                    🎙️ OPTIONAL ADD-ON • DUAL VOICE + SMS HYBRID
-                </div>
-                <h3 style="font-size: 20px; font-weight: 900; margin: 8px 0 4px 0; color: #FFF;">Turnkey 24/7 AI Voice Receptionist ($29/mo) or Free BYOK</h3>
-                <p style="color: #CBD5E0; font-size: 13px; margin: 0 0 12px 0; max-width: 680px; line-height: 1.5;">
-                    Keep your $49.99 lifetime SMS appliance 100% subscription-free forever. When you're ready for an AI agent to actually answer the phone with your custom voice, add our <strong>Turnkey Voice Receptionist ($29/mo)</strong> with 200 included mins & dedicated local forwarding line—or connect your own Vapi key for <strong>$0/mo (Free BYOK)</strong>.
-                </p>
-                <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(260px, 1fr)); gap: 8px; font-size: 12px; color: #E2E8F0;">
-                    <div>✔ <strong>*71 Conditional Forwarding:</strong> Rings 15s, then forwards to your AI</div>
-                    <div>✔ <strong>24/7 AI Receptionist:</strong> Triages emergencies & takes project notes</div>
-                    <div>✔ <strong>Phonetic Address Capture:</strong> Reads back street address to confirm</div>
-                    <div>✔ <strong>Real SIM SMS Auto-Reply:</strong> Texts both customer and your cell instantly</div>
+        <!-- 3-Day Free Trial Callout Banner -->
+        <div style="text-align: center; margin-bottom: 28px; font-size: 13px; color: var(--muted);">
+            Prefer to test on your phone first? <a href="javascript:void(0)" onclick="initiateFreeTrialCheckout()" style="color: var(--warning); font-weight: bold; text-decoration: underline;">Start a 3-Day Risk-Free Trial ($0 today) &rarr;</a>
+        </div>
+
+        <!-- Dedicated Standalone AI Voice Receptionist Plans ($29/mo Starter or $89/mo Business or Free BYOK) -->
+        <div id="voice-edition" style="max-width: 1100px; margin: 24px auto 0 auto; background: linear-gradient(135deg, rgba(168, 85, 247, 0.12), rgba(0, 230, 118, 0.06)); border: 1px solid rgba(168, 85, 247, 0.4); border-radius: 16px; padding: 28px; text-align: left;">
+            <div style="display: flex; justify-content: space-between; align-items: flex-start; flex-wrap: wrap; gap: 16px; margin-bottom: 20px;">
+                <div>
+                    <div style="display: inline-flex; align-items: center; gap: 6px; background: rgba(168, 85, 247, 0.2); color: #C084FC; padding: 3px 10px; border-radius: 20px; font-size: 11px; font-weight: 800; text-transform: uppercase;">
+                        🎙️ STANDALONE ADD-ON • TELEPHONY ENGINE
+                    </div>
+                    <h3 style="font-size: 22px; font-weight: 900; margin: 8px 0 4px 0; color: #FFF;">Standalone 24/7 AI Voice Receptionist or Free BYOK</h3>
+                    <p style="color: #CBD5E0; font-size: 13px; margin: 0; max-width: 700px; line-height: 1.5;">
+                        Already own a hardware appliance license or want standalone telephony? Forward calls with <code>*71</code> when you can't answer. We provide dedicated turnkey lines with pooled minutes, or you can bring your own Vapi/Twilio credentials for $0 markup.
+                    </p>
                 </div>
             </div>
-            <div style="display: flex; gap: 10px; align-items: center; flex-wrap: wrap;">
-                <button onclick="openVoiceAddonModal()" class="cta-btn" style="background: linear-gradient(135deg, #A855F7, #00E676); color: #000; font-weight: 800; padding: 14px 24px; font-size: 13px; margin: 0; border: none; cursor: pointer; border-radius: 8px; display: inline-flex; align-items: center; gap: 6px; box-shadow: 0 4px 14px rgba(168,85,247,0.35);">
-                    🎙️ Add 24/7 Voice Receptionist ($29/mo) ➔
-                </button>
+
+            <!-- Voice Plans Grid -->
+            <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 16px;">
+                <!-- Voice Starter -->
+                <div style="background: rgba(0,0,0,0.35); border: 1px solid rgba(255,255,255,0.08); border-radius: 12px; padding: 20px;">
+                    <div style="font-size: 11px; font-weight: 800; color: #38BDF8; text-transform: uppercase;">SOLO CONTRACTOR</div>
+                    <h4 style="font-size: 18px; margin: 4px 0; color: #FFF;">Voice Starter Plan</h4>
+                    <div style="font-size: 24px; font-weight: 900; color: #FFF; margin-bottom: 8px;">$29.00 <span style="font-size: 12px; color: var(--muted);">/ month</span></div>
+                    <div style="font-size: 12px; color: #CBD5E0; display: flex; flex-direction: column; gap: 6px; margin-bottom: 16px;">
+                        <div>⏱️ <strong>45 Monthly Pooled Minutes</strong> included</div>
+                        <div>📈 <strong>$0.25/min</strong> overage rate</div>
+                        <div>📞 Dedicated local inbound forwarding line</div>
+                        <div>📲 1-Tap *71 conditional carrier transfer</div>
+                    </div>
+                    <button onclick="openVoiceAddonModal('starter')" class="cta-btn" style="width: 100%; background: #38BDF8; color: #000; font-size: 13px; padding: 10px; font-weight: 800;">
+                        Choose Starter ($29/mo)
+                    </button>
+                </div>
+
+                <!-- Voice Business -->
+                <div style="background: rgba(0,0,0,0.35); border: 1px solid rgba(0, 230, 118, 0.4); border-radius: 12px; padding: 20px; position: relative;">
+                    <div style="position: absolute; top: 10px; right: 12px; background: #00E676; color: #000; font-size: 10px; font-weight: 900; padding: 2px 8px; border-radius: 10px; text-transform: uppercase;">BEST VOICE VALUE</div>
+                    <div style="font-size: 11px; font-weight: 800; color: #00E676; text-transform: uppercase;">GROWING BUSINESS</div>
+                    <h4 style="font-size: 18px; margin: 4px 0; color: #FFF;">Voice Business Plan</h4>
+                    <div style="font-size: 24px; font-weight: 900; color: #FFF; margin-bottom: 8px;">$89.00 <span style="font-size: 12px; color: var(--muted);">/ month</span></div>
+                    <div style="font-size: 12px; color: #CBD5E0; display: flex; flex-direction: column; gap: 6px; margin-bottom: 16px;">
+                        <div>⏱️ <strong>300 Monthly Pooled Minutes</strong> included</div>
+                        <div>📈 <strong>$0.20/min</strong> discounted overage rate</div>
+                        <div>📞 Dedicated local inbound forwarding line</div>
+                        <div>📲 Priority Vapi voice pipeline routing</div>
+                    </div>
+                    <button onclick="openVoiceAddonModal('business')" class="cta-btn" style="width: 100%; background: linear-gradient(135deg, #00E676, #00B0FF); color: #000; font-size: 13px; padding: 10px; font-weight: 900;">
+                        Choose Business ($89/mo)
+                    </button>
+                </div>
+
+                <!-- Free BYOK -->
+                <div style="background: rgba(0,0,0,0.35); border: 1px solid rgba(168, 85, 247, 0.3); border-radius: 12px; padding: 20px;">
+                    <div style="font-size: 11px; font-weight: 800; color: #C084FC; text-transform: uppercase;">DEVELOPER / ENTERPRISE</div>
+                    <h4 style="font-size: 18px; margin: 4px 0; color: #FFF;">Free BYOK (Bring Your Key)</h4>
+                    <div style="font-size: 24px; font-weight: 900; color: #FFF; margin-bottom: 8px;">$0.00 <span style="font-size: 12px; color: var(--muted);">/ month markup</span></div>
+                    <div style="font-size: 12px; color: #CBD5E0; display: flex; flex-direction: column; gap: 6px; margin-bottom: 16px;">
+                        <div>🔑 Plug in personal Vapi / ElevenLabs API keys</div>
+                        <div>💳 Pay raw wholesale costs directly (~$0.12–$0.15/m)</div>
+                        <div>⚡ Unlimited minutes with zero markup</div>
+                        <div>🛠️ Built into Pro Android App settings</div>
+                    </div>
+                    <a href="/developers" class="cta-btn" style="display: block; text-align: center; background: rgba(168, 85, 247, 0.2); border: 1px solid #A855F7; color: #D8B4FE; font-size: 13px; padding: 10px; font-weight: 800; text-decoration: none;">
+                        View BYOK Setup Docs
+                    </a>
+                </div>
             </div>
         </div>
 
@@ -2269,15 +2319,15 @@
     }
 
     function initiateProStripeCheckout() {
-        openProCheckoutModal();
+        openProCheckoutModal(false);
     }
 
-    function openProCheckoutModal() {
+    function openProCheckoutModal(isFrontDesk = false) {
         const m = document.getElementById('proCheckoutModal');
         if (m) {
             m.style.display = 'flex';
             const chk = document.getElementById('checkProVoiceOrderBump');
-            if (chk) chk.checked = false;
+            if (chk) chk.checked = Boolean(isFrontDesk);
             onProOrderBumpToggle();
         }
     }
@@ -2290,23 +2340,32 @@
     function onProOrderBumpToggle() {
         const chk = document.getElementById('checkProVoiceOrderBump');
         const isChecked = chk && chk.checked;
+        const modalTitle = document.getElementById('proModalHeading');
         const priceEl = document.getElementById('summaryVoiceAddonPrice');
+        const totalDueEl = document.getElementById('summaryTotalDue');
         const renewsEl = document.getElementById('summaryTotalRenews');
         const btn = document.getElementById('btnProceedProCheckout');
         const card = document.getElementById('orderBumpCard');
 
         if (isChecked) {
-            if (priceEl) { priceEl.innerHTML = '<strong style="color: #00E676;">14-Day Free Trial ($0.00 Today)</strong>'; }
-            if (renewsEl) renewsEl.style.display = 'block';
-            if (btn) btn.innerHTML = 'Proceed to Checkout with Pro + Voice Trial ($149.99 Today) ➔';
+            if (modalTitle) modalTitle.innerText = 'Autonomous Front Desk Bundle ($99/mo)';
+            if (priceEl) priceEl.innerHTML = '<strong style="color: #00E676;">Included (250 Pooled Mins)</strong>';
+            if (totalDueEl) totalDueEl.innerText = '$99.00 / mo';
+            if (renewsEl) {
+                renewsEl.style.display = 'block';
+                renewsEl.innerText = 'Renews at $99.00/mo. Includes 250 pooled minutes ($0.20/min overage). Cancel anytime.';
+            }
+            if (btn) btn.innerHTML = 'Proceed to Checkout with Front Desk Bundle ($99/mo) ➔';
             if (card) {
                 card.style.borderColor = '#00E676';
-                card.style.background = 'linear-gradient(180deg, rgba(0,230,118,0.12) 0%, rgba(9,11,14,0.9) 100%)';
+                card.style.background = 'linear-gradient(180deg, rgba(0,230,118,0.14) 0%, rgba(9,11,14,0.9) 100%)';
             }
         } else {
-            if (priceEl) { priceEl.innerText = 'Not Selected'; priceEl.style.color = '#64748B'; }
+            if (modalTitle) modalTitle.innerText = 'Pro Automation Gateway ($299.00 Perpetual)';
+            if (priceEl) { priceEl.innerText = 'Not Selected (Add Below)'; priceEl.style.color = '#64748B'; }
+            if (totalDueEl) totalDueEl.innerText = '$299.00';
             if (renewsEl) renewsEl.style.display = 'none';
-            if (btn) btn.innerHTML = 'Proceed to Checkout with Pro Only ($149.99) ➔';
+            if (btn) btn.innerHTML = 'Proceed to Checkout with Pro Gateway ($299.00) ➔';
             if (card) {
                 card.style.borderColor = '#A855F7';
                 card.style.background = 'linear-gradient(180deg, rgba(168,85,247,0.12) 0%, rgba(9,11,14,0.85) 100%)';
@@ -2778,11 +2837,11 @@
                    `• <strong>Carrier Activation Codes</strong>:<br>` +
                    `&nbsp;&nbsp;▸ <em>Verizon & AT&T</em>: Dial <code>*71[Your_AI_Number]</code> to activate, <code>*73</code> to cancel.<br>` +
                    `&nbsp;&nbsp;▸ <em>T-Mobile / GSM</em>: Dial <code>**61*[Your_AI_Number]**15#</code> to activate, <code>##004#</code> to cancel.<br>` +
-                   `• <strong>Turnkey Managed Plan</strong>: <strong>14-Day Free Trial ($0 today)</strong>, auto-renews at $29/mo. Includes dedicated local forwarding number, 200 monthly minutes, phonetic address capture, and custom prompt synthesis.<br>` +
-                   `• <strong>⭐ Pro Edition Requirement</strong>: The $29/mo Voice Receptionist is an exclusive add-on designed for <strong>MissedCallAutoSMS Pro ($149)</strong>. Standard $49 keys cannot activate telephony. Each subscription cryptographically binds to your <code>MCAS-PRO-...</code> key.<br>` +
-                   `• <strong>Free BYOK Option ($0/mo)</strong>: If you have your own Vapi account, paste your Vapi API Key & Assistant ID in the app to run 100% free with $0 monthly platform fees!<br>` +
-                   `• <strong>Instant Fallback</strong>: Dial <code>*73</code> or <code>##004#</code> anytime from your phone dialer to instantly restore regular voicemail.<br><br>` +
-                   `<button onclick="openVoiceAddonModal()" class="pill" style="background:linear-gradient(135deg,#A855F7,#00E676); color:#000; font-weight:800;">🎙️ Add Voice Receptionist ($29/mo)</button>`;
+                    `• <strong>Autonomous Front Desk Bundle ($99/mo) — RECOMMENDED</strong>: All-in-one SIM Auto-Text + 24/7 AI Voice + 250 pooled minutes ($0.20/min overage), Dual SIM confirmation text.<br>` +
+                    `• <strong>Standalone Voice Receptionist</strong>: Starter ($29/mo, 45 pooled minutes, $0.25/min overage) or Business ($89/mo, 300 pooled minutes, $0.20/min overage). Dedicated local forwarding line and phonetic address capture.<br>` +
+                    `• <strong>Free BYOK Option ($0/mo)</strong>: Bring your own Vapi/Twilio API keys to run 100% free with $0 platform markup!<br>` +
+                    `• <strong>Instant Fallback</strong>: Dial <code>*73</code> or <code>##004#</code> anytime from your phone dialer to instantly restore regular voicemail.<br><br>` +
+                    `<button onclick="openVoiceAddonModal()" class="pill" style="background:linear-gradient(135deg,#A855F7,#00E676); color:#000; font-weight:800;">🎙️ Explore AI Voice Plans</button>`;
         }
 
         // 5. CONTRACTOR STATUS DIAL & TRADE CUSTOMIZATION ("CUTTING HAIR", SCHEDULE SYNC)
@@ -2811,7 +2870,7 @@
                    `&nbsp;&nbsp;US mobile carriers now block cloud VoIP SMS gateways (Twilio, GHL) with strict 10DLC registration, 3-week delays, and random 30% failure rates. Because MissedCallAutoSMS sends from genuine Android SIM hardware, carriers classify your traffic as <strong>P2P personal mobile texts (100% exempt from 10DLC bans)</strong>.<br>` +
                    `• <strong>3. Zero Ongoing SMS Fees</strong>:<br>` +
                    `&nbsp;&nbsp;GHL costs $297/mo + text fees. Twilio charges per-message + carrier markups. MissedCallAutoSMS uses your phone's existing unlimited talk & text plan—<strong>$0/month per text forever</strong>.<br>` +
-                   `• <strong>4. Lifetime Ownership</strong>: $49.99 (Flagship) or $149.99 (Pro) one-time payment vs $3,500+/yr software subscriptions.`;
+                   `• <strong>4. Lifetime Ownership & Value</strong>: $49.99 (Flagship) or $299 (Pro Gateway) one-time payment, or $99/mo (Front Desk Bundle with 250 AI voice minutes) vs $3,500+/yr software subscriptions.`;
         }
 
         // 7. AGENCY FLEET & RESELLER LICENSES (5-PACK & 10-PACK)
@@ -2835,7 +2894,7 @@
             return `📱 <strong>Android Setup & Appliance Installation (3 Steps)</strong>:<br><br>` +
                    `1. <strong>Download APK File</strong>:<br>` +
                    `&nbsp;&nbsp;▸ Flagship Edition: <a href="/MissedCallAutoSMS.apk" style="color:var(--primary); font-weight:bold;">MissedCallAutoSMS.apk</a> ($49.99)<br>` +
-                   `&nbsp;&nbsp;▸ Pro Automation: <a href="/MissedCallAutoSMS-Pro.apk" style="color:#C084FC; font-weight:bold;">MissedCallAutoSMS-Pro.apk</a> ($149.99)<br>` +
+                   `&nbsp;&nbsp;▸ Pro Automation: <a href="/MissedCallAutoSMS-Pro.apk" style="color:#C084FC; font-weight:bold;">MissedCallAutoSMS-Pro.apk</a> ($299 Perpetual or $29/mo)<br>` +
                    `2. <strong>Install & Permissions</strong>:<br>` +
                    `&nbsp;&nbsp;Open the APK on your Android phone. If prompted, tap <em>"Allow from this source"</em> to allow sideloading. Enter your License Key (<code>MCAS-XXXX-XXXX</code>), grant SMS and Call Log permissions, and toggle <strong>Master Appliance ON</strong>.<br>` +
                    `3. <strong>Critical: Disable Battery Optimization</strong>:<br>` +
@@ -2848,16 +2907,18 @@
         if (q.includes('price') || q.includes('pricing') || q.includes('cost') || q.includes('how much') || q.includes('plan') || q.includes('edition')) {
             aiPendingAction = null;
             return `💰 <strong>Missed Call Auto SMS Editions & Pricing</strong>:<br><br>` +
-                   `• <strong>Flagship Appliance Edition ($49.99 Lifetime)</strong>:<br>` +
+                   `• <strong>Autonomous Front Desk Bundle ($99/mo) — BEST VALUE</strong>:<br>` +
+                   `&nbsp;&nbsp;All-in-one SIM Auto-Text + 24/7 AI Voice Receptionist + 250 pooled minutes ($0.20/min overage), Dual SIM confirmation text.<br>` +
+                   `• <strong>Flagship Appliance Edition ($49.99 One-Time)</strong>:<br>` +
                    `&nbsp;&nbsp;Zero monthly fees. Authentic SIM text auto-replies, contact exclusions, operating hours filter, and battery safeguard. 1 Android phone bound.<br>` +
-                   `• <strong>Pro Automation Edition ($149.99 Lifetime)</strong>:<br>` +
-                   `&nbsp;&nbsp;Everything in Flagship PLUS Dual SIM business slotting, n8n webhook web bridge, Central Webhook Bridge, and eligibility for the 24/7 Voice Receptionist.<br>` +
-                   `• <strong>Turnkey Voice Receptionist ($29/mo Add-On)</strong>:<br>` +
-                   `&nbsp;&nbsp;14-Day Free Trial ($0 today). Auto-renews at $29/mo for dedicated local line, 200 included minutes, phonetic address capture, and *71 carrier forwarding (Requires Pro Edition).<br>` +
+                   `• <strong>Pro Automation Gateway ($299 Perpetual or $29/mo)</strong>:<br>` +
+                   `&nbsp;&nbsp;1-Year Cloud Relay API maintenance included. Full webhook engine, n8n/Make/Zapier bridge, and A2P 10DLC carrier bypass.<br>` +
+                   `• <strong>Standalone AI Voice Receptionist</strong>:<br>` +
+                   `&nbsp;&nbsp;Starter ($29/mo, 45 mins), Business ($89/mo, 300 mins), or Free BYOK ($0 markup with your Vapi/Twilio keys).<br>` +
                    `• <strong>Agency Fleets ($399 for 5-Pack / $799 for 10-Pack)</strong>:<br>` +
                    `&nbsp;&nbsp;Deploy multiple appliances for clients with unified Fleet Portal.<br><br>` +
-                   `<button onclick="initiateFreeTrialCheckout()" class="pill" style="background:#00E676; color:#000; font-weight:800;">🎁 Start 3-Day SMS Trial ($0)</button> ` +
-                   `<button onclick="openVoiceAddonModal()" class="pill" style="background:#7928CA; color:#FFF; font-weight:800;">🎙️ Voice Add-On Modal</button>`;
+                   `<button onclick="initiateVoiceProCheckout('bundle')" class="pill" style="background:#7928CA; color:#FFF; font-weight:800;">⚡ Front Desk Bundle ($99/mo)</button> ` +
+                   `<button onclick="initiateFreeTrialCheckout()" class="pill" style="background:#00E676; color:#000; font-weight:800;">🎁 Start 3-Day SMS Trial ($0)</button>`;
         }
 
         // 10. LICENSE & ACCOUNT DETAILS
@@ -2882,15 +2943,28 @@
 
     calculateROI();
 
-    function openVoiceAddonModal() {
+    let selectedVoiceTier = 'starter';
+    function openVoiceAddonModal(tier = 'starter') {
+        selectedVoiceTier = tier;
         const modal = document.getElementById('voiceAddonModal');
-        if (modal) modal.style.display = 'flex';
+        const badge = document.getElementById('voiceModalBadge');
+        const desc = document.getElementById('voiceModalDesc');
+        if (modal) {
+            modal.style.display = 'flex';
+            if (tier === 'business') {
+                if (badge) badge.innerText = '⭐ BUSINESS VOICE PLAN ($89/MO - 300 MINS)';
+                if (desc) desc.innerHTML = '300 Monthly Pooled Minutes included ($0.20/min overage). Dedicated inbound line + *71 conditional forwarding.';
+            } else {
+                if (badge) badge.innerText = '⭐ STARTER VOICE PLAN ($29/MO - 45 MINS)';
+                if (desc) desc.innerHTML = '45 Monthly Pooled Minutes included ($0.25/min overage). Dedicated inbound line + *71 conditional forwarding.';
+            }
+        }
     }
     function closeVoiceAddonModal() {
         const modal = document.getElementById('voiceAddonModal');
         if (modal) modal.style.display = 'none';
     }
-    function submitVoiceModalProKey() {
+    async function submitVoiceModalProKey() {
         const input = document.getElementById('voiceModalProKey');
         const err = document.getElementById('voiceModalProKeyErr');
         const val = (input ? input.value : '').trim().toUpperCase();
@@ -2901,12 +2975,28 @@
         const isPro = val.startsWith('MCAS-PRO-') || val.startsWith('MCAT-PRO-') || val.includes('PRO-DEMO');
         if (!isPro) {
             if (err) {
-                err.textContent = 'Standard Edition keys (MCAS-...) cannot activate the Voice Receptionist. A Pro Automation Edition license is required. Please upgrade below or enter your Pro key.';
+                err.textContent = 'Standard Edition keys (MCAS-...) cannot activate standalone voice telephony. A Pro license is required, or you can get the Autonomous Front Desk Bundle ($99/mo).';
                 err.style.display = 'block';
             }
             return;
         }
         if (err) err.style.display = 'none';
+
+        try {
+            const res = await fetch('/api/create-voice-pro-checkout', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ licenseKey: val, tier: selectedVoiceTier })
+            });
+            const data = await res.json();
+            if (data.success && data.checkoutUrl) {
+                window.location.href = data.checkoutUrl;
+                return;
+            }
+        } catch (e) {
+            console.warn('Voice checkout error:', e.message);
+        }
+
         window.location.href = `https://buy.stripe.com/4gMeVdcFMaps6M0b572go0f?client_reference_id=${encodeURIComponent(val)}`;
     }
 </script>
@@ -2919,11 +3009,11 @@
         <div style="text-align: center; margin-bottom: 20px;">
             <div style="font-size: 42px; margin-bottom: 8px;">🎙️</div>
             <h2 style="color: #FFF; margin: 0 0 6px 0; font-size: 22px; font-weight: 900;">24/7 AI Voice Receptionist Add-On</h2>
-            <div style="display: inline-block; background: rgba(168,85,247,0.15); border: 1px solid rgba(168,85,247,0.4); color: #C084FC; font-size: 11px; font-weight: 800; padding: 4px 12px; border-radius: 20px;">
-                ⭐ REQUIRES PRO AUTOMATION EDITION ($149)
+            <div id="voiceModalBadge" style="display: inline-block; background: rgba(168,85,247,0.15); border: 1px solid rgba(168,85,247,0.4); color: #C084FC; font-size: 11px; font-weight: 800; padding: 4px 12px; border-radius: 20px;">
+                ⭐ REQUIRES PRO HARDWARE LICENSE
             </div>
-            <p style="color: #CBD5E0; font-size: 13px; margin: 12px 0 0 0; line-height: 1.5;">
-                The Turnkey Voice Receptionist ($29/mo) is an add-on requiring <strong>MissedCallAutoSMS Pro</strong>. Each subscription is permanently bound to your Pro license key.
+            <p id="voiceModalDesc" style="color: #CBD5E0; font-size: 13px; margin: 12px 0 0 0; line-height: 1.5;">
+                The Turnkey Voice Receptionist is provisioned with pooled minutes and bound permanently to your Pro hardware appliance key.
             </p>
         </div>
 
@@ -2931,24 +3021,24 @@
             <!-- Option A: Existing Pro User -->
             <div style="background: #090B0E; border: 1px solid #222836; border-radius: 12px; padding: 18px;">
                 <div style="font-size: 13px; font-weight: 800; color: #00E676; margin-bottom: 4px;">Option A: Already Own Pro Edition?</div>
-                <div style="font-size: 12px; color: #949BAE; margin-bottom: 12px;">Enter your Pro License Key to bind your 14-Day Free Trial ($0 today, then $29/mo):</div>
+                <div style="font-size: 12px; color: #949BAE; margin-bottom: 12px;">Enter your Pro License Key to bind your monthly voice line subscription:</div>
                 <div style="display: flex; gap: 8px; flex-wrap: wrap;">
                     <input type="text" id="voiceModalProKey" placeholder="MCAS-PRO-XXXX-XXXX" style="flex: 1; min-width: 180px; background: #161B22; border: 1px solid #30363D; border-radius: 8px; color: #FFF; padding: 10px 12px; font-family: monospace; font-size: 13px; text-transform: uppercase;">
                     <button onclick="submitVoiceModalProKey()" style="background: linear-gradient(135deg, #A855F7, #00E676); color: #000; font-weight: 800; padding: 10px 16px; border: none; border-radius: 8px; cursor: pointer; font-size: 12px; white-space: nowrap;">
-                        Bind & Start Trial ➔
+                        Bind &amp; Activate ➔
                     </button>
                 </div>
                 <div id="voiceModalProKeyErr" style="display: none; color: #EF4444; font-size: 11px; margin-top: 6px; font-weight: 600;"></div>
             </div>
 
             <!-- Option B: New Customer Bundle -->
-            <div style="background: linear-gradient(180deg, rgba(121,40,202,0.15) 0%, rgba(9,11,14,0.6) 100%); border: 1px solid #7928CA; border-radius: 12px; padding: 18px; text-align: center;">
-                <div style="font-size: 13px; font-weight: 800; color: #D8B4FE; margin-bottom: 4px;">Option B: New Customer? Get the Complete Bundle</div>
+            <div style="background: linear-gradient(180deg, rgba(0,230,118,0.12) 0%, rgba(9,11,14,0.6) 100%); border: 1px solid #00E676; border-radius: 12px; padding: 18px; text-align: center;">
+                <div style="font-size: 13px; font-weight: 800; color: #00E676; margin-bottom: 4px;">Option B: New Customer? Get All-in-One Front Desk</div>
                 <div style="font-size: 12px; color: #CBD5E0; margin-bottom: 14px; line-height: 1.4;">
-                    Get the <strong>$149.99 Lifetime Pro Automation License</strong> bundled with your <strong>14-Day Voice Receptionist Free Trial</strong>.
+                    Get the <strong>Autonomous Front Desk Bundle ($99/mo)</strong> with 24/7 AI Voice Receptionist + 250 Pooled Minutes + Pro Android App + Carrier SIM Auto-Text.
                 </div>
-                <button onclick="initiateProStripeCheckout()" style="background: #7928CA; color: #FFF; font-weight: 800; padding: 12px 24px; border: none; border-radius: 25px; cursor: pointer; font-size: 13px; box-shadow: 0 4px 14px rgba(121,40,202,0.4);">
-                    ⚡ Get Pro Automation Bundle ($149.99) ➔
+                <button onclick="closeVoiceAddonModal(); openProCheckoutModal(true);" style="background: linear-gradient(135deg, #00E676, #00B0FF); color: #000; font-weight: 900; padding: 12px 24px; border: none; border-radius: 25px; cursor: pointer; font-size: 13px; box-shadow: 0 4px 14px rgba(0,230,118,0.4);">
+                    ⚡ Get Front Desk Bundle ($99/mo) ➔
                 </button>
             </div>
         </div>
@@ -2961,92 +3051,87 @@
     </div>
 </div>
 
-<!-- Standard to Pro Upsell Modal -->
+<!-- Standard to Front Desk / Pro Upsell Modal -->
 <div id="standardUpgradeModal" style="display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.85); backdrop-filter: blur(8px); z-index: 10000; align-items: center; justify-content: center; padding: 20px;">
     <div style="background: #131720; border: 1px solid #38BDF8; border-radius: 16px; max-width: 580px; width: 100%; padding: 28px; box-shadow: 0 20px 50px rgba(0,0,0,0.7); position: relative; text-align: left; max-height: 90vh; overflow-y: auto;">
         <button onclick="closeStandardUpgradeModal()" style="position: absolute; top: 16px; right: 16px; background: none; border: none; color: #949BAE; font-size: 24px; cursor: pointer; line-height: 1;">&times;</button>
         
         <div style="text-align: center; margin-bottom: 20px;">
-            <div style="display: inline-block; background: rgba(56,189,248,0.15); border: 1px solid rgba(56,189,248,0.4); color: #38BDF8; font-size: 11px; font-weight: 800; padding: 4px 12px; border-radius: 20px; margin-bottom: 8px; text-transform: uppercase;">
-                ⭐ Smart Contractor Upgrade
+            <div style="display: inline-block; background: rgba(0,230,118,0.15); border: 1px solid rgba(0,230,118,0.4); color: #00E676; font-size: 11px; font-weight: 800; padding: 4px 12px; border-radius: 20px; margin-bottom: 8px; text-transform: uppercase;">
+                ⭐ Smart Contractor Recommendation
             </div>
-            <h2 style="color: #FFF; margin: 0 0 8px 0; font-size: 22px; font-weight: 900;">Wait! Unlock Full Automation with Pro</h2>
+            <h2 style="color: #FFF; margin: 0 0 8px 0; font-size: 22px; font-weight: 900;">Need Calls Answered While You Work?</h2>
             <p style="color: #949BAE; font-size: 13px; margin: 0; line-height: 1.5;">
-                Before you check out with Standard ($49.99), see what contractors get by upgrading to <strong>Pro Automation Edition ($149.99)</strong>:
+                Before you check out with Founder's Flagship ($49.99), check out our all-in-one <strong>Autonomous Front Desk Bundle ($99/mo)</strong>:
             </p>
         </div>
 
         <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin-bottom: 20px;">
-            <!-- Standard Column -->
+            <!-- Flagship Column -->
             <div style="background: #090B0E; border: 1px solid #222836; border-radius: 12px; padding: 14px;">
-                <div style="font-size: 12px; font-weight: 800; color: #949BAE; text-transform: uppercase; margin-bottom: 6px;">Standard ($49.99)</div>
+                <div style="font-size: 12px; font-weight: 800; color: #949BAE; text-transform: uppercase; margin-bottom: 6px;">Flagship ($49.99)</div>
                 <ul style="margin: 0; padding-left: 16px; font-size: 12px; color: #CBD5E0; line-height: 1.6;">
                     <li>Instant Missed Call SMS</li>
-                    <li>Basic keyword auto-replies</li>
+                    <li>Pure SIM hardware appliance</li>
                     <li>1 Android phone activation</li>
-                    <li style="color: #64748B; text-decoration: line-through;">No Webhook / Zapier sync</li>
-                    <li style="color: #64748B; text-decoration: line-through;">Incompatible with AI Voice</li>
+                    <li style="color: #64748B; text-decoration: line-through;">No voice phone answering</li>
+                    <li style="color: #64748B; text-decoration: line-through;">No webhook / CRM sync</li>
                 </ul>
             </div>
 
-            <!-- Pro Column -->
-            <div style="background: linear-gradient(180deg, rgba(168,85,247,0.15) 0%, rgba(9,11,14,0.9) 100%); border: 1px solid #A855F7; border-radius: 12px; padding: 14px;">
-                <div style="font-size: 12px; font-weight: 800; color: #C084FC; text-transform: uppercase; margin-bottom: 6px;">Pro Edition ($149.99) 🚀</div>
+            <!-- Front Desk Column -->
+            <div style="background: linear-gradient(180deg, rgba(0,230,118,0.15) 0%, rgba(9,11,14,0.9) 100%); border: 1px solid #00E676; border-radius: 12px; padding: 14px;">
+                <div style="font-size: 12px; font-weight: 800; color: #00E676; text-transform: uppercase; margin-bottom: 6px;">Front Desk ($99/mo) 🚀</div>
                 <ul style="margin: 0; padding-left: 16px; font-size: 12px; color: #FFF; line-height: 1.6;">
-                    <li>Instant Missed Call SMS</li>
-                    <li>Dual-SIM + Inbound Line Filter</li>
-                    <li>Full Webhook & CRM Pipelines</li>
-                    <li>Multi-Stage Lead Follow-Up</li>
-                    <li><strong style="color: #00E676;">Includes 24/7 AI Voice Eligibility!</strong></li>
+                    <li>24/7 AI Voice Phone Receptionist</li>
+                    <li>250 Monthly Pooled Minutes</li>
+                    <li>Instant Dual SIM Confirmation SMS</li>
+                    <li>Full Pro Automation APK</li>
+                    <li><strong style="color: #00E676;">Replaces $600/mo services</strong></li>
                 </ul>
             </div>
-        </div>
-
-        <!-- Highlight Callout -->
-        <div style="background: rgba(0, 230, 118, 0.08); border: 1px dashed #00E676; border-radius: 10px; padding: 12px; margin-bottom: 20px; font-size: 12px; color: #E2E8F0; line-height: 1.4;">
-            🎙️ <strong style="color: #00E676;">Important Note:</strong> Only Pro license holders can activate our <strong>24/7 AI Voice Receptionist</strong> (14-day free trial). The standard $49.99 license does not support voice integrations.
         </div>
 
         <div style="display: flex; flex-direction: column; gap: 10px; text-align: center;">
-            <button onclick="upgradeFromStandardToProModal()" style="background: linear-gradient(135deg, #7E22CE, #9333EA); color: #FFF; font-weight: 900; font-size: 15px; padding: 14px 20px; border: none; border-radius: 10px; cursor: pointer; box-shadow: 0 4px 15px rgba(126,34,206,0.5); transition: transform 0.15s ease;">
-                ⚡ Upgrade to Pro Automation Edition ($149.99) ➔
+            <button onclick="closeStandardUpgradeModal(); openProCheckoutModal(true);" style="background: linear-gradient(135deg, #00E676, #00B0FF); color: #000; font-weight: 900; font-size: 15px; padding: 14px 20px; border: none; border-radius: 10px; cursor: pointer; box-shadow: 0 4px 15px rgba(0,230,118,0.5); transition: transform 0.15s ease;">
+                ⚡ Choose Front Desk Bundle ($99/mo) ➔
             </button>
             <button onclick="proceedToFlagshipDirectCheckout()" style="background: none; border: none; color: #949BAE; font-size: 12px; cursor: pointer; text-decoration: underline; padding: 6px;">
-                No thanks, continue with Standard Missed Call Auto SMS ($49.99)
+                No thanks, continue with Founder's Flagship Appliance ($49.99)
             </button>
         </div>
     </div>
 </div>
 
-<!-- Pro Automation Edition Checkout Modal with AI Voice Order Bump -->
+<!-- Pro Automation Gateway / Front Desk Checkout Modal -->
 <div id="proCheckoutModal" style="display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.85); backdrop-filter: blur(8px); z-index: 10000; align-items: center; justify-content: center; padding: 20px;">
     <div style="background: #131720; border: 1px solid #7928CA; border-radius: 16px; max-width: 560px; width: 100%; padding: 28px; box-shadow: 0 20px 50px rgba(0,0,0,0.8); position: relative; text-align: left; max-height: 90vh; overflow-y: auto;">
         <button onclick="closeProCheckoutModal()" style="position: absolute; top: 16px; right: 16px; background: none; border: none; color: #949BAE; font-size: 24px; cursor: pointer; line-height: 1;">&times;</button>
         
         <div style="margin-bottom: 20px;">
             <div style="display: inline-block; background: rgba(121,40,202,0.2); border: 1px solid #7928CA; color: #D8B4FE; font-size: 11px; font-weight: 800; padding: 4px 12px; border-radius: 20px; margin-bottom: 6px; text-transform: uppercase;">
-                ⚡ Lifetime Pro Automation License
+                ⚡ SECURE APPLIANCE CHECKOUT
             </div>
-            <h2 style="color: #FFF; margin: 0 0 6px 0; font-size: 22px; font-weight: 900;">Pro Edition Checkout ($149.99)</h2>
+            <h2 id="proModalHeading" style="color: #FFF; margin: 0 0 6px 0; font-size: 22px; font-weight: 900;">Pro Automation Gateway ($299.00 Perpetual)</h2>
             <p style="color: #949BAE; font-size: 13px; margin: 0; line-height: 1.4;">
-                Permanent lifetime license with dedicated webhook pipelines, dual SIM support, and unlimited missed call auto-replies.
+                Hardware-bound gateway with dedicated webhook pipelines, dual SIM support, and unlimited missed call auto-replies.
             </p>
         </div>
 
-        <!-- Optional Order Bump Card -->
+        <!-- Optional Voice / Front Desk Order Bump Card -->
         <div id="orderBumpCard" style="background: linear-gradient(180deg, rgba(168,85,247,0.12) 0%, rgba(9,11,14,0.85) 100%); border: 2px dashed #A855F7; border-radius: 12px; padding: 16px; margin-bottom: 20px; transition: all 0.2s ease;">
             <label style="display: flex; align-items: flex-start; gap: 12px; cursor: pointer;">
                 <input type="checkbox" id="checkProVoiceOrderBump" onchange="onProOrderBumpToggle()" style="margin-top: 3px; width: 20px; height: 20px; cursor: pointer; accent-color: #00E676; flex-shrink: 0;">
                 <div>
                     <div style="display: flex; align-items: center; gap: 8px; flex-wrap: wrap;">
-                        <span style="background: #00E676; color: #000; font-size: 10px; font-weight: 900; padding: 2px 6px; border-radius: 4px; text-transform: uppercase;">SPECIAL ADD-ON</span>
-                        <span style="color: #FFF; font-weight: 800; font-size: 14px;">Add 24/7 AI Voice Receptionist</span>
+                        <span style="background: #00E676; color: #000; font-size: 10px; font-weight: 900; padding: 2px 6px; border-radius: 4px; text-transform: uppercase;">POPULAR COMBO</span>
+                        <span style="color: #FFF; font-weight: 800; font-size: 14px;">Autonomous Front Desk Bundle ($99/mo)</span>
                     </div>
                     <div style="font-size: 12px; color: #00E676; font-weight: 800; margin: 4px 0;">
-                        ⚡ 14-Day Free Trial ($0.00 today, then $29/mo)
+                        ⚡ Includes 250 Monthly Pooled Minutes ($0.20/min overage)
                     </div>
                     <p style="margin: 0; font-size: 12px; color: #CBD5E0; line-height: 1.45;">
-                        Never lose a customer when your hands are full. Our conversational AI answers instantly in human voice, screens incoming jobs, collects caller details, and syncs directly with your Pro app. Bound to your Pro license with 1-click cancel anytime.
+                        Never lose a customer when your hands are full. Our conversational AI receptionist answers in natural voice, screens incoming jobs, and triggers instant confirmation SMS from your real SIM.
                     </p>
                 </div>
             </label>
@@ -3055,28 +3140,24 @@
         <!-- Order Summary Box -->
         <div style="background: #090B0E; border: 1px solid #222836; border-radius: 12px; padding: 14px; margin-bottom: 20px; font-size: 13px;">
             <div style="display: flex; justify-content: space-between; margin-bottom: 8px; color: #CBD5E0;">
-                <span>Missed Call Auto SMS Pro License (Lifetime):</span>
-                <span style="font-weight: 800; color: #FFF;">$149.99</span>
-            </div>
-            <div style="display: flex; justify-content: space-between; margin-bottom: 8px; color: #CBD5E0;">
-                <span>24/7 Turnkey AI Voice Receptionist:</span>
-                <span id="summaryVoiceAddonPrice" style="color: #64748B;">Not Selected</span>
+                <span>Selected Appliance Plan:</span>
+                <span id="summaryVoiceAddonPrice" style="color: #64748B;">Pro Gateway ($299.00)</span>
             </div>
             <div style="border-top: 1px solid #222836; padding-top: 8px; display: flex; justify-content: space-between; align-items: baseline;">
                 <span style="font-weight: 800; color: #FFF; font-size: 15px;">Due Today:</span>
-                <span style="font-weight: 900; color: #00E676; font-size: 20px;">$149.99</span>
+                <span id="summaryTotalDue" style="font-weight: 900; color: #00E676; font-size: 20px;">$299.00</span>
             </div>
             <div id="summaryTotalRenews" style="display: none; font-size: 11px; color: #94A3B8; text-align: right; margin-top: 4px;">
-                Renews at $29/mo after 14-day free trial. Cancel anytime.
+                Renews at $99.00/mo. Cancel anytime.
             </div>
         </div>
 
         <button id="btnProceedProCheckout" onclick="proceedToProDynamicCheckout()" style="width: 100%; background: linear-gradient(135deg, #00E676, #00C853); color: #000; font-weight: 900; font-size: 15px; padding: 16px; border: none; border-radius: 12px; cursor: pointer; box-shadow: 0 4px 18px rgba(0,230,118,0.35); transition: transform 0.15s ease;">
-            Proceed to Checkout with Pro Only ($149.99) ➔
+            Proceed to Checkout with Pro Gateway ($299.00) ➔
         </button>
 
         <div style="text-align: center; margin-top: 14px; font-size: 11px; color: #64748B;">
-            🔒 256-Bit Stripe Checkout • Instant License Key Delivery via SMS & Email • Cancel Add-On Anytime
+            🔒 256-Bit Stripe Checkout • Instant License Key Delivery via SMS &amp; Email
         </div>
     </div>
 </div>
@@ -3088,12 +3169,12 @@
         <span class="btn-main">🎁 $0 Today</span>
     </button>
     <button class="mobile-sticky-btn btn-buy" onclick="initiateStripeCheckout()">
-        <span class="btn-sub">Flagship</span>
+        <span class="btn-sub">Founder SIM</span>
         <span class="btn-main">⚡ $49.99</span>
     </button>
-    <button class="mobile-sticky-btn btn-pro" style="background: linear-gradient(135deg, #7E22CE, #9333EA); color: #FFF; border: 1px solid #C084FC;" onclick="initiateProStripeCheckout()">
-        <span class="btn-sub" style="color: #E9D5FF; font-size: 10px;">End-to-End™</span>
-        <span class="btn-main" style="font-size: 13px;">🚀 $149.99</span>
+    <button class="mobile-sticky-btn btn-pro" style="background: linear-gradient(135deg, #00E676, #00B0FF); color: #000; border: 1px solid #00E676; font-weight: 900;" onclick="openProCheckoutModal(true)">
+        <span class="btn-sub" style="color: #064E3B; font-size: 10px; font-weight: 900;">Front Desk</span>
+        <span class="btn-main" style="font-size: 13px;">🎙️ $99/mo</span>
     </button>
 </div>
 

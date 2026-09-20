@@ -15,6 +15,9 @@ const KEY_PREFIX = "MCAS-";
 let _firestore = null;
 function getFirestore() {
   if (_firestore) return _firestore;
+  if (!process.env.FIREBASE_SERVICE_ACCOUNT_KEY && !process.env.GOOGLE_APPLICATION_CREDENTIALS) {
+    return null;
+  }
   try {
     _firestore = require('../../lib/firestore');
   } catch (e) {
@@ -39,13 +42,13 @@ function generateKey(customerName, daysValid = 0, isPro = false) {
 }
 
 function generateEmailHtml(customerName, licenseKey, apkDownloadUrl, amountPaid, isPro = false) {
-  const brandTitle = isPro ? "Missed Call Auto SMS • Pro Automation" : "Missed Call Auto SMS";
-  const badgeText = isPro ? "PRO AUTOMATION EDITION (UNLIMITED)" : "FLAGSHIP APPLIANCE EDITION";
+  const brandTitle = isPro ? "Missed Call Auto SMS • Pro Gateway" : "Missed Call Auto SMS";
+  const badgeText = isPro ? "PRO AUTOMATION GATEWAY (A2P 10DLC BYPASS)" : "FOUNDER'S FLAGSHIP APPLIANCE";
   const themeBorderColor = isPro ? "#A855F7" : "#00E676";
   const themeTextColor = isPro ? "#C084FC" : "#00E676";
   const editionSummary = isPro
-    ? "Lifetime Pro Automation License • Unlimited n8n Integration • Dual SIM Business Line • 100% A2P 10DLC Exempt"
-    : "Lifetime License • 1 Android Phone Bound • 100% A2P 10DLC Exempt";
+    ? "Lifetime Pro Gateway • 1-Year Cloud Relay API Included • Unlimited n8n/Make Integration • Dual SIM • 100% A2P 10DLC Exempt"
+    : "Founder's Lifetime License • 1 Android Phone Bound • 100% A2P 10DLC Exempt";
 
   return `<!DOCTYPE html>
 <html>
@@ -66,13 +69,13 @@ function generateEmailHtml(customerName, licenseKey, apkDownloadUrl, amountPaid,
         <div style="background: #1A202C; border-left: 4px solid ${themeBorderColor}; padding: 16px; border-radius: 8px; margin-bottom: 24px;">
             <h2 style="margin: 0 0 6px 0; font-size: 18px; color: #FFF;">Thank you, ${customerName}!</h2>
             <p style="margin: 0; color: #CBD5E0; font-size: 14px; line-height: 1.5;">
-                Your payment of <strong>$${amountPaid}</strong> was successful. Your lifetime ${isPro ? 'Pro Automation' : 'hardware'} license key is ready to activate on your Android device.
+                Your payment of <strong>$${amountPaid}</strong> was successful. Your ${isPro ? 'Pro Gateway' : 'Founder\'s Flagship'} license key is ready to activate on your Android device.
             </p>
         </div>
 
         <!-- License Key Box -->
         <div style="background: #090B0E; border: 1px dashed ${themeBorderColor}; border-radius: 12px; padding: 20px; text-align: center; margin-bottom: 24px;">
-            <div style="font-size: 12px; color: #949BAE; text-transform: uppercase; font-weight: bold; margin-bottom: 8px;">Your ${isPro ? 'Pro ' : ''}Hardware License Key</div>
+            <div style="font-size: 12px; color: #949BAE; text-transform: uppercase; font-weight: bold; margin-bottom: 8px;">Your ${isPro ? 'Pro Gateway ' : ''}Hardware License Key</div>
             <div style="font-family: monospace; font-size: 22px; color: ${themeTextColor}; font-weight: bold; word-break: break-all; letter-spacing: 1px; margin-bottom: 8px;">
                 ${licenseKey}
             </div>
@@ -106,7 +109,7 @@ function generateEmailHtml(customerName, licenseKey, apkDownloadUrl, amountPaid,
         <div style="background: rgba(0, 230, 118, 0.04); border: 1px dashed rgba(0, 230, 118, 0.3); border-radius: 12px; padding: 18px; margin-bottom: 24px; text-align: center;">
             <div style="font-size: 14px; font-weight: 800; color: #00E676; margin-bottom: 4px;">🎙️ Need 24/7 AI Voice Answering?</div>
             <div style="font-size: 12px; color: #CBD5E0; margin-bottom: 12px; line-height: 1.4;">
-                As a Pro Automation licensee, your hardware is pre-cleared for our <strong>Turnkey 24/7 AI Voice Receptionist</strong> add-on ($29/mo with 14-day free trial). Never miss a call when you can't pick up.
+                As a Pro Gateway licensee, your hardware is pre-cleared for our <strong>Autonomous Front Desk Bundle</strong> ($99/mo with 250 included minutes) or Starter Voice ($29/mo with 45 minutes). Never miss a call when you can't pick up.
             </div>
             <a href="https://missedcallautosms.com/sales_landing_page.html#voice-details" style="display: inline-block; background: rgba(0, 230, 118, 0.15); color: #00E676; border: 1px solid #00E676; font-weight: 700; font-size: 12px; padding: 8px 18px; border-radius: 20px; text-decoration: none;">
                 Learn More & Activate Voice Add-on →
@@ -120,7 +123,7 @@ function generateEmailHtml(customerName, licenseKey, apkDownloadUrl, amountPaid,
             <ol style="color: #CBD5E0; font-size: 14px; padding-left: 20px; line-height: 1.8;">
                 <li><strong>Download and install</strong> the APK file on your Android business phone.</li>
                 <li>Open the app and <strong>paste your License Key</strong> above.</li>
-                <li>${isPro ? 'Configure your <strong>preferred Dual SIM slot</strong> and link your <strong>n8n webhook URL</strong>.' : 'Grant standard SMS and Call Log permissions, then <strong>Toggle Master Appliance ON</strong>.'}</li>
+                <li>${isPro ? 'Configure your <strong>preferred Dual SIM slot</strong> and link your <strong>n8n/Make webhook URL</strong>.' : 'Grant standard SMS and Call Log permissions, then <strong>Toggle Master Appliance ON</strong>.'}</li>
             </ol>
         </div>
 
@@ -136,12 +139,12 @@ function generateEmailHtml(customerName, licenseKey, apkDownloadUrl, amountPaid,
 </html>`;
 }
 
-function generateProPlusVoiceEmailHtml(customerName, licenseKey, apkDownloadUrl, forwardingNumber, carrierCode, carrierDeactivateCode) {
+function generateProPlusVoiceEmailHtml(customerName, licenseKey, apkDownloadUrl, forwardingNumber, carrierCode, carrierDeactivateCode, quotaMinutes = 250, tierTitle = "AUTONOMOUS FRONT DESK BUNDLE ($99/MO)", overageRate = "0.20") {
   return `<!DOCTYPE html>
 <html>
 <head>
     <meta charset="utf-8">
-    <title>Your Missed Call Auto SMS Pro + 24/7 AI Voice Receptionist Setup Guide</title>
+    <title>Your ${tierTitle} Setup Guide</title>
 </head>
 <body style="font-family: -apple-system, BlinkMacSystemFont, Arial, sans-serif; background-color: #090B0E; color: #FFFFFF; margin: 0; padding: 24px;">
     <div style="max-width: 620px; margin: 0 auto; background: #131720; border: 1px solid #222836; border-radius: 16px; padding: 32px;">
@@ -149,14 +152,14 @@ function generateProPlusVoiceEmailHtml(customerName, licenseKey, apkDownloadUrl,
             <div style="font-size: 44px; margin-bottom: 8px;">⚡🎙️</div>
             <h1 style="color: #A855F7; margin: 0; font-size: 24px; font-weight: 900;">Missed Call Auto SMS</h1>
             <div style="display: inline-block; margin-top: 6px; padding: 4px 14px; border-radius: 20px; font-size: 11px; font-weight: 800; background: rgba(168,85,247,0.15); color: #C084FC; border: 1px solid rgba(168,85,247,0.35);">
-                PRO AUTOMATION + 24/7 AI VOICE BUNDLE
+                ${tierTitle}
             </div>
         </div>
 
         <div style="background: #1A202C; border-left: 4px solid #A855F7; padding: 16px; border-radius: 8px; margin-bottom: 24px;">
             <h2 style="margin: 0 0 6px 0; font-size: 18px; color: #FFF;">Welcome, ${customerName}!</h2>
             <p style="margin: 0; color: #CBD5E0; font-size: 14px; line-height: 1.5;">
-                Your <strong>Pro Automation + 24/7 AI Voice Receptionist</strong> bundle is ready. Your lifetime Pro app license and dedicated inbound AI forwarding line are provisioned below.
+                Your <strong>${tierTitle}</strong> is active! Your hardware appliance license and dedicated inbound AI receptionist line are provisioned below with <strong>${quotaMinutes} monthly minutes</strong> included (additional usage at $${overageRate}/min).
             </p>
         </div>
 
@@ -166,7 +169,7 @@ function generateProPlusVoiceEmailHtml(customerName, licenseKey, apkDownloadUrl,
             <div style="font-family: monospace; font-size: 22px; color: #C084FC; font-weight: bold; word-break: break-all; letter-spacing: 1px; margin-bottom: 6px;">
                 ${licenseKey}
             </div>
-            <div style="font-size: 12px; color: #A0AEC0;">Lifetime Pro Automation • Dual SIM Routing • Unlimited Webhooks</div>
+            <div style="font-size: 12px; color: #A0AEC0;">Pro Appliance Gateway • Dual SIM Routing • Unlimited Native SMS</div>
         </div>
 
         <!-- Assigned AI Line Box -->
@@ -175,7 +178,7 @@ function generateProPlusVoiceEmailHtml(customerName, licenseKey, apkDownloadUrl,
             <div style="font-family: monospace; font-size: 24px; color: #38BDF8; font-weight: bold; letter-spacing: 1px; margin-bottom: 6px;">
                 ${forwardingNumber}
             </div>
-            <div style="font-size: 12px; color: #00E676;">🟢 Status: ACTIVE • 200 Monthly Minutes Included</div>
+            <div style="font-size: 12px; color: #00E676;">🟢 Status: ACTIVE • ${quotaMinutes} Monthly Minutes Included ($${overageRate}/min overage)</div>
         </div>
 
         <!-- Carrier Forwarding Step -->
@@ -366,13 +369,13 @@ function generateTrialEmailHtml(customerName, licenseKey, apkDownloadUrl) {
 </html>`;
 }
 
-function generateVoiceProEmailHtml(customerName, licenseKey, forwardingNumber, carrierCode, carrierDeactivateCode) {
+function generateVoiceProEmailHtml(customerName, licenseKey, forwardingNumber, carrierCode, carrierDeactivateCode, planTitle = "STARTER AI VOICE RECEPTIONIST ($29/MO)", quotaMinutes = 45, overageRate = "0.25") {
 
   return `<!DOCTYPE html>
 <html>
 <head>
     <meta charset="utf-8">
-    <title>Your Turnkey AI Voice Receptionist is Live</title>
+    <title>Your ${planTitle} is Live</title>
 </head>
 <body style="font-family: -apple-system, BlinkMacSystemFont, Arial, sans-serif; background-color: #090B0E; color: #FFFFFF; margin: 0; padding: 24px;">
     <div style="max-width: 620px; margin: 0 auto; background: #131720; border: 1px solid #222836; border-radius: 16px; padding: 32px;">
@@ -380,14 +383,14 @@ function generateVoiceProEmailHtml(customerName, licenseKey, forwardingNumber, c
             <div style="font-size: 46px; margin-bottom: 8px;">🎙️</div>
             <h1 style="color: #00E676; margin: 0; font-size: 24px; font-weight: 900;">Missed Call Auto SMS</h1>
             <div style="display: inline-block; margin-top: 6px; padding: 4px 14px; border-radius: 20px; font-size: 11px; font-weight: 800; background: rgba(0, 230, 118, 0.15); color: #00E676; border: 1px solid rgba(0, 230, 118, 0.35);">
-                MANAGED AI VOICE RECEPTIONIST PLAN ($29/MO)
+                ${planTitle.toUpperCase()}
             </div>
         </div>
 
         <div style="background: #1A202C; border-left: 4px solid #00E676; padding: 16px; border-radius: 8px; margin-bottom: 24px;">
             <h2 style="margin: 0 0 6px 0; font-size: 18px; color: #FFF;">Welcome, ${customerName}!</h2>
             <p style="margin: 0; color: #CBD5E0; font-size: 14px; line-height: 1.5;">
-                Your Turnkey AI Voice Receptionist subscription is active! Your dedicated local AI line is provisioned, loaded with <strong>200 included minutes</strong>, and ready to answer your calls.
+                Your ${planTitle} subscription is active! Your dedicated local AI line is provisioned, loaded with <strong>${quotaMinutes} included minutes</strong> (additional usage at $${overageRate}/min), and ready to answer your calls.
             </p>
         </div>
 
@@ -397,7 +400,7 @@ function generateVoiceProEmailHtml(customerName, licenseKey, forwardingNumber, c
             <div style="font-family: monospace; font-size: 24px; color: #38BDF8; font-weight: bold; letter-spacing: 1px; margin-bottom: 6px;">
                 ${forwardingNumber}
             </div>
-            <div style="font-size: 12px; color: #00E676;">🟢 Status: ACTIVE • 200 Monthly Minutes Included</div>
+            <div style="font-size: 12px; color: #00E676;">🟢 Status: ACTIVE • ${quotaMinutes} Monthly Minutes Included ($${overageRate}/min overage)</div>
         </div>
 
         <!-- 1-Touch Carrier Activation -->
@@ -576,31 +579,42 @@ exports.handler = async (event) => {
       return { statusCode: 200, body: JSON.stringify({ received: true, warning: 'No email found' }) };
     }
 
-    // 1. Pro + Voice Bundle ($178.99 or $149.99 upfront with 14-day free trial for $29/mo)
-    const isBundle = (session.metadata && (session.metadata.tier === 'pro_plus_voice' || session.metadata.include_voice === 'true')) ||
-                     (amountTotal === 17899);
+    // 1. Autonomous Front Desk Bundle ($99/mo, or legacy $178.99 bundle)
+    const isBundle = (session.metadata && (
+      session.metadata.tier === 'autonomous_front_desk' ||
+      session.metadata.tier === 'front_desk_bundle' ||
+      session.metadata.tier === 'pro_plus_voice' ||
+      session.metadata.include_voice === 'true'
+    )) || (amountTotal === 9900) || (amountTotal === 17899);
 
-    // 2. Standalone Managed AI Voice Receptionist ($29.00/mo) - ONLY Voice
-    const isVoicePro = !isBundle && (
-      (session.metadata && (session.metadata.tier === 'managed_voice_pro' || session.metadata.service === 'voice_receptionist')) ||
+    // 2. Standalone Managed AI Voice: Business ($89/mo) or Starter ($29/mo)
+    const isVoiceBusiness = !isBundle && (
+      (session.metadata && (session.metadata.tier === 'voice_business' || session.metadata.tier === 'voice_pro_business')) ||
+      (amountTotal === 8900)
+    );
+
+    const isVoiceStarter = !isBundle && !isVoiceBusiness && (
+      (session.metadata && (session.metadata.tier === 'voice_starter' || session.metadata.tier === 'managed_voice_pro' || session.metadata.service === 'voice_receptionist')) ||
       (amountTotal === 2900 && (!session.metadata || !session.metadata.tier || !session.metadata.tier.includes('pro')))
     );
 
+    const isVoiceStandalone = isVoiceBusiness || isVoiceStarter;
+
     // 3. 3-Day Free Trial ($0.00)
-    const isTrial = !isVoicePro && !isBundle && (
-      (amountTotal === 0 && (!session.metadata || session.metadata.tier !== 'pro_automation')) ||
+    const isTrial = !isVoiceStandalone && !isBundle && (
+      (amountTotal === 0 && (!session.metadata || (session.metadata.tier !== 'pro_automation' && session.metadata.tier !== 'pro_gateway'))) ||
       (session.metadata && session.metadata.tier === 'standard_trial')
     );
 
     // 4. Agency Fleet Bundles ($399+ or $799+)
-    const isAgency10 = !isTrial && !isVoicePro && !isBundle && ((amountTotal >= 70000) || (session.metadata && session.metadata.tier === 'agency_10'));
-    const isAgency5 = !isTrial && !isVoicePro && !isBundle && !isAgency10 && ((amountTotal >= 30000 && amountTotal < 70000) || (session.metadata && session.metadata.tier === 'agency_5'));
+    const isAgency10 = !isTrial && !isVoiceStandalone && !isBundle && ((amountTotal >= 70000) || (session.metadata && session.metadata.tier === 'agency_10'));
+    const isAgency5 = !isTrial && !isVoiceStandalone && !isBundle && !isAgency10 && ((amountTotal >= 30000 && amountTotal < 70000) || (session.metadata && session.metadata.tier === 'agency_5'));
     const isAgency = isAgency5 || isAgency10;
 
-    // 5. Pro Automation ONLY ($149.99) - NO VOICE RECEPTIONIST / NO VAPI ACCOUNT NEEDED
-    const isPro = !isTrial && !isVoicePro && !isBundle && !isAgency && (
-      (amountTotal >= 10000) ||
-      (session.metadata && (session.metadata.tier === 'pro' || session.metadata.tier === 'pro_automation')) ||
+    // 5. Pro Automation Gateway ($299 Perpetual or $29/mo) - NO VAPI LINE INCLUDED
+    const isPro = !isTrial && !isVoiceStandalone && !isBundle && !isAgency && (
+      (amountTotal >= 14900) ||
+      (session.metadata && (session.metadata.tier === 'pro' || session.metadata.tier === 'pro_automation' || session.metadata.tier === 'pro_gateway')) ||
       (session.client_reference_id && session.client_reference_id.toLowerCase().includes('pro'))
     );
 
@@ -608,7 +622,7 @@ exports.handler = async (event) => {
     const apkFileName = (isPro || isBundle) ? 'MissedCallAutoSMS-Pro.apk' : 'MissedCallAutoSMS.apk';
     const apkDownloadUrl = `https://${host}/${apkFileName}`;
 
-    // === BRANCH 1: PRO + VOICE BUNDLE ($149.99 upfront + $29/mo 14-day trial) ===
+    // === BRANCH 1: AUTONOMOUS FRONT DESK BUNDLE ($99/mo - SIM Auto SMS + AI Voice Receptionist, 250 mins) ===
     if (isBundle) {
       // Real Live Vapi AI Receptionist Line
       const forwardingNumber = process.env.VAPI_PRIMARY_PHONE_NUMBER || '+1 (732) 660-9121';
@@ -618,8 +632,7 @@ exports.handler = async (event) => {
 
       const licenseKey = generateKey(customerName, 0, true);
 
-
-      // Persist to Firestore (replaces local .voice_pro_bindings.json which doesn't persist on Netlify)
+      // Persist to Firestore
       const db = getFirestore();
       if (db) {
         try {
@@ -630,11 +643,12 @@ exports.handler = async (event) => {
             customerEmail,
             customerName,
             status: 'ACTIVE',
-            tier: 'PRO_PLUS_VOICE',
+            tier: 'AUTONOMOUS_FRONT_DESK',
             forwardingNumber,
             carrierCode,
             carrierDeactivateCode,
-            quotaMinutes: 200,
+            quotaMinutes: 250,
+            overageRate: 0.20,
             minutesUsed: 0,
             boundAt: new Date().toISOString()
           });
@@ -644,13 +658,15 @@ exports.handler = async (event) => {
             customer: customerName,
             email: customerEmail,
             tier: 'PRO',
-            type: 'PAID',
-            price: '178.99',
+            type: 'SUBSCRIPTION',
+            price: amountPaid || '99.00/mo',
             voiceActive: true,
             voiceNumber: forwardingNumber,
             carrierCode,
             status: 'ACTIVE',
             subscriptionId: session.subscription || session.id,
+            quotaMinutes: 250,
+            overageRate: 0.20,
             date: new Date().toISOString()
           });
         } catch (dbErr) {
@@ -660,33 +676,42 @@ exports.handler = async (event) => {
         console.warn('[stripe-webhook] Firestore unavailable — add FIREBASE_SERVICE_ACCOUNT_KEY to Netlify env.');
       }
 
-
-
-      console.log(`⚡🎙️ [PRO + VOICE BUNDLE ACTIVATED] Line: ${forwardingNumber}, Pro Key: ${licenseKey} for ${customerEmail}`);
+      console.log(`⚡🎙️ [AUTONOMOUS FRONT DESK BUNDLE ACTIVATED] Line: ${forwardingNumber}, Pro Key: ${licenseKey} for ${customerEmail}`);
 
       if (RESEND_API_KEY) {
-        const emailSubject = `⚡🎙️ Your Missed Call Auto SMS Pro + 24/7 AI Voice Receptionist Setup Guide`;
-        const emailHtml = generateProPlusVoiceEmailHtml(customerName, licenseKey, apkDownloadUrl, forwardingNumber, carrierCode, carrierDeactivateCode);
+        const emailSubject = `⚡🎙️ Your Missed Call Auto SMS Autonomous Front Desk Setup Guide`;
+        const emailHtml = generateProPlusVoiceEmailHtml(
+          customerName,
+          licenseKey,
+          apkDownloadUrl,
+          forwardingNumber,
+          carrierCode,
+          carrierDeactivateCode,
+          250,
+          "AUTONOMOUS FRONT DESK BUNDLE ($99/MO)",
+          "0.20"
+        );
 
         try {
           const sendResult = await sendEmail(RESEND_API_KEY, customerEmail, emailSubject, emailHtml);
-          console.log(`📧 [BUNDLE EMAIL DELIVERED] Dispatched to ${customerEmail} (ID: ${sendResult.id})`);
+          console.log(`📧 [FRONT DESK EMAIL DELIVERED] Dispatched to ${customerEmail} (ID: ${sendResult.id})`);
 
           if (OWNER_NOTIFY_EMAIL && OWNER_NOTIFY_EMAIL !== customerEmail) {
             sendEmail(
               RESEND_API_KEY,
               OWNER_NOTIFY_EMAIL,
-              `⚡🎙️ New Pro + Voice Bundle Purchase: ${customerName}`,
-              `<p>New Pro + Voice Bundle subscriber active!</p>
+              `⚡🎙️ New Autonomous Front Desk Subscriber ($99/mo): ${customerName}`,
+              `<p>New Autonomous Front Desk ($99/mo) subscriber active!</p>
                <p><strong>Customer:</strong> ${customerName} (${customerEmail})</p>
                <p><strong>Pro Key:</strong> <code>${licenseKey}</code></p>
                <p><strong>Assigned Line:</strong> ${forwardingNumber}</p>
                <p><strong>Carrier Dial Code:</strong> <code>${carrierCode}</code></p>
+               <p><strong>Included Quota:</strong> 250 minutes ($0.20/min overage)</p>
                <p><strong>Subscription ID:</strong> <code>${session.subscription || session.id}</code></p>`
             ).catch(() => {});
           }
         } catch (emailErr) {
-          console.error(`❌ [BUNDLE EMAIL FAILED] for ${customerEmail}:`, emailErr.message);
+          console.error(`❌ [FRONT DESK EMAIL FAILED] for ${customerEmail}:`, emailErr.message);
         }
       }
 
@@ -695,7 +720,9 @@ exports.handler = async (event) => {
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           received: true,
-          tier: 'pro_plus_voice',
+          tier: 'autonomous_front_desk',
+          quotaMinutes: 250,
+          overageRate: 0.20,
           forwardingNumber,
           carrierCode,
           carrierDeactivateCode,
@@ -706,8 +733,14 @@ exports.handler = async (event) => {
       };
     }
 
-    // === BRANCH 2: MANAGED VOICE PRO STANDALONE ($29/mo) ===
-    if (isVoicePro) {
+    // === BRANCH 2: STANDALONE MANAGED AI VOICE RECEPTIONIST (Business $89/mo or Starter $29/mo) ===
+    if (isVoiceStandalone) {
+      const isBusiness = isVoiceBusiness;
+      const quotaMinutes = isBusiness ? 300 : 45;
+      const overageRate = isBusiness ? "0.20" : "0.25";
+      const planTitle = isBusiness ? "Business AI Voice Receptionist ($89/mo)" : "Starter AI Voice Receptionist ($29/mo)";
+      const tierName = isBusiness ? "VOICE_BUSINESS" : "VOICE_STARTER";
+
       // Real Live Vapi AI Receptionist Line
       const forwardingNumber = process.env.VAPI_PRIMARY_PHONE_NUMBER || '+1 (732) 660-9121';
       const cleanDigits = forwardingNumber.replace(/\D/g, '');
@@ -715,7 +748,6 @@ exports.handler = async (event) => {
       const carrierDeactivateCode = '*73';
 
       // Enforce binding to user's existing Pro license key:
-
       const candidateKey = (session.client_reference_id ||
                            (session.metadata && session.metadata.license_key) ||
                            (session.subscription_data && session.subscription_data.metadata && session.subscription_data.metadata.license_key) || '').trim().toUpperCase();
@@ -729,7 +761,7 @@ exports.handler = async (event) => {
       // Bind to user's existing Pro license key, or generate a Pro key if none provided
       const voiceLicenseKey = isProCandidate ? candidateKey : generateKey(customerName, 0, true);
 
-      // Persist binding to Firestore (replaces local JSON file that doesn't persist on Netlify)
+      // Persist binding to Firestore
       const db2 = getFirestore();
       if (db2) {
         try {
@@ -740,11 +772,12 @@ exports.handler = async (event) => {
             customerEmail,
             customerName,
             status: 'ACTIVE',
-            tier: 'VOICE_PRO_STANDALONE',
+            tier: tierName,
             forwardingNumber,
             carrierCode,
             carrierDeactivateCode,
-            quotaMinutes: 200,
+            quotaMinutes: quotaMinutes,
+            overageRate: parseFloat(overageRate),
             minutesUsed: 0,
             boundAt: new Date().toISOString()
           });
@@ -755,47 +788,58 @@ exports.handler = async (event) => {
             email: customerEmail,
             tier: 'PRO',
             type: 'SUBSCRIPTION',
-            price: '29.00/mo',
+            price: isBusiness ? '89.00/mo' : '29.00/mo',
             voiceActive: true,
             voiceNumber: forwardingNumber,
             carrierCode,
             status: 'ACTIVE',
             subscriptionId: session.subscription || session.id,
+            quotaMinutes: quotaMinutes,
+            overageRate: parseFloat(overageRate),
             date: new Date().toISOString()
           });
         } catch (dbErr) {
-          console.error('[stripe-webhook] Firestore write failed (voice-pro):', dbErr.message);
+          console.error(`[stripe-webhook] Firestore write failed (${tierName.toLowerCase()}):`, dbErr.message);
         }
       } else {
         console.warn('[stripe-webhook] Firestore unavailable — add FIREBASE_SERVICE_ACCOUNT_KEY to Netlify env.');
       }
 
-
-      console.log(`🎙️ [MANAGED VOICE PRO BOUND TO PRO KEY] Line: ${forwardingNumber}, Pro Key: ${voiceLicenseKey} for ${customerEmail}`);
+      console.log(`🎙️ [${tierName} BOUND TO PRO KEY] Line: ${forwardingNumber}, Pro Key: ${voiceLicenseKey}, Quota: ${quotaMinutes}m for ${customerEmail}`);
 
       if (RESEND_API_KEY) {
-        const emailSubject = `🎙️ Your AI Voice Receptionist is Live! Assigned Line: ${forwardingNumber}`;
-        const emailHtml = generateVoiceProEmailHtml(customerName, voiceLicenseKey, forwardingNumber, carrierCode, carrierDeactivateCode);
+        const emailSubject = `🎙️ Your ${planTitle} is Live! Assigned Line: ${forwardingNumber}`;
+        const emailHtml = generateVoiceProEmailHtml(
+          customerName,
+          voiceLicenseKey,
+          forwardingNumber,
+          carrierCode,
+          carrierDeactivateCode,
+          planTitle,
+          quotaMinutes,
+          overageRate
+        );
 
         try {
           const sendResult = await sendEmail(RESEND_API_KEY, customerEmail, emailSubject, emailHtml);
-          console.log(`📧 [VOICE PRO EMAIL DELIVERED] Dispatched to ${customerEmail} (ID: ${sendResult.id})`);
+          console.log(`📧 [VOICE EMAIL DELIVERED] Dispatched to ${customerEmail} (ID: ${sendResult.id})`);
 
           if (OWNER_NOTIFY_EMAIL && OWNER_NOTIFY_EMAIL !== customerEmail) {
             sendEmail(
               RESEND_API_KEY,
               OWNER_NOTIFY_EMAIL,
-              `🎙️ New Voice Receptionist Subscriber ($29/mo): ${customerName}`,
-              `<p>New Managed Voice Pro ($29/mo) subscriber active!</p>
+              `🎙️ New ${planTitle} Subscriber: ${customerName}`,
+              `<p>New ${planTitle} subscriber active!</p>
                <p><strong>Customer:</strong> ${customerName} (${customerEmail})</p>
                <p><strong>Bound Pro Key:</strong> <code>${voiceLicenseKey}</code></p>
                <p><strong>Assigned Line:</strong> ${forwardingNumber}</p>
                <p><strong>Carrier Dial Code:</strong> <code>${carrierCode}</code></p>
+               <p><strong>Included Quota:</strong> ${quotaMinutes} minutes ($${overageRate}/min overage)</p>
                <p><strong>Subscription ID:</strong> <code>${session.subscription || session.id}</code></p>`
             ).catch(() => {});
           }
         } catch (emailErr) {
-          console.error(`❌ [VOICE PRO EMAIL FAILED] for ${customerEmail}:`, emailErr.message);
+          console.error(`❌ [VOICE EMAIL FAILED] for ${customerEmail}:`, emailErr.message);
         }
       }
 
@@ -804,7 +848,9 @@ exports.handler = async (event) => {
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           received: true,
-          tier: 'managed_voice_pro',
+          tier: tierName.toLowerCase(),
+          quotaMinutes: quotaMinutes,
+          overageRate: parseFloat(overageRate),
           forwardingNumber,
           carrierCode,
           carrierDeactivateCode,
@@ -929,16 +975,16 @@ exports.handler = async (event) => {
       };
     }
 
-    // Direct Purchase (Standard $49.99 or Pro $149.99)
+    // Direct Purchase (Founder's Flagship $49.99 or Pro Gateway $299 / $149.99)
     // 1. Generate Signed Lifetime License Key
     const licenseKey = generateKey(customerName, 0, isPro);
-    console.log(`🔑 [${isPro ? 'PRO ' : 'STANDARD '}LIFETIME LICENSE GENERATED] ${licenseKey} for ${customerEmail} ($${amountPaid})`);
+    console.log(`🔑 [${isPro ? 'PRO GATEWAY ' : 'FLAGSHIP FOUNDER '}LIFETIME LICENSE GENERATED] ${licenseKey} for ${customerEmail} ($${amountPaid})`);
 
     // 2. Automatically Dispatch Delivery Email
     if (RESEND_API_KEY) {
       const emailSubject = isPro
-        ? `⚡ Your Missed Call Auto SMS (Pro Automation Edition) License Key & Setup Guide`
-        : `Your Missed Call Auto SMS License Key & Setup Guide`;
+        ? `⚡ Your Missed Call Auto SMS Pro Automation Gateway License Key & Setup Guide`
+        : `Your Missed Call Auto SMS Founder's Flagship Appliance License Key & Setup Guide`;
       const emailHtml = generateEmailHtml(customerName, licenseKey, apkDownloadUrl, amountPaid, isPro);
 
       try {
@@ -950,11 +996,11 @@ exports.handler = async (event) => {
           sendEmail(
             RESEND_API_KEY,
             OWNER_NOTIFY_EMAIL,
-            `🎉 New ${isPro ? '⚡ Pro ($149.99)' : '📱 Standard ($49.99)'} Purchase: ${customerName}`,
-            `<p>New ${isPro ? 'Pro Automation' : 'Standard'} license purchased!</p>
+            `🎉 New ${isPro ? `⚡ Pro Gateway ($${amountPaid})` : '📱 Founder Flagship ($49.99)'} Purchase: ${customerName}`,
+            `<p>New ${isPro ? 'Pro Automation Gateway' : 'Founder Flagship Appliance'} license purchased!</p>
              <p><strong>Customer:</strong> ${customerName} (${customerEmail})</p>
              <p><strong>Amount:</strong> $${amountPaid}</p>
-             <p><strong>Edition:</strong> ${isPro ? 'Pro Automation ($149.99)' : 'Flagship Appliance ($49.99)'}</p>
+             <p><strong>Edition:</strong> ${isPro ? 'Pro Automation Gateway ($299.00 Perpetual)' : "Founder's Flagship Appliance ($49.99)"}</p>
              <p><strong>License Key:</strong> <code>${licenseKey}</code></p>
              <p><strong>APK Delivered:</strong> ${apkDownloadUrl}</p>`
           ).catch(() => {});
@@ -971,7 +1017,7 @@ exports.handler = async (event) => {
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({
         received: true,
-        tier: isPro ? 'pro_automation' : 'standard',
+        tier: isPro ? 'pro_gateway' : 'flagship_founder',
         licenseKey: licenseKey,
         apkUrl: apkDownloadUrl,
         customerEmail: customerEmail
@@ -1155,3 +1201,7 @@ exports.handler = async (event) => {
 
   return { statusCode: 200, body: JSON.stringify({ received: true }) };
 };
+
+module.exports.generateEmailHtml = generateEmailHtml;
+module.exports.generateProPlusVoiceEmailHtml = generateProPlusVoiceEmailHtml;
+module.exports.generateVoiceProEmailHtml = generateVoiceProEmailHtml;

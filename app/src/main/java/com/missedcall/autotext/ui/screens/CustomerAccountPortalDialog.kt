@@ -34,6 +34,7 @@ import java.net.HttpURLConnection
 import java.net.URL
 import java.nio.charset.StandardCharsets
 import java.util.Locale
+import org.json.JSONObject
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -70,6 +71,48 @@ fun CustomerAccountPortalDialog(
     val isCancelled = settings.subscriptionStatus == "CANCELLED"
     val isTrial = settings.subscriptionStatus == "TRIAL" || settings.licenseKey.contains("TRIAL", ignoreCase = true)
     val isPro = settings.licenseKey.contains("PRO", ignoreCase = true)
+
+    var livePlanName by remember { mutableStateOf("Autonomous Front Desk Bundle") }
+    var liveQuotaMinutes by remember { mutableIntStateOf(250) }
+    var liveMinutesUsed by remember { mutableIntStateOf(0) }
+    var liveOverageMinutes by remember { mutableIntStateOf(0) }
+    var liveOverageAmount by remember { mutableDoubleStateOf(0.0) }
+    var liveOverageRate by remember { mutableDoubleStateOf(0.20) }
+    var isUnlimitedGateway by remember { mutableStateOf(false) }
+
+    LaunchedEffect(settings.licenseKey) {
+        val key = settings.licenseKey.trim()
+        if (key.isBlank()) return@LaunchedEffect
+        withContext(Dispatchers.IO) {
+            try {
+                val endpoint = if (settings.remoteUpdateUrl.contains("localhost") || settings.remoteUpdateUrl.contains("10.0.")) {
+                    "http://10.0.2.2:8000/api/vapi/usage?key=$key"
+                } else {
+                    "https://missedcallautosms.com/api/vapi/usage?key=$key"
+                }
+                val url = URL(endpoint)
+                val conn = (url.openConnection() as HttpURLConnection).apply {
+                    connectTimeout = 4000
+                    readTimeout = 4000
+                }
+                if (conn.responseCode == 200) {
+                    val body = conn.inputStream.bufferedReader().use { it.readText() }
+                    val json = JSONObject(body)
+                    if (json.optBoolean("success", false)) {
+                        withContext(Dispatchers.Main) {
+                            livePlanName = json.optString("planName", livePlanName)
+                            liveQuotaMinutes = json.optInt("quotaMinutes", 250)
+                            liveMinutesUsed = json.optInt("minutesUsed", 0)
+                            liveOverageMinutes = json.optInt("overageMinutes", 0)
+                            liveOverageAmount = json.optDouble("overageAmount", 0.0)
+                            liveOverageRate = json.optDouble("overageRatePerMinute", 0.20)
+                            isUnlimitedGateway = json.optBoolean("isUnlimitedGateway", false)
+                        }
+                    }
+                }
+            } catch (e: Exception) {}
+        }
+    }
 
     Dialog(
         onDismissRequest = onDismiss,
@@ -188,7 +231,7 @@ fun CustomerAccountPortalDialog(
                                         } else if (isTrial) {
                                             "Auto-charges $49.99 on Day 4 if not cancelled."
                                         } else if (isPro) {
-                                            "$149.99 One-Time — Unlimited Automations & Dual SIM"
+                                            "$299.00 Perpetual — Unlimited Automations, Dual SIM & Cloud Relay"
                                         } else {
                                             "Paid One-Time — 0 Monthly Fees Forever"
                                         },
@@ -209,6 +252,97 @@ fun CustomerAccountPortalDialog(
                                         maxLines = 1,
                                         softWrap = false,
                                         modifier = Modifier.padding(horizontal = 8.dp, vertical = 4.dp)
+                                    )
+                                }
+                            }
+                        }
+                    }
+
+                    // Card 1.5: Voice Quota & Overage Meter
+                    item {
+                        Card(
+                            colors = CardDefaults.cardColors(
+                                containerColor = if (liveOverageMinutes > 0) RedError.copy(alpha = 0.12f) else MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.5f)
+                            ),
+                            shape = RoundedCornerShape(16.dp)
+                        ) {
+                            Column(modifier = Modifier.padding(16.dp)) {
+                                Row(
+                                    modifier = Modifier.fillMaxWidth(),
+                                    horizontalArrangement = Arrangement.SpaceBetween,
+                                    verticalAlignment = Alignment.CenterVertically
+                                ) {
+                                    Row(verticalAlignment = Alignment.CenterVertically) {
+                                        Icon(Icons.Default.Timer, contentDescription = null, tint = Color(0xFF9333EA))
+                                        Spacer(modifier = Modifier.width(8.dp))
+                                        Text(
+                                            text = "Voice Quota & Metering",
+                                            style = MaterialTheme.typography.titleSmall,
+                                            fontWeight = FontWeight.Bold
+                                        )
+                                    }
+                                    Surface(
+                                        color = if (liveOverageMinutes > 0) RedError else Color(0xFF9333EA),
+                                        shape = RoundedCornerShape(6.dp)
+                                    ) {
+                                        Text(
+                                            text = livePlanName,
+                                            color = Color.White,
+                                            fontSize = 10.sp,
+                                            fontWeight = FontWeight.Bold,
+                                            modifier = Modifier.padding(horizontal = 6.dp, vertical = 2.dp)
+                                        )
+                                    }
+                                }
+
+                                Spacer(modifier = Modifier.height(10.dp))
+
+                                if (isUnlimitedGateway) {
+                                    Text(
+                                        text = "⚡ Perpetual Pro Automation Gateway: Unlimited SIM SMS text-backs & Webhook Bridge active. Included voice minutes: 0 (BYOK / Managed Add-On available).",
+                                        style = MaterialTheme.typography.bodySmall,
+                                        color = MaterialTheme.colorScheme.onSurfaceVariant
+                                    )
+                                } else {
+                                    val progressFraction = if (liveQuotaMinutes > 0) {
+                                        (liveMinutesUsed.toFloat() / liveQuotaMinutes.toFloat()).coerceIn(0f, 1f)
+                                    } else 0f
+
+                                    LinearProgressIndicator(
+                                        progress = { progressFraction },
+                                        modifier = Modifier.fillMaxWidth().height(8.dp),
+                                        color = if (liveOverageMinutes > 0) RedError else ActiveGreenText,
+                                        trackColor = MaterialTheme.colorScheme.surfaceVariant
+                                    )
+
+                                    Spacer(modifier = Modifier.height(8.dp))
+
+                                    Row(
+                                        modifier = Modifier.fillMaxWidth(),
+                                        horizontalArrangement = Arrangement.SpaceBetween
+                                    ) {
+                                        Text(
+                                            text = "$liveMinutesUsed / $liveQuotaMinutes Mins Used",
+                                            fontWeight = FontWeight.Bold,
+                                            style = MaterialTheme.typography.bodySmall
+                                        )
+                                        Text(
+                                            text = if (liveOverageMinutes > 0) {
+                                                "⚠️ $liveOverageMinutes Mins Overage (+$${"%.2f".format(liveOverageAmount)})"
+                                            } else {
+                                                "${maxOf(0, liveQuotaMinutes - liveMinutesUsed)} Mins Left"
+                                            },
+                                            fontWeight = FontWeight.SemiBold,
+                                            style = MaterialTheme.typography.bodySmall,
+                                            color = if (liveOverageMinutes > 0) RedError else ActiveGreenText
+                                        )
+                                    }
+
+                                    Spacer(modifier = Modifier.height(4.dp))
+                                    Text(
+                                        text = "Overage rate: $${"%.2f".format(liveOverageRate)}/min. Additional minutes roll into your monthly Stripe renewal automatically.",
+                                        fontSize = 11.sp,
+                                        color = MaterialTheme.colorScheme.onSurfaceVariant
                                     )
                                 }
                             }
@@ -507,10 +641,10 @@ fun CustomerAccountPortalDialog(
                                         coroutineScope.launch {
                                             withContext(Dispatchers.IO) {
                                                 try {
-                                                    val endpoint = if (settings.remoteUpdateUrl.isNotBlank()) {
-                                                        settings.remoteUpdateUrl.replace("/api/version.json", "/api/vapi/custom-greeting")
-                                                    } else {
+                                                    val endpoint = if (settings.remoteUpdateUrl.contains("localhost") || settings.remoteUpdateUrl.contains("10.0.")) {
                                                         "http://10.0.2.2:8000/api/vapi/custom-greeting"
+                                                    } else {
+                                                        "https://missedcallautosms.com/api/vapi/custom-greeting"
                                                     }
                                                     val url = URL(endpoint)
                                                     val conn = url.openConnection() as HttpURLConnection
@@ -675,10 +809,10 @@ fun CustomerAccountPortalDialog(
                             // Attempt remote cancellation via server endpoint
                             withContext(Dispatchers.IO) {
                                 try {
-                                    val endpoint = if (settings.remoteUpdateUrl.isNotBlank()) {
-                                        settings.remoteUpdateUrl.replace("/api/version.json", "/api/cancel-trial")
-                                    } else {
+                                    val endpoint = if (settings.remoteUpdateUrl.contains("localhost") || settings.remoteUpdateUrl.contains("10.0.")) {
                                         "http://10.0.2.2:8000/api/cancel-trial"
+                                    } else {
+                                        "https://missedcallautosms.com/api/cancel-trial"
                                     }
                                     val url = URL(endpoint)
                                     val conn = url.openConnection() as HttpURLConnection
@@ -745,10 +879,10 @@ fun CustomerAccountPortalDialog(
 
                             withContext(Dispatchers.IO) {
                                 try {
-                                    val endpoint = if (settings.remoteUpdateUrl.isNotBlank()) {
-                                        settings.remoteUpdateUrl.replace("/api/version.json", "/api/vapi/cancel-subscription")
-                                    } else {
+                                    val endpoint = if (settings.remoteUpdateUrl.contains("localhost") || settings.remoteUpdateUrl.contains("10.0.")) {
                                         "http://10.0.2.2:8000/api/vapi/cancel-subscription"
+                                    } else {
+                                        "https://missedcallautosms.com/api/vapi/cancel-subscription"
                                     }
                                     val url = URL(endpoint)
                                     val conn = url.openConnection() as HttpURLConnection

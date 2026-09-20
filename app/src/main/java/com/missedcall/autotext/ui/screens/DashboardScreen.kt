@@ -29,8 +29,15 @@ import com.missedcall.autotext.remote.UpdateInfo
 import com.missedcall.autotext.ui.theme.ActiveGreenContainer
 import com.missedcall.autotext.ui.theme.ActiveGreenText
 import com.missedcall.autotext.ui.theme.GrayPaused
+import com.missedcall.autotext.ui.theme.AmberWarning
+import com.missedcall.autotext.ui.theme.RedError
 import com.missedcall.autotext.util.CarrierForwardingManager
+import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.withContext
+import org.json.JSONObject
+import java.net.HttpURLConnection
+import java.net.URL
 import java.text.NumberFormat
 import java.text.SimpleDateFormat
 import java.util.*
@@ -260,6 +267,14 @@ fun DashboardScreen(
                     )
                 }
             }
+        }
+
+        // 2. Real-Time Minute Quota & Overage Meter Card
+        item {
+            VoiceMinuteMeterCard(
+                settings = settings,
+                onOpenAccountPortal = { showAccountPortal = true }
+            )
         }
 
         // Strategic In-App Upgrade / Feature Spotlight Banner
@@ -795,5 +810,215 @@ fun DashboardScreen(
             onSettingsChanged = onSettingsChanged,
             onDismiss = { showAccountPortal = false }
         )
+    }
+}
+
+/**
+ * Real-Time Minute Quota & Overage Meter Card
+ * Connects directly to /api/vapi/usage to display pooled minutes, remaining quota,
+ * active overage tracking, and direct access to billing.
+ */
+@Composable
+fun VoiceMinuteMeterCard(
+    settings: AppSettings,
+    onOpenAccountPortal: () -> Unit
+) {
+    val context = LocalContext.current
+    val coroutineScope = rememberCoroutineScope()
+    var isLoading by remember { mutableStateOf(false) }
+    var planName by remember { mutableStateOf("Autonomous Front Desk Bundle") }
+    var quotaMinutes by remember { mutableIntStateOf(250) }
+    var minutesUsed by remember { mutableIntStateOf(0) }
+    var overageMinutes by remember { mutableIntStateOf(0) }
+    var overageAmount by remember { mutableDoubleStateOf(0.0) }
+    var isUnlimitedGateway by remember { mutableStateOf(false) }
+
+    fun fetchUsage() {
+        val key = settings.licenseKey.trim()
+        if (key.isBlank()) return
+        isLoading = true
+        coroutineScope.launch {
+            withContext(Dispatchers.IO) {
+                try {
+                    val endpoint = if (settings.remoteUpdateUrl.contains("localhost") || settings.remoteUpdateUrl.contains("10.0.")) {
+                        "http://10.0.2.2:8000/api/vapi/usage?key=$key"
+                    } else {
+                        "https://missedcallautosms.com/api/vapi/usage?key=$key"
+                    }
+                    val url = URL(endpoint)
+                    val conn = (url.openConnection() as HttpURLConnection).apply {
+                        connectTimeout = 4000
+                        readTimeout = 4000
+                    }
+                    if (conn.responseCode == 200) {
+                        val body = conn.inputStream.bufferedReader().use { it.readText() }
+                        val json = JSONObject(body)
+                        if (json.optBoolean("success", false)) {
+                            withContext(Dispatchers.Main) {
+                                planName = json.optString("planName", planName)
+                                quotaMinutes = json.optInt("quotaMinutes", 250)
+                                minutesUsed = json.optInt("minutesUsed", 0)
+                                overageMinutes = json.optInt("overageMinutes", 0)
+                                overageAmount = json.optDouble("overageAmount", 0.0)
+                                isUnlimitedGateway = json.optBoolean("isUnlimitedGateway", false)
+                            }
+                        }
+                    }
+                } catch (e: Exception) {
+                    // Graceful offline fallback
+                } finally {
+                    withContext(Dispatchers.Main) {
+                        isLoading = false
+                    }
+                }
+            }
+        }
+    }
+
+    LaunchedEffect(settings.licenseKey) {
+        fetchUsage()
+    }
+
+    Card(
+        colors = CardDefaults.cardColors(
+            containerColor = if (overageMinutes > 0) {
+                RedError.copy(alpha = 0.12f)
+            } else {
+                MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.5f)
+            }
+        ),
+        border = androidx.compose.foundation.BorderStroke(
+            1.dp,
+            if (overageMinutes > 0) RedError.copy(alpha = 0.6f) else MaterialTheme.colorScheme.outlineVariant
+        ),
+        shape = RoundedCornerShape(16.dp),
+        modifier = Modifier.fillMaxWidth()
+    ) {
+        Column(modifier = Modifier.padding(16.dp)) {
+            // Header: Plan Title & Action Icon
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.SpaceBetween,
+                verticalAlignment = Alignment.CenterVertically
+            ) {
+                Row(verticalAlignment = Alignment.CenterVertically) {
+                    Surface(
+                        shape = RoundedCornerShape(8.dp),
+                        color = if (overageMinutes > 0) RedError else Color(0xFF9333EA),
+                        modifier = Modifier.size(32.dp)
+                    ) {
+                        Box(contentAlignment = Alignment.Center) {
+                            Icon(
+                                if (overageMinutes > 0) Icons.Default.Warning else Icons.Default.Timer,
+                                contentDescription = null,
+                                tint = Color.White,
+                                modifier = Modifier.size(18.dp)
+                            )
+                        }
+                    }
+                    Spacer(modifier = Modifier.width(10.dp))
+                    Column {
+                        Text(
+                            text = planName,
+                            fontWeight = FontWeight.Bold,
+                            style = MaterialTheme.typography.titleSmall
+                        )
+                        Text(
+                            text = if (isUnlimitedGateway) "Perpetual License • Cloud Relay API" else "Live Monthly Voice Quota Meter",
+                            style = MaterialTheme.typography.labelSmall,
+                            color = MaterialTheme.colorScheme.onSurfaceVariant
+                        )
+                    }
+                }
+
+                IconButton(
+                    onClick = { fetchUsage() },
+                    modifier = Modifier.size(32.dp)
+                ) {
+                    Icon(
+                        Icons.Default.Refresh,
+                        contentDescription = "Refresh Usage",
+                        tint = MaterialTheme.colorScheme.primary,
+                        modifier = Modifier.size(18.dp)
+                    )
+                }
+            }
+
+            Spacer(modifier = Modifier.height(14.dp))
+
+            if (isUnlimitedGateway) {
+                Surface(
+                    color = Color(0xFF9333EA).copy(alpha = 0.15f),
+                    shape = RoundedCornerShape(8.dp),
+                    modifier = Modifier.fillMaxWidth()
+                ) {
+                    Text(
+                        text = "⚡ Unlimited local SIM SMS automations active. Voice reception requires BYOK key or Pooled Minutes Add-On.",
+                        style = MaterialTheme.typography.bodySmall,
+                        modifier = Modifier.padding(10.dp)
+                    )
+                }
+            } else {
+                // Progress Bar
+                val progressFraction = if (quotaMinutes > 0) {
+                    (minutesUsed.toFloat() / quotaMinutes.toFloat()).coerceIn(0f, 1f)
+                } else 0f
+
+                val barColor = when {
+                    overageMinutes > 0 -> RedError
+                    minutesUsed >= (quotaMinutes * 0.8f) -> AmberWarning
+                    else -> ActiveGreenText
+                }
+
+                LinearProgressIndicator(
+                    progress = { progressFraction },
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .height(8.dp),
+                    color = barColor,
+                    trackColor = MaterialTheme.colorScheme.surfaceVariant
+                )
+
+                Spacer(modifier = Modifier.height(8.dp))
+
+                Row(
+                    modifier = Modifier.fillMaxWidth(),
+                    horizontalArrangement = Arrangement.SpaceBetween,
+                    verticalAlignment = Alignment.CenterVertically
+                ) {
+                    Text(
+                        text = "$minutesUsed / $quotaMinutes Mins Used",
+                        fontWeight = FontWeight.Bold,
+                        style = MaterialTheme.typography.bodyMedium
+                    )
+
+                    val remaining = maxOf(0, quotaMinutes - minutesUsed)
+                    Text(
+                        text = if (overageMinutes > 0) {
+                            "⚠️ $overageMinutes Mins Overage (+$${"%.2f".format(overageAmount)})"
+                        } else {
+                            "$remaining Mins Left"
+                        },
+                        fontWeight = FontWeight.SemiBold,
+                        style = MaterialTheme.typography.bodySmall,
+                        color = if (overageMinutes > 0) RedError else ActiveGreenText
+                    )
+                }
+            }
+
+            Spacer(modifier = Modifier.height(10.dp))
+
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.End
+            ) {
+                TextButton(
+                    onClick = onOpenAccountPortal,
+                    contentPadding = PaddingValues(horizontal = 8.dp, vertical = 2.dp)
+                ) {
+                    Text("Manage Billing & Quota ➔", fontSize = 12.sp)
+                }
+            }
+        }
     }
 }

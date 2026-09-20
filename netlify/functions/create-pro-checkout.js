@@ -90,49 +90,42 @@ exports.handler = async (event) => {
     let postData = {};
 
     if (includeVoice) {
-      // BUNDLE: Pro Lifetime ($149.99 One-Time) + 24/7 AI Voice Receptionist ($0.00 Today, 14-Day Free Trial, then $29/mo)
+      // AUTONOMOUS FRONT DESK BUNDLE: $99.00/mo (Hardware SIM Auto SMS + 24/7 AI Voice, 250 mins)
       postData = {
         'mode': 'subscription',
         'payment_method_types[0]': 'card',
-        
-        // Item 1: Pro Automation Lifetime License ($149.99 upfront)
         'line_items[0][price_data][currency]': 'usd',
-        'line_items[0][price_data][unit_amount]': '14999',
-        'line_items[0][price_data][product_data][name]': 'Missed Call Auto SMS - Pro Automation Edition (Lifetime)',
-        'line_items[0][price_data][product_data][description]': 'Lifetime Appliance License • Dual SIM Carrier Routing • Unlimited End-to-End™ Webhook Gateway (n8n/Zapier) • 100% A2P 10DLC Exempt',
+        'line_items[0][price_data][unit_amount]': '9900',
+        'line_items[0][price_data][recurring][interval]': 'month',
+        'line_items[0][price_data][product_data][name]': 'Missed Call Auto SMS - Autonomous Front Desk Bundle ($99/mo)',
+        'line_items[0][price_data][product_data][description]': 'All-in-One Autonomous Front Desk • 250 Monthly Pooled Minutes ($0.20/min overage) • Dual SIM Outbound Confirmation SMS • Dedicated Local AI Line (*71 Carrier Transfer)',
         'line_items[0][quantity]': '1',
-
-        // Item 2: 24/7 Turnkey AI Voice Receptionist ($29.00/mo with 14-day free trial)
-        'line_items[1][price_data][currency]': 'usd',
-        'line_items[1][price_data][unit_amount]': '2900',
-        'line_items[1][price_data][recurring][interval]': 'month',
-        'line_items[1][price_data][product_data][name]': '24/7 AI Voice Receptionist Add-On (Turnkey Managed)',
-        'line_items[1][price_data][product_data][description]': '14-Day Free Trial ($0 today) • Auto-renews at $29/mo for 200 included mins • *71 Carrier Conditional Forwarding & Dedicated Local Line',
-        'line_items[1][quantity]': '1',
-
-        'subscription_data[trial_period_days]': '14',
-        'subscription_data[metadata][tier]': 'pro_plus_voice',
+        'subscription_data[metadata][tier]': 'autonomous_front_desk',
+        'subscription_data[metadata][quotaMinutes]': '250',
+        'subscription_data[metadata][overageRate]': '0.20',
         'subscription_data[metadata][business_name]': businessName,
-        'metadata[tier]': 'pro_plus_voice',
+        'metadata[tier]': 'autonomous_front_desk',
+        'metadata[quotaMinutes]': '250',
+        'metadata[overageRate]': '0.20',
         'metadata[include_voice]': 'true',
         'metadata[business_name]': businessName,
-        'success_url': 'https://missedcallautosms.com/success.html?session_id={CHECKOUT_SESSION_ID}&tier=pro_voice&bundle=true',
+        'success_url': 'https://missedcallautosms.com/success.html?session_id={CHECKOUT_SESSION_ID}&tier=autonomous_front_desk',
         'cancel_url': 'https://missedcallautosms.com/#checkout'
       };
     } else {
-      // STANDALONE: Pro Lifetime ($149.99 One-Time)
+      // PRO AUTOMATION GATEWAY: $299.00 Perpetual (A2P 10DLC Bypass Gateway + 1-Year Cloud Relay API)
       postData = {
         'mode': 'payment',
         'payment_method_types[0]': 'card',
         'line_items[0][price_data][currency]': 'usd',
-        'line_items[0][price_data][unit_amount]': '14999',
-        'line_items[0][price_data][product_data][name]': 'Missed Call Auto SMS - Pro Automation Edition (Lifetime)',
-        'line_items[0][price_data][product_data][description]': 'Lifetime Appliance License • Dual SIM Carrier Routing • Unlimited End-to-End™ Webhook Gateway (n8n/Zapier) • 100% A2P 10DLC Exempt',
+        'line_items[0][price_data][unit_amount]': '29900',
+        'line_items[0][price_data][product_data][name]': 'Missed Call Auto SMS - Pro Automation Gateway (Perpetual)',
+        'line_items[0][price_data][product_data][description]': 'Lifetime Pro License • 1-Year Cloud Relay API Included • Unlimited n8n/Make Webhooks • Dual SIM Routing • 100% A2P 10DLC Carrier Exempt',
         'line_items[0][quantity]': '1',
-        'metadata[tier]': 'pro_automation',
+        'metadata[tier]': 'pro_gateway',
         'metadata[include_voice]': 'false',
         'metadata[business_name]': businessName,
-        'success_url': 'https://missedcallautosms.com/success.html?session_id={CHECKOUT_SESSION_ID}&tier=pro',
+        'success_url': 'https://missedcallautosms.com/success.html?session_id={CHECKOUT_SESSION_ID}&tier=pro_gateway',
         'cancel_url': 'https://missedcallautosms.com/#checkout'
       };
     }
