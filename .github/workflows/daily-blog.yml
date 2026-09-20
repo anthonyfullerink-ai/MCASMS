@@ -46,8 +46,8 @@ jobs:
         env:
           GEMINI_API_KEY: ${{ secrets.GEMINI_API_KEY }}
           META_PAGE_ACCESS_TOKEN: ${{ secrets.META_PAGE_ACCESS_TOKEN }}
-          FB_PAGE_ID: ${{ secrets.FB_PAGE_ID || '1248332278370968' }}
-          IG_USER_ID: ${{ secrets.IG_USER_ID || '17841428781387416' }}
+          FB_PAGE_ID: ${{ secrets.FB_PAGE_ID }}
+          IG_USER_ID: ${{ secrets.IG_USER_ID }}
         run: |
           echo "🚀 Initiating Daily Autonomous Blog Generation..."
           node scripts/generate_daily_blog.js
@@ -75,8 +75,8 @@ jobs:
         if: steps.commit_step.outputs.new_post == 'true' || github.event_name == 'workflow_dispatch'
         env:
           META_PAGE_ACCESS_TOKEN: ${{ secrets.META_PAGE_ACCESS_TOKEN }}
-          FB_PAGE_ID: ${{ secrets.FB_PAGE_ID || '1248332278370968' }}
-          IG_USER_ID: ${{ secrets.IG_USER_ID || '17841428781387416' }}
+          FB_PAGE_ID: ${{ secrets.FB_PAGE_ID }}
+          IG_USER_ID: ${{ secrets.IG_USER_ID }}
         run: |
           echo "📢 Publishing new article announcement to Facebook & Instagram..."
           node scripts/publish_social_blog.js

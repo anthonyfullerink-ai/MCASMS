@@ -72,8 +72,8 @@ jobs:
         env:
           GEMINI_API_KEY: ${{ secrets.GEMINI_API_KEY }}
           META_PAGE_ACCESS_TOKEN: ${{ secrets.META_PAGE_ACCESS_TOKEN }}
-          FB_PAGE_ID: ${{ secrets.FB_PAGE_ID || '1248332278370968' }}
-          IG_USER_ID: ${{ secrets.IG_USER_ID || '17841428781387416' }}
+          FB_PAGE_ID: ${{ secrets.FB_PAGE_ID }}
+          IG_USER_ID: ${{ secrets.IG_USER_ID }}
           DRY_RUN: ${{ steps.slot_picker.outputs.dry_run }}
         run: |
           echo "🚀 Executing Omnichannel Slot: ${{ steps.slot_picker.outputs.slot }} (DryRun: ${{ steps.slot_picker.outputs.dry_run }})"

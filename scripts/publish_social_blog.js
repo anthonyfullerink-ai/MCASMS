@@ -22,8 +22,12 @@ function loadEnv() {
 loadEnv();
 
 const TOKEN = process.env.META_PAGE_ACCESS_TOKEN || '';
-const FB_PAGE_ID = process.env.FB_PAGE_ID || '1248332278370968';
-const IG_USER_ID = process.env.IG_USER_ID || '17841428781387416';
+const FB_PAGE_ID = (process.env.FB_PAGE_ID && process.env.FB_PAGE_ID !== 'true' && process.env.FB_PAGE_ID !== 'false')
+  ? process.env.FB_PAGE_ID
+  : '1248332278370968';
+const IG_USER_ID = (process.env.IG_USER_ID && process.env.IG_USER_ID !== 'true' && process.env.IG_USER_ID !== 'false')
+  ? process.env.IG_USER_ID
+  : '17841428781387416';
 
 function getSocialImageUrl(article = {}) {
   const postsPath = path.join(__dirname, '../blog/posts.json');

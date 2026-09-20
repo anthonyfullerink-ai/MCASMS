@@ -24,7 +24,9 @@ loadEnv();
 const APP_ID = process.env.FB_APP_ID || '1084095534483206';
 const APP_SECRET = process.env.FB_APP_SECRET || '';
 const CURRENT_TOKEN = process.env.META_PAGE_ACCESS_TOKEN || '';
-const PAGE_ID = process.env.FB_PAGE_ID || '1248332278370968';
+const PAGE_ID = (process.env.FB_PAGE_ID && process.env.FB_PAGE_ID !== 'true' && process.env.FB_PAGE_ID !== 'false')
+  ? process.env.FB_PAGE_ID
+  : '1248332278370968';
 
 if (!APP_SECRET) {
   console.error('❌ Error: FB_APP_SECRET not found in .env.');
