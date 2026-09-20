@@ -1,10 +1,10 @@
 {
-  "versionCode": 14,
-  "versionName": "1.6.0",
+  "versionCode": 15,
+  "versionName": "1.6.1",
   "downloadUrl": "https://raw.githubusercontent.com/anthonyfullerink-ai/MCASMS/main/MissedCallAutoSMS.apk",
   "proDownloadUrl": "https://raw.githubusercontent.com/anthonyfullerink-ai/MCASMS/main/MissedCallAutoSMS-Pro.apk",
-  "releaseNotes": "• 🎙️ Unified Prompt & AI Studio — one centralized hub for Missed-Call SMS, AI Voice persona/greetings, and Post-Call SMS with live interactive preview bubbles\n• ⏱️ Real-Time Minute Quota & Overage Meter — live tracking of pooled voice minutes and automated overage billing\n• ⚡ Autonomous Front Desk Bundle ($99/mo) & Pro Automation Gateway ($299 Perpetual) full platform integration\n• 🛡️ Anti-piracy cryptographic HMAC-SHA256 signature verification & 1-device appliance hardware binding",
+  "releaseNotes": "• ✨ UI Declutter & Polish — streamlined Dashboard, Voice Hub, and Settings menus with zero redundancy\n• 📱 Responsive Chip Layouts — dynamic FlowRow wrapping prevents text clipping on all screen sizes\n• 🎙️ Unified Prompt & AI Studio — one centralized hub for Missed-Call SMS, AI Voice persona/greetings, and Post-Call SMS with live interactive preview bubbles\n• ⏱️ Real-Time Minute Quota & Metering — live tracking of pooled voice minutes and automated overage billing\n• 🛡️ Hardware appliance cryptographic lock & anti-piracy licensing protection",
   "mandatory": true,
-  "minSupportedVersion": 14,
-  "updatedAt": "2026-09-20T04:06:00.000Z"
+  "minSupportedVersion": 15,
+  "updatedAt": "2026-09-20T04:30:00.000Z"
 }
