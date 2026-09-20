@@ -1,10 +1,10 @@
 {
-  "versionCode": 15,
-  "versionName": "1.6.1",
+  "versionCode": 16,
+  "versionName": "1.6.2",
   "downloadUrl": "https://raw.githubusercontent.com/anthonyfullerink-ai/MCASMS/main/MissedCallAutoSMS.apk",
   "proDownloadUrl": "https://raw.githubusercontent.com/anthonyfullerink-ai/MCASMS/main/MissedCallAutoSMS-Pro.apk",
-  "releaseNotes": "• ✨ UI Declutter & Polish — streamlined Dashboard, Voice Hub, and Settings menus with zero redundancy\n• 📱 Responsive Chip Layouts — dynamic FlowRow wrapping prevents text clipping on all screen sizes\n• 🎙️ Unified Prompt & AI Studio — one centralized hub for Missed-Call SMS, AI Voice persona/greetings, and Post-Call SMS with live interactive preview bubbles\n• ⏱️ Real-Time Minute Quota & Metering — live tracking of pooled voice minutes and automated overage billing\n• 🛡️ Hardware appliance cryptographic lock & anti-piracy licensing protection",
+  "releaseNotes": "• 🚀 Reliability Update — Exponential backoff for webhooks ensures 99.9% lead notification deliverability\n• 🧠 Intent-Based AI SMS — Dynamic response routing based on AI call outcome (Emergency vs General)\n• 🌐 Remote Template Engine — Manage and update client messaging instantly via the Agency Dashboard\n• 🟢 Fleet Visibility — Real-time Green/Red status monitoring for all deployed hardware appliances",
   "mandatory": true,
-  "minSupportedVersion": 15,
-  "updatedAt": "2026-09-20T04:30:00.000Z"
+  "minSupportedVersion": 16,
+  "updatedAt": "2026-09-20T23:45:00.000Z"
 }
