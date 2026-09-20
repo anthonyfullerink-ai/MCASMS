@@ -2838,6 +2838,34 @@ const server = http.createServer((req, res) => {
     return;
   }
 
+  // ─── Netlify Function Bridge: Agency Fleet ───
+  if (relativePath === '/.netlify/functions/agency-fleet' || relativePath === '/api/agency/fleet') {
+    let body = '';
+    req.on('data', chunk => body += chunk);
+    req.on('end', async () => {
+      try {
+        delete require.cache[require.resolve('./netlify/functions/agency-fleet')];
+        const agencyFleetHandler = require('./netlify/functions/agency-fleet').handler;
+        const event = {
+          httpMethod: req.method,
+          headers: req.headers,
+          body: body || null
+        };
+        const result = await agencyFleetHandler(event);
+        res.writeHead(result.statusCode || 200, {
+          'Content-Type': 'application/json; charset=utf-8',
+          'Access-Control-Allow-Origin': '*',
+          ...(result.headers || {})
+        });
+        res.end(result.body);
+      } catch (err) {
+        res.writeHead(500, { 'Content-Type': 'application/json; charset=utf-8', 'Access-Control-Allow-Origin': '*' });
+        res.end(JSON.stringify({ success: false, error: err.message }));
+      }
+    });
+    return;
+  }
+
   // ─── Agency: Online Revocation Check (consumed by Android LicenseManager.kt) ──
   if ((relativePath === '/api/agency/revoked' || relativePath === '/api/agency/revoked/') && req.method === 'GET') {
     const urlObj = new URL(req.url, `http://localhost:${PORT}`);
