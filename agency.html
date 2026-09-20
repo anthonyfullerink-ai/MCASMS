@@ -5,7 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Agency & Reseller Fleet Pack | Missed Call Auto SMS</title>
 
-    <meta name="description" content="Deploy 100% A2P-exempt Android SMS appliances for your marketing agency clients. Zero Twilio markups, zero carrier bans, and high-margin recurring retainers.">
+    <meta name="description" content="Deploy 100% A2P-exempt Android SMS appliances for your marketing agency clients. Recurring monthly seat licensing with pooled AI voice minutes, zero Twilio markups, and high-margin recurring retainers.">
     
     <link rel="icon" type="image/svg+xml" href="/favicon.svg?v=2">
     <link rel="icon" type="image/png" sizes="32x32" href="/favicon-32x32.png?v=2">
@@ -147,6 +147,52 @@
             margin: 0 auto 36px auto;
         }
 
+        /* Two-line pitch strip */
+        .pitch-strip {
+            display: flex;
+            justify-content: center;
+            align-items: stretch;
+            gap: 0;
+            max-width: 700px;
+            margin: 0 auto 36px auto;
+            border-radius: 14px;
+            overflow: hidden;
+            border: 1px solid var(--card-border);
+        }
+
+        .pitch-half {
+            flex: 1;
+            padding: 18px 22px;
+            text-align: center;
+        }
+
+        .pitch-half:first-child {
+            background: #131720;
+            border-right: 1px solid var(--card-border);
+        }
+
+        .pitch-half:last-child {
+            background: rgba(56, 189, 248, 0.08);
+        }
+
+        .pitch-label {
+            font-size: 10px;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            font-weight: 800;
+            color: var(--muted);
+            margin-bottom: 4px;
+        }
+
+        .pitch-value {
+            font-size: 16px;
+            font-weight: 800;
+            color: #FFF;
+            line-height: 1.3;
+        }
+
+        .pitch-value span { color: var(--agency-accent); }
+
         .hero-ctas {
             display: flex;
             gap: 16px;
@@ -200,13 +246,8 @@
             padding: 32px;
         }
 
-        .card-bad {
-            border-left: 4px solid var(--warning);
-        }
-
-        .card-good {
-            border-left: 4px solid var(--agency-accent);
-        }
+        .card-bad { border-left: 4px solid var(--warning); }
+        .card-good { border-left: 4px solid var(--agency-accent); }
 
         .card-title {
             font-size: 20px;
@@ -291,9 +332,9 @@
         /* Pricing Bundles */
         .pricing-grid {
             display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
             gap: 24px;
-            max-width: 860px;
+            max-width: 1060px;
             margin: 0 auto 60px auto;
         }
 
@@ -314,6 +355,12 @@
             background: linear-gradient(180deg, #101726 0%, #131720 100%);
         }
 
+        .price-card.enterprise {
+            border: 2px solid var(--purple);
+            box-shadow: 0 8px 32px rgba(168, 85, 247, 0.2);
+            background: linear-gradient(180deg, #130d1e 0%, #131720 100%);
+        }
+
         .badge-popular {
             position: absolute;
             top: -12px;
@@ -327,6 +374,22 @@
             font-weight: 900;
             text-transform: uppercase;
             letter-spacing: 0.5px;
+        }
+
+        .badge-enterprise {
+            position: absolute;
+            top: -12px;
+            left: 50%;
+            transform: translateX(-50%);
+            background: linear-gradient(135deg, #7C3AED, #A855F7);
+            color: #FFF;
+            padding: 3px 14px;
+            border-radius: 20px;
+            font-size: 11px;
+            font-weight: 900;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            white-space: nowrap;
         }
 
         .plan-name {
@@ -351,7 +414,22 @@
         .plan-sub {
             font-size: 13px;
             color: var(--muted);
-            margin-bottom: 24px;
+            margin-bottom: 10px;
+        }
+
+        /* Voice pool badge */
+        .pool-badge {
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+            background: rgba(168, 85, 247, 0.12);
+            color: #C084FC;
+            border: 1px solid rgba(168, 85, 247, 0.3);
+            padding: 4px 12px;
+            border-radius: 20px;
+            font-size: 11px;
+            font-weight: 800;
+            margin-bottom: 20px;
         }
 
         .plan-features {
@@ -363,6 +441,89 @@
             display: flex;
             flex-direction: column;
             gap: 10px;
+        }
+
+        /* Margin Calculator */
+        .calc-section {
+            background: var(--card-bg);
+            border: 1px solid var(--card-border);
+            border-radius: 20px;
+            padding: 36px;
+            max-width: 780px;
+            margin: 0 auto 60px auto;
+        }
+
+        .calc-section h3 {
+            font-size: 22px;
+            font-weight: 900;
+            margin: 0 0 6px 0;
+            text-align: center;
+        }
+
+        .calc-desc {
+            text-align: center;
+            color: var(--muted);
+            font-size: 14px;
+            margin-bottom: 28px;
+        }
+
+        .calc-controls {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 20px;
+            margin-bottom: 24px;
+        }
+
+        @media (max-width: 640px) { .calc-controls { grid-template-columns: 1fr; } }
+
+        .calc-label {
+            font-size: 12px;
+            font-weight: 700;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            color: var(--muted);
+            margin-bottom: 8px;
+        }
+
+        .calc-slider {
+            width: 100%;
+            accent-color: var(--agency-accent);
+        }
+
+        .calc-value {
+            font-size: 24px;
+            font-weight: 900;
+            color: var(--agency-accent);
+            margin-top: 4px;
+        }
+
+        .calc-result {
+            background: #090B0E;
+            border: 1px solid rgba(56, 189, 248, 0.3);
+            border-radius: 14px;
+            padding: 20px;
+            text-align: center;
+        }
+
+        .calc-result-label {
+            font-size: 12px;
+            color: var(--muted);
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            font-weight: 700;
+            margin-bottom: 6px;
+        }
+
+        .calc-result-value {
+            font-size: 36px;
+            font-weight: 900;
+            color: var(--primary);
+        }
+
+        .calc-result-sub {
+            font-size: 12px;
+            color: var(--muted);
+            margin-top: 4px;
         }
 
         /* FAQ */
@@ -412,6 +573,7 @@
         <a href="/">Home</a>
         <a href="#playbook">The Playbook</a>
         <a href="#pricing">Pricing</a>
+        <a href="#calculator">ROI Calculator</a>
         <a href="#faq">Agency FAQ</a>
         <a href="/agency_dashboard.html" class="btn-nav-portal">Agency Fleet Login →</a>
     </div>
@@ -422,14 +584,29 @@
     <!-- Hero -->
     <div class="hero">
         <div class="agency-pill">
-            <span>🏢</span> The High-Ticket Agency SMS Appliance Playbook
+            <span>🏢</span> High-Ticket Agency Fleet Platform
         </div>
-        <h1>Deploy <span>100% A2P-Exempt SMS Appliances</span> for Your Clients</h1>
+        <h1>Deploy <span>AI-Powered SMS Appliances</span><br>for Every Client You Have</h1>
         <p>
-            Stop fighting 4-week A2P 10DLC rejections and paying Twilio markups for every client text. Deploy dedicated Android carrier appliances in your clients' back offices, connect to GoHighLevel/n8n via webhooks, and pocket \$150–\$300/mo management retainers.
+            Stop fighting A2P 10DLC rejections and Twilio markups. Deploy a dedicated Android carrier appliance per client and charge a recurring monthly management retainer — while your software cost stays predictable.
         </p>
+
+        <!-- Two-line pitch strip -->
+        <div class="pitch-strip">
+            <div class="pitch-half">
+                <div class="pitch-label">Hardware Cost</div>
+                <div class="pitch-value">One-Time <span>~$40</span></div>
+                <div style="font-size: 11px; color: var(--muted); margin-top: 4px;">Client buys a $40 Android + $10/mo SIM. Yours forever.</div>
+            </div>
+            <div class="pitch-half">
+                <div class="pitch-label">Platform License</div>
+                <div class="pitch-value"><span>$69/seat/mo</span> recurring</div>
+                <div style="font-size: 11px; color: var(--muted); margin-top: 4px;">AI voice + SIM SMS. Pooled minutes. You charge clients $199–$399.</div>
+            </div>
+        </div>
+
         <div class="hero-ctas">
-            <a href="#pricing" class="btn-primary">View Agency Bundles ($399 – $799) ➔</a>
+            <a href="#pricing" class="btn-primary">View Agency Bundles ($349–$1,500) ➔</a>
             <a href="/agency_dashboard.html" class="btn-secondary">Access Agency Fleet Portal →</a>
         </div>
     </div>
@@ -442,7 +619,7 @@
             </h3>
             <ul class="list-items">
                 <li><strong>A2P 10DLC Rejection Hell:</strong> Registering campaigns for local plumbers or roofers takes weeks, requires EIN verification, and still gets rejected by TCR.</li>
-                <li><strong>Twilio Surcharges:</strong> Cloud VoIP gateways bill \$0.0079/SMS plus carrier pass-through fees that eat your agency margins.</li>
+                <li><strong>Twilio Surcharges:</strong> Cloud VoIP gateways bill $0.0079/SMS plus carrier pass-through fees that eat your agency margins.</li>
                 <li><strong>Carrier Spam Blocking:</strong> Virtual VoIP numbers are flagged as "Spam Likely" by AT&T and Verizon.</li>
                 <li><strong>Client Frustration:</strong> Missed call texts fail to deliver, making your agency look unreliable.</li>
             </ul>
@@ -450,13 +627,13 @@
 
         <div class="card card-good">
             <h3 class="card-title" style="color: var(--agency-accent);">
-                <span>✅</span> The Hardware Appliance Advantage
+                <span>✅</span> The Hardware Appliance + AI Platform Advantage
             </h3>
             <ul class="list-items">
                 <li><strong>100% A2P 10DLC Exempt:</strong> Real physical SIM cards (Verizon, AT&T, T-Mobile) send direct cellular signals. Zero forms, zero approvals.</li>
-                <li><strong>Unlimited Texts via Client SIM:</strong> Runs on a cheap \$10–\$15/mo prepaid SIM (Tello, Mint). Zero per-message software fees.</li>
+                <li><strong>Pooled AI Voice Minutes:</strong> Your fleet shares a pooled voice minute bank. Slower clients subsidize busier ones. Overages are metered and billed automatically.</li>
                 <li><strong>n8n, Make & GHL Webhooks:</strong> Transmits missed-call leads straight into your agency workflows with zero double-texts.</li>
-                <li><strong>High Recurring Retainers:</strong> Charge clients \$199/mo for automated speed-to-lead response while your software cost is \$0/month forever.</li>
+                <li><strong>Predictable Monthly Revenue:</strong> You pay a flat per-seat rate. You charge clients $199–$399/mo. Your margin is yours to keep.</li>
             </ul>
         </div>
     </div>
@@ -465,106 +642,111 @@
     <section id="playbook">
         <div class="section-header">
             <h2>The 15-Minute Client Deployment Playbook</h2>
-            <p>How top automation consultants turn spare phones into automated revenue engines.</p>
+            <p>How top automation consultants turn spare phones into recurring revenue engines.</p>
         </div>
 
         <div class="steps-grid">
             <div class="step-box">
                 <div class="step-number">01</div>
-                <h4 class="step-heading">Buy Agency Pack</h4>
-                <p class="step-desc">Purchase a 5-Pack or 10-Pack bundle. Gain instant access to your unified Agency Fleet Management Portal.</p>
+                <h4 class="step-heading">Subscribe to Agency Plan</h4>
+                <p class="step-desc">Choose a 5-seat or 10-seat monthly bundle. Your Agency Fleet Portal and Master Key are provisioned instantly on checkout.</p>
             </div>
             <div class="step-box">
                 <div class="step-number">02</div>
-                <h4 class="step-heading">Source \$40 Phone</h4>
-                <p class="step-desc">Grab an affordable Android phone (e.g. Motorola Moto G or Samsung A-series) and a \$10/mo unlimited text SIM card.</p>
+                <h4 class="step-heading">Source $40 Phone + SIM</h4>
+                <p class="step-desc">Grab an affordable Android phone (e.g. Motorola Moto G or Samsung A-series) and a $10/mo unlimited text SIM card.</p>
             </div>
             <div class="step-box">
                 <div class="step-number">03</div>
-                <h4 class="step-heading">Sideload & Issue Key</h4>
-                <p class="step-desc">Generate a client key in your Agency Portal. Paste into the phone, grant permissions, and enable Outbound Forwarder.</p>
+                <h4 class="step-heading">Issue Client Key in Portal</h4>
+                <p class="step-desc">Generate a child Pro key in your Agency Fleet Portal. Sideload the APK, paste the key, grant permissions, and enable the Outbound Forwarder.</p>
             </div>
             <div class="step-box">
                 <div class="step-number">04</div>
-                <h4 class="step-heading">Dock in Client Office</h4>
-                <p class="step-desc">Dock the phone on office Wi-Fi. Missed calls automatically trigger instant SMS and route into their CRM!</p>
+                <h4 class="step-heading">Dock & Bill $199–$399/mo</h4>
+                <p class="step-desc">Dock the phone in the client's back office on Wi-Fi. Set your retainer price, connect to their CRM, and collect recurring revenue every month.</p>
             </div>
         </div>
     </section>
 
+    <!-- Agency Founder Quote -->
+    <div style="max-width: 860px; margin: 0 auto 50px auto; background: linear-gradient(180deg, #131720 0%, #0d121c 100%); border: 1px solid rgba(56, 189, 248, 0.3); border-left: 4px solid var(--agency-accent); border-radius: 16px; padding: 24px 28px; text-align: left; box-shadow: 0 10px 30px rgba(0,0,0,0.35);">
+        <div style="display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 10px; margin-bottom: 12px; border-bottom: 1px solid rgba(255,255,255,0.06); padding-bottom: 10px;">
+            <div style="display: flex; align-items: center; gap: 8px;">
+                <span style="display: inline-block; width: 8px; height: 8px; background: var(--agency-accent); border-radius: 50%; box-shadow: 0 0 8px var(--agency-accent);"></span>
+                <span style="font-size: 11px; font-weight: 800; color: var(--agency-accent); text-transform: uppercase; letter-spacing: 1px;">From One Agency Operator To Another</span>
+            </div>
+            <div style="font-size: 11px; color: var(--muted); font-weight: 600;">
+                Anthony Fuller • Founder, Offgrid Media Group
+            </div>
+        </div>
+
+        <h3 style="font-size: 17px; font-weight: 800; color: #FFF; margin: 0 0 10px 0; line-height: 1.35;">
+            "Why recurring bundles: your first client retainer covers your entire monthly plan cost — every client after that is pure margin."
+        </h3>
+
+        <p style="font-size: 13.5px; color: #C5CBD8; line-height: 1.6; margin: 0 0 10px 0;">
+            At <strong>Offgrid Media Group</strong>, we know the gut punch of closing a client on a $1,500/month marketing retainer, only to spend 4 weeks fighting TCR brand rejections. We built this appliance fleet for our own client deployments.
+        </p>
+
+        <p style="font-size: 13.5px; color: #C5CBD8; line-height: 1.6; margin: 0 0 14px 0;">
+            The model is simple: the <strong>hardware is a one-time cost</strong> ($40 phone, $10/mo SIM — your client buys it). The <strong>platform license is your monthly recurring fee</strong>. You pay $69/seat/mo. You charge clients $199–$399/mo. At 5 clients, your plan pays for itself on Day 1 — then it's pure agency margin every month after.
+        </p>
+
+        <div style="display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 12px; padding-top: 12px; border-top: 1px solid rgba(255,255,255,0.06); font-size: 12px; color: var(--muted);">
+            <div style="display: flex; align-items: center; gap: 10px;">
+                <img src="/assets/profile-avatar.jpg" alt="Anthony Fuller" style="width: 32px; height: 32px; border-radius: 50%; border: 1.5px solid var(--agency-accent); object-fit: cover;">
+                <span><strong>Anthony Fuller</strong> — Operator @ Offgrid Media Group & Missed Call Auto SMS</span>
+            </div>
+            <div style="display: flex; align-items: center; gap: 14px; flex-wrap: wrap;">
+                <span>🛡️ Reassignable Client Seats</span>
+                <span>⚡ Instant Fleet Portal Access</span>
+                <span>🎙️ Pooled AI Voice Minutes</span>
+            </div>
+        </div>
+    </div>
+
     <!-- Pricing Bundles -->
     <section id="pricing">
         <div class="section-header">
-            <h2>High-Ticket Agency Fleet Bundles</h2>
-            <p>One-time purchase. Lifetime ownership. Zero recurring software fees to your agency.</p>
-        </div>
-
-        <!-- Agency Peer-to-Peer Callout -->
-        <div class="agency-callout-card" style="max-width: 860px; margin: 0 auto 36px auto; background: linear-gradient(180deg, #131720 0%, #0d121c 100%); border: 1px solid rgba(56, 189, 248, 0.3); border-left: 4px solid var(--agency-accent); border-radius: 16px; padding: 24px 28px; text-align: left; box-shadow: 0 10px 30px rgba(0,0,0,0.35);">
-            <div style="display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 10px; margin-bottom: 12px; border-bottom: 1px solid rgba(255,255,255,0.06); padding-bottom: 10px;">
-                <div style="display: flex; align-items: center; gap: 8px;">
-                    <span style="display: inline-block; width: 8px; height: 8px; background: var(--agency-accent); border-radius: 50%; box-shadow: 0 0 8px var(--agency-accent);"></span>
-                    <span style="font-size: 11px; font-weight: 800; color: var(--agency-accent); text-transform: uppercase; letter-spacing: 1px;">From One Agency Operator To Another</span>
-                </div>
-                <div style="font-size: 11px; color: var(--muted); font-weight: 600;">
-                    Anthony Fuller • Founder, Offgrid Media Group
-                </div>
-            </div>
-
-            <h3 style="font-size: 17px; font-weight: 800; color: #FFF; margin: 0 0 10px 0; line-height: 1.35;">
-                "Why we built fleet bundles: Your first client retainer pays for the entire pack."
-            </h3>
-
-            <p style="font-size: 13.5px; color: #C5CBD8; line-height: 1.6; margin: 0 0 10px 0;">
-                At <strong>Offgrid Media Group</strong>, we know the gut punch of closing a client on a $1,500/month marketing retainer, only to spend 4 weeks fighting TCR brand rejections and explaining to an angry contractor why his Twilio texts are blocked. We engineered this appliance fleet for our own client deployments.
-            </p>
-
-            <p style="font-size: 13.5px; color: #C5CBD8; line-height: 1.6; margin: 0 0 14px 0;">
-                When you deploy a $40 dedicated Android phone in your client's office with a $10/mo SIM, <strong>deliverability is 100% cellular, A2P 10DLC is completely bypassed, and your recurring software overhead is $0</strong>. Charge your clients $150–$300/mo for automated speed-to-lead recovery. A single client pays off your entire 5-Pack ($399) or 10-Pack ($799) in Month 1—every month after that is 100% pure agency margin.
-            </p>
-
-            <div style="display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 12px; padding-top: 12px; border-top: 1px solid rgba(255,255,255,0.06); font-size: 12px; color: var(--muted);">
-                <div style="display: flex; align-items: center; gap: 10px;">
-                    <img src="/assets/profile-avatar.jpg" alt="Anthony Fuller" style="width: 32px; height: 32px; border-radius: 50%; border: 1.5px solid var(--agency-accent); object-fit: cover;">
-                    <span><strong>Anthony Fuller</strong> — Operator @ Offgrid Media Group &amp; Missed Call Auto SMS</span>
-                </div>
-                <div style="display: flex; align-items: center; gap: 14px; flex-wrap: wrap;">
-                    <span>🛡️ Reassignable Client Seats</span>
-                    <span>⚡ Instant Master Fleet Key Access</span>
-                </div>
-            </div>
+            <h2>Agency Fleet Bundles</h2>
+            <p>Monthly recurring platform licenses with pooled AI voice minutes. Hardware is a separate one-time client cost.</p>
         </div>
 
         <div class="pricing-grid">
-            <!-- 5-Pack ($399) -->
+            <!-- 5-Pack ($349/mo) -->
             <div class="price-card">
                 <h3 class="plan-name">Agency 5-Pack</h3>
-                <div class="plan-price">$399 <span>One-Time</span></div>
-                <div class="plan-sub">$79.80 / Client Appliance (Saves $350 vs Single Pro)</div>
+                <div class="plan-price">$349 <span>/mo</span></div>
+                <div class="plan-sub">$69.80/seat · 5 client appliances</div>
+                <div class="pool-badge">🎙️ 1,250 Pooled AI Voice Mins/mo</div>
 
                 <div class="plan-features">
                     <div>✓ <strong>5 Pro Appliance Seats</strong> for client deployments</div>
                     <div>✓ <strong>Agency Fleet Management Portal</strong></div>
                     <div>✓ <strong>1-Click Client Key Generator</strong></div>
-                    <div>✓ <strong>Hardware Reset & Rebind</strong> (Switch client phones anytime)</div>
+                    <div>✓ <strong>Per-Client Voice Usage Dashboard</strong></div>
+                    <div>✓ <strong>Pooled Minute Overage Alerts</strong> (auto-billed $0.20/min)</div>
+                    <div>✓ <strong>Hardware Reset & Rebind</strong> (switch client phones anytime)</div>
                     <div>✓ <strong>n8n & Make.com Webhook Forwarder</strong></div>
-                    <div>✓ <strong>Mute Native Auto-Reply</strong> (Zero double-sends)</div>
+                    <div>✓ <strong>Mute Native Auto-Reply</strong> (zero double-sends)</div>
                     <div>✓ <strong>Dual SIM Outbound Line Selector</strong></div>
-                    <div>✓ <strong>SIM Burn Safeguard™</strong> Anti-Spam pacing</div>
-                    <div>✓ <strong>Client 1-Page Setup Sheet Generator</strong></div>
+                    <div>✓ <strong>SIM Burn Safeguard™</strong> anti-spam pacing</div>
+                    <div>✓ <strong>Client Setup Sheet Generator</strong></div>
                 </div>
 
                 <a href="https://buy.stripe.com/9B6aEX8pw2X03zOddf2go0d" class="btn-primary" style="justify-content: center; width: 100%;">
-                    Get Agency 5-Pack ($399) ➔
+                    Start Agency 5-Pack ($349/mo) ➔
                 </a>
             </div>
 
-            <!-- 10-Pack ($799) -->
+            <!-- 10-Pack ($649/mo) -->
             <div class="price-card featured">
                 <div class="badge-popular">⚡ MOST POPULAR AGENCY BUNDLE</div>
                 <h3 class="plan-name">Agency 10-Pack</h3>
-                <div class="plan-price">$799 <span>One-Time</span></div>
-                <div class="plan-sub">$79.90 / Client Appliance (Saves $700 vs Single Pro)</div>
+                <div class="plan-price">$649 <span>/mo</span></div>
+                <div class="plan-sub">$64.90/seat · 10 client appliances</div>
+                <div class="pool-badge">🎙️ 2,500 Pooled AI Voice Mins/mo</div>
 
                 <div class="plan-features">
                     <div>✓ <strong>10 Pro Appliance Seats</strong> for client deployments</div>
@@ -574,11 +756,80 @@
                     <div>✓ <strong>White-Label Client PDF Onboarding Pack</strong></div>
                     <div>✓ <strong>Turnkey n8n AI Lead Qualification Templates</strong></div>
                     <div>✓ <strong>Free Lifetime OTA Updates for All Devices</strong></div>
+                    <div>✓ <strong>Overage Alerts Billed to Agency Master Account</strong></div>
                 </div>
 
                 <a href="https://buy.stripe.com/9B6bJ15dk5582vK1ux2go0e" class="btn-primary" style="justify-content: center; width: 100%; background: linear-gradient(135deg, #0284C7, #00E676);">
-                    Get Agency 10-Pack ($799) ➔
+                    Start Agency 10-Pack ($649/mo) ➔
                 </a>
+            </div>
+
+            <!-- Enterprise White-Label ($1,500+/mo) -->
+            <div class="price-card enterprise">
+                <div class="badge-enterprise">🏆 ENTERPRISE / WHITE-LABEL</div>
+                <h3 class="plan-name" style="color: #C084FC;">Enterprise Fleet</h3>
+                <div class="plan-price" style="color: #C084FC;">$1,500+ <span>/mo</span></div>
+                <div class="plan-sub">Unlimited seats · Custom voice pool</div>
+                <div class="pool-badge" style="background: rgba(168,85,247,0.15); color: #C084FC; border-color: rgba(168,85,247,0.4);">🎙️ Custom Pooled Voice Mins — You Set the Quota</div>
+
+                <div class="plan-features">
+                    <div>✓ <strong>Unlimited Client Appliance Seats</strong></div>
+                    <div>✓ <strong>Everything in Agency 10-Pack</strong></div>
+                    <div>✓ <strong>White-Label Fleet Dashboard</strong> (your brand, logo & colors)</div>
+                    <div>✓ <strong>Custom Agency Domain</strong> (e.g. fleet.youragency.com)</div>
+                    <div>✓ <strong>Branded Setup Sheets & Client PDFs</strong> with your logo</div>
+                    <div>✓ <strong>Branded Customer Email Templates</strong></div>
+                    <div>✓ <strong>Custom Voice Pool Sizing</strong> (negotiate your overage rate)</div>
+                    <div>✓ <strong>Dedicated Account Manager</strong></div>
+                    <div>✓ <strong>SLA-Backed Uptime Guarantee</strong></div>
+                    <div>✓ <strong>Bulk Key CSV Import/Export</strong></div>
+                </div>
+
+                <a href="mailto:contactus@offgridmediagroup.com?subject=Enterprise Fleet Inquiry" class="btn-primary" style="justify-content: center; width: 100%; background: linear-gradient(135deg, #7C3AED, #A855F7);">
+                    Contact Sales for Enterprise Pricing ➔
+                </a>
+            </div>
+        </div>
+    </section>
+
+    <!-- Margin Calculator -->
+    <section id="calculator">
+        <div class="calc-section">
+            <h3>💰 Agency Margin Calculator</h3>
+            <p class="calc-desc">See your monthly gross margin at different client billing rates.</p>
+
+            <div class="calc-controls">
+                <div>
+                    <div class="calc-label">Agency Bundle</div>
+                    <select id="calc-plan" style="width: 100%; background: #090B0E; border: 1px solid var(--card-border); color: #FFF; padding: 10px 12px; border-radius: 10px; font-size: 14px; outline: none;" onchange="calcMargin()">
+                        <option value="349:5">Agency 5-Pack — $349/mo (5 seats)</option>
+                        <option value="649:10" selected>Agency 10-Pack — $649/mo (10 seats)</option>
+                        <option value="1500:25">Enterprise — $1,500/mo (25 seats)</option>
+                    </select>
+                </div>
+                <div>
+                    <div class="calc-label">Your Client Charge</div>
+                    <input type="range" id="calc-client-price" class="calc-slider" min="99" max="499" step="10" value="249" oninput="calcMargin()">
+                    <div class="calc-value" id="calc-price-display">$249/mo per client</div>
+                </div>
+            </div>
+
+            <div style="display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 12px;">
+                <div class="calc-result">
+                    <div class="calc-result-label">Your Platform Cost</div>
+                    <div class="calc-result-value" id="calc-cost" style="color: #EF4444;">-$649</div>
+                    <div class="calc-result-sub">Per month</div>
+                </div>
+                <div class="calc-result">
+                    <div class="calc-result-label">Client Revenue</div>
+                    <div class="calc-result-value" id="calc-revenue" style="color: var(--agency-accent);">$2,490</div>
+                    <div class="calc-result-sub">10 × $249/mo</div>
+                </div>
+                <div class="calc-result">
+                    <div class="calc-result-label">Monthly Gross Margin</div>
+                    <div class="calc-result-value" id="calc-margin">$1,841</div>
+                    <div class="calc-result-sub" id="calc-margin-pct">73.9% margin</div>
+                </div>
             </div>
         </div>
     </section>
@@ -590,13 +841,28 @@
         </div>
 
         <div class="faq-box">
+            <div class="faq-q">How does the monthly pricing work vs. the old one-time packs?</div>
+            <p class="faq-a">The hardware is still a one-time cost your client handles (~$40 Android phone + $10/mo SIM). The platform license is your monthly recurring fee — starting at $349/mo for 5 seats. This gives you a predictable cost and keeps you on the same billing cycle as your own client retainers. You can cancel anytime.</p>
+        </div>
+
+        <div class="faq-box">
+            <div class="faq-q">What are "pooled AI voice minutes" and how does overage work?</div>
+            <p class="faq-a">Each bundle includes a shared pool of AI voice minutes across all your client seats. The 5-Pack includes 1,250 mins/mo; the 10-Pack includes 2,500 mins/mo. If your fleet exceeds the pool, overage is metered at $0.20/min and billed to your master agency account at month-end via Stripe. Your Fleet Dashboard shows real-time per-client usage and pool consumption.</p>
+        </div>
+
+        <div class="faq-box">
             <div class="faq-q">Can I reassign or transfer a license if a client cancels?</div>
             <p class="faq-a">Yes! Inside your Agency Fleet Dashboard, simply click "Revoke Seat" or "Reset Lock". The seat returns to your available quota immediately, allowing you to deploy it to a new client or new Android phone.</p>
         </div>
 
         <div class="faq-box">
             <div class="faq-q">Do my clients see my Master Agency Key or Stripe account?</div>
-            <p class="faq-a">No. You hold the Master Agency Key. For each client, you generate a dedicated child Pro License Key (e.g. <code>MCAS-PRO-...</code>). The client only sees their own business name and activation status on their phone.</p>
+            <p class="faq-a">No. You hold the Master Agency Key. For each client, you generate a dedicated child Pro License Key (e.g. <code>MCAS-PRO-...</code>). The client only sees their own business name and activation status on their phone. With the Enterprise plan, your branding replaces all MCAS branding in the setup sheets and portal.</p>
+        </div>
+
+        <div class="faq-box">
+            <div class="faq-q">What is the Enterprise / White-Label tier and who is it for?</div>
+            <p class="faq-a">Enterprise is designed for SaaS-grade agencies managing 25+ client deployments who need their own branded experience: a custom domain fleet portal (e.g. fleet.youragency.com), client setup sheets with your logo, branded customer emails, and negotiated voice pool sizing. Contact our sales team for custom pricing.</p>
         </div>
 
         <div class="faq-box">
@@ -606,7 +872,7 @@
 
         <div class="faq-box">
             <div class="faq-q">What SIM cards and phone models work best?</div>
-            <p class="faq-a">Any budget Android 8.0+ smartphone (such as a Motorola Moto G Pure, Samsung Galaxy A03s, or BLU device) works flawlessly. For cellular plans, prepaid unlimited talk/text SIMs like Tello (\$10/mo), Mint Mobile (\$15/mo), or US Mobile work out of the box with zero A2P paperwork.</p>
+            <p class="faq-a">Any budget Android 8.0+ smartphone (such as a Motorola Moto G Pure, Samsung Galaxy A03s, or BLU device) works flawlessly. For cellular plans, prepaid unlimited talk/text SIMs like Tello ($10/mo), Mint Mobile ($15/mo), or US Mobile work out of the box with zero A2P paperwork.</p>
         </div>
     </section>
 
@@ -623,6 +889,26 @@
     </div>
     <p>© 2026 MissedCallAutoSMS.com. All rights reserved. Missed Call Auto SMS is an independent telecommunications hardware appliance utility.</p>
 </footer>
+
+<script>
+function calcMargin() {
+    const planVal = document.getElementById('calc-plan').value;
+    const [cost, seats] = planVal.split(':').map(Number);
+    const clientPrice = parseInt(document.getElementById('calc-client-price').value);
+
+    const revenue = clientPrice * seats;
+    const margin = revenue - cost;
+    const pct = ((margin / revenue) * 100).toFixed(1);
+
+    document.getElementById('calc-price-display').textContent = `$${clientPrice}/mo per client`;
+    document.getElementById('calc-cost').textContent = `-$${cost.toLocaleString()}`;
+    document.getElementById('calc-revenue').textContent = `$${revenue.toLocaleString()}`;
+    document.getElementById('calc-revenue').nextElementSibling.textContent = `${seats} × $${clientPrice}/mo`;
+    document.getElementById('calc-margin').textContent = `$${margin.toLocaleString()}`;
+    document.getElementById('calc-margin-pct').textContent = `${pct}% margin`;
+}
+calcMargin();
+</script>
 
 </body>
 </html>

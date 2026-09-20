@@ -2838,6 +2838,104 @@ const server = http.createServer((req, res) => {
     return;
   }
 
+  // ─── Agency: Online Revocation Check (consumed by Android LicenseManager.kt) ──
+  if ((relativePath === '/api/agency/revoked' || relativePath === '/api/agency/revoked/') && req.method === 'GET') {
+    const urlObj = new URL(req.url, `http://localhost:${PORT}`);
+    const keyParam = (urlObj.searchParams.get('key') || urlObj.searchParams.get('licenseKey') || '').trim().toUpperCase();
+
+    if (!keyParam) {
+      res.writeHead(400, { 'Content-Type': 'application/json; charset=utf-8', 'Access-Control-Allow-Origin': '*' });
+      res.end(JSON.stringify({ revoked: false, error: 'key parameter required' }));
+      return;
+    }
+
+    try {
+      const fleetCachePath = path.join(__dirname, '.agency_fleet_cache.json');
+      let revoked = false;
+      if (fs.existsSync(fleetCachePath)) {
+        const cache = JSON.parse(fs.readFileSync(fleetCachePath, 'utf8'));
+        if (cache._revokedKeys && Array.isArray(cache._revokedKeys)) {
+          revoked = cache._revokedKeys.includes(keyParam);
+        }
+      }
+      res.writeHead(200, { 'Content-Type': 'application/json; charset=utf-8', 'Access-Control-Allow-Origin': '*' });
+      res.end(JSON.stringify({ revoked, key: keyParam }));
+    } catch (e) {
+      res.writeHead(200, { 'Content-Type': 'application/json; charset=utf-8', 'Access-Control-Allow-Origin': '*' });
+      res.end(JSON.stringify({ revoked: false }));
+    }
+    return;
+  }
+
+  // ─── Agency: Aggregated Fleet Voice Usage (pooled meter for fleet dashboard) ──
+  if ((relativePath === '/api/agency/usage' || relativePath === '/api/agency/usage/') && req.method === 'GET') {
+    const urlObj = new URL(req.url, `http://localhost:${PORT}`);
+    const agencyKey = (urlObj.searchParams.get('agencyKey') || req.headers['x-agency-key'] || '').trim().toUpperCase();
+
+    if (!agencyKey) {
+      res.writeHead(400, { 'Content-Type': 'application/json; charset=utf-8', 'Access-Control-Allow-Origin': '*' });
+      res.end(JSON.stringify({ success: false, error: 'agencyKey parameter required' }));
+      return;
+    }
+
+    try {
+      const FLEET_CACHE_PATH = path.join(__dirname, '.agency_fleet_cache.json');
+      if (!fs.existsSync(FLEET_CACHE_PATH)) {
+        res.writeHead(404, { 'Content-Type': 'application/json; charset=utf-8', 'Access-Control-Allow-Origin': '*' });
+        res.end(JSON.stringify({ success: false, error: 'Fleet record not found' }));
+        return;
+      }
+
+      const cache = JSON.parse(fs.readFileSync(FLEET_CACHE_PATH, 'utf8'));
+      const agencyRecord = cache[agencyKey];
+
+      if (!agencyRecord) {
+        res.writeHead(404, { 'Content-Type': 'application/json; charset=utf-8', 'Access-Control-Allow-Origin': '*' });
+        res.end(JSON.stringify({ success: false, error: 'Agency key not found in fleet cache' }));
+        return;
+      }
+
+      const TIER_CONFIG = {
+        agency_5:          { voiceMinsPool: 1250, overageRatePerMin: 0.20 },
+        agency_10:         { voiceMinsPool: 2500, overageRatePerMin: 0.20 },
+        agency_enterprise: { voiceMinsPool: 9999, overageRatePerMin: 0.15 }
+      };
+      const tierCfg = TIER_CONFIG[agencyRecord.tier] || TIER_CONFIG['agency_5'];
+      const voiceMinsPool = agencyRecord.voiceMinsPool || tierCfg.voiceMinsPool;
+      const overageRatePerMin = agencyRecord.overageRatePerMin || tierCfg.overageRatePerMin;
+
+      let totalUsed = 0;
+      const clientUsage = (agencyRecord.clients || []).map(c => {
+        const used = c.voiceMinsUsed || 0;
+        totalUsed += used;
+        return { id: c.id, clientName: c.clientName, licenseKey: c.licenseKey, status: c.status, voiceMinsUsed: used };
+      });
+
+      const overageMinutes = Math.max(0, totalUsed - voiceMinsPool);
+      const overageAmount = parseFloat((overageMinutes * overageRatePerMin).toFixed(2));
+      const percentUsed = voiceMinsPool > 0 ? Math.round((totalUsed / voiceMinsPool) * 100) : 0;
+
+      res.writeHead(200, { 'Content-Type': 'application/json; charset=utf-8', 'Access-Control-Allow-Origin': '*' });
+      res.end(JSON.stringify({
+        success: true,
+        agencyName: agencyRecord.agencyName,
+        tier: agencyRecord.tier,
+        voiceMinsPool,
+        totalUsed,
+        overageMinutes,
+        overageAmount,
+        overageRatePerMin,
+        percentUsed,
+        alertLevel: percentUsed >= 100 ? 'OVERAGE' : percentUsed >= 85 ? 'WARNING' : 'OK',
+        clientUsage
+      }));
+    } catch (e) {
+      res.writeHead(500, { 'Content-Type': 'application/json; charset=utf-8', 'Access-Control-Allow-Origin': '*' });
+      res.end(JSON.stringify({ success: false, error: e.message }));
+    }
+    return;
+  }
+
   // Clean URL Routing
   if (relativePath === '/') {
     relativePath = '/sales_landing_page.html';

@@ -87,6 +87,9 @@ object LicenseManager {
             val fields = payloadStr.split("|")
             val customerName = fields.getOrNull(0)?.ifBlank { "Valued Customer" } ?: "Valued Customer"
             val expiryTimeRaw = fields.getOrNull(1)?.toLongOrNull() ?: 0L
+            // fields[2] = issuedAt timestamp (ignored here — server-side only)
+            // fields[3] = agencyId attribution tag (optional, 4th segment for agency-issued child keys)
+            // Backward-compatible: retail keys have 3 segments, agency keys have 4
             
             // Normalize epoch timestamp: if <= 10 billion, it's in seconds -> convert to ms
             val expiryTimeMs = if (expiryTimeRaw in 1..<10_000_000_000L) {
@@ -116,10 +119,18 @@ object LicenseManager {
         }
     }
 
+    /**
+     * Checks the live revocation endpoint at https://missedcallautosms.com/api/agency/revoked
+     * Returns true if the key has been revoked by the agency operator.
+     * Returns false on any network error (fail-open to avoid falsely blocking valid keys offline).
+     */
     suspend fun checkOnlineRevocation(licenseKey: String, revocationUrl: String): Boolean = withContext(Dispatchers.IO) {
         if (revocationUrl.isBlank() || licenseKey.isBlank()) return@withContext false
         return@withContext try {
-            val url = URL(revocationUrl)
+            val encodedKey = java.net.URLEncoder.encode(licenseKey, "UTF-8")
+            val fullUrl = if (revocationUrl.contains("?")) "$revocationUrl&key=$encodedKey"
+                         else "$revocationUrl?key=$encodedKey"
+            val url = URL(fullUrl)
             val conn = url.openConnection() as HttpURLConnection
             conn.requestMethod = "GET"
             conn.connectTimeout = 5000
@@ -127,12 +138,14 @@ object LicenseManager {
 
             if (conn.responseCode == 200) {
                 val json = conn.inputStream.bufferedReader().use { it.readText() }
-                json.contains(licenseKey.uppercase())
+                // Parse {"revoked": true} response from /api/agency/revoked
+                json.contains("\"revoked\":true") || json.contains("\"revoked\": true")
             } else {
-                false
+                false // Non-200 response — fail open (don't block user)
             }
         } catch (e: Exception) {
-            false
+            Log.w(TAG, "Online revocation check failed (network error): ${e.message}")
+            false // Network error — fail open (don't block valid users who are offline)
         }
     }
 
