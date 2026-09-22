@@ -1,10 +1,10 @@
 {
-  "versionCode": 16,
-  "versionName": "1.6.2",
+  "versionCode": 15,
+  "versionName": "1.6.1",
   "downloadUrl": "https://raw.githubusercontent.com/anthonyfullerink-ai/MCASMS/main/MissedCallAutoSMS.apk",
   "proDownloadUrl": "https://raw.githubusercontent.com/anthonyfullerink-ai/MCASMS/main/MissedCallAutoSMS-Pro.apk",
-  "releaseNotes": "✅ Autonomous Daily Social Posts — 9AM blog, 12:30PM feed, 6PM reel+story fire automatically every day\n✅ Fixed stale content cache — AI now generates a fresh topic bundle each morning instead of reusing yesterday's\n✅ Blog articles now automatically cross-post to Facebook & Instagram immediately after publishing\n✅ Nav bar reorganized into clean dropdown menus (Plans, For Business, Learn)\n✅ App: Removed duplicate AI greeting field — one unified source in Prompt Studio\n✅ App: Busy Status chips (Hands Full, On a Job, etc.) now instantly update what Riley tells callers live",
-  "mandatory": true,
-  "minSupportedVersion": 15,
-  "updatedAt": "2026-09-22T04:00:00.000Z"
+  "releaseNotes": "✅ Autonomous Daily Social Posts — 9AM blog, 12:30PM feed, 6PM reel+story fire automatically every day\n✅ Fixed stale content cache — AI now generates a fresh topic bundle each morning\n✅ Blog articles now automatically cross-post to Facebook & Instagram immediately after publishing\n✅ Nav bar reorganized into clean dropdown menus (Plans, For Business, Learn)\n✅ App: Removed duplicate AI greeting field — one unified source in Prompt Studio\n✅ App: Busy Status chips (Hands Full, On a Job, etc.) now instantly update what Riley tells callers live",
+  "mandatory": false,
+  "minSupportedVersion": 14,
+  "updatedAt": "2026-09-22T04:10:00.000Z"
 }
