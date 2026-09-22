@@ -185,10 +185,28 @@
         .badge-active { background: rgba(0, 230, 118, 0.15); color: var(--primary); border: 1px solid var(--primary); }
         .badge-pro { background: rgba(168, 85, 247, 0.15); color: #C084FC; border: 1px solid #A855F7; }
         .badge-agency { background: rgba(99, 102, 241, 0.15); color: #818CF8; border: 1px solid #6366F1; }
+        .badge-fleet { background: rgba(56, 189, 248, 0.15); color: #38BDF8; border: 1px solid #38BDF8; }
         .badge-voice { background: rgba(6, 182, 212, 0.15); color: #22D3EE; border: 1px solid #06B6D4; }
         .badge-free { background: rgba(41, 182, 246, 0.15); color: var(--accent); border: 1px solid var(--accent); }
         .badge-trial { background: rgba(255, 179, 0, 0.15); color: var(--warning); border: 1px solid var(--warning); }
         .badge-revoked { background: rgba(248, 81, 73, 0.15); color: var(--danger); border: 1px solid var(--danger); }
+
+        .filter-pill {
+            background: #161B22;
+            color: var(--muted);
+            border: 1px solid var(--card-border);
+            padding: 6px 14px;
+            border-radius: 20px;
+            font-size: 12px;
+            font-weight: 700;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+        .filter-pill:hover, .filter-pill.active {
+            background: #21262D;
+            color: #FFF;
+            border-color: var(--primary);
+        }
 
         .btn-action {
             background: #21262D;
@@ -422,6 +440,7 @@
         <button id="tabBtn3" class="tab-btn" onclick="switchTab(3)">📰 AI Blog Engine (<span id="countTabBlog">0</span>)</button>
         <button id="tabBtn4" class="tab-btn" onclick="switchTab(4)">🎫 Support Tickets (<span id="countTabTickets">0</span>)</button>
         <button id="tabBtn5" class="tab-btn" onclick="switchTab(5)">🎙️ AI Voice Receptionist (<span id="countTabVoice">0</span>)</button>
+        <button id="tabBtn6" class="tab-btn" onclick="switchTab(6)" style="border-color: #6366F1; color: #818CF8;">🏢 Agency Fleet Operations (<span id="countTabFleet">0</span>)</button>
     </div>
 
     <!-- TAB 0: Sales & License Directory -->
@@ -429,15 +448,26 @@
         <div class="card-header">
             <div>
                 <h2>🔑 License Engine & Active Appliance Registry</h2>
-                <div style="font-size: 12px; color: var(--muted); margin-top: 4px;">Real-time registry tracking Flagship ($49.99), Pro Gateway ($299), Front Desk ($99/mo), and Standalone Voice ($29/$89/mo) subscriptions.</div>
+                <div style="font-size: 12px; color: var(--muted); margin-top: 4px;">Real-time registry tracking Flagship ($49.99), Pro Gateway ($299), Agency Bundles ($349–$1500/mo), and Client Appliance Fleets.</div>
             </div>
             <div style="display: flex; gap: 10px; flex-wrap: wrap;">
                 <button class="btn-action btn-pro-action" onclick="promptProLicense()">⚡ + Issue $299 Pro License</button>
                 <button class="btn-action" style="border-color: #38BDF8; color: #38BDF8;" onclick="syncMasterLicensesFromServer()">🔄 Sync Licenses</button>
                 <button class="btn-action btn-primary-action" onclick="switchTab(1)">+ Issue Flagship ($49.99)</button>
                 <button class="btn-action btn-free-action" onclick="promptFreeLicense()">🎁 + Issue Comp Key ($0.00)</button>
-                <button class="btn-action" style="border-color: var(--primary); color: var(--primary);" onclick="switchTab(2); setTimeout(() => runFullSystemSimulation(), 250);">🧪 Audit All Systems</button>
+                <button class="btn-action" style="border-color: #6366F1; color: #818CF8;" onclick="switchTab(6)">🏢 Manage Fleets</button>
             </div>
+        </div>
+
+        <!-- Directory Filter Bar -->
+        <div style="display: flex; gap: 8px; margin-bottom: 16px; flex-wrap: wrap; align-items: center; background: #0D1017; padding: 10px 14px; border-radius: 10px; border: 1px solid var(--card-border);">
+            <span style="font-size: 11px; color: var(--muted); font-weight: 800; letter-spacing: 0.5px;">FILTER REGISTRY:</span>
+            <button class="filter-pill active" id="filterPillAll" onclick="setDirectoryFilter('ALL', this)">All Licenses (<span id="filterCountAll">0</span>)</button>
+            <button class="filter-pill" id="filterPillPro" onclick="setDirectoryFilter('PRO', this)">⚡ Pro Gateway</button>
+            <button class="filter-pill" id="filterPillStandard" onclick="setDirectoryFilter('STANDARD', this)">📱 Flagship</button>
+            <button class="filter-pill" id="filterPillAgency" onclick="setDirectoryFilter('AGENCY', this)" style="border-color: #6366F1; color: #818CF8;">🏢 Agency Masters (<span id="filterCountAgency">0</span>)</button>
+            <button class="filter-pill" id="filterPillFleet" onclick="setDirectoryFilter('AGENCY_FLEET', this)" style="border-color: #38BDF8; color: #38BDF8;">📱 Fleet Appliances (<span id="filterCountFleet">0</span>)</button>
+            <input type="text" id="dirSearchInput" placeholder="🔍 Quick search client or key..." oninput="renderDashboard()" style="margin-left: auto; width: 220px; padding: 6px 12px; font-size: 12px; background: #161B22; border: 1px solid var(--card-border); border-radius: 8px; color: #FFF; outline: none;">
         </div>
 
         <table>
@@ -478,8 +508,9 @@
                 <option value="49.99|0|PAID">📱 Lifetime $49.99 Flagship Appliance License (MCAS-...)</option>
                 <option value="0.00|0|FREE_PRO">⚡ Complimentary Pro Gateway License ($0.00 Comp)</option>
                 <option value="0.00|0|FREE">🎁 Complimentary Flagship License ($0.00 Comp)</option>
-                <option value="399.00|0|AGENCY_5">🏢 Agency Fleet 5-Pack ($399.00 Lifetime)</option>
-                <option value="799.00|0|AGENCY_10">🏢 Agency Fleet 10-Pack ($799.00 Lifetime)</option>
+                <option value="349.00|0|AGENCY_5">🏢 Agency Fleet 5-Pack ($349.00/mo • 1,250 Voice Mins)</option>
+                <option value="649.00|0|AGENCY_10">🏢 Agency Fleet 10-Pack ($649.00/mo • 2,500 Voice Mins)</option>
+                <option value="1500.00|0|AGENCY_ENT">🏢 Enterprise White-Label Partner ($1,500.00/mo • 999 Seats)</option>
                 <option value="49.99|3|TRIAL">⏳ 3-Day Free Trial ($0 Today ➔ Auto-Charges $49.99 on Day 4)</option>
                 <option value="0.00|14|FREE_TRIAL">⏳ 14-Day Free Demo ($0.00)</option>
             </select>
@@ -1141,6 +1172,97 @@
             </tbody>
         </table>
     </div>
+
+    <!-- TAB 6: Agency Fleet Operations -->
+    <div id="tab6" class="tab-content" style="display: none;">
+        <div class="card-header">
+            <div>
+                <h2>🏢 Agency Partner & Client Fleet Operations</h2>
+                <div style="font-size: 12px; color: var(--muted); margin-top: 4px;">Unified multi-tenant control center: Manage Agency Master Partners ($349/mo, $649/mo, $1,500/mo), seat quotas, pooled voice minutes, and individual client appliances.</div>
+            </div>
+            <div style="display: flex; gap: 10px; flex-wrap: wrap;">
+                <button class="btn-action btn-pro-action" onclick="promptCreateAgencyPartner()">🏢 + Issue Agency Account</button>
+                <button class="btn-action" style="border-color: #38BDF8; color: #38BDF8;" onclick="loadAgencyFleetTab()">🔄 Refresh Fleet Data</button>
+                <a href="/agency_dashboard.html" target="_blank" class="btn-action" style="text-decoration: none; border-color: #818CF8; color: #818CF8;">🔗 Open Agency Portal</a>
+            </div>
+        </div>
+
+        <!-- Metric Cards Grid -->
+        <div class="metrics-grid" style="grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); margin-bottom: 24px;">
+            <div class="metric-card">
+                <div class="metric-title">Active Agency Partners</div>
+                <div class="metric-value" id="fleetMetricAgencies" style="color: #818CF8;">0</div>
+                <div class="metric-sub" id="fleetMetricAgenciesSub">5-Pack, 10-Pack & Enterprise</div>
+            </div>
+            <div class="metric-card">
+                <div class="metric-title">Client Appliances Deployed</div>
+                <div class="metric-value" id="fleetMetricSeats" style="color: var(--primary);">0</div>
+                <div class="metric-sub" id="fleetMetricSeatsSub">0 seats assigned</div>
+            </div>
+            <div class="metric-card">
+                <div class="metric-title">Pooled Voice Minutes Pool</div>
+                <div class="metric-value" id="fleetMetricVoicePool" style="color: #A855F7;">0m</div>
+                <div class="metric-sub" id="fleetMetricVoiceSub">0 mins utilized across fleets</div>
+            </div>
+            <div class="metric-card">
+                <div class="metric-title">Hardware Bound Devices</div>
+                <div class="metric-value" id="fleetMetricHardware" style="color: #38BDF8;">0</div>
+                <div class="metric-sub">Physical Android appliances active</div>
+            </div>
+        </div>
+
+        <!-- SECTION 1: Agency Master Accounts Table -->
+        <div class="card-header" style="border-top: 1px solid var(--card-border); padding-top: 20px; margin-top: 10px;">
+            <div>
+                <h3 style="margin: 0; font-size: 16px; color: #FFF;">🏢 Agency Partner Master Accounts (<span id="agencyPartnersCount">0</span>)</h3>
+                <div style="font-size: 12px; color: var(--muted); margin-top: 4px;">Each master key manages an isolated client fleet with pooled AI voice minutes and turnkey branding.</div>
+            </div>
+            <button class="btn-action" style="font-size: 12px;" onclick="promptCreateAgencyPartner()">+ New Partner</button>
+        </div>
+
+        <table style="margin-bottom: 30px;">
+            <thead>
+                <tr>
+                    <th>Agency Partner</th>
+                    <th>Master License Key</th>
+                    <th>Tier & Pricing</th>
+                    <th>Seat Quota Utilization</th>
+                    <th>Voice Pool (Mins)</th>
+                    <th>Status</th>
+                    <th>Actions</th>
+                </tr>
+            </thead>
+            <tbody id="agencyPartnersTableBody">
+                <tr><td colspan="7" style="text-align: center; color: var(--muted); padding: 24px;">Loading agency partner accounts...</td></tr>
+            </tbody>
+        </table>
+
+        <!-- SECTION 2: All Deployed Client Appliances Table -->
+        <div class="card-header" style="border-top: 1px solid var(--card-border); padding-top: 20px;">
+            <div>
+                <h3 style="margin: 0; font-size: 16px; color: #FFF;">📱 Deployed Client Appliance Fleets (<span id="allFleetClientsCount">0</span>)</h3>
+                <div style="font-size: 12px; color: var(--muted); margin-top: 4px;">All physical Android devices deployed under agency master keys. Reset hardware locks or issue client setup sheets directly.</div>
+            </div>
+            <input type="text" id="fleetClientSearchInput" placeholder="🔍 Search client appliance or key..." oninput="filterFleetClientsTable()" style="width: 260px; padding: 6px 12px; font-size: 12px; background: #161B22; border: 1px solid var(--card-border); border-radius: 8px; color: #FFF; outline: none;">
+        </div>
+
+        <table>
+            <thead>
+                <tr>
+                    <th>Client Business</th>
+                    <th>Parent Agency</th>
+                    <th>Appliance Key</th>
+                    <th>Bound Hardware ID</th>
+                    <th>Voice Usage</th>
+                    <th>Status</th>
+                    <th>Actions</th>
+                </tr>
+            </thead>
+            <tbody id="fleetClientsTableBody">
+                <tr><td colspan="7" style="text-align: center; color: var(--muted); padding: 24px;">Loading deployed client appliances...</td></tr>
+            </tbody>
+        </table>
+    </div>
 </div>
 
 <script>
@@ -1224,11 +1346,20 @@
         wrap.style.display = isPro ? 'block' : 'none';
     }
 
+    let currentDirFilter = 'ALL';
+
+    function setDirectoryFilter(filterType, btnEl) {
+        currentDirFilter = filterType;
+        document.querySelectorAll('.filter-pill').forEach(btn => btn.classList.remove('active'));
+        if (btnEl) btnEl.classList.add('active');
+        renderDashboard();
+    }
+
     function renderDashboard() {
         const records = getStore();
         const tbody = document.getElementById("registryBody");
 
-        // Calculate Metrics
+        // Calculate Metrics & Filter Counts
         let grossRevenue = 0;
         let standardRev = 0;
         let proRev = 0;
@@ -1237,22 +1368,36 @@
         let voiceCount = 0;
         let activeDevices = 0;
         let revokedCount = 0;
+        let agencyCount = 0;
+        let fleetCount = 0;
 
         records.forEach(r => {
-            const isPro = (r.tier === "PRO" || (r.key && r.key.includes("PRO")) || r.type === "PRO");
-            const price = parseFloat(r.price) || 0;
+            const isAgencyMaster = (r.tier === "AGENCY" || (r.type && r.type.startsWith("AGENCY_") && r.type !== "AGENCY_FLEET"));
+            const isFleetClient = (r.type === "AGENCY_FLEET");
+            const isPro = !isAgencyMaster && !isFleetClient && (r.tier === "PRO" || (r.key && r.key.includes("PRO")) || r.type === "PRO");
+            
+            let price = 0;
+            if (typeof r.price === 'number') {
+                price = r.price;
+            } else if (typeof r.price === 'string') {
+                const cleaned = r.price.replace(/[^0-9.]/g, '');
+                price = parseFloat(cleaned) || 0;
+            }
 
+            if (isAgencyMaster) agencyCount++;
+            if (isFleetClient) fleetCount++;
             if (isPro) proCount++;
+
             if (r.voiceActive) {
                 voiceCount++;
                 voiceRev += 29.00;
             }
 
-            // ONLY sum price if price > 0 ($0.00 Free licenses are excluded from revenue)
+            // Sum revenue if active
             if (r.status === "ACTIVE" && price > 0) {
                 grossRevenue += price;
                 if (isPro) proRev += price;
-                else standardRev += price;
+                else if (!isFleetClient && !isAgencyMaster) standardRev += price;
             }
             if (r.status === "REVOKED") {
                 revokedCount++;
@@ -1268,7 +1413,7 @@
 
         document.getElementById("metricLicenses").innerText = records.length;
         const proEl = document.getElementById("metricProBreakdown");
-        if (proEl) proEl.innerHTML = `⚡ ${proCount} Pro Editions`;
+        if (proEl) proEl.innerHTML = `⚡ ${proCount} Pro • 🏢 ${agencyCount} Agencies • 📱 ${fleetCount} Fleet Seats`;
 
         document.getElementById("metricActive").innerText = activeDevices;
         document.getElementById("metricRevoked").innerText = revokedCount;
@@ -1276,25 +1421,57 @@
         if (voiceEl) voiceEl.innerText = `${voiceCount} Active`;
 
         document.getElementById("countTab0").innerText = records.length;
+        const fleetNavCount = document.getElementById("countTabFleet");
+        if (fleetNavCount) fleetNavCount.innerText = (agencyCount + fleetCount);
+
+        const pillAll = document.getElementById("filterCountAll");
+        if (pillAll) pillAll.innerText = records.length;
+        const pillAgency = document.getElementById("filterCountAgency");
+        if (pillAgency) pillAgency.innerText = agencyCount;
+        const pillFleet = document.getElementById("filterCountFleet");
+        if (pillFleet) pillFleet.innerText = fleetCount;
+
+        // Apply Directory Filters
+        const searchQuery = (document.getElementById("dirSearchInput")?.value || '').trim().toLowerCase();
+        let filtered = records.filter(r => {
+            const isAgencyMaster = (r.tier === "AGENCY" || (r.type && r.type.startsWith("AGENCY_") && r.type !== "AGENCY_FLEET"));
+            const isFleetClient = (r.type === "AGENCY_FLEET");
+            const isPro = !isAgencyMaster && !isFleetClient && (r.tier === "PRO" || (r.key && r.key.includes("PRO")) || r.type === "PRO");
+            const isStandard = !isAgencyMaster && !isFleetClient && !isPro;
+
+            if (currentDirFilter === 'PRO' && !isPro) return false;
+            if (currentDirFilter === 'STANDARD' && !isStandard) return false;
+            if (currentDirFilter === 'AGENCY' && !isAgencyMaster) return false;
+            if (currentDirFilter === 'AGENCY_FLEET' && !isFleetClient) return false;
+
+            if (searchQuery) {
+                const searchCorpus = `${r.name || ''} ${r.email || ''} ${r.key || ''} ${r.agencyName || ''} ${r.deviceId || ''}`.toLowerCase();
+                if (!searchCorpus.includes(searchQuery)) return false;
+            }
+            return true;
+        });
 
         // Render Registry Table
-        if (records.length === 0) {
-            tbody.innerHTML = '<tr><td colspan="7" style="color: var(--muted); text-align: center;">No licenses issued yet. Use Tab 1 to generate keys.</td></tr>';
+        if (filtered.length === 0) {
+            tbody.innerHTML = '<tr><td colspan="7" style="color: var(--muted); text-align: center; padding: 24px;">No licenses match the selected directory filter.</td></tr>';
             return;
         }
 
-        tbody.innerHTML = records.map(r => {
+        tbody.innerHTML = filtered.map(r => {
             const isRevoked = r.status === "REVOKED";
-            const isPro = (r.tier === "PRO" || (r.key && r.key.includes("PRO")) || r.type === "PRO");
-            const isAgency = (r.tier === "AGENCY" || (r.key && r.key.includes("AGENCY")));
+            const isAgencyMaster = (r.tier === "AGENCY" || (r.type && r.type.startsWith("AGENCY_") && r.type !== "AGENCY_FLEET"));
+            const isFleetClient = (r.type === "AGENCY_FLEET");
+            const isPro = !isAgencyMaster && !isFleetClient && (r.tier === "PRO" || (r.key && r.key.includes("PRO")) || r.type === "PRO");
 
             const deviceDisplay = r.deviceId 
-                ? `<span style="font-family: monospace; color: var(--accent);">🔒 ${r.deviceId}</span>` 
+                ? `<span style="font-family: monospace; color: var(--accent);">🔒 ${escapeHtml(r.deviceId)}</span>` 
                 : `<span style="font-family: monospace; color: var(--muted);">Unbound (Ready)</span>`;
 
             let tierBadge = `<span class="badge badge-active">📱 FLAGSHIP ($49)</span>`;
-            if (isAgency) {
-                tierBadge = `<span class="badge badge-agency">🏢 AGENCY FLEET</span>`;
+            if (isAgencyMaster) {
+                tierBadge = `<span class="badge badge-agency">🏢 AGENCY MASTER (${escapeHtml(r.type || 'AGENCY_5')})</span>`;
+            } else if (isFleetClient) {
+                tierBadge = `<span class="badge badge-fleet">📱 FLEET APPLIANCE</span>`;
             } else if (isPro) {
                 tierBadge = `<span class="badge badge-pro">⚡ PRO GATEWAY ($299)</span>`;
             }
@@ -1303,7 +1480,8 @@
                 ? `<span class="badge badge-voice">🎙️ ACTIVE (${r.voiceNumber || '+1 (555) 349-2810'})</span>`
                 : `<span style="color: var(--muted); font-size: 12px;">— Inactive</span>`;
 
-            let statusBadge = `<span class="badge badge-active">ACTIVE ($${(r.price || 0).toFixed(2)})</span>`;
+            let priceDisplay = typeof r.price === 'number' ? `$${r.price.toFixed(2)}` : (r.price || '$49.99');
+            let statusBadge = `<span class="badge badge-active">ACTIVE (${priceDisplay})</span>`;
             if (isRevoked) {
                 statusBadge = `<span class="badge badge-revoked">REVOKED</span>`;
             } else if (r.price === 0 || r.type === "FREE" || r.type === "FREE_PRO") {
@@ -1312,23 +1490,47 @@
                 statusBadge = `<span class="badge badge-trial">3-DAY TRIAL</span>`;
             }
 
+            let nameSubtext = `<small style="color: var(--muted);">${escapeHtml(r.email || 'N/A')}</small>`;
+            if (isAgencyMaster) {
+                nameSubtext = `<small style="color: #818CF8; font-weight: bold;">🏢 Partner Fleet • Quota: ${r.usedSeats || 0}/${r.quota || 5} Seats</small>`;
+            } else if (isFleetClient) {
+                nameSubtext = `<small style="color: #38BDF8; font-weight: bold;">Managed by: ${escapeHtml(r.agencyName || 'Agency Partner')}</small>`;
+            }
+
+            let actionButtons = '';
+            if (isAgencyMaster) {
+                actionButtons = `
+                    <button class="btn-action" style="color: #818CF8;" onclick="switchTab(6)">🏢 View Fleet</button>
+                    <a href="/agency_dashboard.html#key=${r.key}" target="_blank" class="btn-action" style="text-decoration:none; color: #38BDF8;">Portal ➔</a>
+                    <button class="btn-action btn-danger" onclick="toggleRevokeKey('${r.key}')">${isRevoked ? 'Reactivate' : 'Revoke'}</button>
+                `;
+            } else if (isFleetClient) {
+                actionButtons = `
+                    <button class="btn-action" style="color: #38BDF8;" onclick="showSetupSheetForFleetKey('${r.key}', '${escapeHtml(r.name)}', '${escapeHtml(r.agencyName || 'Agency')}')">📋 Setup Sheet</button>
+                    <button class="btn-action" onclick="resetDevice('${r.key}')" ${isRevoked ? 'disabled' : ''}>Reset Lock</button>
+                    <button class="btn-action btn-danger" onclick="toggleRevokeKey('${r.key}')">${isRevoked ? 'Reactivate' : 'Revoke'}</button>
+                `;
+            } else {
+                actionButtons = `
+                    <button class="btn-action" style="color: ${isPro ? '#C084FC' : 'var(--primary)'};" onclick="triggerEmailForKey('${r.key}')">📧 Email ${isPro ? 'Pro APK' : 'APK'}</button>
+                    <button class="btn-action" onclick="resetDevice('${r.key}')" ${isRevoked ? 'disabled' : ''}>Reset Lock</button>
+                    ${isPro ? `<button class="btn-action" style="color: #38BDF8;" onclick="toggleVoiceForKey('${r.key}')">${r.voiceActive ? 'Pause Voice' : '🎙️ Attach Voice'}</button>` : ''}
+                    <button class="btn-action btn-danger" onclick="toggleRevokeKey('${r.key}')">${isRevoked ? 'Reactivate' : 'Revoke'}</button>
+                `;
+            }
+
             return `
                 <tr>
                     <td>${r.date}</td>
-                    <td><strong>${escapeHtml(r.name)}</strong><br><small style="color: var(--muted);">${escapeHtml(r.email || 'N/A')}</small></td>
+                    <td><strong>${escapeHtml(r.name)}</strong><br>${nameSubtext}</td>
                     <td>
                         ${tierBadge}<br>
-                        <span style="font-family: monospace; font-weight: bold; color: ${isPro ? '#C084FC' : 'var(--primary)'}; font-size: 13px;">${r.key}</span>
+                        <span style="font-family: monospace; font-weight: bold; color: ${isAgencyMaster ? '#818CF8' : (isFleetClient ? '#38BDF8' : (isPro ? '#C084FC' : 'var(--primary)'))}; font-size: 13px;">${r.key}</span>
                     </td>
                     <td>${deviceDisplay}</td>
                     <td>${voiceDisplay}</td>
                     <td>${statusBadge}</td>
-                    <td>
-                        <button class="btn-action" style="color: ${isPro ? '#C084FC' : 'var(--primary)'};" onclick="triggerEmailForKey('${r.key}')">📧 Email ${isPro ? 'Pro APK' : 'APK'}</button>
-                        <button class="btn-action" onclick="resetDevice('${r.key}')" ${isRevoked ? 'disabled' : ''}>Reset Lock</button>
-                        ${isPro ? `<button class="btn-action" style="color: #38BDF8;" onclick="toggleVoiceForKey('${r.key}')">${r.voiceActive ? 'Pause Voice' : '🎙️ Attach Voice'}</button>` : ''}
-                        <button class="btn-action btn-danger" onclick="toggleRevokeKey('${r.key}')">${isRevoked ? 'Reactivate' : 'Revoke'}</button>
-                    </td>
+                    <td>${actionButtons}</td>
                 </tr>
             `;
         }).join('');
@@ -1345,6 +1547,7 @@
             renderDashboard();
             loadBlogCount();
             loadTicketCount();
+            syncMasterLicensesFromServer(true);
         } else {
             document.getElementById("loginContainer").style.display = "flex";
             document.getElementById("dashboardContainer").style.display = "none";
@@ -1395,6 +1598,8 @@
             loadSupportTickets();
         } else if (index === 5) {
             loadVoiceDashboard();
+        } else if (index === 6) {
+            loadAgencyFleetTab();
         }
     }
 
@@ -2365,7 +2570,7 @@ ${isVoiceActive ? `🎙️ AI Voice Receptionist Line: ${voiceNumber}\n📲 Acti
         sendLicenseEmail(newRecord);
     }
 
-    function resetDevice(key) {
+    async function resetDevice(key) {
         const records = getStore();
         const rec = records.find(r => r.key === key);
         if (!rec) return;
@@ -2373,6 +2578,15 @@ ${isVoiceActive ? `🎙️ AI Voice Receptionist Line: ${voiceNumber}\n📲 Acti
         if (confirm(`Clear bound hardware device ID for ${rec.name} (${key})?\n\nThis allows the customer to transfer their key to a new Android phone.\nActive Voice Pro add-on bindings will remain preserved.`)) {
             rec.deviceId = null;
             saveStore(records);
+            try {
+                await safeFetchJson('/api/reset-device', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ licenseKey: key })
+                });
+            } catch (e) {
+                console.warn('Backend reset-device notice:', e.message);
+            }
             alert(`Device lock cleared for ${key}. Client can now activate on a new device.`);
         }
     }
@@ -2396,7 +2610,7 @@ ${isVoiceActive ? `🎙️ AI Voice Receptionist Line: ${voiceNumber}\n📲 Acti
         alert(`Voice Pro status for ${rec.name} (${key}): ${rec.voiceActive ? '🎙️ BOUND & ACTIVE (+1 555-349-2810)' : 'PAUSED / INACTIVE'}`);
     }
 
-    function toggleRevokeKey(key) {
+    async function toggleRevokeKey(key) {
         const records = getStore();
         const rec = records.find(r => r.key === key);
         if (!rec) return;
@@ -2406,6 +2620,15 @@ ${isVoiceActive ? `🎙️ AI Voice Receptionist Line: ${voiceNumber}\n📲 Acti
             rec.status = newStatus;
             saveStore(records);
             renderDashboard();
+            try {
+                await safeFetchJson('/api/agency/manage', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ action: 'toggle_revoke', licenseKey: key })
+                });
+            } catch (e) {
+                console.warn('Backend toggle_revoke notice:', e.message);
+            }
         }
     }
 
@@ -2487,6 +2710,36 @@ ${isVoiceActive ? `🎙️ AI Voice Receptionist Line: ${voiceNumber}\n📲 Acti
 
         // Automatically populate verify key input field for instant verification
         document.getElementById('inputVerifyKey').value = formattedKey;
+
+        // If Agency Tier, register in backend fleet cache
+        if (isAgency) {
+            let agencyTier = 'agency_5';
+            let quota = 5;
+            if (typeTag === 'AGENCY_10') {
+                agencyTier = 'agency_10';
+                quota = 10;
+            } else if (typeTag === 'AGENCY_ENT') {
+                agencyTier = 'agency_enterprise';
+                quota = 999;
+            }
+
+            try {
+                await safeFetchJson('/api/agency/manage', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        action: 'create_agency',
+                        agencyName: name,
+                        customerEmail: email,
+                        tier: agencyTier,
+                        quota: quota,
+                        masterKey: formattedKey
+                    })
+                });
+            } catch (e) {
+                console.warn('Backend agency registration notice:', e.message);
+            }
+        }
 
         // Save Record to Master Sync Store
         const records = getStore();
@@ -3571,7 +3824,7 @@ OPERATIONAL PROTOCOL:
         }
     }
 
-    async function syncMasterLicensesFromServer() {
+    async function syncMasterLicensesFromServer(silent = false) {
         try {
             const res = await safeFetchJson('/api/licenses');
             if (res && res.licenses && Array.isArray(res.licenses)) {
@@ -3592,21 +3845,344 @@ OPERATIONAL PROTOCOL:
                             voiceActive: !!lic.voiceActive,
                             voiceNumber: lic.voiceNumber || '',
                             deviceId: lic.deviceId || null,
-                            status: lic.status || 'ACTIVE'
+                            status: lic.status || 'ACTIVE',
+                            quota: lic.quota || null,
+                            usedSeats: lic.usedSeats || 0,
+                            agencyKey: lic.agencyKey || null,
+                            agencyName: lic.agencyName || null
                         });
                         addedCount++;
                     } else {
                         if (lic.voiceActive !== undefined) existing.voiceActive = lic.voiceActive;
                         if (lic.voiceNumber) existing.voiceNumber = lic.voiceNumber;
+                        if (lic.status) existing.status = lic.status;
+                        if (lic.deviceId !== undefined) existing.deviceId = lic.deviceId;
+                        if (lic.tier) existing.tier = lic.tier;
+                        if (lic.type) existing.type = lic.type;
+                        if (lic.quota !== undefined) existing.quota = lic.quota;
+                        if (lic.usedSeats !== undefined) existing.usedSeats = lic.usedSeats;
+                        if (lic.agencyKey) existing.agencyKey = lic.agencyKey;
+                        if (lic.agencyName) existing.agencyName = lic.agencyName;
+                        if (lic.customer && (lic.customer.includes('[') || lic.customer.includes('('))) existing.name = lic.customer;
                     }
                 }
                 saveStore(currentStore);
                 renderDashboard();
-                alert(`✅ Synced with Server Registry!\n\nFound ${res.licenses.length} total licenses (${addedCount} newly merged into your local directory).`);
+                if (!silent) {
+                    alert(`✅ Synced with Server Registry!\n\nFound ${res.licenses.length} total licenses (${addedCount} newly merged into your local directory).`);
+                }
             }
         } catch (e) {
-            console.warn('Could not sync licenses from server:', e.message);
+            if (!silent) {
+                console.warn('Could not sync licenses from server:', e.message);
+            }
         }
+    }
+
+    // =========================================================================
+    // TAB 6: AGENCY FLEET OPERATIONS & MULTI-TENANT REGISTRY
+    // =========================================================================
+    let allFleetDataCache = null;
+
+    async function loadAgencyFleetTab() {
+        const partnersBody = document.getElementById('agencyPartnersTableBody');
+        const clientsBody = document.getElementById('fleetClientsTableBody');
+        if (!partnersBody || !clientsBody) return;
+
+        partnersBody.innerHTML = '<tr><td colspan="7" style="text-align: center; color: var(--muted); padding: 24px;">Loading live agency fleet data...</td></tr>';
+        clientsBody.innerHTML = '<tr><td colspan="7" style="text-align: center; color: var(--muted); padding: 24px;">Loading deployed client appliances...</td></tr>';
+
+        try {
+            const data = await safeFetchJson('/api/agency/manage', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ action: 'list_fleets' })
+            });
+
+            if (!data || !data.fleets) {
+                throw new Error('No fleet data returned from server');
+            }
+
+            allFleetDataCache = data;
+            const fleets = data.fleets || {};
+            const revokedKeys = data.revokedKeys || [];
+
+            let totalAgencies = 0;
+            let totalSeats = 0;
+            let totalVoicePool = 0;
+            let totalVoiceUsed = 0;
+            let totalHardwareBound = 0;
+
+            const agencyRows = [];
+            const clientRows = [];
+
+            for (const [agencyKey, agency] of Object.entries(fleets)) {
+                if (agencyKey.startsWith('_')) continue;
+                totalAgencies++;
+                const isRevoked = revokedKeys.includes(agencyKey);
+                const clients = Array.isArray(agency.clients) ? agency.clients : [];
+                totalSeats += clients.length;
+                const pool = agency.voiceMinsPool || 1250;
+                totalVoicePool += pool;
+
+                let tierLabel = '$349.00/mo (5-Pack)';
+                if (agency.tier === 'agency_10') tierLabel = '$649.00/mo (10-Pack)';
+                else if (agency.tier === 'agency_enterprise') tierLabel = '$1,500.00/mo (Enterprise)';
+
+                agencyRows.push(`
+                    <tr>
+                        <td>
+                            <strong>${escapeHtml(agency.agencyName || 'Agency Partner')}</strong><br>
+                            <small style="color: var(--muted);">${escapeHtml(agency.customerEmail || 'No email')}</small>
+                        </td>
+                        <td>
+                            <span style="font-family: monospace; font-size: 12px; color: #818CF8; font-weight: bold;">${agencyKey}</span>
+                            <button class="btn-action" style="padding: 2px 6px; font-size: 10px; margin-left: 6px;" onclick="copyToClipboard('${agencyKey}')">📋 Copy</button>
+                        </td>
+                        <td>
+                            <span class="badge badge-agency">${escapeHtml(agency.tier || 'agency_5').toUpperCase()}</span><br>
+                            <small style="color: #00E676; font-weight: bold;">${tierLabel}</small>
+                        </td>
+                        <td>
+                            <div style="font-size: 13px; font-weight: bold; color: ${clients.length >= (agency.quota || 5) ? 'var(--warning)' : '#FFF'};">
+                                ${clients.length} / ${agency.quota || 5} Seats Used
+                            </div>
+                            <div style="width: 120px; height: 6px; background: #21262D; border-radius: 3px; margin-top: 4px; overflow: hidden;">
+                                <div style="width: ${Math.min(100, Math.round((clients.length / (agency.quota || 5)) * 100))}%; height: 100%; background: ${clients.length >= (agency.quota || 5) ? '#F59E0B' : '#00E676'}; border-radius: 3px;"></div>
+                            </div>
+                        </td>
+                        <td>
+                            <span style="color: #A855F7; font-weight: bold;">${pool.toLocaleString()} mins</span>
+                        </td>
+                        <td>
+                            <span class="badge ${isRevoked ? 'badge-revoked' : 'badge-active'}">${isRevoked ? 'REVOKED' : 'ACTIVE'}</span>
+                        </td>
+                        <td>
+                            <button class="btn-action" style="color: #00E676;" onclick="quickAddSeats('${agencyKey}', ${agency.quota || 5})">+ Quota</button>
+                            <a href="/agency_dashboard.html#key=${agencyKey}" target="_blank" class="btn-action" style="color: #818CF8; text-decoration: none;">🏢 Portal</a>
+                            <button class="btn-action btn-danger" onclick="toggleRevokeFleetKey('${agencyKey}')">${isRevoked ? 'Reactivate' : 'Revoke'}</button>
+                        </td>
+                    </tr>
+                `);
+
+                for (const client of clients) {
+                    const clientRevoked = revokedKeys.includes(client.licenseKey);
+                    const voiceUsed = client.voiceMinsUsed || 0;
+                    totalVoiceUsed += voiceUsed;
+                    if (client.hardwareId) totalHardwareBound++;
+
+                    clientRows.push(`
+                        <tr class="fleet-client-row" data-search="${escapeHtml(client.clientName + ' ' + (client.clientContact || '') + ' ' + client.licenseKey + ' ' + (agency.agencyName || '')).toLowerCase()}">
+                            <td>
+                                <strong>${escapeHtml(client.clientName)}</strong><br>
+                                <small style="color: var(--muted);">${escapeHtml(client.clientContact || '—')}</small>
+                            </td>
+                            <td>
+                                <span class="badge badge-agency">${escapeHtml(agency.agencyName || 'Agency Partner')}</span>
+                            </td>
+                            <td>
+                                <span style="font-family: monospace; font-size: 12px; color: #38BDF8; font-weight: bold;">${client.licenseKey}</span>
+                                <button class="btn-action" style="padding: 2px 6px; font-size: 10px; margin-left: 6px;" onclick="copyToClipboard('${client.licenseKey}')">📋</button>
+                            </td>
+                            <td>
+                                ${client.hardwareId 
+                                    ? `<span style="font-family: monospace; color: var(--accent); font-size: 12px;">🔒 ${escapeHtml(client.hardwareId)}</span>`
+                                    : `<span style="color: var(--muted); font-size: 12px;">Unbound (Ready)</span>`}
+                            </td>
+                            <td>
+                                <span style="color: #C084FC; font-size: 12px; font-weight: bold;">${voiceUsed} mins</span>
+                            </td>
+                            <td>
+                                <span class="badge ${clientRevoked ? 'badge-revoked' : 'badge-active'}">${clientRevoked ? 'REVOKED' : 'ACTIVE'}</span>
+                            </td>
+                            <td>
+                                <button class="btn-action" style="color: #38BDF8;" onclick="showSetupSheetForFleetKey('${client.licenseKey}', '${escapeHtml(client.clientName)}', '${escapeHtml(agency.agencyName || 'Agency Partner')}')">📋 Setup</button>
+                                <button class="btn-action" onclick="resetFleetDevice('${client.licenseKey}', '${escapeHtml(client.clientName)}')" ${clientRevoked ? 'disabled' : ''}>🔓 Reset Lock</button>
+                                <button class="btn-action btn-danger" onclick="toggleRevokeFleetKey('${client.licenseKey}')">${clientRevoked ? 'Reactivate' : 'Revoke'}</button>
+                            </td>
+                        </tr>
+                    `);
+                }
+            }
+
+            // Update stats
+            document.getElementById('fleetMetricAgencies').innerText = totalAgencies;
+            document.getElementById('fleetMetricSeats').innerText = totalSeats;
+            document.getElementById('fleetMetricSeatsSub').innerText = `${totalHardwareBound} bound appliances`;
+            document.getElementById('fleetMetricVoicePool').innerText = `${totalVoiceUsed} / ${totalVoicePool.toLocaleString()}m`;
+            document.getElementById('fleetMetricVoiceSub').innerText = `${totalVoicePool - totalVoiceUsed} pooled mins remaining`;
+            document.getElementById('fleetMetricHardware').innerText = totalHardwareBound;
+
+            document.getElementById('agencyPartnersCount').innerText = totalAgencies;
+            document.getElementById('allFleetClientsCount').innerText = totalSeats;
+            const countTabFleet = document.getElementById('countTabFleet');
+            if (countTabFleet) countTabFleet.innerText = (totalAgencies + totalSeats);
+
+            partnersBody.innerHTML = agencyRows.length ? agencyRows.join('') : '<tr><td colspan="7" style="text-align: center; color: var(--muted); padding: 24px;">No agency partner accounts found. Click "+ Issue Agency Account" above.</td></tr>';
+            clientsBody.innerHTML = clientRows.length ? clientRows.join('') : '<tr><td colspan="7" style="text-align: center; color: var(--muted); padding: 24px;">No client appliances deployed across fleets yet.</td></tr>';
+
+        } catch (e) {
+            partnersBody.innerHTML = `<tr><td colspan="7" style="text-align: center; color: var(--danger); padding: 24px;">Failed to load fleet partners: ${escapeHtml(e.message)}</td></tr>`;
+            clientsBody.innerHTML = `<tr><td colspan="7" style="text-align: center; color: var(--danger); padding: 24px;">Failed to load fleet clients: ${escapeHtml(e.message)}</td></tr>`;
+        }
+    }
+
+    async function promptCreateAgencyPartner() {
+        const agencyName = prompt("Enter Agency / Reseller Partner Name (e.g. Apex Growth Agency):");
+        if (!agencyName || !agencyName.trim()) return;
+
+        const email = prompt(`Enter Contact Email for ${agencyName.trim()}:`, "");
+        if (!email || !email.trim()) { alert("Email is required."); return; }
+
+        const tierChoice = prompt("Select Plan Tier:\n1 = 5-Pack ($349/mo • 1,250 Voice Mins)\n2 = 10-Pack ($649/mo • 2,500 Voice Mins)\n3 = Enterprise ($1,500/mo • Unlimited Fleets)", "1");
+        let tier = 'agency_5';
+        let quota = 5;
+        if (tierChoice === '2') {
+            tier = 'agency_10';
+            quota = 10;
+        } else if (tierChoice === '3') {
+            tier = 'agency_enterprise';
+            quota = 999;
+        }
+
+        const nowSec = Math.floor(Date.now() / 1000);
+        const payloadStr = `${agencyName.trim()}|0|${nowSec}`;
+        const payloadHex = stringToHex(payloadStr);
+        const sigFull = await generateHmacSha256(payloadHex, SECRET_KEY);
+        const sigShort = sigFull.substring(0, 8);
+        const masterKey = `MCAS-AGENCY-${payloadHex}-${sigShort}`;
+
+        try {
+            const res = await safeFetchJson('/api/agency/manage', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                    action: 'create_agency',
+                    agencyName: agencyName.trim(),
+                    customerEmail: email.trim(),
+                    tier: tier,
+                    quota: quota,
+                    masterKey: masterKey
+                })
+            });
+
+            if (res && res.success) {
+                alert(`🎉 Agency Partner Created!\n\nAgency: ${agencyName}\nMaster Key: ${masterKey}\nQuota: ${quota} Seats\n\nThe agency master has been registered and synced.`);
+                await syncMasterLicensesFromServer(true);
+                loadAgencyFleetTab();
+            } else {
+                alert('Creation failed: ' + (res?.error || 'Unknown error'));
+            }
+        } catch (e) {
+            alert('Error creating agency: ' + e.message);
+        }
+    }
+
+    async function quickAddSeats(masterKey, currentQuota) {
+        const newQuotaStr = prompt(`Update seat quota for agency (${masterKey})?\nCurrent quota: ${currentQuota} seats.\nEnter new total seat count:`, (currentQuota + 5).toString());
+        if (!newQuotaStr) return;
+        const newQuota = parseInt(newQuotaStr, 10);
+        if (isNaN(newQuota) || newQuota <= 0) { alert('Invalid quota number.'); return; }
+
+        try {
+            const res = await safeFetchJson('/api/agency/manage', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                    action: 'update_quota',
+                    masterKey: masterKey,
+                    quota: newQuota
+                })
+            });
+            if (res && res.success) {
+                alert(`✅ Quota updated to ${newQuota} seats!`);
+                loadAgencyFleetTab();
+                syncMasterLicensesFromServer(true);
+            } else {
+                alert('Failed to update quota: ' + (res?.error || 'Unknown error'));
+            }
+        } catch (e) {
+            alert('Error updating quota: ' + e.message);
+        }
+    }
+
+    async function toggleRevokeFleetKey(key) {
+        if (!confirm(`Toggle revocation status for key ${key}?`)) return;
+        try {
+            const res = await safeFetchJson('/api/agency/manage', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                    action: 'toggle_revoke',
+                    licenseKey: key
+                })
+            });
+            if (res && res.success) {
+                alert(res.message);
+                loadAgencyFleetTab();
+                syncMasterLicensesFromServer(true);
+            } else {
+                alert('Action failed: ' + (res?.error || 'Unknown error'));
+            }
+        } catch (e) {
+            alert('Error toggling key: ' + e.message);
+        }
+    }
+
+    async function resetFleetDevice(key, clientName) {
+        if (!confirm(`Reset hardware lock for ${clientName} (${key})?\n\nThis unbinds the current Android device ID and allows activation on a new phone.`)) return;
+        try {
+            const res = await safeFetchJson('/api/reset-device', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ licenseKey: key })
+            });
+            if (res && res.success) {
+                alert(`✅ Hardware lock cleared for ${clientName} (${key})!`);
+                loadAgencyFleetTab();
+                syncMasterLicensesFromServer(true);
+            } else {
+                alert('Reset failed: ' + (res?.error || 'Unknown error'));
+            }
+        } catch (e) {
+            alert('Error resetting device: ' + e.message);
+        }
+    }
+
+    function filterFleetClientsTable() {
+        const query = (document.getElementById('fleetClientSearchInput')?.value || '').trim().toLowerCase();
+        const rows = document.querySelectorAll('.fleet-client-row');
+        rows.forEach(row => {
+            const searchData = row.getAttribute('data-search') || '';
+            row.style.display = searchData.includes(query) ? '' : 'none';
+        });
+    }
+
+    function showSetupSheetForFleetKey(key, clientName, agencyName) {
+        const base = getApiBaseUrl();
+        const apkUrl = `${base}/MissedCallAutoSMS-Pro.apk`;
+        const sheet = `======================================================
+📱 CLIENT APPLIANCE SETUP SHEET: ${clientName}
+🏢 MANAGED BY AGENCY: ${agencyName || 'Agency Partner'}
+======================================================
+
+🔑 CLIENT LICENSE KEY:
+${key}
+
+📥 ANDROID APK DOWNLOAD LINK:
+${apkUrl}
+
+🚀 3-MINUTE ACTIVATION INSTRUCTIONS:
+1. Open Chrome on the client's Android phone and navigate to:
+   ${apkUrl}
+2. Tap "Install" (if prompted, tap "Settings" and enable "Allow from this source").
+3. Launch Missed Call Auto SMS, paste the License Key above, grant SMS & Call Log permissions, and toggle Master Appliance ON.
+
+Hardware lock binds automatically to the phone on first launch.
+To transfer to a new device at any time, contact your agency administrator.
+======================================================`;
+        copyToClipboard(sheet);
+        alert(`📋 Client Setup Sheet for "${clientName}" copied to clipboard!\n\nYou can now paste this directly into an onboarding email, Slack, or SMS.`);
     }
 
     async function verifyCarrierForwardingFromUi() {

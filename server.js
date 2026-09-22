@@ -685,21 +685,25 @@ function assembleVapiPrompt(settings) {
   const now = new Date();
   const currentHour = now.getHours();
   const isDaytime = currentHour >= settings.businessHoursStart && currentHour < settings.businessHoursEnd;
+  const activity = (settings.contractorActivity || 'hands full').toLowerCase();
+  const agentName = settings.agentName || settings.ownerName || 'your AI receptionist';
 
   let timeGreeting = '';
   if (isDaytime) {
-    timeGreeting = `You are answering during normal business hours (${settings.businessHoursStart}:00 - ${settings.businessHoursEnd}:00). Inform the caller that ${settings.ownerName} has his hands full on an active service call, and you are taking down their details so he can call or text back within 15 minutes.`;
+    timeGreeting = `You are answering during normal business hours (${settings.businessHoursStart}:00 - ${settings.businessHoursEnd}:00). Inform the caller that ${settings.ownerName} is currently ${activity}, and you are taking down their details so they can call or text back within 15 minutes.`;
   } else {
     timeGreeting = `You are answering AFTER-HOURS (Shop closed). Inform the caller that regular dispatch resumes at ${settings.businessHoursStart}:00 AM, but our emergency response is active for critical hazards like active water leaks or electrical sparking. Ask: "Is this an active emergency, or would you like us to schedule a quote for tomorrow morning?"`;
   }
 
   const openingGreeting = (settings.customGreeting && settings.customGreeting.trim())
-    ? `CUSTOM FIRST GREETING: When answering, say: "${settings.customGreeting.trim()}"`
-    : `DEFAULT FIRST GREETING: "Hi, thanks for calling ${settings.businessName}! ${settings.ownerName} has his hands full on an active service job right now. How can I help you today?"`;
+    ? `CUSTOM FIRST GREETING: When answering, say exactly: "${settings.customGreeting.trim()}"`
+    : `DEFAULT FIRST GREETING: "Hi, thanks for calling ${settings.businessName}! I'm ${agentName}, your AI receptionist. ${settings.ownerName} is currently ${activity}. How can I help you today?"`;
 
   return `
 You are the professional, friendly AI voice receptionist for "${settings.businessName}" (${settings.serviceTrade}).
-Technician Name: ${settings.ownerName}
+AI Agent Name: ${agentName}
+Technician / Owner Name: ${settings.ownerName}
+Current Status: ${activity}
 
 ${openingGreeting}
 
@@ -1387,6 +1391,44 @@ const server = http.createServer((req, res) => {
         const payload = JSON.parse(body || '{}');
         const key = (payload.licenseKey || '').trim().toUpperCase();
 
+        if (key) {
+          // 1. Clear from device tokens cache
+          const devCachePath = path.join(__dirname, '.device_tokens_cache.json');
+          if (fs.existsSync(devCachePath)) {
+            try {
+              const devCache = JSON.parse(fs.readFileSync(devCachePath, 'utf8'));
+              if (devCache[key]) {
+                delete devCache[key];
+                fs.writeFileSync(devCachePath, JSON.stringify(devCache, null, 2), 'utf8');
+              }
+            } catch (e) {}
+          }
+
+          // 2. Clear from agency fleet cache if it is an agency fleet key
+          const fleetCachePath = path.join(__dirname, '.agency_fleet_cache.json');
+          if (fs.existsSync(fleetCachePath)) {
+            try {
+              const fleetCache = JSON.parse(fs.readFileSync(fleetCachePath, 'utf8'));
+              let modified = false;
+              for (const ak of Object.keys(fleetCache)) {
+                if (ak.startsWith('_')) continue;
+                const cl = fleetCache[ak].clients;
+                if (Array.isArray(cl)) {
+                  const target = cl.find(c => c.licenseKey === key);
+                  if (target) {
+                    target.hardwareId = null;
+                    target.status = 'PENDING_ACTIVATION';
+                    modified = true;
+                  }
+                }
+              }
+              if (modified) {
+                fs.writeFileSync(fleetCachePath, JSON.stringify(fleetCache, null, 2), 'utf8');
+              }
+            } catch (e) {}
+          }
+        }
+
         res.writeHead(200, { 'Content-Type': 'application/json; charset=utf-8', 'Access-Control-Allow-Origin': '*' });
         res.end(JSON.stringify({
           success: true,
@@ -1815,13 +1857,16 @@ const server = http.createServer((req, res) => {
         if (payload.customGreeting !== undefined) settings.customGreeting = payload.customGreeting;
         if (payload.businessName) settings.businessName = payload.businessName;
         if (payload.ownerName) settings.ownerName = payload.ownerName;
+        if (payload.agentName) settings.agentName = payload.agentName;
         if (payload.serviceTrade) settings.serviceTrade = payload.serviceTrade;
+        if (payload.contractorActivity) settings.contractorActivity = payload.contractorActivity;
         if (payload.emergencyKeywords) settings.emergencyKeywords = payload.emergencyKeywords;
         if (payload.businessHoursStart !== undefined) settings.businessHoursStart = parseInt(payload.businessHoursStart, 10);
         if (payload.businessHoursEnd !== undefined) settings.businessHoursEnd = parseInt(payload.businessHoursEnd, 10);
         if (payload.emergencyTransferNumber !== undefined) settings.emergencyTransferNumber = payload.emergencyTransferNumber;
 
         saveVoiceSettings(settings);
+
 
         const newPrompt = assembleVapiPrompt(settings);
         console.log(`🎙️ [CUSTOM GREETING UPDATED] Saved greeting for ${settings.businessName} (${settings.ownerName})`);
@@ -2833,8 +2878,190 @@ const server = http.createServer((req, res) => {
       }
     }
 
+    // Merge Agency Master Accounts and their Client Appliances from .agency_fleet_cache.json
+    try {
+      const FLEET_CACHE_PATH = path.join(__dirname, '.agency_fleet_cache.json');
+      if (fs.existsSync(FLEET_CACHE_PATH)) {
+        const fleetCache = JSON.parse(fs.readFileSync(FLEET_CACHE_PATH, 'utf8'));
+        const revokedKeys = Array.isArray(fleetCache._revokedKeys) ? fleetCache._revokedKeys : [];
+
+        for (const [agencyKey, agencyRecord] of Object.entries(fleetCache)) {
+          if (agencyKey.startsWith('_')) continue;
+
+          const isAgencyRevoked = revokedKeys.includes(agencyKey);
+          const tierPriceMap = { agency_5: '$349.00/mo', agency_10: '$649.00/mo', agency_enterprise: '$1,500.00/mo' };
+          const tierLabelMap = { agency_5: 'AGENCY_5', agency_10: 'AGENCY_10', agency_enterprise: 'AGENCY_ENT' };
+          const agencyPrice = tierPriceMap[agencyRecord.tier] || '$349.00/mo';
+          const agencyTierLabel = tierLabelMap[agencyRecord.tier] || 'AGENCY_5';
+
+          // 1. Add/update Agency Master License in directory
+          const existingAgency = combined.find(c => c.key === agencyKey);
+          if (existingAgency) {
+            existingAgency.tier = 'AGENCY';
+            existingAgency.type = agencyTierLabel;
+            existingAgency.quota = agencyRecord.quota || 5;
+            existingAgency.usedSeats = (agencyRecord.clients || []).length;
+            existingAgency.price = agencyPrice;
+            existingAgency.status = isAgencyRevoked ? 'REVOKED' : 'ACTIVE';
+          } else {
+            combined.unshift({
+              key: agencyKey,
+              customer: `${agencyRecord.agencyName || 'Agency Partner'} [MASTER]`,
+              email: agencyRecord.customerEmail || 'agency@partner.com',
+              tier: 'AGENCY',
+              type: agencyTierLabel,
+              price: agencyPrice,
+              quota: agencyRecord.quota || 5,
+              usedSeats: (agencyRecord.clients || []).length,
+              voiceActive: false,
+              status: isAgencyRevoked ? 'REVOKED' : 'ACTIVE',
+              date: agencyRecord.createdAt || new Date().toISOString()
+            });
+          }
+
+          // 2. Add/update Child Fleet Client Appliances
+          for (const client of (agencyRecord.clients || [])) {
+            const isClientRevoked = revokedKeys.includes(client.licenseKey);
+            const existingClient = combined.find(c => c.key === client.licenseKey);
+            if (existingClient) {
+              existingClient.tier = 'PRO';
+              existingClient.type = 'AGENCY_FLEET';
+              existingClient.customer = `${client.clientName} (Fleet: ${agencyRecord.agencyName})`;
+              existingClient.deviceId = client.hardwareId || null;
+              existingClient.status = isClientRevoked ? 'REVOKED' : (client.status || 'ACTIVE');
+              existingClient.agencyKey = agencyKey;
+              existingClient.agencyName = agencyRecord.agencyName;
+            } else {
+              combined.unshift({
+                key: client.licenseKey,
+                customer: `${client.clientName} (Fleet: ${agencyRecord.agencyName})`,
+                email: client.clientContact || '',
+                tier: 'PRO',
+                type: 'AGENCY_FLEET',
+                price: '$0.00 (Agency Seat)',
+                deviceId: client.hardwareId || null,
+                voiceActive: (client.voiceMinsUsed || 0) > 0,
+                status: isClientRevoked ? 'REVOKED' : (client.status || 'ACTIVE'),
+                agencyKey: agencyKey,
+                agencyName: agencyRecord.agencyName,
+                date: client.issuedAt || new Date().toISOString()
+              });
+            }
+          }
+        }
+      }
+    } catch (e) {
+      console.warn('[api/licenses] Error merging fleet cache:', e.message);
+    }
+
     res.writeHead(200, { 'Content-Type': 'application/json; charset=utf-8', 'Access-Control-Allow-Origin': '*' });
     res.end(JSON.stringify({ success: true, licenses: combined, count: combined.length }));
+    return;
+  }
+
+  // ─── Agency: Management Endpoint for Developer Dashboard ───
+  if ((relativePath === '/api/agency/manage' || relativePath === '/api/agency/manage/') && req.method === 'POST') {
+    let body = '';
+    req.on('data', chunk => body += chunk);
+    req.on('end', () => {
+      try {
+        const payload = JSON.parse(body || '{}');
+        const action = payload.action || 'list_fleets';
+        const FLEET_CACHE_PATH = path.join(__dirname, '.agency_fleet_cache.json');
+        let fleetCache = {};
+        if (fs.existsSync(FLEET_CACHE_PATH)) {
+          try { fleetCache = JSON.parse(fs.readFileSync(FLEET_CACHE_PATH, 'utf8')); } catch (e) {}
+        }
+        if (!Array.isArray(fleetCache._revokedKeys)) fleetCache._revokedKeys = [];
+
+        // 1. LIST ALL FLEETS
+        if (action === 'list_fleets') {
+          res.writeHead(200, { 'Content-Type': 'application/json; charset=utf-8', 'Access-Control-Allow-Origin': '*' });
+          res.end(JSON.stringify({ success: true, fleets: fleetCache, revokedKeys: fleetCache._revokedKeys }));
+          return;
+        }
+
+        // 2. TOGGLE REVOKE ON ANY KEY (Agency Master Key or Fleet Client Key)
+        if (action === 'toggle_revoke') {
+          const key = (payload.licenseKey || payload.key || '').trim().toUpperCase();
+          if (!key) {
+            res.writeHead(400, { 'Content-Type': 'application/json; charset=utf-8', 'Access-Control-Allow-Origin': '*' });
+            res.end(JSON.stringify({ success: false, error: 'licenseKey required' }));
+            return;
+          }
+          const isCurrentlyRevoked = fleetCache._revokedKeys.includes(key);
+          if (isCurrentlyRevoked) {
+            fleetCache._revokedKeys = fleetCache._revokedKeys.filter(k => k !== key);
+          } else {
+            fleetCache._revokedKeys.push(key);
+          }
+          fs.writeFileSync(FLEET_CACHE_PATH, JSON.stringify(fleetCache, null, 2), 'utf8');
+
+          res.writeHead(200, { 'Content-Type': 'application/json; charset=utf-8', 'Access-Control-Allow-Origin': '*' });
+          res.end(JSON.stringify({
+            success: true,
+            key,
+            revoked: !isCurrentlyRevoked,
+            message: `Key ${key} has been ${!isCurrentlyRevoked ? 'REVOKED' : 'REACTIVATED'}`
+          }));
+          return;
+        }
+
+        // 3. CREATE / REGISTER AGENCY MASTER KEY
+        if (action === 'create_agency') {
+          const agencyName = (payload.agencyName || 'Agency Partner').trim();
+          const tier = payload.tier || 'agency_5';
+          const quota = parseInt(payload.quota || (tier === 'agency_enterprise' ? '999' : tier === 'agency_10' ? '10' : '5'), 10);
+          const masterKey = (payload.masterKey || '').trim().toUpperCase();
+
+          if (!masterKey) {
+            res.writeHead(400, { 'Content-Type': 'application/json; charset=utf-8', 'Access-Control-Allow-Origin': '*' });
+            res.end(JSON.stringify({ success: false, error: 'masterKey required' }));
+            return;
+          }
+
+          fleetCache[masterKey] = {
+            agencyName,
+            customerEmail: payload.customerEmail || '',
+            quota,
+            tier,
+            voiceMinsPool: tier === 'agency_enterprise' ? 9999 : tier === 'agency_10' ? 2500 : 1250,
+            overageRatePerMin: tier === 'agency_enterprise' ? 0.15 : 0.20,
+            createdAt: new Date().toISOString(),
+            clients: [],
+            branding: null
+          };
+          fs.writeFileSync(FLEET_CACHE_PATH, JSON.stringify(fleetCache, null, 2), 'utf8');
+
+          res.writeHead(200, { 'Content-Type': 'application/json; charset=utf-8', 'Access-Control-Allow-Origin': '*' });
+          res.end(JSON.stringify({ success: true, message: `Agency account created for ${agencyName}`, agency: fleetCache[masterKey] }));
+          return;
+        }
+
+        // 4. UPDATE AGENCY QUOTA
+        if (action === 'update_quota') {
+          const masterKey = (payload.masterKey || '').trim().toUpperCase();
+          const newQuota = parseInt(payload.quota, 10);
+          if (!fleetCache[masterKey] || isNaN(newQuota)) {
+            res.writeHead(404, { 'Content-Type': 'application/json; charset=utf-8', 'Access-Control-Allow-Origin': '*' });
+            res.end(JSON.stringify({ success: false, error: 'Agency key not found or invalid quota' }));
+            return;
+          }
+          fleetCache[masterKey].quota = newQuota;
+          fs.writeFileSync(FLEET_CACHE_PATH, JSON.stringify(fleetCache, null, 2), 'utf8');
+
+          res.writeHead(200, { 'Content-Type': 'application/json; charset=utf-8', 'Access-Control-Allow-Origin': '*' });
+          res.end(JSON.stringify({ success: true, message: `Quota updated to ${newQuota} for ${fleetCache[masterKey].agencyName}` }));
+          return;
+        }
+
+        res.writeHead(400, { 'Content-Type': 'application/json; charset=utf-8', 'Access-Control-Allow-Origin': '*' });
+        res.end(JSON.stringify({ success: false, error: `Unknown action: ${action}` }));
+      } catch (e) {
+        res.writeHead(500, { 'Content-Type': 'application/json; charset=utf-8', 'Access-Control-Allow-Origin': '*' });
+        res.end(JSON.stringify({ success: false, error: e.message }));
+      }
+    });
     return;
   }
 
@@ -3018,3 +3245,104 @@ const server = http.createServer((req, res) => {
 server.listen(PORT, '0.0.0.0', () => {
   console.log(`Server running at http://localhost:${PORT}/ and http://10.0.0.65:${PORT}/`);
 });
+
+// ═══════════════════════════════════════════════════════════════════
+//  AUTONOMOUS DAILY SOCIAL AUTOMATION SCHEDULER
+//  Slots: 9:00 AM (morning blog), 12:30 PM (lunch feed), 6:00 PM (evening reel+story)
+//  All times in US Eastern Time (UTC-4 EDT / UTC-5 EST)
+// ═══════════════════════════════════════════════════════════════════
+(function startSocialScheduler() {
+  const { publishMorningBlog, publishLunchFeedPost, publishEveningReelAndStory } = require('./scripts/publish_omnichannel');
+  const { generateDailyContentBundle } = require('./scripts/generate_daily_content');
+
+  const EASTERN_OFFSET_HOURS = -4; // EDT; change to -5 in Nov for EST
+
+  function nowEastern() {
+    const d = new Date();
+    d.setHours(d.getHours() + EASTERN_OFFSET_HOURS + (d.getTimezoneOffset() / 60));
+    return d;
+  }
+
+  function msTilNextEastern(targetHour, targetMinute) {
+    const now = new Date();
+    const et = nowEastern();
+    const todayTarget = new Date(now);
+    // Compute offset delta: (targetHour:targetMinute ET) - now UTC
+    const deltaHours = targetHour - et.getHours();
+    const deltaMins = targetMinute - et.getMinutes();
+    const deltaMs = (deltaHours * 60 + deltaMins) * 60 * 1000 - (et.getSeconds() * 1000 + et.getMilliseconds());
+    return deltaMs > 0 ? deltaMs : deltaMs + 24 * 60 * 60 * 1000; // wrap to next day
+  }
+
+  const histPath = path.join(__dirname, 'data/social_publish_history.json');
+
+  function alreadyRanToday(slot) {
+    try {
+      if (!fs.existsSync(histPath)) return false;
+      const hist = JSON.parse(fs.readFileSync(histPath, 'utf8'));
+      const today = new Date().toISOString().split('T')[0];
+      return !!(hist[today] && hist[today][slot]);
+    } catch { return false; }
+  }
+
+  function markSlotDone(slot) {
+    try {
+      let hist = {};
+      if (fs.existsSync(histPath)) hist = JSON.parse(fs.readFileSync(histPath, 'utf8'));
+      const today = new Date().toISOString().split('T')[0];
+      if (!hist[today]) hist[today] = {};
+      hist[today][slot] = { timestamp: new Date().toISOString(), auto: true };
+      fs.mkdirSync(path.dirname(histPath), { recursive: true });
+      fs.writeFileSync(histPath, JSON.stringify(hist, null, 2), 'utf8');
+    } catch {}
+  }
+
+  async function getDailyBundle() {
+    const bufferPath = path.join(__dirname, 'data/daily_content_buffer.json');
+    const todayStr = new Date().toISOString().split('T')[0];
+    if (fs.existsSync(bufferPath)) {
+      try {
+        const raw = JSON.parse(fs.readFileSync(bufferPath, 'utf8'));
+        if (raw && raw.date === todayStr) return raw;
+      } catch {}
+    }
+    console.log('🔄 [SCHEDULER] Generating fresh daily bundle...');
+    const bundle = await generateDailyContentBundle({ offline: true });
+    try {
+      fs.mkdirSync(path.dirname(bufferPath), { recursive: true });
+      fs.writeFileSync(bufferPath, JSON.stringify(bundle, null, 2), 'utf8');
+    } catch {}
+    return bundle;
+  }
+
+  function scheduleSlot(slotName, targetHour, targetMin, fn) {
+    const delay = msTilNextEastern(targetHour, targetMin);
+    const fireAt = new Date(Date.now() + delay);
+    console.log(`📅 [SCHEDULER] "${slotName}" scheduled for ${fireAt.toLocaleString('en-US', { timeZone: 'America/New_York' })} ET (in ${Math.round(delay/60000)} min)`);
+
+    setTimeout(async function tick() {
+      if (alreadyRanToday(slotName)) {
+        console.log(`⏭️  [SCHEDULER] "${slotName}" already ran today — skipping.`);
+      } else {
+        console.log(`\n🚀 [SCHEDULER] FIRING "${slotName}" slot...`);
+        try {
+          const bundle = await getDailyBundle();
+          await fn(bundle, false);
+          markSlotDone(slotName);
+          console.log(`✅ [SCHEDULER] "${slotName}" complete.`);
+        } catch (err) {
+          console.error(`❌ [SCHEDULER] "${slotName}" error:`, err.message);
+        }
+      }
+      // Re-schedule for same time tomorrow
+      setTimeout(tick, msTilNextEastern(targetHour, targetMin));
+    }, delay);
+  }
+
+  // Wire up all 3 daily slots
+  scheduleSlot('morning', 9,  0,  publishMorningBlog);
+  scheduleSlot('lunch',   12, 30, publishLunchFeedPost);
+  scheduleSlot('evening', 18, 0,  publishEveningReelAndStory);
+
+  console.log('✅ [SCHEDULER] Daily social automation active (morning 9AM / lunch 12:30PM / evening 6PM ET)');
+})();

@@ -29,9 +29,21 @@ const IG_USER_ID = (process.env.IG_USER_ID && process.env.IG_USER_ID !== 'true' 
   ? process.env.IG_USER_ID
   : '17841428781387416';
 
+const VERIFIED_GITHUB_SOCIAL_IMAGES = [
+  'contractor-jobsite.jpg',
+  'contractor-speed-rule.jpg',
+  'hvac-speed-to-lead.jpg',
+  'appliance-vs-saas.jpg',
+  'carrier-spam-filter-bypass.jpg',
+  'answering-service-cost.jpg',
+  'speed-to-lead.jpg',
+  'v1-5-0-ai-voice-assistant-launch.jpg',
+  'pro-automation-launch.jpg',
+  'ghl-vs-appliance-ad.jpg'
+];
+
 function getSocialImageUrl(article = {}) {
   const postsPath = path.join(__dirname, '../blog/posts.json');
-  const assetsSocialDir = path.join(__dirname, '../assets/social');
   
   let existingPosts = [];
   if (fs.existsSync(postsPath)) {
@@ -40,50 +52,22 @@ function getSocialImageUrl(article = {}) {
     } catch (e) {}
   }
 
-  // If article already has an imageUrl, validate and return
-  if (article.imageUrl && article.imageUrl.startsWith('http')) {
-    const duplicate = existingPosts.find(p => p.slug !== article.slug && p.imageUrl === article.imageUrl);
-    if (duplicate) {
-      console.warn(`⚠️ [IMAGE REUSE WARNING] Image ${article.imageUrl} is already used by "${duplicate.title}". Resolving new bespoke image...`);
-    } else {
+  // If article already has a valid verified GitHub imageUrl, use it
+  if (article.imageUrl && article.imageUrl.startsWith('https://raw.githubusercontent.com/')) {
+    const baseName = path.basename(article.imageUrl);
+    if (VERIFIED_GITHUB_SOCIAL_IMAGES.includes(baseName)) {
       return article.imageUrl;
     }
   }
-  
-  // Find all used image basenames in existing posts
-  const usedImages = new Set(existingPosts.map(p => path.basename(p.imageUrl || '')));
-  
-  // Find an available unused asset in assets/social
-  if (fs.existsSync(assetsSocialDir)) {
-    const availableAssets = fs.readdirSync(assetsSocialDir)
-      .filter(f => /\.(jpg|jpeg|png|webp)$/i.test(f));
-    
-    const unusedAsset = availableAssets.find(f => !usedImages.has(f));
-    if (unusedAsset) {
-      const resolvedUrl = `https://raw.githubusercontent.com/anthonyfullerink-ai/MCASMS/main/assets/social/${unusedAsset}`;
-      article.imageUrl = resolvedUrl;
-      return resolvedUrl;
-    }
-  }
 
-  // Provision a dedicated bespoke image file for this slug
-  const slug = article.slug || `post-${Date.now()}`;
-  const bespokeFilename = `${slug}.jpg`;
-  const targetPath = path.join(assetsSocialDir, bespokeFilename);
+  // Find a verified image that was least recently used
+  const usedImages = existingPosts.map(p => path.basename(p.imageUrl || ''));
+  const unusedAsset = VERIFIED_GITHUB_SOCIAL_IMAGES.find(img => !usedImages.includes(img));
+  const chosenAsset = unusedAsset || VERIFIED_GITHUB_SOCIAL_IMAGES[Math.floor(Math.random() * VERIFIED_GITHUB_SOCIAL_IMAGES.length)];
 
-  if (!fs.existsSync(targetPath) && fs.existsSync(assetsSocialDir)) {
-    const fallbackSource = path.join(assetsSocialDir, 'hvac-speed-to-lead.jpg');
-    if (fs.existsSync(fallbackSource)) {
-      fs.copyFileSync(fallbackSource, targetPath);
-    } else {
-      const anySource = fs.readdirSync(assetsSocialDir).find(f => /\.(jpg|png)$/i.test(f));
-      if (anySource) fs.copyFileSync(path.join(assetsSocialDir, anySource), targetPath);
-    }
-  }
-
-  const bespokeUrl = `https://raw.githubusercontent.com/anthonyfullerink-ai/MCASMS/main/assets/social/${bespokeFilename}`;
-  article.imageUrl = bespokeUrl;
-  return bespokeUrl;
+  const resolvedUrl = `https://raw.githubusercontent.com/anthonyfullerink-ai/MCASMS/main/assets/social/${chosenAsset}`;
+  article.imageUrl = resolvedUrl;
+  return resolvedUrl;
 }
 
 function postGraphApi(endpoint, postData) {

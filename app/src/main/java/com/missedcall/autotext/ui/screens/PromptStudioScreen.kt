@@ -22,6 +22,12 @@ import com.missedcall.autotext.data.AppSettings
 import com.missedcall.autotext.ui.theme.ActiveGreenContainer
 import com.missedcall.autotext.ui.theme.ActiveGreenText
 import com.missedcall.autotext.ui.theme.PurpleVariant
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.launch
+import kotlinx.coroutines.withContext
+import java.net.HttpURLConnection
+import java.net.URL
+import java.nio.charset.StandardCharsets
 
 /**
  * Unified Prompt & AI Messaging Studio
@@ -35,10 +41,43 @@ fun PromptStudioScreen(
     onSettingsChanged: (AppSettings) -> Unit
 ) {
     val context = LocalContext.current
+    val coroutineScope = rememberCoroutineScope()
     var selectedStudioTab by remember { mutableIntStateOf(0) }
 
     val defaultMissedCallTemplate = "Hey! Sorry I missed your call. How can I help you today? - {business_name}"
     val defaultPostCallTemplate = "Hey {NAME}, this is {BUSINESS_NAME}. My AI assistant let me know about {SUMMARY}. I am wrapping up on a job and will reach out to you shortly!"
+
+    /**
+     * Pushes an updated greeting + activity to the server's /api/vapi/custom-greeting endpoint.
+     * Called immediately when the user taps a busy-status chip or saves the greeting field.
+     */
+    suspend fun pushGreetingToVapi(newSettings: AppSettings) {
+        withContext(Dispatchers.IO) {
+            try {
+                val endpoint = if (newSettings.remoteUpdateUrl.contains("localhost") || newSettings.remoteUpdateUrl.contains("10.0.")) {
+                    "http://10.0.2.2:8000/api/vapi/custom-greeting"
+                } else {
+                    "https://missedcallautosms.com/api/vapi/custom-greeting"
+                }
+                val url = URL(endpoint)
+                val conn = url.openConnection() as HttpURLConnection
+                conn.requestMethod = "POST"
+                conn.doOutput = true
+                conn.setRequestProperty("Content-Type", "application/json; charset=utf-8")
+                conn.connectTimeout = 6000
+                conn.readTimeout = 6000
+                val safeBusiness = newSettings.businessName.replace("\"", "\\\"")
+                val safeGreeting = newSettings.voiceReceptionistGreeting
+                    .ifBlank { "Thanks for calling $safeBusiness! Everyone currently has their ${newSettings.contractorActivity.ifBlank { "hands full" }}, but I'm ${newSettings.voiceAgentName.ifBlank { "Riley" }}, your AI receptionist. How can I help?" }
+                    .replace("\"", "\\\"")
+                val safeActivity = newSettings.contractorActivity.replace("\"", "\\\"")
+                val payload = """{"businessName":"$safeBusiness","customGreeting":"$safeGreeting","contractorActivity":"$safeActivity","agentName":"${newSettings.voiceAgentName.replace("\"","\\\"") }"}"""
+                conn.outputStream.use { it.write(payload.toByteArray(StandardCharsets.UTF_8)) }
+                conn.responseCode
+            } catch (_: Exception) { /* silent fail — offline or local fallback */ }
+        }
+    }
+
 
     Scaffold(
         topBar = {
@@ -243,6 +282,7 @@ fun PromptStudioScreen(
                                 }
 
                                 Spacer(modifier = Modifier.height(12.dp))
+                                var isSavingGreeting by remember { mutableStateOf(false) }
                                 OutlinedTextField(
                                     value = settings.voiceReceptionistGreeting,
                                     onValueChange = { onSettingsChanged(settings.copy(voiceReceptionistGreeting = it)) },
@@ -254,30 +294,90 @@ fun PromptStudioScreen(
                                     minLines = 2,
                                     maxLines = 4
                                 )
+                                Spacer(modifier = Modifier.height(8.dp))
+                                Button(
+                                    onClick = {
+                                        isSavingGreeting = true
+                                        coroutineScope.launch {
+                                            pushGreetingToVapi(settings)
+                                            withContext(Dispatchers.Main) {
+                                                isSavingGreeting = false
+                                                Toast.makeText(context, "✅ Greeting saved & pushed to AI!", Toast.LENGTH_SHORT).show()
+                                            }
+                                        }
+                                    },
+                                    enabled = !isSavingGreeting,
+                                    modifier = Modifier.align(Alignment.End)
+                                ) {
+                                    if (isSavingGreeting) {
+                                        CircularProgressIndicator(modifier = Modifier.size(16.dp), color = Color.White, strokeWidth = 2.dp)
+                                        Spacer(modifier = Modifier.width(6.dp))
+                                        Text("Saving...")
+                                    } else {
+                                        Icon(Icons.Default.Save, contentDescription = null, modifier = Modifier.size(16.dp))
+                                        Spacer(modifier = Modifier.width(6.dp))
+                                        Text("Save Greeting")
+                                    }
+                                }
 
                                 Spacer(modifier = Modifier.height(14.dp))
+
                                 Text(
                                     text = "Current Busy Status / Activity Phrase:",
                                     style = MaterialTheme.typography.labelMedium,
                                     fontWeight = FontWeight.SemiBold
                                 )
-                                Spacer(modifier = Modifier.height(6.dp))
+                                Spacer(modifier = Modifier.height(2.dp))
+                                Text(
+                                    text = "Tap to update — instantly changes what Riley tells callers.",
+                                    style = MaterialTheme.typography.labelSmall,
+                                    color = MaterialTheme.colorScheme.onSurfaceVariant
+                                )
+                                Spacer(modifier = Modifier.height(8.dp))
                                 FlowRow(
                                     modifier = Modifier.fillMaxWidth(),
                                     horizontalArrangement = Arrangement.spacedBy(8.dp),
                                     verticalArrangement = Arrangement.spacedBy(6.dp)
                                 ) {
                                     StatusActivityChip("Hands Full", settings.contractorActivity) {
-                                        onSettingsChanged(settings.copy(contractorActivity = "Hands Full"))
+                                        val updated = settings.copy(contractorActivity = "Hands Full")
+                                        onSettingsChanged(updated)
+                                        coroutineScope.launch {
+                                            pushGreetingToVapi(updated)
+                                            withContext(Dispatchers.Main) {
+                                                Toast.makeText(context, "🤙 Status updated: Hands Full", Toast.LENGTH_SHORT).show()
+                                            }
+                                        }
                                     }
                                     StatusActivityChip("On a Job", settings.contractorActivity) {
-                                        onSettingsChanged(settings.copy(contractorActivity = "on a job"))
+                                        val updated = settings.copy(contractorActivity = "on a job")
+                                        onSettingsChanged(updated)
+                                        coroutineScope.launch {
+                                            pushGreetingToVapi(updated)
+                                            withContext(Dispatchers.Main) {
+                                                Toast.makeText(context, "🔧 Status updated: On a Job", Toast.LENGTH_SHORT).show()
+                                            }
+                                        }
                                     }
                                     StatusActivityChip("In Consultation", settings.contractorActivity) {
-                                        onSettingsChanged(settings.copy(contractorActivity = "in a consultation"))
+                                        val updated = settings.copy(contractorActivity = "in a consultation")
+                                        onSettingsChanged(updated)
+                                        coroutineScope.launch {
+                                            pushGreetingToVapi(updated)
+                                            withContext(Dispatchers.Main) {
+                                                Toast.makeText(context, "💬 Status updated: In Consultation", Toast.LENGTH_SHORT).show()
+                                            }
+                                        }
                                     }
                                     StatusActivityChip("After Hours", settings.contractorActivity) {
-                                        onSettingsChanged(settings.copy(contractorActivity = "closed for the day"))
+                                        val updated = settings.copy(contractorActivity = "closed for the day")
+                                        onSettingsChanged(updated)
+                                        coroutineScope.launch {
+                                            pushGreetingToVapi(updated)
+                                            withContext(Dispatchers.Main) {
+                                                Toast.makeText(context, "🌙 Status updated: After Hours", Toast.LENGTH_SHORT).show()
+                                            }
+                                        }
                                     }
                                 }
 
