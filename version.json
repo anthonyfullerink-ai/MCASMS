@@ -3,8 +3,8 @@
   "versionName": "1.6.2",
   "downloadUrl": "https://raw.githubusercontent.com/anthonyfullerink-ai/MCASMS/main/MissedCallAutoSMS.apk",
   "proDownloadUrl": "https://raw.githubusercontent.com/anthonyfullerink-ai/MCASMS/main/MissedCallAutoSMS-Pro.apk",
-  "releaseNotes": "• 🚀 Reliability Update — Exponential backoff for webhooks ensures 99.9% lead notification deliverability\n• 🧠 Intent-Based AI SMS — Dynamic response routing based on AI call outcome (Emergency vs General)\n• 🌐 Remote Template Engine — Manage and update client messaging instantly via the Agency Dashboard\n• 🟢 Fleet Visibility — Real-time Green/Red status monitoring for all deployed hardware appliances",
+  "releaseNotes": "✅ Autonomous Daily Social Posts — 9AM blog, 12:30PM feed, 6PM reel+story fire automatically every day\n✅ Fixed stale content cache — AI now generates a fresh topic bundle each morning instead of reusing yesterday's\n✅ Blog articles now automatically cross-post to Facebook & Instagram immediately after publishing\n✅ Nav bar reorganized into clean dropdown menus (Plans, For Business, Learn)\n✅ App: Removed duplicate AI greeting field — one unified source in Prompt Studio\n✅ App: Busy Status chips (Hands Full, On a Job, etc.) now instantly update what Riley tells callers live",
   "mandatory": true,
-  "minSupportedVersion": 16,
-  "updatedAt": "2026-09-20T23:45:00.000Z"
+  "minSupportedVersion": 15,
+  "updatedAt": "2026-09-22T04:00:00.000Z"
 }
