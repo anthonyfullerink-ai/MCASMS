@@ -97,8 +97,14 @@
             border-bottom: 1px solid rgba(0, 230, 118, 0.25);
             text-align: center;
             padding: 10px 16px;
+        /* Top Announcement Banner */
+        .top-banner {
+            background: linear-gradient(90deg, #1E1B4B, #0F172A, #064E3B);
+            border-bottom: 1px solid rgba(0, 230, 118, 0.25);
+            padding: 10px 16px;
+            text-align: center;
             font-size: 13px;
-            font-weight: 700;
+            font-weight: 600;
             color: #E2E8F0;
         }
         .top-banner strong { color: var(--primary); }
@@ -108,7 +114,7 @@
             display: flex;
             justify-content: space-between;
             align-items: center;
-            padding: 18px 0;
+            padding: 16px 0;
             border-bottom: 1px solid var(--card-border);
             position: sticky;
             top: 0;
@@ -118,29 +124,22 @@
         }
 
         .logo {
-            font-size: 19px;
+            font-size: 20px;
             font-weight: 900;
-            color: var(--text);
+            color: #FFF;
             text-decoration: none;
-            display: flex;
-            align-items: center;
-            gap: 10px;
             letter-spacing: -0.5px;
+            white-space: nowrap;
         }
-        .logo-badge {
-            font-size: 10px;
-            font-weight: 800;
-            background: rgba(0, 230, 118, 0.15);
-            color: var(--primary);
-            border: 1px solid rgba(0, 230, 118, 0.4);
-            padding: 2px 8px;
-            border-radius: 20px;
-            text-transform: uppercase;
+        .logo span {
+            background: linear-gradient(135deg, #FFF, var(--primary));
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
         }
 
         .nav-links {
             display: flex;
-            gap: 24px;
+            gap: 22px;
             align-items: center;
         }
         .nav-links a {
@@ -149,43 +148,36 @@
             font-size: 14px;
             font-weight: 600;
             transition: color 0.2s;
+            white-space: nowrap;
         }
         .nav-links a:hover, .nav-links a.active {
             color: var(--primary);
         }
+        .nav-link-demo {
+            color: var(--primary) !important;
+            font-weight: 700 !important;
+            display: inline-flex;
+            align-items: center;
+            gap: 4px;
+        }
 
         .nav-cta {
             display: flex;
-            gap: 12px;
+            gap: 10px;
             align-items: center;
-        }
-
-        .btn-trial-nav {
-            background: rgba(0, 230, 118, 0.12);
-            color: var(--primary);
-            border: 1px solid var(--primary);
-            padding: 8px 16px;
-            border-radius: 8px;
-            font-size: 13px;
-            font-weight: 700;
-            text-decoration: none;
-            transition: all 0.2s;
-        }
-        .btn-trial-nav:hover {
-            background: var(--primary);
-            color: #000;
         }
 
         .btn-buy-nav {
             background: linear-gradient(135deg, var(--primary), var(--cyan));
             color: #000;
-            padding: 9px 18px;
+            padding: 9px 20px;
             border-radius: 8px;
             font-size: 13px;
             font-weight: 800;
             text-decoration: none;
             box-shadow: 0 2px 10px rgba(0, 230, 118, 0.3);
             transition: all 0.2s;
+            white-space: nowrap;
         }
         .btn-buy-nav:hover {
             transform: translateY(-1px);
@@ -194,7 +186,7 @@
 
         /* Hero Section */
         .hero {
-            padding: 60px 0 40px;
+            padding: 50px 0 30px;
             text-align: center;
             position: relative;
         }
@@ -1004,13 +996,16 @@
         footer a:hover { color: var(--primary); }
 
         /* Responsive */
-        @media (max-width: 768px) {
+        @media (max-width: 992px) {
             .nav-links { display: none; }
+        }
+        @media (max-width: 768px) {
             .lifecycle-step { flex-direction: column; gap: 14px; padding: 22px; }
             .floating-call-badge { position: relative; bottom: 0; left: 0; max-width: 100%; margin: 12px; }
             .hero-media-wrapper { border-radius: 12px; }
-            .audio-player-box { flex-direction: column; align-items: flex-start; }
-            .audio-wave-visual { width: 100%; }
+            .call-demo-container { padding: 20px 16px; }
+            .prompt-chips-grid { gap: 6px; }
+            .prompt-chip { font-size: 11px; padding: 5px 10px; }
         }
     </style>
 </head>
@@ -1027,19 +1022,15 @@
             <nav>
                 <a href="/" class="logo">
                     <span>MissedCallAutoSMS</span>
-                    <span class="logo-badge">⚡ Autonomous Front Desk</span>
                 </a>
                 <div class="nav-links">
+                    <a href="#demo" class="nav-link-demo">🎙️ Live Voice Demo</a>
                     <a href="#how-it-works">How It Works</a>
-                    <a href="#lifecycle">Sign-Up to Cancellation</a>
-                    <a href="#features">Features</a>
-                    <a href="#demo">Live Demo</a>
                     <a href="#pricing">Pricing & Tiers</a>
-                    <a href="#faq">FAQ</a>
+                    <a href="/agency">Agency Fleet</a>
                 </div>
                 <div class="nav-cta">
-                    <a href="https://buy.stripe.com/5kQ5kDbBI8hkdao8WZ2go0c" class="btn-trial-nav">Free 3-Day Trial</a>
-                    <a href="https://buy.stripe.com/cNi5kDdJQ558c6k2yB2go0b" class="btn-buy-nav">Get Front Desk ($99/mo)</a>
+                    <a href="https://buy.stripe.com/5kQ5kDbBI8hkdao8WZ2go0c" class="btn-buy-nav">Free 3-Day Trial</a>
                 </div>
             </nav>
         </div>
@@ -1048,8 +1039,8 @@
     <!-- Main Content -->
     <main>
 
-        <!-- Hero Section -->
-        <section class="hero">
+        <!-- Hero Section with Integrated Live Vapi WebRTC Stage -->
+        <section class="hero" id="demo">
             <div class="container">
                 <div class="hero-pill">
                     🎙️ 24/7 AI TELEPHONY + NATIVE SIM APPLIANCE
@@ -1062,73 +1053,9 @@
                     Answers in 15 seconds, triages customer emergencies, books calendar appointments, and <strong>fires authentic confirmation text messages straight from your real phone's SIM card</strong>. Zero Twilio 10DLC bans. Zero VoIP software lock-in.
                 </p>
 
-                <div class="hero-cta-group">
-                    <a href="https://buy.stripe.com/5kQ5kDbBI8hkdao8WZ2go0c" class="btn-primary-lg">
-                        ⚡ Start 3-Day Free Trial ($0.00 Today) ➔
-                    </a>
-                    <a href="https://buy.stripe.com/cNi5kDdJQ558c6k2yB2go0b" class="btn-secondary-lg">
-                        ⚡ Get Front Desk Bundle ($99/mo)
-                    </a>
-                </div>
-
-                <div class="hero-guarantee">
-                    <span>🔒 No Setup Fees</span>
-                    <span>⚡ 1-Tap Carrier Forwarding (*71)</span>
-                    <span>🛑 Cancel Anytime (Dial *73)</span>
-                    <span>📱 100% Native SIM SMS Delivery</span>
-                </div>
-
-                <!-- Hero Visual Media Banner -->
-                <div class="hero-media-wrapper">
-                    <img src="/assets/social/ai_voice_receptionist_hero.jpg" alt="Autonomous AI Voice Receptionist Appliance Setup" width="1040" height="585">
-                    <div class="floating-call-badge">
-                        <div class="floating-badge-top">
-                            <div class="badge-live-indicator">
-                                <span class="live-dot"></span> Inbound Call Active (0:18s)
-                            </div>
-                            <span style="font-size: 11px; color: var(--muted);">SIM Line: +1 (404) 555-8321</span>
-                        </div>
-                        <p class="badge-quote">
-                            "Hi, thanks for calling Apex Plumbing! I can dispatch our senior technician tomorrow at 9:00 AM. I just texted confirmation details to your cell phone from our main office line."
-                        </p>
-                    </div>
-                </div>
-
-                <!-- Metric Strip -->
-                <div class="metric-strip">
-                    <div class="metric-card">
-                        <div class="metric-num">15s</div>
-                        <div class="metric-label">Average Call Pickup Time</div>
-                    </div>
-                    <div class="metric-card">
-                        <div class="metric-num">250 Min</div>
-                        <div class="metric-label">Monthly Pooled AI Voice Minutes</div>
-                    </div>
-                    <div class="metric-card">
-                        <div class="metric-num">100%</div>
-                        <div class="metric-label">Carrier SIM SMS Delivery Rate</div>
-                    </div>
-                    <div class="metric-card">
-                        <div class="metric-num">$3,400/mo</div>
-                        <div class="metric-label">Average Payroll Savings vs Staff</div>
-                    </div>
-                </div>
-
-            </div>
-        </section>
-
-        <!-- Live Vapi WebRTC Browser Call Demo -->
-        <section id="demo">
-            <div class="container">
-                <div class="section-header">
-                    <span class="section-tag">⚡ Live Browser Voice Experience</span>
-                    <h2>Talk to Riley: Your 24/7 AI Front Desk</h2>
-                    <p>Click below to start a live voice conversation directly through your microphone. Riley answers questions, quotes rates, triages emergencies, and schedules appointments across every trade and service business.</p>
-                </div>
-
+                <!-- Integrated Live Vapi WebRTC Call Widget -->
                 <div class="call-demo-container">
-                    
-                    <div class="prompt-chips-title">💡 Try Speaking Any Of These Scenarios When Connected:</div>
+                    <div class="prompt-chips-title">💡 Click To Test Or Speak Any Of These Scenarios When Connected:</div>
                     <div class="prompt-chips-grid">
                         <div class="prompt-chip" onclick="copyPrompt('My AC unit stopped blowing cold air and it is 90 degrees inside.')">
                             🔧 <span>"AC blowing hot air (HVAC Emergency)"</span>
@@ -1170,7 +1097,7 @@
                         <div id="callIdleControls">
                             <button class="btn-call-start" id="startCallBtn" onclick="startVapiCall()">
                                 <span>📞</span>
-                                <span>Start Live Call (Speak Now)</span>
+                                <span>Start Live Call (Speak with Riley Now)</span>
                             </button>
                             <div class="call-footer-note">
                                 <span>🔒 100% In-Browser Audio (WebRTC)</span>
@@ -1226,15 +1153,67 @@
                         <!-- Realtime Transcript Stream -->
                         <div class="call-transcript-stream" id="transcriptStream">
                             <div class="transcript-msg">
-                                <span class="speaker-tag speaker-system">System:</span> Click "Start Live Call" to test talking to Riley. Speak naturally into your device microphone!
+                                <span class="speaker-tag speaker-system">System:</span> Click "Start Live Call" above to talk to Riley in real-time. Speak naturally into your microphone!
                             </div>
                         </div>
-
                     </div>
-
                 </div>
+
+                <div class="hero-cta-group" style="margin-top: 36px;">
+                    <a href="https://buy.stripe.com/5kQ5kDbBI8hkdao8WZ2go0c" class="btn-primary-lg">
+                        ⚡ Start 3-Day Free Trial ($0.00 Today) ➔
+                    </a>
+                    <a href="https://buy.stripe.com/cNi5kDdJQ558c6k2yB2go0b" class="btn-secondary-lg">
+                        ⚡ Get Front Desk Bundle ($99/mo)
+                    </a>
+                </div>
+
+                <div class="hero-guarantee">
+                    <span>🔒 No Setup Fees</span>
+                    <span>⚡ 1-Tap Carrier Forwarding (*71)</span>
+                    <span>🛑 Cancel Anytime (Dial *73)</span>
+                    <span>📱 100% Native SIM SMS Delivery</span>
+                </div>
+
+                <!-- Hero Visual Media Banner -->
+                <div class="hero-media-wrapper">
+                    <img src="/assets/social/ai_voice_receptionist_hero.jpg" alt="Autonomous AI Voice Receptionist Appliance Setup" width="1040" height="585">
+                    <div class="floating-call-badge">
+                        <div class="floating-badge-top">
+                            <div class="badge-live-indicator">
+                                <span class="live-dot"></span> Inbound Call Active (0:18s)
+                            </div>
+                            <span style="font-size: 11px; color: var(--muted);">SIM Line: +1 (404) 555-8321</span>
+                        </div>
+                        <p class="badge-quote">
+                            "Hi, thanks for calling Apex Plumbing! I can dispatch our senior technician tomorrow at 9:00 AM. I just texted confirmation details to your cell phone from our main office line."
+                        </p>
+                    </div>
+                </div>
+
+                <!-- Metric Strip -->
+                <div class="metric-strip">
+                    <div class="metric-card">
+                        <div class="metric-num">15s</div>
+                        <div class="metric-label">Average Call Pickup Time</div>
+                    </div>
+                    <div class="metric-card">
+                        <div class="metric-num">250 Min</div>
+                        <div class="metric-label">Monthly Pooled AI Voice Minutes</div>
+                    </div>
+                    <div class="metric-card">
+                        <div class="metric-num">100%</div>
+                        <div class="metric-label">Carrier SIM SMS Delivery Rate</div>
+                    </div>
+                    <div class="metric-card">
+                        <div class="metric-num">$3,400/mo</div>
+                        <div class="metric-label">Average Payroll Savings vs Staff</div>
+                    </div>
+                </div>
+
             </div>
         </section>
+
 
         <!-- Complete Lifecycle: Sign-Up to Implementation to Cancellation -->
         <section id="lifecycle">

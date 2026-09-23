@@ -34,7 +34,10 @@
 /marketing/             /content_engine_dashboard.html 200
 /api/content-engine/*   /.netlify/functions/content-engine 200
 /api/content-engine     /.netlify/functions/content-engine 200
+/agency                 /agency.html                200
+/agency/                /agency.html                200
 /voice                  /voice.html                 200
 /voice/                 /voice.html                 200
 /owner   /owner_admin_dashboard.html   200
-/   /sales_landing_page.html   200
+/   /voice.html   200
+

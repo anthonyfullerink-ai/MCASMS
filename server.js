@@ -4307,6 +4307,8 @@ const server = http.createServer((req, res) => {
 
   // Clean URL Routing
   if (relativePath === '/') {
+    relativePath = '/voice.html';
+  } else if (relativePath === '/flagship' || relativePath === '/flagship/') {
     relativePath = '/sales_landing_page.html';
   } else if (relativePath === '/owner' || relativePath === '/owner/') {
     relativePath = '/owner_admin_dashboard.html';
