@@ -159,6 +159,32 @@
   to = "/agency.html"
   status = 200
 
+# Direct access to Content Engine dashboard
+[[redirects]]
+  from = "/content-engine"
+  to = "/content_engine_dashboard.html"
+  status = 200
+
+[[redirects]]
+  from = "/content-engine/"
+  to = "/content_engine_dashboard.html"
+  status = 200
+
+[[redirects]]
+  from = "/marketing"
+  to = "/content_engine_dashboard.html"
+  status = 200
+
+[[redirects]]
+  from = "/api/content-engine/*"
+  to = "/.netlify/functions/content-engine"
+  status = 200
+
+[[redirects]]
+  from = "/api/content-engine"
+  to = "/.netlify/functions/content-engine"
+  status = 200
+
 # Direct access to owner dashboard
 [[redirects]]
   from = "/owner"
