@@ -1,5 +1,15 @@
 const { execSync } = require('child_process');
-const ffmpeg = require('ffmpeg-static');
+let ffmpeg = null;
+try {
+  ffmpeg = require('ffmpeg-static');
+} catch (e) {
+  try {
+    execSync('ffmpeg -version', { stdio: 'ignore' });
+    ffmpeg = 'ffmpeg';
+  } catch (_) {
+    ffmpeg = null;
+  }
+}
 const path = require('path');
 const fs = require('fs');
 
@@ -40,6 +50,10 @@ function personalizeSocialGraphic({
     `drawtext=text='${cleanCta}':fontcolor=0x00E676:fontsize=24:x=40:y=950`,
     `drawtext=text='MissedCallAutoSMS.com':fontcolor=0x8B949E:fontsize=22:x=40:y=990`
   ].join(',');
+
+  if (!ffmpeg) {
+    return srcPath;
+  }
 
   const cmd = `"${ffmpeg}" -y -i "${srcPath}" -vf "${vf}" -q:v 2 "${outPath}"`;
   
