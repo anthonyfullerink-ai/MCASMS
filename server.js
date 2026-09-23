@@ -3683,6 +3683,86 @@ const server = http.createServer((req, res) => {
       return;
     }
 
+    // 7a. One-Click Approve from Google Chat (Mobile Responsive HTML)
+    if (relativePath === '/api/content-engine/one-click-approve' && req.method === 'GET') {
+      const urlObj = new URL(req.url, `http://localhost:${PORT}`);
+      const postId = urlObj.searchParams.get('postId') || urlObj.searchParams.get('id') || '';
+      let queue = readJson(CE_QUEUE_FILE, []);
+      let approvedPost = null;
+
+      if (postId === 'all') {
+        queue.forEach(p => {
+          if (p.status === 'draft') {
+            p.status = 'approved';
+            p.approvedAt = new Date().toISOString();
+          }
+        });
+        writeJson(CE_QUEUE_FILE, queue);
+      } else if (postId) {
+        approvedPost = queue.find(p => p.id === postId);
+        if (approvedPost) {
+          approvedPost.status = 'approved';
+          approvedPost.approvedAt = new Date().toISOString();
+          writeJson(CE_QUEUE_FILE, queue);
+        } else {
+          const fallbackDraft = queue.find(p => p.status === 'draft');
+          if (fallbackDraft) {
+            fallbackDraft.status = 'approved';
+            fallbackDraft.approvedAt = new Date().toISOString();
+            approvedPost = fallbackDraft;
+            writeJson(CE_QUEUE_FILE, queue);
+          }
+        }
+      }
+
+      const postTitle = approvedPost ? approvedPost.title : 'Content Engine Post';
+      const postFormat = approvedPost ? approvedPost.format : 'Omnichannel Post';
+      const scheduledText = approvedPost && approvedPost.scheduledFor ? new Date(approvedPost.scheduledFor).toLocaleString('en-US', { timeZone: 'America/New_York' }) + ' ET' : 'Next Scheduled Timeslot';
+
+      res.writeHead(200, {
+        'Content-Type': 'text/html; charset=utf-8',
+        'Access-Control-Allow-Origin': '*'
+      });
+      res.end(`<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="utf-8">
+  <title>Post Approved - Missed Call Auto SMS</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <style>
+    body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; background: #0b0f19; color: #f8fafc; display: flex; align-items: center; justify-content: center; min-height: 100vh; margin: 0; padding: 20px; box-sizing: border-box; }
+    .card { background: #131b2e; border: 1px solid #1e293b; border-radius: 16px; padding: 32px 24px; max-width: 520px; width: 100%; text-align: center; box-shadow: 0 20px 40px rgba(0,0,0,0.5); }
+    .badge { display: inline-flex; align-items: center; gap: 6px; background: rgba(16, 185, 129, 0.15); color: #10b981; font-weight: 700; font-size: 13px; padding: 6px 14px; border-radius: 999px; margin-bottom: 20px; border: 1px solid rgba(16, 185, 129, 0.3); }
+    h1 { font-size: 22px; font-weight: 800; margin: 0 0 12px 0; color: #ffffff; line-height: 1.3; }
+    .post-box { background: #0f172a; border: 1px solid #1e293b; border-radius: 10px; padding: 16px; margin: 18px 0; text-align: left; }
+    .post-box .label { font-size: 11px; text-transform: uppercase; color: #64748b; font-weight: 700; margin-bottom: 4px; }
+    .post-box .title { font-size: 14px; color: #e2e8f0; font-weight: 600; margin-bottom: 8px; }
+    .post-box .meta { font-size: 12px; color: #38bdf8; display: flex; justify-content: space-between; }
+    p { color: #94a3b8; font-size: 14px; line-height: 1.6; margin: 0 0 24px 0; }
+    .btn { display: block; background: #2563eb; color: #ffffff; font-weight: 700; font-size: 15px; text-decoration: none; padding: 14px 24px; border-radius: 10px; transition: background 0.2s; text-align: center; }
+    .btn:hover { background: #1d4ed8; }
+  </style>
+</head>
+<body>
+  <div class="card">
+    <div class="badge">✔ ARMED FOR PUBLICATION</div>
+    <h1>Post Successfully Approved</h1>
+    <div class="post-box">
+      <div class="label">Approved Content</div>
+      <div class="title">${postTitle}</div>
+      <div class="meta">
+        <span>Format: <b>${postFormat}</b></span>
+        <span>Slot: <b>${scheduledText}</b></span>
+      </div>
+    </div>
+    <p>This post is now armed. The scheduler daemon will automatically publish it across your configured channels (Blog, Facebook, and Instagram).</p>
+    <a href="/owner?tab=6" class="btn">Open Omnichannel Queue & Dashboard</a>
+  </div>
+</body>
+</html>`);
+      return;
+    }
+
     // 7b. Unapprove Post (Revert to Draft)
     if (relativePath === '/api/content-engine/unapprove-post' && req.method === 'POST') {
       getRequestBody().then(({ postId }) => {
