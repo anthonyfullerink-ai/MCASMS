@@ -1,8 +1,16 @@
 {
+  "autoPostingEnabled": true,
+  "autoPublishApprovedOnly": true,
+  "lastSchedulerCheck": "2026-09-23T04:17:17.097Z",
+  "postingTimeslots": [
+    "09:00",
+    "13:00",
+    "18:00"
+  ],
+  "schedulerIntervalSeconds": 60,
   "smartGenerationProtocol": true,
-  "creditsPreservedEstimated": 142.50,
+  "creditsPreservedEstimated": 142.5,
   "googleChatWebhookUrl": "",
-  "autoPublishOnApproval": false,
   "defaultNiche": "Contractors, Plumbers, and Service Businesses",
   "postingFrequencyDays": 1,
   "videoModel": "Veo 3.1",

@@ -660,11 +660,78 @@
       transform: translateY(0);
       opacity: 1;
     }
+
+    /* Owner Admin Login Gate */
+    .login-wrapper {
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      min-height: 80vh;
+      padding: 20px;
+    }
+
+    .login-card {
+      background: var(--card-bg);
+      border: 1px solid var(--card-border);
+      border-radius: 20px;
+      padding: 40px;
+      width: 100%;
+      max-width: 440px;
+      box-shadow: 0 20px 50px rgba(0,0,0,0.7);
+      text-align: center;
+    }
+
+    .login-logo { font-size: 40px; margin-bottom: 10px; }
+    .login-title { font-size: 22px; font-weight: 900; color: #FFF; margin-bottom: 6px; }
+    .login-sub { color: var(--muted); font-size: 13px; margin-bottom: 24px; line-height: 1.4; }
+
+    .error-alert {
+      background: rgba(248, 81, 73, 0.15);
+      color: var(--danger);
+      border: 1px solid var(--danger);
+      padding: 10px 14px;
+      border-radius: 10px;
+      font-size: 13px;
+      font-weight: bold;
+      margin-bottom: 18px;
+      display: none;
+    }
   </style>
 </head>
 <body>
 
-  <div class="container">
+  <!-- 1. Password Protected Login Screen -->
+  <div id="loginContainer" class="login-wrapper">
+    <div class="login-card">
+      <div class="login-logo">🔒</div>
+      <div class="login-title">Content & Omnichannel Engine</div>
+      <div class="login-sub">Restricted Owner / Developer Credentials Required</div>
+
+      <div id="loginError" class="error-alert">Invalid Username or Password</div>
+
+      <form onsubmit="handleLogin(event)">
+        <div class="form-group" style="text-align: left;">
+          <label>Developer Username</label>
+          <input type="text" id="loginUser" value="admin" required class="form-control" placeholder="Enter username">
+        </div>
+
+        <div class="form-group" style="text-align: left;">
+          <label>Developer Password</label>
+          <input type="password" id="loginPass" placeholder="Enter password" required autofocus class="form-control">
+        </div>
+
+        <button type="submit" class="btn btn-primary" style="width: 100%; justify-content: center; padding: 12px; font-size: 14px; margin-top: 8px;">
+          Unlock Content Engine
+        </button>
+      </form>
+      <div style="margin-top: 20px; font-size: 12px;">
+        <a href="/owner" style="color: var(--muted); text-decoration: none;">← Open Master Owner Admin Portal</a>
+      </div>
+    </div>
+  </div>
+
+  <!-- 2. Protected Dashboard Content -->
+  <div id="dashboardContainer" class="container" style="display: none;">
     <!-- Header -->
     <header class="header">
       <div class="header-brand">
@@ -675,11 +742,68 @@
         </div>
       </div>
       <div class="header-actions">
-        <a href="/owner" class="btn btn-secondary btn-sm">Owner Admin</a>
-        <a href="/blog" class="btn btn-secondary btn-sm" target="_blank">View Live Blog</a>
+        <a href="/owner" class="btn btn-secondary btn-sm">🏠 Master Owner Admin</a>
+        <a href="/blog" class="btn btn-secondary btn-sm" target="_blank">📰 View Live Blog</a>
         <button class="btn btn-purple btn-sm" onclick="openSettingsModal()">⚙️ Settings & Chat Webhook</button>
+        <button class="btn btn-secondary btn-sm" onclick="handleLogout()" style="color: var(--danger); border-color: rgba(248,81,73,0.3);">🔒 Logout</button>
       </div>
     </header>
+
+    <!-- Master Auto-Posting Automation Command Panel -->
+    <div style="background: linear-gradient(135deg, #131A26, #101620); border: 1px solid var(--card-border); border-radius: 16px; padding: 20px 24px; margin-bottom: 24px; box-shadow: 0 8px 32px rgba(0,0,0,0.4);">
+      <div style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 16px; margin-bottom: 14px;">
+        <div>
+          <div style="display: flex; align-items: center; gap: 10px;">
+            <span style="font-size: 22px;">🤖</span>
+            <h2 style="font-size: 18px; font-weight: 800; color: #FFF; margin: 0;">24/7 Omnichannel Auto-Publisher Daemon</h2>
+          </div>
+          <p style="font-size: 13px; color: var(--muted); margin-top: 4px;">
+            Local server daemon checks queue every 60s. Approved posts auto-publish to Blog and Social channels at their scheduled timeslot.
+          </p>
+        </div>
+        <div style="display: flex; align-items: center; gap: 12px; flex-wrap: wrap;">
+          <button id="btnMasterAutoPost" class="btn btn-primary" onclick="toggleAutoPosting()">
+            <span class="status-dot"></span> ⚡ Auto-Posting: ACTIVE
+          </button>
+          <button class="btn btn-secondary" onclick="forceSchedulerTick()">
+            🔄 Force Scheduler Check Now
+          </button>
+        </div>
+      </div>
+
+      <!-- Live Pipeline & Next Post Status Strip -->
+      <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 14px; background: #0A0D13; border: 1px solid var(--card-border); border-radius: 12px; padding: 14px 18px;">
+        <div>
+          <div style="font-size: 11px; text-transform: uppercase; color: var(--muted); font-weight: 700;">Scheduler Daemon Status</div>
+          <div style="font-size: 14px; font-weight: 800; color: var(--primary); display: flex; align-items: center; gap: 6px; margin-top: 2px;" id="statSchedulerActive">
+            <span class="status-dot"></span> Online (Every 60s)
+          </div>
+        </div>
+        <div>
+          <div style="font-size: 11px; text-transform: uppercase; color: var(--muted); font-weight: 700;">Next Scheduled Post</div>
+          <div style="font-size: 14px; font-weight: 800; color: #FFF; margin-top: 2px;" id="statNextPostTime">
+            Calculating...
+          </div>
+        </div>
+        <div>
+          <div style="font-size: 11px; text-transform: uppercase; color: var(--muted); font-weight: 700;">Approval Gate Status</div>
+          <div style="font-size: 14px; font-weight: 800; color: var(--warning); margin-top: 2px;" id="statApprovalGate">
+            <span id="statPendingApprovals">0</span> Drafts Pending Approval
+          </div>
+        </div>
+        <div>
+          <div style="font-size: 11px; text-transform: uppercase; color: var(--muted); font-weight: 700;">Target Daily Timeslots</div>
+          <div style="font-size: 13px; font-weight: 700; color: var(--accent); margin-top: 2px;">
+            09:00 AM • 01:00 PM • 06:00 PM
+          </div>
+        </div>
+      </div>
+
+      <div style="margin-top: 14px; font-size: 12px; color: #8B949E; display: flex; align-items: center; gap: 8px;">
+        <span style="font-size: 16px;">🛡️</span>
+        <span><strong>Safety Guarantee:</strong> Unapproved drafts will <em>never</em> auto-publish. Only posts explicitly armed with <strong>🟢 Approved</strong> status will be dispatched when their scheduled time arrives.</span>
+      </div>
+    </div>
 
     <!-- Status & Protocol Bar -->
     <div class="status-bar">
@@ -829,9 +953,10 @@
         <!-- Filter Tabs -->
         <div class="filter-tabs">
           <button class="filter-tab active" onclick="filterQueue('all', this)">All Posts (<span id="countAll">0</span>)</button>
-          <button class="filter-tab" onclick="filterQueue('draft', this)">Drafts (<span id="countDraft">0</span>)</button>
-          <button class="filter-tab" onclick="filterQueue('approved', this)">Approved (<span id="countApproved">0</span>)</button>
-          <button class="filter-tab" onclick="filterQueue('published', this)">Published (<span id="countPublished">0</span>)</button>
+          <button class="filter-tab" onclick="filterQueue('scheduled', this)">📅 Scheduled Timeline (<span id="countScheduled">0</span>)</button>
+          <button class="filter-tab" onclick="filterQueue('draft', this)">⚠️ Drafts (<span id="countDraft">0</span>)</button>
+          <button class="filter-tab" onclick="filterQueue('approved', this)">🟢 Armed / Approved (<span id="countApproved">0</span>)</button>
+          <button class="filter-tab" onclick="filterQueue('published', this)">🚀 Published (<span id="countPublished">0</span>)</button>
           <button class="filter-tab" onclick="openAnalyticsModal()">📊 Analytics & Feedback</button>
         </div>
 
@@ -1099,11 +1224,61 @@
     }
 
     function updateBadgeCounters() {
+      const scheduledPosts = allPosts.filter(p => p.status !== 'published' && p.scheduledFor);
+      const drafts = allPosts.filter(p => p.status === 'draft');
+      const approved = allPosts.filter(p => p.status === 'approved');
+      const published = allPosts.filter(p => p.status === 'published');
+
       document.getElementById('countAll').innerText = allPosts.length;
-      document.getElementById('countDraft').innerText = allPosts.filter(p => p.status === 'draft').length;
-      document.getElementById('countApproved').innerText = allPosts.filter(p => p.status === 'approved').length;
-      document.getElementById('countPublished').innerText = allPosts.filter(p => p.status === 'published').length;
-      document.getElementById('statsQueueCount').innerText = `${allPosts.length} Posts (${allPosts.filter(p => p.status === 'draft').length} Drafts)`;
+      const countSchedEl = document.getElementById('countScheduled');
+      if (countSchedEl) countSchedEl.innerText = scheduledPosts.length;
+      document.getElementById('countDraft').innerText = drafts.length;
+      document.getElementById('countApproved').innerText = approved.length;
+      document.getElementById('countPublished').innerText = published.length;
+      document.getElementById('statsQueueCount').innerText = `${allPosts.length} Posts (${drafts.length} Drafts)`;
+
+      const draftsEl = document.getElementById('statPendingApprovals');
+      if (draftsEl) draftsEl.innerText = drafts.length;
+
+      // Compute earliest armed post for countdown
+      const armed = approved
+        .filter(p => p.scheduledFor)
+        .sort((a,b) => new Date(a.scheduledFor) - new Date(b.scheduledFor));
+
+      const nextPostEl = document.getElementById('statNextPostTime');
+      if (nextPostEl) {
+        if (armed.length > 0) {
+          const d = new Date(armed[0].scheduledFor);
+          nextPostEl.innerHTML = `${d.toLocaleDateString('en-US', {weekday:'short', month:'short', day:'numeric'})} @ ${d.toLocaleTimeString('en-US', {hour:'numeric', minute:'2-digit'})} <span style="font-size:11px; color:var(--primary); font-weight:600;">(${getTimeUntilText(d)})</span>`;
+        } else {
+          nextPostEl.innerHTML = `<span style="color:var(--muted); font-size:12px;">No approved posts armed</span>`;
+        }
+      }
+    }
+
+    function toInputDateTime(isoStr) {
+      if (!isoStr) return '';
+      const d = new Date(isoStr);
+      if (isNaN(d.getTime())) return '';
+      const pad = n => String(n).padStart(2, '0');
+      const yyyy = d.getFullYear();
+      const MM = pad(d.getMonth() + 1);
+      const dd = pad(d.getDate());
+      const hh = pad(d.getHours());
+      const mm = pad(d.getMinutes());
+      return `${yyyy}-${MM}-${dd}T${hh}:${mm}`;
+    }
+
+    function getTimeUntilText(targetDate) {
+      const diff = targetDate.getTime() - Date.now();
+      if (diff <= 0) return 'Ready to fire';
+      const hours = Math.floor(diff / (1000 * 60 * 60));
+      const mins = Math.floor((diff % (1000 * 60 * 60)) / (1000 * 60));
+      if (hours >= 24) {
+        const days = Math.floor(hours / 24);
+        return `In ${days}d ${hours % 24}h`;
+      }
+      return `In ${hours}h ${mins}m`;
     }
 
     function filterQueue(filter, btn) {
@@ -1117,7 +1292,16 @@
 
     function renderPosts() {
       const container = document.getElementById('postsContainer');
-      const filtered = currentFilter === 'all' ? allPosts : allPosts.filter(p => p.status === currentFilter);
+      let filtered;
+      if (currentFilter === 'all') {
+        filtered = allPosts;
+      } else if (currentFilter === 'scheduled') {
+        filtered = allPosts
+          .filter(p => p.status !== 'published')
+          .sort((a,b) => new Date(a.scheduledFor || 0) - new Date(b.scheduledFor || 0));
+      } else {
+        filtered = allPosts.filter(p => p.status === currentFilter);
+      }
 
       if (filtered.length === 0) {
         container.innerHTML = `
@@ -1131,14 +1315,24 @@
       }
 
       container.innerHTML = filtered.map(post => {
-        const statusBadge = post.status === 'published' 
-          ? '<span class="badge badge-published">Published</span>' 
-          : post.status === 'approved' 
-          ? '<span class="badge badge-approved">Approved</span>' 
-          : '<span class="badge badge-draft">Draft (Needs Review)</span>';
+        const isApproved = post.status === 'approved';
+        const isDraft = post.status === 'draft';
+        const isPublished = post.status === 'published';
+
+        const statusBadge = isPublished 
+          ? '<span class="badge badge-published">🚀 Published</span>' 
+          : isApproved 
+          ? '<span class="badge badge-approved">🟢 ARMED FOR AUTO-PUBLISH</span>' 
+          : '<span class="badge badge-draft">⚠️ BLOCKED (DRAFT - APPROVAL REQUIRED)</span>';
+
+        const schedDate = post.scheduledFor ? new Date(post.scheduledFor) : null;
+        const schedText = schedDate && !isNaN(schedDate.getTime()) 
+          ? schedDate.toLocaleString('en-US', { weekday: 'short', month: 'short', day: 'numeric', hour: 'numeric', minute: '2-digit', hour12: true }) 
+          : 'Immediate / Unscheduled';
+        const timeUntil = schedDate ? getTimeUntilText(schedDate) : '';
 
         return `
-          <div class="post-card" id="card-${post.id}">
+          <div class="post-card" id="card-${post.id}" style="${isApproved ? 'border-color: rgba(0, 230, 118, 0.4);' : ''}">
             <div class="post-card-header">
               <div>
                 <span style="font-size:11px; font-weight:700; color:var(--primary); text-transform:uppercase; letter-spacing:0.5px;">${post.niche || 'General Trade'} • ${post.format || 'Story'}</span>
@@ -1155,17 +1349,50 @@
               ${(post.narrativeBody || '').slice(0, 240)}...
             </div>
 
+            <!-- Scheduled Publishing Date/Time Controller -->
+            <div style="background: #0B0E14; border: 1px solid var(--card-border); border-radius: 10px; padding: 12px 14px; margin-bottom: 14px; display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 10px;">
+              <div>
+                <div style="font-size: 11px; text-transform: uppercase; color: var(--muted); font-weight: 700;">
+                  🗓️ Scheduled Auto-Publish Time
+                </div>
+                <div style="font-size: 13px; font-weight: 800; color: #FFF; margin-top: 3px;">
+                  ${schedText} <span style="font-size: 11px; color: ${isApproved ? 'var(--primary)' : 'var(--warning)'}; font-weight: 600;">(${timeUntil})</span>
+                </div>
+              </div>
+
+              ${!isPublished ? `
+              <div style="display: flex; align-items: center; gap: 8px; flex-wrap: wrap;">
+                <div style="display: flex; align-items: center; gap: 6px;">
+                  <label style="font-size: 11px; color: var(--muted); font-weight: 600;">Edit Time:</label>
+                  <input type="datetime-local" class="form-control" style="width: auto; padding: 5px 8px; font-size: 11px;" value="${toInputDateTime(post.scheduledFor)}" onchange="reschedulePost('${post.id}', this.value)">
+                </div>
+                <div class="quick-chips" style="margin-top: 0;">
+                  <span class="chip" onclick="quickReschedule('${post.id}', 24)">+24h</span>
+                  <span class="chip" onclick="quickSetSlot('${post.id}', 9)">Tomorrow 9am</span>
+                  <span class="chip" onclick="quickSetSlot('${post.id}', 13)">Tomorrow 1pm</span>
+                  <span class="chip" onclick="quickSetSlot('${post.id}', 18)">Tomorrow 6pm</span>
+                  <span class="chip" onclick="quickReschedule('${post.id}', 48)">+48h</span>
+                </div>
+              </div>
+              ` : `
+              <div style="font-size: 12px; color: var(--accent); font-weight: 700;">
+                ✓ Published to Blog & RSS: ${post.publishedAt ? new Date(post.publishedAt).toLocaleDateString() : 'Live'}
+              </div>
+              `}
+            </div>
+
             <div class="post-meta-row">
               <div class="post-tags">
                 <span class="tag-pill">🎯 ${post.cta ? '3-Day Trial CTA' : 'Direct CTA'}</span>
                 <span class="tag-pill">📱 ${(post.channelTargets || ['blog']).join(', ')}</span>
-                <span class="tag-pill">🗓️ ${post.scheduledFor ? new Date(post.scheduledFor).toLocaleDateString() : 'Immediate'}</span>
+                <span class="tag-pill">${isApproved ? '🟢 Auto-Publish Armed' : '⚠️ Approval Required'}</span>
               </div>
               <div class="post-actions">
                 <button class="btn btn-secondary btn-sm" onclick="openPreviewModal('${post.id}')">👁️ Preview & Edit</button>
                 <button class="btn btn-secondary btn-sm" onclick="sendChatCard('${post.id}')">💬 Push to Chat</button>
-                ${post.status === 'draft' ? `<button class="btn btn-primary btn-sm" onclick="approvePost('${post.id}')">✓ Approve</button>` : ''}
-                ${post.status === 'approved' ? `<button class="btn btn-purple btn-sm" onclick="publishPost('${post.id}')">🚀 Publish Omnichannel</button>` : ''}
+                ${isDraft ? `<button class="btn btn-primary btn-sm" onclick="approvePost('${post.id}')">✓ Approve & Arm Auto-Publish</button>` : ''}
+                ${isApproved ? `<button class="btn btn-secondary btn-sm" style="color:var(--warning); border-color:rgba(255,179,0,0.4);" onclick="unapprovePost('${post.id}')">↩️ Revert to Draft</button>` : ''}
+                ${!isPublished ? `<button class="btn btn-purple btn-sm" onclick="publishPost('${post.id}')">🚀 Publish Now</button>` : ''}
               </div>
             </div>
           </div>
@@ -1300,6 +1527,116 @@
     function sendGoogleChatCardForCurrentPost() {
       const postId = document.getElementById('editPostId').value;
       sendChatCard(postId);
+    }
+
+    // Rescheduling & Auto-Publisher Helpers
+    async function reschedulePost(postId, newIsoOrLocal) {
+      if (!newIsoOrLocal) return;
+      const isoStr = new Date(newIsoOrLocal).toISOString();
+      try {
+        const res = await fetch('/api/content-engine/reschedule-post', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ postId, scheduledFor: isoStr })
+        });
+        const data = await res.json();
+        if (data.success) {
+          showToast(`Post rescheduled to ${new Date(isoStr).toLocaleString()}!`);
+          loadPosts();
+        } else {
+          showToast("Rescheduling failed: " + (data.error || "Unknown"));
+        }
+      } catch (e) {
+        showToast("Error updating schedule");
+      }
+    }
+
+    async function quickReschedule(postId, addHours) {
+      const post = allPosts.find(p => p.id === postId);
+      const base = (post && post.scheduledFor) ? new Date(post.scheduledFor).getTime() : Date.now();
+      const nextTime = new Date(base + addHours * 3600 * 1000).toISOString();
+      await reschedulePost(postId, nextTime);
+    }
+
+    async function quickSetSlot(postId, hour24) {
+      const d = new Date();
+      d.setDate(d.getDate() + 1);
+      d.setHours(hour24, 0, 0, 0);
+      await reschedulePost(postId, d.toISOString());
+    }
+
+    async function unapprovePost(postId) {
+      try {
+        const res = await fetch('/api/content-engine/unapprove-post', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ postId })
+        });
+        const data = await res.json();
+        if (data.success) {
+          showToast("Approval revoked. Post returned to review draft (disarmed).");
+          loadPosts();
+        } else {
+          showToast("Unapproval failed");
+        }
+      } catch (e) {
+        showToast("Network error reverting approval");
+      }
+    }
+
+    async function toggleAutoPosting() {
+      try {
+        const res = await fetch('/api/content-engine/toggle-autopost', { method: 'POST' });
+        const data = await res.json();
+        if (data.success) {
+          showToast(`Master Auto-Posting is now ${data.autoPostingEnabled ? 'ACTIVE (Fires automatically on schedule)' : 'PAUSED (Manual triggers only)'}`);
+          loadSchedulerStatus();
+          loadPosts();
+        }
+      } catch (e) {
+        showToast("Error toggling auto-posting");
+      }
+    }
+
+    async function forceSchedulerTick() {
+      showToast("Triggering immediate scheduler background tick...");
+      try {
+        const res = await fetch('/api/content-engine/run-scheduler-tick', { method: 'POST' });
+        const data = await res.json();
+        if (data.success) {
+          showToast(`Scheduler check completed! Published ${data.publishedCount} post(s).`);
+          loadPosts();
+          loadSchedulerStatus();
+        }
+      } catch (e) {
+        showToast("Scheduler tick failed");
+      }
+    }
+
+    async function loadSchedulerStatus() {
+      try {
+        const res = await fetch('/api/content-engine/status');
+        const data = await res.json();
+        if (data.success && data.settings) {
+          const active = data.settings.autoPostingEnabled !== false;
+          const btn = document.getElementById('btnMasterAutoPost');
+          if (btn) {
+            if (active) {
+              btn.className = "btn btn-primary";
+              btn.innerHTML = `<span class="status-dot"></span> ⚡ Auto-Posting: ACTIVE`;
+            } else {
+              btn.className = "btn btn-secondary";
+              btn.innerHTML = `<span class="status-dot warning"></span> ⏸️ Auto-Posting: PAUSED`;
+            }
+          }
+          const schedStat = document.getElementById('statSchedulerActive');
+          if (schedStat) {
+            schedStat.innerHTML = active 
+              ? `<span class="status-dot"></span> Online (Every 60s)` 
+              : `<span class="status-dot warning"></span> Paused (Manual Only)`;
+          }
+        }
+      } catch (e) {}
     }
 
     // Ingestion
@@ -1468,10 +1805,45 @@
       });
     }
 
+    // Owner Authentication Gate (Master Backend Protection)
+    const DEV_USER = "admin";
+    const DEV_PASS = "2026";
+
+    function checkAuth() {
+      if (sessionStorage.getItem("owner_authenticated") === "true") {
+        document.getElementById("loginContainer").style.display = "none";
+        document.getElementById("dashboardContainer").style.display = "block";
+        loadPosts();
+        loadResearchBlobs();
+        loadSchedulerStatus();
+      } else {
+        document.getElementById("loginContainer").style.display = "flex";
+        document.getElementById("dashboardContainer").style.display = "none";
+      }
+    }
+
+    function handleLogin(e) {
+      e.preventDefault();
+      const user = document.getElementById("loginUser").value.trim();
+      const pass = document.getElementById("loginPass").value.trim();
+
+      if (user === DEV_USER && pass === DEV_PASS) {
+        sessionStorage.setItem("owner_authenticated", "true");
+        document.getElementById("loginError").style.display = "none";
+        checkAuth();
+      } else {
+        document.getElementById("loginError").style.display = "block";
+      }
+    }
+
+    function handleLogout() {
+      sessionStorage.removeItem("owner_authenticated");
+      checkAuth();
+    }
+
     // Initialize
     window.addEventListener('DOMContentLoaded', () => {
-      loadPosts();
-      loadResearchBlobs();
+      checkAuth();
     });
   </script>
 </body>
