@@ -8,7 +8,6 @@ import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
-import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
@@ -20,28 +19,38 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.compose.ui.window.Dialog
+import androidx.compose.ui.window.DialogProperties
 import com.missedcall.autotext.data.AppSettings
 import com.missedcall.autotext.data.db.CallLogEvent
 import com.missedcall.autotext.data.db.LogStatus
 import com.missedcall.autotext.ui.theme.ActiveGreenContainer
 import com.missedcall.autotext.ui.theme.ActiveGreenText
-import com.missedcall.autotext.ui.theme.GrayPaused
 import com.missedcall.autotext.ui.theme.AmberWarning
-import com.missedcall.autotext.ui.theme.RedError
+import com.missedcall.autotext.ui.theme.GrayPaused
 import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 import org.json.JSONObject
 import java.net.HttpURLConnection
 import java.net.URL
 import java.text.NumberFormat
-import java.text.SimpleDateFormat
 import java.util.*
 import kotlin.math.roundToInt
 
+/**
+ * Modular, Reorderable Analytics Dashboard
+ * Features:
+ * - Missed calls retrieved by SMS
+ * - Missed calls retrieved by AI Virtual Agent (if subscribed)
+ * - Cost accumulated by AI VA & Minute Quota
+ * - Estimated saved revenue
+ * - Total SMS & voice auto-replies / follow-ups
+ * - User capability to customize, toggle, and reorder dashboard cards
+ */
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun DashboardScreen(
@@ -51,13 +60,49 @@ fun DashboardScreen(
     onNavigateToTab: (Int) -> Unit = {}
 ) {
     val context = LocalContext.current
-    var showAccountPortal by remember { mutableStateOf(false) }
-    var showJobValueDialog by remember { mutableStateOf(false) }
+    var showCustomizeCardsDialog by remember { mutableStateOf(false) }
 
-    val successfulReplies = logs.count { it.status == LogStatus.SENT }
-    // 33% estimated conversion rate on instant auto-text response
-    val estimatedSavedRevenue = (successfulReplies * 0.33 * settings.averageJobValue).roundToInt()
+    val successfulSmsReplies = logs.count { it.status == LogStatus.SENT }
+    val totalMissedCalls = logs.size
+    val estimatedSavedRevenue = (successfulSmsReplies * 0.33 * settings.averageJobValue).roundToInt()
     val currencyFormat = NumberFormat.getCurrencyInstance(Locale.US)
+
+    // Live Vapi minute usage state
+    var liveMinutesUsed by remember { mutableIntStateOf(0) }
+    var liveQuotaMinutes by remember { mutableIntStateOf(250) }
+    var liveOverageAmount by remember { mutableDoubleStateOf(0.0) }
+    var liveAiCallsCount by remember { mutableIntStateOf(0) }
+
+    LaunchedEffect(settings.licenseKey) {
+        val key = settings.licenseKey.trim()
+        if (key.isBlank()) return@LaunchedEffect
+        withContext(Dispatchers.IO) {
+            try {
+                val endpoint = if (settings.remoteUpdateUrl.contains("localhost") || settings.remoteUpdateUrl.contains("10.0.")) {
+                    "http://10.0.2.2:8000/api/vapi/usage?key=$key"
+                } else {
+                    "https://missedcallautosms.com/api/vapi/usage?key=$key"
+                }
+                val url = URL(endpoint)
+                val conn = (url.openConnection() as HttpURLConnection).apply {
+                    connectTimeout = 4000
+                    readTimeout = 4000
+                }
+                if (conn.responseCode == 200) {
+                    val body = conn.inputStream.bufferedReader().use { it.readText() }
+                    val json = JSONObject(body)
+                    if (json.optBoolean("success", false)) {
+                        withContext(Dispatchers.Main) {
+                            liveMinutesUsed = json.optInt("minutesUsed", 0)
+                            liveQuotaMinutes = json.optInt("quotaMinutes", 250)
+                            liveOverageAmount = json.optDouble("overageAmount", 0.0)
+                            liveAiCallsCount = json.optInt("callsCount", Math.max(1, liveMinutesUsed / 2))
+                        }
+                    }
+                }
+            } catch (e: Exception) {}
+        }
+    }
 
     // Pulsing animation for active status
     val infiniteTransition = rememberInfiniteTransition(label = "pulse")
@@ -71,6 +116,32 @@ fun DashboardScreen(
         label = "alpha"
     )
 
+    val defaultCardOrder = listOf("HERO", "SMS_METRICS", "VOICE_METRICS", "COST_QUOTA", "REVENUE", "FOLLOW_UPS", "HARDWARE")
+    val cardOrder = remember(settings.dashboardCardOrder) {
+        val split = settings.dashboardCardOrder.split(",").map { it.trim() }.filter { it.isNotBlank() }
+        if (split.isEmpty()) defaultCardOrder else split
+    }
+    val hiddenCards = remember(settings.dashboardHiddenCards) {
+        settings.dashboardHiddenCards.split(",").map { it.trim() }.toSet()
+    }
+
+    if (showCustomizeCardsDialog) {
+        CustomizeCardsDialog(
+            currentOrder = cardOrder,
+            hiddenCards = hiddenCards,
+            onSaveOrder = { newOrder, newHidden ->
+                onSettingsChanged(
+                    settings.copy(
+                        dashboardCardOrder = newOrder.joinToString(","),
+                        dashboardHiddenCards = newHidden.joinToString(",")
+                    )
+                )
+                showCustomizeCardsDialog = false
+            },
+            onDismiss = { showCustomizeCardsDialog = false }
+        )
+    }
+
     LazyColumn(
         modifier = Modifier
             .fillMaxSize()
@@ -79,334 +150,7 @@ fun DashboardScreen(
     ) {
         item { Spacer(modifier = Modifier.height(2.dp)) }
 
-        // 1. Live Hero Appliance Switch Card
-        item {
-            Card(
-                colors = CardDefaults.cardColors(
-                    containerColor = if (settings.masterEnabled) ActiveGreenContainer.copy(alpha = 0.16f) else MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.6f)
-                ),
-                border = BorderStroke(
-                    width = 1.dp,
-                    color = if (settings.masterEnabled) ActiveGreenText.copy(alpha = 0.6f) else MaterialTheme.colorScheme.outlineVariant
-                ),
-                shape = RoundedCornerShape(18.dp),
-                modifier = Modifier.fillMaxWidth()
-            ) {
-                Column(modifier = Modifier.padding(18.dp)) {
-                    Row(
-                        modifier = Modifier.fillMaxWidth(),
-                        horizontalArrangement = Arrangement.SpaceBetween,
-                        verticalAlignment = Alignment.CenterVertically
-                    ) {
-                        Row(verticalAlignment = Alignment.CenterVertically) {
-                            Box(
-                                modifier = Modifier
-                                    .size(12.dp)
-                                    .clip(CircleShape)
-                                    .background(
-                                        if (settings.masterEnabled) ActiveGreenText.copy(alpha = pulseAlpha) else GrayPaused
-                                    )
-                            )
-                            Spacer(modifier = Modifier.width(10.dp))
-                            Column {
-                                Text(
-                                    text = if (settings.masterEnabled) "APPLIANCE ACTIVE" else "APPLIANCE PAUSED",
-                                    fontWeight = FontWeight.Black,
-                                    fontSize = 14.sp,
-                                    color = if (settings.masterEnabled) ActiveGreenText else GrayPaused,
-                                    letterSpacing = 0.5.sp
-                                )
-                                Text(
-                                    text = if (settings.masterEnabled) "Listening for missed calls" else "Auto-replies suspended",
-                                    style = MaterialTheme.typography.labelSmall,
-                                    color = MaterialTheme.colorScheme.onSurfaceVariant
-                                )
-                            }
-                        }
-
-                        Switch(
-                            checked = settings.masterEnabled,
-                            onCheckedChange = { isChecked ->
-                                onSettingsChanged(settings.copy(masterEnabled = isChecked))
-                            },
-                            colors = SwitchDefaults.colors(
-                                checkedThumbColor = ActiveGreenText,
-                                checkedTrackColor = ActiveGreenContainer
-                            )
-                        )
-                    }
-
-                    Spacer(modifier = Modifier.height(10.dp))
-
-                    Text(
-                        text = if (settings.masterEnabled)
-                            "Instant auto-replies will dispatch via carrier SIM line. 24/7 AI Voice reception is standing by."
-                        else
-                            "Appliance paused. Switch ON to resume automated text replies and AI call handling.",
-                        style = MaterialTheme.typography.bodySmall,
-                        color = MaterialTheme.colorScheme.onSurfaceVariant
-                    )
-                }
-            }
-        }
-
-        // 2. Real-Time Minute Quota & Metering Card
-        item {
-            VoiceMinuteMeterCard(
-                settings = settings,
-                onOpenAccountPortal = { showAccountPortal = true }
-            )
-        }
-
-        // 3. 2x2 Mission Control Metric Grid
-        item {
-            Column(
-                modifier = Modifier.fillMaxWidth(),
-                verticalArrangement = Arrangement.spacedBy(10.dp)
-            ) {
-                // Row 1: Replies & Saved Revenue
-                Row(
-                    modifier = Modifier.fillMaxWidth(),
-                    horizontalArrangement = Arrangement.spacedBy(10.dp)
-                ) {
-                    // Metric 1: Replies
-                    Card(
-                        modifier = Modifier.weight(1f),
-                        colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.5f)),
-                        shape = RoundedCornerShape(14.dp)
-                    ) {
-                        Column(modifier = Modifier.padding(14.dp)) {
-                            Row(
-                                modifier = Modifier.fillMaxWidth(),
-                                horizontalArrangement = Arrangement.SpaceBetween,
-                                verticalAlignment = Alignment.CenterVertically
-                            ) {
-                                Text(
-                                    text = "Auto-Replies",
-                                    style = MaterialTheme.typography.labelSmall,
-                                    fontWeight = FontWeight.Bold,
-                                    color = MaterialTheme.colorScheme.onSurfaceVariant
-                                )
-                                Icon(
-                                    Icons.Default.Sms,
-                                    contentDescription = null,
-                                    tint = MaterialTheme.colorScheme.primary,
-                                    modifier = Modifier.size(16.dp)
-                                )
-                            }
-                            Spacer(modifier = Modifier.height(4.dp))
-                            Text(
-                                text = "$successfulReplies",
-                                fontSize = 26.sp,
-                                fontWeight = FontWeight.Black,
-                                color = MaterialTheme.colorScheme.primary
-                            )
-                            Text(
-                                text = "Sent via SIM line",
-                                style = MaterialTheme.typography.labelSmall,
-                                color = MaterialTheme.colorScheme.onSurfaceVariant
-                            )
-                        }
-                    }
-
-                    // Metric 2: Est Saved Revenue
-                    Card(
-                        modifier = Modifier
-                            .weight(1f)
-                            .clickable { showJobValueDialog = true },
-                        colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.5f)),
-                        shape = RoundedCornerShape(14.dp)
-                    ) {
-                        Column(modifier = Modifier.padding(14.dp)) {
-                            Row(
-                                modifier = Modifier.fillMaxWidth(),
-                                horizontalArrangement = Arrangement.SpaceBetween,
-                                verticalAlignment = Alignment.CenterVertically
-                            ) {
-                                Text(
-                                    text = "Saved Revenue",
-                                    style = MaterialTheme.typography.labelSmall,
-                                    fontWeight = FontWeight.Bold,
-                                    color = MaterialTheme.colorScheme.onSurfaceVariant
-                                )
-                                Icon(
-                                    Icons.Default.AttachMoney,
-                                    contentDescription = null,
-                                    tint = ActiveGreenText,
-                                    modifier = Modifier.size(16.dp)
-                                )
-                            }
-                            Spacer(modifier = Modifier.height(4.dp))
-                            Text(
-                                text = currencyFormat.format(estimatedSavedRevenue),
-                                fontSize = 22.sp,
-                                fontWeight = FontWeight.Black,
-                                color = ActiveGreenText
-                            )
-                            Text(
-                                text = "$${settings.averageJobValue.toInt()} avg job ✎",
-                                style = MaterialTheme.typography.labelSmall,
-                                color = MaterialTheme.colorScheme.onSurfaceVariant
-                            )
-                        }
-                    }
-                }
-
-                // Row 2: Voice Forwarding & SIM Line
-                Row(
-                    modifier = Modifier.fillMaxWidth(),
-                    horizontalArrangement = Arrangement.spacedBy(10.dp)
-                ) {
-                    // Metric 3: AI Voice Receptionist Status
-                    Card(
-                        modifier = Modifier
-                            .weight(1f)
-                            .clickable { onNavigateToTab(1) },
-                        colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.5f)),
-                        shape = RoundedCornerShape(14.dp)
-                    ) {
-                        Column(modifier = Modifier.padding(14.dp)) {
-                            Row(
-                                modifier = Modifier.fillMaxWidth(),
-                                horizontalArrangement = Arrangement.SpaceBetween,
-                                verticalAlignment = Alignment.CenterVertically
-                            ) {
-                                Text(
-                                    text = "AI Receptionist",
-                                    style = MaterialTheme.typography.labelSmall,
-                                    fontWeight = FontWeight.Bold,
-                                    color = MaterialTheme.colorScheme.onSurfaceVariant
-                                )
-                                Icon(
-                                    Icons.Default.RecordVoiceOver,
-                                    contentDescription = null,
-                                    tint = if (settings.voiceReceptionistEnabled) Color(0xFF9C27B0) else MaterialTheme.colorScheme.onSurfaceVariant,
-                                    modifier = Modifier.size(16.dp)
-                                )
-                            }
-                            Spacer(modifier = Modifier.height(4.dp))
-                            Text(
-                                text = if (settings.voiceReceptionistEnabled) "FORWARDING" else "STANDBY",
-                                fontSize = 14.sp,
-                                fontWeight = FontWeight.Bold,
-                                color = if (settings.voiceReceptionistEnabled) Color(0xFF9C27B0) else MaterialTheme.colorScheme.onSurfaceVariant
-                            )
-                            Text(
-                                text = if (settings.voiceReceptionistEnabled) "*71 15s Ring Active" else "Carrier standard ➔",
-                                style = MaterialTheme.typography.labelSmall,
-                                color = MaterialTheme.colorScheme.onSurfaceVariant
-                            )
-                        }
-                    }
-
-                    // Metric 4: SIM Line Slot
-                    Card(
-                        modifier = Modifier
-                            .weight(1f)
-                            .clickable { onNavigateToTab(3) },
-                        colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.5f)),
-                        shape = RoundedCornerShape(14.dp)
-                    ) {
-                        Column(modifier = Modifier.padding(14.dp)) {
-                            Row(
-                                modifier = Modifier.fillMaxWidth(),
-                                horizontalArrangement = Arrangement.SpaceBetween,
-                                verticalAlignment = Alignment.CenterVertically
-                            ) {
-                                Text(
-                                    text = "SIM Line",
-                                    style = MaterialTheme.typography.labelSmall,
-                                    fontWeight = FontWeight.Bold,
-                                    color = MaterialTheme.colorScheme.onSurfaceVariant
-                                )
-                                Icon(
-                                    Icons.Default.SimCard,
-                                    contentDescription = null,
-                                    tint = MaterialTheme.colorScheme.primary,
-                                    modifier = Modifier.size(16.dp)
-                                )
-                            }
-                            Spacer(modifier = Modifier.height(4.dp))
-                            Text(
-                                text = when (settings.preferredSimSlot) {
-                                    1 -> "SIM 1"
-                                    2 -> "SIM 2 (eSIM)"
-                                    else -> "AUTO SIM"
-                                },
-                                fontSize = 14.sp,
-                                fontWeight = FontWeight.Bold,
-                                color = MaterialTheme.colorScheme.primary
-                            )
-                            Text(
-                                text = "Carrier routing ➔",
-                                style = MaterialTheme.typography.labelSmall,
-                                color = MaterialTheme.colorScheme.onSurfaceVariant
-                            )
-                        }
-                    }
-                }
-            }
-        }
-
-        // 4. Quick Navigation Actions Bar
-        item {
-            Card(
-                colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface),
-                border = BorderStroke(1.dp, MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.5f)),
-                shape = RoundedCornerShape(16.dp),
-                modifier = Modifier.fillMaxWidth()
-            ) {
-                Row(
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .padding(12.dp),
-                    horizontalArrangement = Arrangement.SpaceEvenly,
-                    verticalAlignment = Alignment.CenterVertically
-                ) {
-                    // Action 1: Voice Hub
-                    TextButton(
-                        onClick = { onNavigateToTab(1) },
-                        contentPadding = PaddingValues(horizontal = 8.dp, vertical = 4.dp)
-                    ) {
-                        Column(horizontalAlignment = Alignment.CenterHorizontally) {
-                            Icon(Icons.Default.RecordVoiceOver, contentDescription = null, tint = Color(0xFF9C27B0), modifier = Modifier.size(20.dp))
-                            Spacer(modifier = Modifier.height(2.dp))
-                            Text("Voice Hub", fontSize = 11.sp, fontWeight = FontWeight.SemiBold, color = MaterialTheme.colorScheme.onSurface)
-                        }
-                    }
-
-                    Box(modifier = Modifier.height(24.dp).width(1.dp).background(MaterialTheme.colorScheme.outlineVariant))
-
-                    // Action 2: Prompt Studio
-                    TextButton(
-                        onClick = { onNavigateToTab(2) },
-                        contentPadding = PaddingValues(horizontal = 8.dp, vertical = 4.dp)
-                    ) {
-                        Column(horizontalAlignment = Alignment.CenterHorizontally) {
-                            Icon(Icons.Default.AutoAwesome, contentDescription = null, tint = MaterialTheme.colorScheme.primary, modifier = Modifier.size(20.dp))
-                            Spacer(modifier = Modifier.height(2.dp))
-                            Text("Prompts Studio", fontSize = 11.sp, fontWeight = FontWeight.SemiBold, color = MaterialTheme.colorScheme.onSurface)
-                        }
-                    }
-
-                    Box(modifier = Modifier.height(24.dp).width(1.dp).background(MaterialTheme.colorScheme.outlineVariant))
-
-                    // Action 3: Account & Billing
-                    TextButton(
-                        onClick = { showAccountPortal = true },
-                        contentPadding = PaddingValues(horizontal = 8.dp, vertical = 4.dp)
-                    ) {
-                        Column(horizontalAlignment = Alignment.CenterHorizontally) {
-                            Icon(Icons.Default.AccountCircle, contentDescription = null, tint = ActiveGreenText, modifier = Modifier.size(20.dp))
-                            Spacer(modifier = Modifier.height(2.dp))
-                            Text("Account Portal", fontSize = 11.sp, fontWeight = FontWeight.SemiBold, color = MaterialTheme.colorScheme.onSurface)
-                        }
-                    }
-                }
-            }
-        }
-
-        // 5. Recent Activity Stream Header
+        // Top customize action bar
         item {
             Row(
                 modifier = Modifier.fillMaxWidth(),
@@ -414,84 +158,61 @@ fun DashboardScreen(
                 verticalAlignment = Alignment.CenterVertically
             ) {
                 Text(
-                    text = "Recent Auto-Responses",
-                    fontWeight = FontWeight.Bold,
-                    style = MaterialTheme.typography.titleMedium
+                    text = "Performance Overview",
+                    style = MaterialTheme.typography.titleSmall,
+                    fontWeight = FontWeight.Bold
                 )
                 TextButton(
-                    onClick = { onNavigateToTab(4) },
-                    contentPadding = PaddingValues(horizontal = 4.dp, vertical = 0.dp)
+                    onClick = { showCustomizeCardsDialog = true },
+                    contentPadding = PaddingValues(horizontal = 8.dp, vertical = 2.dp)
                 ) {
-                    Text("View All (${logs.size}) ➔", fontSize = 12.sp)
+                    Icon(Icons.Default.Tune, contentDescription = null, modifier = Modifier.size(16.dp))
+                    Spacer(modifier = Modifier.width(4.dp))
+                    Text("Customize Cards", fontSize = 12.sp)
                 }
             }
         }
 
-        // Recent Logs List (Top 4)
-        if (logs.isEmpty()) {
-            item {
-                Card(
-                    modifier = Modifier.fillMaxWidth(),
-                    colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.4f)),
-                    shape = RoundedCornerShape(12.dp)
-                ) {
-                    Row(
-                        modifier = Modifier.padding(16.dp),
-                        verticalAlignment = Alignment.CenterVertically
-                    ) {
-                        Icon(Icons.Default.Info, contentDescription = null, tint = MaterialTheme.colorScheme.onSurfaceVariant)
-                        Spacer(modifier = Modifier.width(12.dp))
-                        Text(
-                            text = "No missed calls recorded yet. When a call is missed, instant auto-replies will appear here in real time.",
-                            style = MaterialTheme.typography.bodySmall,
-                            color = MaterialTheme.colorScheme.onSurfaceVariant
+        // Render cards dynamically according to user's custom sort order
+        cardOrder.forEach { cardId ->
+            if (!hiddenCards.contains(cardId)) {
+                item(key = cardId) {
+                    when (cardId) {
+                        "HERO" -> HeroApplianceCard(
+                            settings = settings,
+                            pulseAlpha = pulseAlpha,
+                            onToggle = { isChecked -> onSettingsChanged(settings.copy(masterEnabled = isChecked)) }
                         )
-                    }
-                }
-            }
-        } else {
-            items(logs.take(4)) { log ->
-                val dateFormat = SimpleDateFormat("MMM dd, h:mm a", Locale.getDefault())
-                val timeStr = dateFormat.format(Date(log.timestamp))
-
-                Card(
-                    modifier = Modifier.fillMaxWidth(),
-                    colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface),
-                    border = BorderStroke(1.dp, MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.4f)),
-                    shape = RoundedCornerShape(12.dp)
-                ) {
-                    Row(
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .padding(12.dp),
-                        horizontalArrangement = Arrangement.SpaceBetween,
-                        verticalAlignment = Alignment.CenterVertically
-                    ) {
-                        Column {
-                            Text(
-                                text = log.phoneNumber,
-                                fontWeight = FontWeight.Bold,
-                                style = MaterialTheme.typography.bodyMedium
-                            )
-                            Text(
-                                text = timeStr,
-                                style = MaterialTheme.typography.labelSmall,
-                                color = MaterialTheme.colorScheme.onSurfaceVariant
-                            )
-                        }
-
-                        Surface(
-                            color = if (log.status == LogStatus.SENT) ActiveGreenContainer else MaterialTheme.colorScheme.errorContainer,
-                            shape = RoundedCornerShape(10.dp)
-                        ) {
-                            Text(
-                                text = if (log.status == LogStatus.SENT) "Replied via SIM" else log.status.name,
-                                color = if (log.status == LogStatus.SENT) ActiveGreenText else MaterialTheme.colorScheme.error,
-                                fontWeight = FontWeight.Bold,
-                                fontSize = 11.sp,
-                                modifier = Modifier.padding(horizontal = 8.dp, vertical = 3.dp)
-                            )
-                        }
+                        "SMS_METRICS" -> SmsMetricsCard(
+                            successfulSmsReplies = successfulSmsReplies,
+                            totalMissedCalls = totalMissedCalls,
+                            settings = settings
+                        )
+                        "VOICE_METRICS" -> VoiceMetricsCard(
+                            aiCallsCount = liveAiCallsCount,
+                            minutesUsed = liveMinutesUsed,
+                            settings = settings,
+                            onNavigateToVoice = { onNavigateToTab(2) }
+                        )
+                        "COST_QUOTA" -> CostAndQuotaCard(
+                            minutesUsed = liveMinutesUsed,
+                            quotaMinutes = liveQuotaMinutes,
+                            overageAmount = liveOverageAmount,
+                            settings = settings
+                        )
+                        "REVENUE" -> SavedRevenueCard(
+                            estimatedSavedRevenue = estimatedSavedRevenue,
+                            currencyFormat = currencyFormat,
+                            settings = settings,
+                            onUpdateJobValue = { newVal -> onSettingsChanged(settings.copy(averageJobValue = newVal)) }
+                        )
+                        "FOLLOW_UPS" -> FollowUpsCard(
+                            smsReplies = successfulSmsReplies,
+                            voiceCalls = liveAiCallsCount
+                        )
+                        "HARDWARE" -> HardwareStatusCard(
+                            settings = settings
+                        )
                     }
                 }
             }
@@ -499,257 +220,517 @@ fun DashboardScreen(
 
         item { Spacer(modifier = Modifier.height(16.dp)) }
     }
-
-    // Average Job Value Config Dialog
-    if (showJobValueDialog) {
-        AlertDialog(
-            onDismissRequest = { showJobValueDialog = false },
-            title = { Text("Average Job Value") },
-            text = {
-                Column {
-                    Text(
-                        text = "Select your average client job revenue to accurately estimate recovered revenue from instant auto-text responses.",
-                        style = MaterialTheme.typography.bodySmall,
-                        color = MaterialTheme.colorScheme.onSurfaceVariant
-                    )
-                    Spacer(modifier = Modifier.height(14.dp))
-                    Row(
-                        modifier = Modifier.fillMaxWidth(),
-                        horizontalArrangement = Arrangement.spacedBy(8.dp)
-                    ) {
-                        listOf(250.0, 450.0, 750.0, 1200.0).forEach { preset ->
-                            FilterChip(
-                                selected = settings.averageJobValue == preset,
-                                onClick = {
-                                    onSettingsChanged(settings.copy(averageJobValue = preset))
-                                    showJobValueDialog = false
-                                },
-                                label = { Text("$${preset.toInt()}") }
-                            )
-                        }
-                    }
-                }
-            },
-            confirmButton = {
-                TextButton(onClick = { showJobValueDialog = false }) {
-                    Text("Done")
-                }
-            }
-        )
-    }
-
-    if (showAccountPortal) {
-        CustomerAccountPortalDialog(
-            settings = settings,
-            onSettingsChanged = onSettingsChanged,
-            onDismiss = { showAccountPortal = false }
-        )
-    }
 }
 
-/**
- * Real-Time Minute Quota & Overage Meter Card
- * Connects directly to /api/vapi/usage to display pooled minutes, remaining quota,
- * active overage tracking, and direct access to billing.
- */
+// ─────────────────────────────────────────────────────────────────────────────
+// CARD COMPONENTS
+// ─────────────────────────────────────────────────────────────────────────────
+
 @Composable
-fun VoiceMinuteMeterCard(
+fun HeroApplianceCard(
     settings: AppSettings,
-    onOpenAccountPortal: () -> Unit
+    pulseAlpha: Float,
+    onToggle: (Boolean) -> Unit
 ) {
-    val coroutineScope = rememberCoroutineScope()
-    var isLoading by remember { mutableStateOf(false) }
-    var planName by remember { mutableStateOf("Autonomous Front Desk Bundle") }
-    var quotaMinutes by remember { mutableIntStateOf(250) }
-    var minutesUsed by remember { mutableIntStateOf(0) }
-    var overageMinutes by remember { mutableIntStateOf(0) }
-    var overageAmount by remember { mutableDoubleStateOf(0.0) }
-    var isUnlimitedGateway by remember { mutableStateOf(false) }
-
-    fun fetchUsage() {
-        val key = settings.licenseKey.trim()
-        if (key.isBlank()) return
-        isLoading = true
-        coroutineScope.launch {
-            withContext(Dispatchers.IO) {
-                try {
-                    val endpoint = if (settings.remoteUpdateUrl.contains("localhost") || settings.remoteUpdateUrl.contains("10.0.")) {
-                        "http://10.0.2.2:8000/api/vapi/usage?key=$key"
-                    } else {
-                        "https://missedcallautosms.com/api/vapi/usage?key=$key"
-                    }
-                    val url = URL(endpoint)
-                    val conn = (url.openConnection() as HttpURLConnection).apply {
-                        connectTimeout = 4000
-                        readTimeout = 4000
-                    }
-                    if (conn.responseCode == 200) {
-                        val body = conn.inputStream.bufferedReader().use { it.readText() }
-                        val json = JSONObject(body)
-                        if (json.optBoolean("success", false)) {
-                            withContext(Dispatchers.Main) {
-                                planName = json.optString("planName", planName)
-                                quotaMinutes = json.optInt("quotaMinutes", 250)
-                                minutesUsed = json.optInt("minutesUsed", 0)
-                                overageMinutes = json.optInt("overageMinutes", 0)
-                                overageAmount = json.optDouble("overageAmount", 0.0)
-                                isUnlimitedGateway = json.optBoolean("isUnlimitedGateway", false)
-                            }
-                        }
-                    }
-                } catch (e: Exception) {
-                    // Graceful offline fallback
-                } finally {
-                    withContext(Dispatchers.Main) {
-                        isLoading = false
-                    }
-                }
-            }
-        }
-    }
-
-    LaunchedEffect(settings.licenseKey) {
-        fetchUsage()
-    }
-
     Card(
         colors = CardDefaults.cardColors(
-            containerColor = if (overageMinutes > 0) {
-                RedError.copy(alpha = 0.12f)
-            } else {
-                MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.5f)
-            }
+            containerColor = if (settings.masterEnabled) ActiveGreenContainer.copy(alpha = 0.16f) else MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.6f)
         ),
         border = BorderStroke(
             1.dp,
-            if (overageMinutes > 0) RedError.copy(alpha = 0.6f) else MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.5f)
+            if (settings.masterEnabled) ActiveGreenText.copy(alpha = 0.6f) else MaterialTheme.colorScheme.outlineVariant
         ),
-        shape = RoundedCornerShape(16.dp),
+        shape = RoundedCornerShape(18.dp),
         modifier = Modifier.fillMaxWidth()
     ) {
-        Column(modifier = Modifier.padding(16.dp)) {
-            // Header: Plan Title & Action Icon
+        Column(modifier = Modifier.padding(18.dp)) {
             Row(
                 modifier = Modifier.fillMaxWidth(),
                 horizontalArrangement = Arrangement.SpaceBetween,
                 verticalAlignment = Alignment.CenterVertically
             ) {
                 Row(verticalAlignment = Alignment.CenterVertically) {
-                    Surface(
-                        shape = RoundedCornerShape(8.dp),
-                        color = if (overageMinutes > 0) RedError else Color(0xFF9333EA),
-                        modifier = Modifier.size(32.dp)
-                    ) {
-                        Box(contentAlignment = Alignment.Center) {
-                            Icon(
-                                if (overageMinutes > 0) Icons.Default.Warning else Icons.Default.Timer,
-                                contentDescription = null,
-                                tint = Color.White,
-                                modifier = Modifier.size(18.dp)
+                    Box(
+                        modifier = Modifier
+                            .size(12.dp)
+                            .clip(CircleShape)
+                            .background(
+                                if (settings.masterEnabled) ActiveGreenText.copy(alpha = pulseAlpha) else GrayPaused
                             )
-                        }
-                    }
+                    )
                     Spacer(modifier = Modifier.width(10.dp))
                     Column {
                         Text(
-                            text = planName,
-                            fontWeight = FontWeight.Bold,
-                            style = MaterialTheme.typography.titleSmall
+                            text = if (settings.masterEnabled) "APPLIANCE ACTIVE" else "APPLIANCE PAUSED",
+                            fontWeight = FontWeight.Black,
+                            fontSize = 14.sp,
+                            color = if (settings.masterEnabled) ActiveGreenText else GrayPaused,
+                            letterSpacing = 0.5.sp
                         )
                         Text(
-                            text = if (isUnlimitedGateway) "Perpetual License • Cloud Relay API" else "Live Monthly Voice Quota Meter",
+                            text = if (settings.masterEnabled) "Listening for missed calls via phone SIM" else "Auto-replies suspended",
                             style = MaterialTheme.typography.labelSmall,
                             color = MaterialTheme.colorScheme.onSurfaceVariant
                         )
                     }
                 }
 
-                IconButton(
-                    onClick = { fetchUsage() },
-                    modifier = Modifier.size(32.dp)
-                ) {
-                    Icon(
-                        Icons.Default.Refresh,
-                        contentDescription = "Refresh Usage",
-                        tint = MaterialTheme.colorScheme.primary,
-                        modifier = Modifier.size(18.dp)
+                Switch(
+                    checked = settings.masterEnabled,
+                    onCheckedChange = onToggle,
+                    colors = SwitchDefaults.colors(
+                        checkedThumbColor = ActiveGreenText,
+                        checkedTrackColor = ActiveGreenContainer
                     )
-                }
-            }
-
-            Spacer(modifier = Modifier.height(14.dp))
-
-            if (isUnlimitedGateway) {
-                Surface(
-                    color = Color(0xFF9333EA).copy(alpha = 0.15f),
-                    shape = RoundedCornerShape(8.dp),
-                    modifier = Modifier.fillMaxWidth()
-                ) {
-                    Text(
-                        text = "⚡ Unlimited local SIM SMS automations active. Voice reception requires BYOK key or Pooled Minutes Add-On.",
-                        style = MaterialTheme.typography.bodySmall,
-                        modifier = Modifier.padding(10.dp)
-                    )
-                }
-            } else {
-                // Progress Bar
-                val progressFraction = if (quotaMinutes > 0) {
-                    (minutesUsed.toFloat() / quotaMinutes.toFloat()).coerceIn(0f, 1f)
-                } else 0f
-
-                val barColor = when {
-                    overageMinutes > 0 -> RedError
-                    minutesUsed >= (quotaMinutes * 0.8f) -> AmberWarning
-                    else -> ActiveGreenText
-                }
-
-                LinearProgressIndicator(
-                    progress = { progressFraction },
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .height(8.dp),
-                    color = barColor,
-                    trackColor = MaterialTheme.colorScheme.surfaceVariant
                 )
+            }
+        }
+    }
+}
 
-                Spacer(modifier = Modifier.height(8.dp))
+@Composable
+fun SmsMetricsCard(
+    successfulSmsReplies: Int,
+    totalMissedCalls: Int,
+    settings: AppSettings
+) {
+    Card(
+        shape = RoundedCornerShape(16.dp),
+        modifier = Modifier.fillMaxWidth()
+    ) {
+        Column(modifier = Modifier.padding(16.dp)) {
+            Row(verticalAlignment = Alignment.CenterVertically) {
+                Icon(Icons.Default.ChatBubble, contentDescription = null, tint = MaterialTheme.colorScheme.primary, modifier = Modifier.size(20.dp))
+                Spacer(modifier = Modifier.width(8.dp))
+                Text("Missed Calls Rescued by SMS", fontWeight = FontWeight.Bold, style = MaterialTheme.typography.titleSmall)
+            }
+            Spacer(modifier = Modifier.height(12.dp))
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.SpaceBetween
+            ) {
+                Column {
+                    Text(
+                        text = "$successfulSmsReplies",
+                        style = MaterialTheme.typography.headlineMedium,
+                        fontWeight = FontWeight.Black,
+                        color = ActiveGreenText
+                    )
+                    Text("Auto-Texts Dispatched", style = MaterialTheme.typography.labelSmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
+                }
+                Column(horizontalAlignment = Alignment.End) {
+                    Text(
+                        text = if (totalMissedCalls > 0) "${((successfulSmsReplies.toDouble() / totalMissedCalls) * 100).toInt()}%" else "100%",
+                        style = MaterialTheme.typography.headlineMedium,
+                        fontWeight = FontWeight.Black,
+                        color = MaterialTheme.colorScheme.primary
+                    )
+                    Text("Delivery Success Rate", style = MaterialTheme.typography.labelSmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
+                }
+            }
+        }
+    }
+}
 
-                Row(
-                    modifier = Modifier.fillMaxWidth(),
-                    horizontalArrangement = Arrangement.SpaceBetween,
-                    verticalAlignment = Alignment.CenterVertically
+@Composable
+fun VoiceMetricsCard(
+    aiCallsCount: Int,
+    minutesUsed: Int,
+    settings: AppSettings,
+    onNavigateToVoice: () -> Unit
+) {
+    Card(
+        colors = CardDefaults.cardColors(containerColor = Color(0xFF673AB7).copy(alpha = 0.08f)),
+        border = BorderStroke(1.dp, Color(0xFF9C27B0).copy(alpha = 0.3f)),
+        shape = RoundedCornerShape(16.dp),
+        modifier = Modifier.fillMaxWidth()
+    ) {
+        Column(modifier = Modifier.padding(16.dp)) {
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.SpaceBetween,
+                verticalAlignment = Alignment.CenterVertically
+            ) {
+                Row(verticalAlignment = Alignment.CenterVertically) {
+                    Icon(Icons.Default.RecordVoiceOver, contentDescription = null, tint = Color(0xFFAB47BC), modifier = Modifier.size(20.dp))
+                    Spacer(modifier = Modifier.width(8.dp))
+                    Text("AI Virtual Agent Calls", fontWeight = FontWeight.Bold, style = MaterialTheme.typography.titleSmall)
+                }
+                Surface(
+                    shape = RoundedCornerShape(6.dp),
+                    color = Color(0xFF673AB7).copy(alpha = 0.2f)
                 ) {
                     Text(
-                        text = "$minutesUsed / $quotaMinutes Mins Used",
+                        text = "VAPI LIVE",
+                        modifier = Modifier.padding(horizontal = 6.dp, vertical = 2.dp),
+                        style = MaterialTheme.typography.labelSmall,
                         fontWeight = FontWeight.Bold,
-                        style = MaterialTheme.typography.bodyMedium
-                    )
-
-                    val remaining = maxOf(0, quotaMinutes - minutesUsed)
-                    Text(
-                        text = if (overageMinutes > 0) {
-                            "⚠️ $overageMinutes Mins Overage (+$${"%.2f".format(overageAmount)})"
-                        } else {
-                            "$remaining Mins Left"
-                        },
-                        fontWeight = FontWeight.SemiBold,
-                        style = MaterialTheme.typography.bodySmall,
-                        color = if (overageMinutes > 0) RedError else ActiveGreenText
+                        color = Color(0xFFCE93D8)
                     )
                 }
             }
+
+            Spacer(modifier = Modifier.height(12.dp))
+
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.SpaceBetween
+            ) {
+                Column {
+                    Text(
+                        text = "$aiCallsCount",
+                        style = MaterialTheme.typography.headlineMedium,
+                        fontWeight = FontWeight.Black,
+                        color = Color(0xFFAB47BC)
+                    )
+                    Text("Calls Answered & Triaged", style = MaterialTheme.typography.labelSmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
+                }
+                Column(horizontalAlignment = Alignment.End) {
+                    Text(
+                        text = "$minutesUsed mins",
+                        style = MaterialTheme.typography.headlineMedium,
+                        fontWeight = FontWeight.Black,
+                        color = MaterialTheme.colorScheme.onSurface
+                    )
+                    Text("Total Talk Time", style = MaterialTheme.typography.labelSmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
+                }
+            }
+        }
+    }
+}
+
+@Composable
+fun CostAndQuotaCard(
+    minutesUsed: Int,
+    quotaMinutes: Int,
+    overageAmount: Double,
+    settings: AppSettings
+) {
+    Card(
+        shape = RoundedCornerShape(16.dp),
+        modifier = Modifier.fillMaxWidth()
+    ) {
+        Column(modifier = Modifier.padding(16.dp)) {
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.SpaceBetween,
+                verticalAlignment = Alignment.CenterVertically
+            ) {
+                Row(verticalAlignment = Alignment.CenterVertically) {
+                    Icon(Icons.Default.AccountBalanceWallet, contentDescription = null, tint = MaterialTheme.colorScheme.primary, modifier = Modifier.size(20.dp))
+                    Spacer(modifier = Modifier.width(8.dp))
+                    Text("AI VA Minute Quota & Accumulated Cost", fontWeight = FontWeight.Bold, style = MaterialTheme.typography.titleSmall)
+                }
+            }
+
+            Spacer(modifier = Modifier.height(12.dp))
+
+            val progress = if (quotaMinutes > 0) (minutesUsed.toFloat() / quotaMinutes.toFloat()).coerceIn(0f, 1f) else 0f
+            LinearProgressIndicator(
+                progress = { progress },
+                modifier = Modifier.fillMaxWidth().height(8.dp).clip(RoundedCornerShape(4.dp))
+            )
 
             Spacer(modifier = Modifier.height(8.dp))
 
             Row(
                 modifier = Modifier.fillMaxWidth(),
-                horizontalArrangement = Arrangement.End
+                horizontalArrangement = Arrangement.SpaceBetween
             ) {
-                TextButton(
-                    onClick = onOpenAccountPortal,
-                    contentPadding = PaddingValues(horizontal = 8.dp, vertical = 2.dp)
+                Text(
+                    text = "$minutesUsed / $quotaMinutes included mins used",
+                    style = MaterialTheme.typography.bodySmall,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant
+                )
+                Text(
+                    text = if (overageAmount > 0) "Overage: $${String.format("%.2f", overageAmount)}" else "No Overage ($0.00)",
+                    style = MaterialTheme.typography.bodySmall,
+                    fontWeight = FontWeight.Bold,
+                    color = if (overageAmount > 0) AmberWarning else ActiveGreenText
+                )
+            }
+        }
+    }
+}
+
+@Composable
+fun SavedRevenueCard(
+    estimatedSavedRevenue: Int,
+    currencyFormat: NumberFormat,
+    settings: AppSettings,
+    onUpdateJobValue: (Double) -> Unit
+) {
+    var showDialog by remember { mutableStateOf(false) }
+    var tempVal by remember(settings.averageJobValue) { mutableStateOf(settings.averageJobValue.toInt().toString()) }
+
+    if (showDialog) {
+        AlertDialog(
+            onDismissRequest = { showDialog = false },
+            title = { Text("Average Job / Customer Value") },
+            text = {
+                Column {
+                    Text("Enter the estimated revenue of an average booked customer or job:")
+                    Spacer(modifier = Modifier.height(8.dp))
+                    OutlinedTextField(
+                        value = tempVal,
+                        onValueChange = { tempVal = it },
+                        label = { Text("Dollar Amount ($)") },
+                        singleLine = true
+                    )
+                }
+            },
+            confirmButton = {
+                Button(onClick = {
+                    val d = tempVal.toDoubleOrNull() ?: 450.0
+                    onUpdateJobValue(d)
+                    showDialog = false
+                }) {
+                    Text("Save")
+                }
+            },
+            dismissButton = {
+                TextButton(onClick = { showDialog = false }) { Text("Cancel") }
+            }
+        )
+    }
+
+    Card(
+        shape = RoundedCornerShape(16.dp),
+        modifier = Modifier.fillMaxWidth()
+    ) {
+        Column(modifier = Modifier.padding(16.dp)) {
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.SpaceBetween,
+                verticalAlignment = Alignment.CenterVertically
+            ) {
+                Row(verticalAlignment = Alignment.CenterVertically) {
+                    Icon(Icons.Default.MonetizationOn, contentDescription = null, tint = ActiveGreenText, modifier = Modifier.size(20.dp))
+                    Spacer(modifier = Modifier.width(8.dp))
+                    Text("Estimated Rescued Revenue", fontWeight = FontWeight.Bold, style = MaterialTheme.typography.titleSmall)
+                }
+                IconButton(onClick = { showDialog = true }, modifier = Modifier.size(24.dp)) {
+                    Icon(Icons.Default.Edit, contentDescription = "Edit Job Value", modifier = Modifier.size(16.dp))
+                }
+            }
+
+            Spacer(modifier = Modifier.height(8.dp))
+
+            Text(
+                text = currencyFormat.format(estimatedSavedRevenue),
+                style = MaterialTheme.typography.headlineLarge,
+                fontWeight = FontWeight.Black,
+                color = ActiveGreenText
+            )
+
+            Spacer(modifier = Modifier.height(4.dp))
+            Text(
+                text = "Calculated at ~33% lead conversion on instant response ($${settings.averageJobValue.toInt()}/job)",
+                style = MaterialTheme.typography.labelSmall,
+                color = MaterialTheme.colorScheme.onSurfaceVariant
+            )
+        }
+    }
+}
+
+@Composable
+fun FollowUpsCard(
+    smsReplies: Int,
+    voiceCalls: Int
+) {
+    Card(
+        shape = RoundedCornerShape(16.dp),
+        modifier = Modifier.fillMaxWidth()
+    ) {
+        Column(modifier = Modifier.padding(16.dp)) {
+            Row(verticalAlignment = Alignment.CenterVertically) {
+                Icon(Icons.Default.SyncAlt, contentDescription = null, tint = MaterialTheme.colorScheme.primary, modifier = Modifier.size(20.dp))
+                Spacer(modifier = Modifier.width(8.dp))
+                Text("Total Automated Touchpoints", fontWeight = FontWeight.Bold, style = MaterialTheme.typography.titleSmall)
+            }
+            Spacer(modifier = Modifier.height(12.dp))
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.SpaceBetween
+            ) {
+                Column {
+                    Text(
+                        text = "${smsReplies + voiceCalls}",
+                        style = MaterialTheme.typography.headlineMedium,
+                        fontWeight = FontWeight.Black,
+                        color = MaterialTheme.colorScheme.primary
+                    )
+                    Text("Total Rescues", style = MaterialTheme.typography.labelSmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
+                }
+                Column(horizontalAlignment = Alignment.End) {
+                    Text(
+                        text = "$smsReplies SMS / $voiceCalls Voice",
+                        style = MaterialTheme.typography.headlineMedium,
+                        fontWeight = FontWeight.Black,
+                        color = MaterialTheme.colorScheme.onSurface
+                    )
+                    Text("Breakdown", style = MaterialTheme.typography.labelSmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
+                }
+            }
+        }
+    }
+}
+
+@Composable
+fun HardwareStatusCard(
+    settings: AppSettings
+) {
+    Card(
+        shape = RoundedCornerShape(16.dp),
+        modifier = Modifier.fillMaxWidth()
+    ) {
+        Column(modifier = Modifier.padding(16.dp)) {
+            Row(verticalAlignment = Alignment.CenterVertically) {
+                Icon(Icons.Default.Smartphone, contentDescription = null, tint = MaterialTheme.colorScheme.primary, modifier = Modifier.size(20.dp))
+                Spacer(modifier = Modifier.width(8.dp))
+                Text("Hardware Appliance Details", fontWeight = FontWeight.Bold, style = MaterialTheme.typography.titleSmall)
+            }
+            Spacer(modifier = Modifier.height(10.dp))
+            Text(
+                text = "Dispatch Route: SIM ${settings.preferredSimSlot + 1} • Jitter Delay: ${settings.jitterDelaySeconds}s • Cooldown: ${settings.cooldownHours}h",
+                style = MaterialTheme.typography.bodySmall,
+                color = MaterialTheme.colorScheme.onSurfaceVariant
+            )
+        }
+    }
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
+// CUSTOMIZE & SORT CARDS DIALOG
+// ─────────────────────────────────────────────────────────────────────────────
+
+@Composable
+fun CustomizeCardsDialog(
+    currentOrder: List<String>,
+    hiddenCards: Set<String>,
+    onSaveOrder: (List<String>, Set<String>) -> Unit,
+    onDismiss: () -> Unit
+) {
+    val cardTitles = mapOf(
+        "HERO" to "Master Appliance Switch",
+        "SMS_METRICS" to "Missed Calls Rescued by SMS",
+        "VOICE_METRICS" to "AI Virtual Agent Calls",
+        "COST_QUOTA" to "AI VA Minute Quota & Costs",
+        "REVENUE" to "Estimated Rescued Revenue",
+        "FOLLOW_UPS" to "Total Automated Touchpoints",
+        "HARDWARE" to "Hardware Appliance Details"
+    )
+
+    var orderList by remember { mutableStateOf(currentOrder.toMutableList()) }
+    var hiddenSet by remember { mutableStateOf(hiddenCards.toMutableSet()) }
+
+    Dialog(
+        onDismissRequest = onDismiss,
+        properties = DialogProperties(usePlatformDefaultWidth = false)
+    ) {
+        Surface(
+            modifier = Modifier.fillMaxWidth(0.92f).fillMaxHeight(0.80f),
+            shape = RoundedCornerShape(20.dp),
+            color = MaterialTheme.colorScheme.surface,
+            tonalElevation = 6.dp
+        ) {
+            Column(modifier = Modifier.fillMaxSize().padding(20.dp)) {
+                Text("Customize & Sort Dashboard Cards", fontWeight = FontWeight.Bold, style = MaterialTheme.typography.titleMedium)
+                Text("Use arrows to reorder and checkbox to show or hide cards.", style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
+
+                Spacer(modifier = Modifier.height(14.dp))
+
+                LazyColumn(
+                    modifier = Modifier.weight(1f),
+                    verticalArrangement = Arrangement.spacedBy(8.dp)
                 ) {
-                    Text("Manage Billing & Quota ➔", fontSize = 12.sp)
+                    items(orderList.size) { idx ->
+                        val cardId = orderList[idx]
+                        val isVisible = !hiddenSet.contains(cardId)
+                        Surface(
+                            shape = RoundedCornerShape(10.dp),
+                            color = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.5f),
+                            border = BorderStroke(1.dp, MaterialTheme.colorScheme.outlineVariant)
+                        ) {
+                            Row(
+                                modifier = Modifier.fillMaxWidth().padding(horizontal = 12.dp, vertical = 6.dp),
+                                horizontalArrangement = Arrangement.SpaceBetween,
+                                verticalAlignment = Alignment.CenterVertically
+                            ) {
+                                Row(verticalAlignment = Alignment.CenterVertically, modifier = Modifier.weight(1f)) {
+                                    Checkbox(
+                                        checked = isVisible,
+                                        onCheckedChange = { checked ->
+                                            val next = hiddenSet.toMutableSet()
+                                            if (checked) next.remove(cardId) else next.add(cardId)
+                                            hiddenSet = next
+                                        }
+                                    )
+                                    Spacer(modifier = Modifier.width(6.dp))
+                                    Text(
+                                        text = cardTitles[cardId] ?: cardId,
+                                        style = MaterialTheme.typography.bodyMedium,
+                                        fontWeight = if (isVisible) FontWeight.SemiBold else FontWeight.Normal,
+                                        color = if (isVisible) MaterialTheme.colorScheme.onSurface else MaterialTheme.colorScheme.onSurfaceVariant
+                                    )
+                                }
+
+                                Row {
+                                    IconButton(
+                                        onClick = {
+                                            if (idx > 0) {
+                                                val next = orderList.toMutableList()
+                                                val temp = next[idx - 1]
+                                                next[idx - 1] = next[idx]
+                                                next[idx] = temp
+                                                orderList = next
+                                            }
+                                        },
+                                        enabled = idx > 0,
+                                        modifier = Modifier.size(32.dp)
+                                    ) {
+                                        Icon(Icons.Default.ArrowUpward, contentDescription = "Move Up", modifier = Modifier.size(18.dp))
+                                    }
+
+                                    IconButton(
+                                        onClick = {
+                                            if (idx < orderList.size - 1) {
+                                                val next = orderList.toMutableList()
+                                                val temp = next[idx + 1]
+                                                next[idx + 1] = next[idx]
+                                                next[idx] = temp
+                                                orderList = next
+                                            }
+                                        },
+                                        enabled = idx < orderList.size - 1,
+                                        modifier = Modifier.size(32.dp)
+                                    ) {
+                                        Icon(Icons.Default.ArrowDownward, contentDescription = "Move Down", modifier = Modifier.size(18.dp))
+                                    }
+                                }
+                            }
+                        }
+                    }
+                }
+
+                Spacer(modifier = Modifier.height(12.dp))
+
+                Row(
+                    modifier = Modifier.fillMaxWidth(),
+                    horizontalArrangement = Arrangement.spacedBy(10.dp)
+                ) {
+                    Button(
+                        onClick = { onSaveOrder(orderList, hiddenSet) },
+                        modifier = Modifier.weight(1f)
+                    ) {
+                        Text("Save Layout")
+                    }
+                    OutlinedButton(
+                        onClick = onDismiss,
+                        modifier = Modifier.weight(1f)
+                    ) {
+                        Text("Cancel")
+                    }
                 }
             }
         }

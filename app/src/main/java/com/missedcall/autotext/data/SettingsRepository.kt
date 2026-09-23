@@ -5,6 +5,7 @@ import androidx.datastore.core.DataStore
 import androidx.datastore.preferences.core.Preferences
 import androidx.datastore.preferences.core.booleanPreferencesKey
 import androidx.datastore.preferences.core.edit
+import androidx.datastore.preferences.core.floatPreferencesKey
 import androidx.datastore.preferences.core.intPreferencesKey
 import androidx.datastore.preferences.core.stringPreferencesKey
 import androidx.datastore.preferences.preferencesDataStore
@@ -67,6 +68,13 @@ class SettingsRepository(private val context: Context) {
         val VOICE_EMERGENCY_KEYWORDS = stringPreferencesKey("voice_emergency_keywords")
         val VOICE_AFTER_HOURS_MODE = stringPreferencesKey("voice_after_hours_mode")
         val VOICE_WIZARD_COMPLETED = booleanPreferencesKey("voice_wizard_completed")
+        val VAPI_PROMPT = stringPreferencesKey("vapi_prompt")
+        val VAPI_TEMPERATURE = floatPreferencesKey("vapi_temperature")
+        val VAPI_MODEL = stringPreferencesKey("vapi_model")
+        val VAPI_VOICE_ID = stringPreferencesKey("vapi_voice_id")
+        val VAPI_VOICE_PROVIDER = stringPreferencesKey("vapi_voice_provider")
+        val DASHBOARD_CARD_ORDER = stringPreferencesKey("dashboard_card_order")
+        val DASHBOARD_HIDDEN_CARDS = stringPreferencesKey("dashboard_hidden_cards")
     }
 
 
@@ -140,7 +148,14 @@ class SettingsRepository(private val context: Context) {
             voiceIndustryTrade = preferences[VOICE_INDUSTRY_TRADE] ?: "Home Services & Trades",
             voiceEmergencyKeywords = preferences[VOICE_EMERGENCY_KEYWORDS] ?: "leak, flooding, no heat, sparking, gas smell, pipe burst",
             voiceAfterHoursMode = preferences[VOICE_AFTER_HOURS_MODE] ?: "EMERGENCY_ONLY",
-            voiceWizardCompleted = preferences[VOICE_WIZARD_COMPLETED] ?: false
+            voiceWizardCompleted = preferences[VOICE_WIZARD_COMPLETED] ?: false,
+            vapiPrompt = preferences[VAPI_PROMPT] ?: "",
+            vapiTemperature = preferences[VAPI_TEMPERATURE] ?: 0.3f,
+            vapiModel = preferences[VAPI_MODEL] ?: "gpt-4o-mini",
+            vapiVoiceId = preferences[VAPI_VOICE_ID] ?: "",
+            vapiVoiceProvider = preferences[VAPI_VOICE_PROVIDER] ?: "cartesia",
+            dashboardCardOrder = preferences[DASHBOARD_CARD_ORDER] ?: "HERO,SMS_METRICS,VOICE_METRICS,REVENUE,QUOTA,HARDWARE",
+            dashboardHiddenCards = preferences[DASHBOARD_HIDDEN_CARDS] ?: ""
         )
 
 
@@ -232,6 +247,13 @@ class SettingsRepository(private val context: Context) {
             preferences[VOICE_EMERGENCY_KEYWORDS] = settings.voiceEmergencyKeywords
             preferences[VOICE_AFTER_HOURS_MODE] = settings.voiceAfterHoursMode
             preferences[VOICE_WIZARD_COMPLETED] = settings.voiceWizardCompleted
+            preferences[VAPI_PROMPT] = settings.vapiPrompt
+            preferences[VAPI_TEMPERATURE] = settings.vapiTemperature
+            preferences[VAPI_MODEL] = settings.vapiModel
+            preferences[VAPI_VOICE_ID] = settings.vapiVoiceId
+            preferences[VAPI_VOICE_PROVIDER] = settings.vapiVoiceProvider
+            preferences[DASHBOARD_CARD_ORDER] = settings.dashboardCardOrder
+            preferences[DASHBOARD_HIDDEN_CARDS] = settings.dashboardHiddenCards
         }
     }
 

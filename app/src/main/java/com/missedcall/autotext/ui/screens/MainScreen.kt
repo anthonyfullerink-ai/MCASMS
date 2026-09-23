@@ -217,12 +217,22 @@ fun MainScreen(
         )
     }
 
-    // Customer Account & Subscription Portal Dialog
-    if (showCustomerPortalDialog) {
-        CustomerAccountPortalDialog(
+    var showProfileDialog by remember { mutableStateOf(false) }
+    var showGlobalSettingsDialog by remember { mutableStateOf(false) }
+
+    if (showProfileDialog) {
+        ProfileDialog(
             settings = settings,
             onSettingsChanged = onSettingsChanged,
-            onDismiss = { showCustomerPortalDialog = false }
+            onDismiss = { showProfileDialog = false }
+        )
+    }
+
+    if (showGlobalSettingsDialog) {
+        GlobalSettingsDialog(
+            settings = settings,
+            onSettingsChanged = onSettingsChanged,
+            onDismiss = { showGlobalSettingsDialog = false }
         )
     }
 
@@ -231,7 +241,7 @@ fun MainScreen(
             TopAppBar(
                 title = {
                     Column(
-                        modifier = Modifier.clickable { showCustomerPortalDialog = true }
+                        modifier = Modifier.clickable { showProfileDialog = true }
                     ) {
                         Text(
                             text = "Missed Call Auto SMS",
@@ -246,32 +256,45 @@ fun MainScreen(
                     }
                 },
                 actions = {
+                    // Profile Dialog Icon
                     IconButton(
-                        onClick = { showCustomerPortalDialog = true },
-                        modifier = Modifier.padding(end = 4.dp)
+                        onClick = { showProfileDialog = true }
                     ) {
                         Icon(
                             Icons.Default.AccountCircle,
-                            contentDescription = "My Account & Subscription",
+                            contentDescription = "My Profile & Account",
                             tint = MaterialTheme.colorScheme.primary,
-                            modifier = Modifier.size(28.dp)
+                            modifier = Modifier.size(26.dp)
                         )
                     }
 
+                    // Global Settings (n8n Webhooks, Dual SIM, Battery, OTA)
+                    IconButton(
+                        onClick = { showGlobalSettingsDialog = true }
+                    ) {
+                        Icon(
+                            Icons.Default.Settings,
+                            contentDescription = "Global Settings & n8n",
+                            tint = MaterialTheme.colorScheme.onSurfaceVariant,
+                            modifier = Modifier.size(24.dp)
+                        )
+                    }
+
+                    // Master Power Toggle
                     Surface(
                         shape = RoundedCornerShape(20.dp),
                         color = if (settings.masterEnabled) ActiveGreenContainer else GrayPaused.copy(alpha = 0.2f),
-                        modifier = Modifier.padding(end = 12.dp)
+                        modifier = Modifier.padding(start = 2.dp, end = 10.dp)
                     ) {
                         Row(
                             verticalAlignment = Alignment.CenterVertically,
-                            modifier = Modifier.padding(horizontal = 8.dp, vertical = 2.dp)
+                            modifier = Modifier.padding(horizontal = 6.dp, vertical = 2.dp)
                         ) {
                             Icon(
                                 imageVector = Icons.Default.PowerSettingsNew,
                                 contentDescription = "Master Switch",
                                 tint = if (settings.masterEnabled) ActiveGreenText else GrayPaused,
-                                modifier = Modifier.size(20.dp)
+                                modifier = Modifier.size(18.dp)
                             )
                             Spacer(modifier = Modifier.width(4.dp))
                             Switch(
@@ -304,33 +327,27 @@ fun MainScreen(
                 Tab(
                     selected = selectedTab == 0,
                     onClick = { selectedTab = 0 },
-                    text = { Text("Dashboard", fontSize = 11.sp) },
+                    text = { Text("Dashboard", fontSize = 12.sp, fontWeight = if (selectedTab == 0) FontWeight.Bold else FontWeight.Normal) },
                     icon = { Icon(Icons.Default.Dashboard, contentDescription = null, modifier = Modifier.size(20.dp)) }
                 )
                 Tab(
                     selected = selectedTab == 1,
                     onClick = { selectedTab = 1 },
-                    text = {
-                        Text(if (unreadVoiceCalls > 0) "Voice ($unreadVoiceCalls)" else "Voice", fontSize = 11.sp)
-                    },
-                    icon = { Icon(Icons.Default.RecordVoiceOver, contentDescription = null, modifier = Modifier.size(20.dp)) }
+                    text = { Text("Auto-SMS", fontSize = 12.sp, fontWeight = if (selectedTab == 1) FontWeight.Bold else FontWeight.Normal) },
+                    icon = { Icon(Icons.Default.ChatBubble, contentDescription = null, modifier = Modifier.size(20.dp)) }
                 )
                 Tab(
                     selected = selectedTab == 2,
                     onClick = { selectedTab = 2 },
-                    text = { Text("Prompts", fontSize = 11.sp, fontWeight = FontWeight.Bold) },
-                    icon = { Icon(Icons.Default.AutoAwesome, contentDescription = null, modifier = Modifier.size(20.dp), tint = MaterialTheme.colorScheme.primary) }
+                    text = {
+                        Text(if (unreadVoiceCalls > 0) "Voice ($unreadVoiceCalls)" else "Voice", fontSize = 12.sp, fontWeight = if (selectedTab == 2) FontWeight.Bold else FontWeight.Normal)
+                    },
+                    icon = { Icon(Icons.Default.RecordVoiceOver, contentDescription = null, modifier = Modifier.size(20.dp)) }
                 )
                 Tab(
                     selected = selectedTab == 3,
                     onClick = { selectedTab = 3 },
-                    text = { Text("Settings", fontSize = 11.sp) },
-                    icon = { Icon(Icons.Default.Settings, contentDescription = null, modifier = Modifier.size(20.dp)) }
-                )
-                Tab(
-                    selected = selectedTab == 4,
-                    onClick = { selectedTab = 4 },
-                    text = { Text("Logs", fontSize = 11.sp) },
+                    text = { Text("Logs", fontSize = 12.sp, fontWeight = if (selectedTab == 3) FontWeight.Bold else FontWeight.Normal) },
                     icon = { Icon(Icons.Default.History, contentDescription = null, modifier = Modifier.size(20.dp)) }
                 )
             }
@@ -342,25 +359,18 @@ fun MainScreen(
                     logs = logs,
                     onNavigateToTab = { selectedTab = it }
                 )
-                1 -> VoiceHubScreen(
+                1 -> AutoSmsScreen(
+                    settings = settings,
+                    onSettingsChanged = onSettingsChanged
+                )
+                2 -> VoiceHubScreen(
                     settings = settings,
                     onSettingsChanged = onSettingsChanged,
                     voiceCalls = voiceCalls,
                     onMarkVoiceCallRead = onMarkVoiceCallRead,
-                    onClearVoiceCalls = onClearVoiceCalls,
-                    onNavigateToPrompts = { selectedTab = 2 }
+                    onClearVoiceCalls = onClearVoiceCalls
                 )
-                2 -> PromptStudioScreen(
-                    settings = settings,
-                    onSettingsChanged = onSettingsChanged
-                )
-                3 -> SettingsScreen(
-                    settings = settings,
-                    onSettingsChanged = onSettingsChanged,
-                    missingPermissions = missingPermissions,
-                    onRequestPermissions = onRequestPermissions
-                )
-                4 -> ActivityLogScreen(
+                3 -> ActivityLogScreen(
                     logs = logs,
                     onClearLogs = onClearLogs
                 )

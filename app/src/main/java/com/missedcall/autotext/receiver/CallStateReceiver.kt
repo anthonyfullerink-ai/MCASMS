@@ -8,7 +8,6 @@ import android.util.Log
 import androidx.work.*
 import com.missedcall.autotext.App
 import com.missedcall.autotext.worker.SendAutoTextWorker
-import com.missedcall.autotext.worker.HeartbeatWorker
 import kotlinx.coroutines.runBlocking
 import java.util.concurrent.TimeUnit
 import java.util.concurrent.atomic.AtomicBoolean
@@ -26,9 +25,6 @@ class CallStateReceiver : BroadcastReceiver() {
 
     override fun onReceive(context: Context, intent: Intent) {
         if (intent.action != TelephonyManager.ACTION_PHONE_STATE_CHANGED) return
-
-        // Schedule heartbeat pulse if not already scheduled
-        scheduleHeartbeat(context)
 
         val stateStr = intent.getStringExtra(TelephonyManager.EXTRA_STATE) ?: return
         val number = intent.getStringExtra(TelephonyManager.EXTRA_INCOMING_NUMBER)
@@ -67,61 +63,14 @@ class CallStateReceiver : BroadcastReceiver() {
     }
 
     private fun enqueueAutoTextWorker(context: Context, phoneNumber: String) {
-        val app = context.applicationContext as? App
-        val settings = try {
-            runBlocking { app?.settingsRepository?.getSettings() }
-        } catch (e: Exception) {
-            null
-        }
-
-        val cleanDigits = phoneNumber.filter { it.isDigit() }.takeLast(10)
-        val isVoiceActive = settings?.voiceReceptionistEnabled == true
-
         val inputData = Data.Builder()
             .putString(SendAutoTextWorker.KEY_PHONE_NUMBER, phoneNumber)
             .build()
 
-        val workRequestBuilder = OneTimeWorkRequestBuilder<SendAutoTextWorker>()
+        val workRequest = OneTimeWorkRequestBuilder<SendAutoTextWorker>()
             .setInputData(inputData)
-            .setBackoffCriteria(
-                BackoffPolicy.EXPONENTIAL,
-                WorkRequest.MIN_BACKOFF_MILLIS,
-                TimeUnit.MILLISECONDS
-            )
-
-        if (isVoiceActive) {
-            // Approach 2: Reconciliation Buffer (45s delay to allow carrier *71 handoff and Vapi engagement)
-            workRequestBuilder
-                .setInitialDelay(45, TimeUnit.SECONDS)
-                .addTag("pending_missed_$cleanDigits")
-                .addTag("all_pending_missed_calls")
-
-            Log.i(TAG, "AI Voice Active: Queued native missed-call text for $cleanDigits with 45s reconciliation buffer (Tag: pending_missed_$cleanDigits)")
-
-            WorkManager.getInstance(context.applicationContext).enqueueUniqueWork(
-                "pending_missed_$cleanDigits",
-                ExistingWorkPolicy.REPLACE,
-                workRequestBuilder.build()
-            )
-        } else {
-            Log.i(TAG, "Standard Mode: Enqueued native missed-call text immediately for $phoneNumber")
-            WorkManager.getInstance(context.applicationContext).enqueue(workRequestBuilder.build())
-        }
-    }
-
-    private fun scheduleHeartbeat(context: Context) {
-        val heartbeatRequest = PeriodicWorkRequestBuilder<HeartbeatWorker>(15, TimeUnit.MINUTES)
-            .setConstraints(
-                Constraints.Builder()
-                    .setRequiredNetworkType(NetworkType.CONNECTED)
-                    .build()
-            )
             .build()
 
-        WorkManager.getInstance(context.applicationContext).enqueueUniquePeriodicWork(
-            "device_heartbeat_pulse",
-            ExistingPeriodicWorkPolicy.KEEP,
-            heartbeatRequest
-        )
+        WorkManager.getInstance(context.applicationContext).enqueue(workRequest)
     }
 }

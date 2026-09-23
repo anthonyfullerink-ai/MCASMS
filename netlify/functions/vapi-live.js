@@ -131,6 +131,122 @@ exports.handler = async (event) => {
       };
     }
 
+    // 2.1 GET or POST /api/vapi/user-assistant
+    if (reqPath.includes('user-assistant')) {
+      let fsModule = null;
+      try { fsModule = require('../../lib/firestore'); } catch (e) {}
+
+      // Handle GET /api/vapi/user-assistant?key=MCAS-...
+      if (event.httpMethod === 'GET') {
+        const key = (event.queryStringParameters?.key || event.queryStringParameters?.licenseKey || '').trim().toUpperCase();
+        let targetAssistantId = null;
+        let binding = null;
+
+        if (key && fsModule && process.env.FIREBASE_SERVICE_ACCOUNT_KEY) {
+          try {
+            binding = await fsModule.getVoiceBinding(key);
+            if (binding && binding.vapiAssistantId) {
+              targetAssistantId = binding.vapiAssistantId;
+            }
+          } catch (e) {
+            console.warn('[vapi-live] Firestore user-assistant lookup error:', e.message);
+          }
+        }
+
+        // Fallback for dev / unassigned
+        if (!targetAssistantId) {
+          targetAssistantId = assistantId || '5105b379-8cbf-4037-becc-bba45504f781';
+        }
+
+        let asstData = null;
+        try {
+          asstData = await vapiApiRequest(`/assistant/${targetAssistantId}`);
+        } catch (e) {
+          console.warn('[vapi-live] Failed to fetch assistant:', e.message);
+        }
+
+        const systemMessage = asstData?.model?.messages?.find(m => m.role === 'system')?.content ||
+          "You are a friendly, professional AI receptionist. Your job is to answer incoming calls, capture the caller's name and service request, and reassure them that someone will follow up shortly.";
+
+        return {
+          statusCode: 200,
+          headers,
+          body: JSON.stringify({
+            success: true,
+            licenseKey: key,
+            assistantId: targetAssistantId,
+            phoneNumberId: binding?.vapiPhoneNumberId || null,
+            forwardingNumber: binding?.forwardingNumber || '+1 (732) 660-9121',
+            carrierCode: binding?.carrierCode || '*717326609121',
+            quotaMinutes: binding?.quotaMinutes || 250,
+            minutesUsed: binding?.minutesUsed || 0,
+            assistant: {
+              id: targetAssistantId,
+              name: asstData?.name || 'Riley (AI Receptionist)',
+              firstMessage: asstData?.firstMessage || 'Hi! Thanks for calling. How can I help you today?',
+              systemPrompt: systemMessage,
+              model: asstData?.model?.model || 'gpt-4o-mini',
+              temperature: asstData?.model?.temperature ?? 0.3,
+              voiceProvider: asstData?.voice?.provider || 'cartesia',
+              voiceId: asstData?.voice?.voiceId || '248be419-c632-4f23-adf1-5324ed7dbf10'
+            }
+          })
+        };
+      }
+
+      // Handle POST /api/vapi/user-assistant (Update assistant)
+      if (event.httpMethod === 'POST') {
+        const payload = JSON.parse(event.body || '{}');
+        const key = (payload.licenseKey || payload.key || '').trim().toUpperCase();
+        let targetAssistantId = payload.assistantId || null;
+
+        if (key && fsModule && process.env.FIREBASE_SERVICE_ACCOUNT_KEY) {
+          try {
+            const binding = await fsModule.getVoiceBinding(key);
+            if (binding && binding.vapiAssistantId) {
+              targetAssistantId = binding.vapiAssistantId;
+            }
+          } catch (e) {}
+        }
+
+        if (!targetAssistantId) {
+          targetAssistantId = assistantId || '5105b379-8cbf-4037-becc-bba45504f781';
+        }
+
+        const patchPayload = {};
+        if (payload.name) patchPayload.name = payload.name;
+        if (payload.firstMessage !== undefined) patchPayload.firstMessage = payload.firstMessage;
+
+        const modelConfig = {
+          provider: 'openai',
+          model: payload.model || 'gpt-4o-mini',
+          temperature: typeof payload.temperature === 'number' ? payload.temperature : 0.3,
+          messages: [
+            { role: 'system', content: payload.systemPrompt || "You are a professional AI receptionist." }
+          ]
+        };
+        patchPayload.model = modelConfig;
+
+        if (payload.voiceProvider || payload.voiceId) {
+          patchPayload.voice = {
+            provider: payload.voiceProvider || 'cartesia',
+            voiceId: payload.voiceId || '248be419-c632-4f23-adf1-5324ed7dbf10'
+          };
+        }
+
+        const vapiRes = await vapiApiRequest(`/assistant/${targetAssistantId}`, 'PATCH', patchPayload);
+        return {
+          statusCode: 200,
+          headers,
+          body: JSON.stringify({
+            success: true,
+            message: `Your AI Voice Receptionist settings were updated live in Vapi!`,
+            assistant: vapiRes
+          })
+        };
+      }
+    }
+
     // 3. GET /api/vapi/live-status or default status
     let assistant = null;
     let resolvedId = assistantId;

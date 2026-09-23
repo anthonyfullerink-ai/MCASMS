@@ -53,7 +53,14 @@ data class AppSettings(
     val voiceIndustryTrade: String = "Home Services & Trades",
     val voiceEmergencyKeywords: String = "leak, flooding, no heat, sparking, gas smell, pipe burst",
     val voiceAfterHoursMode: String = "EMERGENCY_ONLY", // "24_7_SAME", "EMERGENCY_ONLY", "MESSAGE_ONLY"
-    val voiceWizardCompleted: Boolean = false
+    val voiceWizardCompleted: Boolean = false,
+    val vapiPrompt: String = "",
+    val vapiTemperature: Float = 0.3f,
+    val vapiModel: String = "gpt-4o-mini",
+    val vapiVoiceId: String = "",
+    val vapiVoiceProvider: String = "cartesia",
+    val dashboardCardOrder: String = "HERO,SMS_METRICS,VOICE_METRICS,REVENUE,QUOTA,HARDWARE",
+    val dashboardHiddenCards: String = ""
 )
 
 

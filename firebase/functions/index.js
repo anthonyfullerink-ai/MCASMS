@@ -126,8 +126,8 @@ exports.activateLicense = functions.https.onRequest(async (req, res) => {
 exports.getLatestAppVersion = functions.https.onRequest(async (req, res) => {
     res.set("Access-Control-Allow-Origin", "*");
     res.status(200).json({
-        versionCode: 2,
-        versionName: "1.1.0",
+        versionCode: 15,
+        versionName: "1.6.1",
         downloadUrl: "https://missedcallautosms.com/downloads/missed-call-auto-sms.apk",
         releaseNotes: "In-App OTA update checking, enhanced business hours schedule, and performance updates.",
         mandatory: false,

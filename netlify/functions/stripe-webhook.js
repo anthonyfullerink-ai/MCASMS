@@ -514,6 +514,128 @@ function sendEmail(apiKey, toEmail, subject, htmlContent) {
   });
 }
 
+async function provisionVapiForSubscriber(customerName, businessName = '') {
+  const vapiApiKey = process.env.VAPI_PRIVATE_API_KEY;
+  const defaultNumber = process.env.VAPI_PRIMARY_PHONE_NUMBER || '+1 (732) 660-9121';
+  const defaultAsst = process.env.VAPI_ASSISTANT_ID || '5105b379-8cbf-4037-becc-bba45504f781';
+
+  if (!vapiApiKey) {
+    console.warn('[stripe-webhook] VAPI_PRIVATE_API_KEY not configured. Falling back to default line.');
+    return {
+      assistantId: defaultAsst,
+      phoneNumberId: null,
+      forwardingNumber: defaultNumber
+    };
+  }
+
+  try {
+    // 1. Create dedicated assistant for this subscriber
+    const asstPayload = {
+      name: `${customerName || 'Contractor'} (AI Receptionist)`,
+      firstMessage: `Thanks for calling ${businessName || customerName || 'us'}! How can I help you today?`,
+      model: {
+        provider: 'openai',
+        model: 'gpt-4o-mini',
+        temperature: 0.3,
+        messages: [
+          {
+            role: 'system',
+            content: `You are Riley, a friendly and professional AI receptionist for ${businessName || customerName || 'our business'}. Warmly greet callers, answer questions, capture their name and service details, and confirm that someone will follow up promptly.`
+          }
+        ]
+      },
+      voice: {
+        provider: 'cartesia',
+        voiceId: '248be419-c632-4f23-adf1-5324ed7dbf10'
+      },
+      serverUrl: 'https://missedcallautosms.com/api/vapi/webhook'
+    };
+
+    const asstRes = await new Promise((resolve) => {
+      const data = JSON.stringify(asstPayload);
+      const req = https.request({
+        hostname: 'api.vapi.ai',
+        port: 443,
+        path: '/assistant',
+        method: 'POST',
+        headers: {
+          'Authorization': `Bearer ${vapiApiKey}`,
+          'Content-Type': 'application/json',
+          'Content-Length': Buffer.byteLength(data)
+        }
+      }, res => {
+        let b = '';
+        res.on('data', c => b += c);
+        res.on('end', () => {
+          try { resolve(JSON.parse(b)); } catch (e) { resolve(null); }
+        });
+      });
+      req.on('error', (err) => {
+        console.warn('[stripe-webhook] Vapi assistant creation error:', err.message);
+        resolve(null);
+      });
+      req.write(data);
+      req.end();
+    });
+
+    const newAssistantId = asstRes?.id || defaultAsst;
+
+    // 2. Provision dedicated phone number if available
+    let newPhoneNumber = null;
+    let newPhoneId = null;
+
+    if (newAssistantId) {
+      try {
+        const phoneBuyRes = await new Promise((resolve) => {
+          const postData = JSON.stringify({ assistantId: newAssistantId });
+          const req = https.request({
+            hostname: 'api.vapi.ai',
+            port: 443,
+            path: '/phone-number/buy',
+            method: 'POST',
+            headers: {
+              'Authorization': `Bearer ${vapiApiKey}`,
+              'Content-Type': 'application/json',
+              'Content-Length': Buffer.byteLength(postData)
+            }
+          }, res => {
+            let b = '';
+            res.on('data', c => b += c);
+            res.on('end', () => {
+              try { resolve(JSON.parse(b)); } catch (e) { resolve(null); }
+            });
+          });
+          req.on('error', () => resolve(null));
+          req.write(postData);
+          req.end();
+        });
+
+        if (phoneBuyRes?.number) {
+          newPhoneNumber = phoneBuyRes.number;
+          newPhoneId = phoneBuyRes.id;
+        }
+      } catch (pErr) {
+        console.warn('[stripe-webhook] Vapi phone provision notice:', pErr.message);
+      }
+    }
+
+    const finalNumber = newPhoneNumber || defaultNumber;
+    console.log(`🎙️ [VAPI PROVISIONED] Assistant: ${newAssistantId}, Phone: ${finalNumber} for ${customerName}`);
+    return {
+      assistantId: newAssistantId,
+      phoneNumberId: newPhoneId,
+      forwardingNumber: finalNumber
+    };
+  } catch (err) {
+    console.error('[stripe-webhook] Vapi provisioning error:', err.message);
+    return {
+      assistantId: defaultAsst,
+      phoneNumberId: null,
+      forwardingNumber: defaultNumber
+    };
+  }
+}
+
 function verifyStripeSignature(payload, sigHeader, secret) {
   if (!sigHeader || !secret) return true; // Skip signature check if secret not set
   try {
@@ -624,8 +746,9 @@ exports.handler = async (event) => {
 
     // === BRANCH 1: AUTONOMOUS FRONT DESK BUNDLE ($99/mo - SIM Auto SMS + AI Voice Receptionist, 250 mins) ===
     if (isBundle) {
-      // Real Live Vapi AI Receptionist Line
-      const forwardingNumber = process.env.VAPI_PRIMARY_PHONE_NUMBER || '+1 (732) 660-9121';
+      // Provision dedicated Vapi AI receptionist assistant & phone line
+      const vapiInfo = await provisionVapiForSubscriber(customerName);
+      const forwardingNumber = vapiInfo.forwardingNumber;
       const cleanDigits = forwardingNumber.replace(/\D/g, '');
       const carrierCode = `*71${cleanDigits.slice(-10)}`;
       const carrierDeactivateCode = '*73';
@@ -647,6 +770,8 @@ exports.handler = async (event) => {
             forwardingNumber,
             carrierCode,
             carrierDeactivateCode,
+            vapiAssistantId: vapiInfo.assistantId,
+            vapiPhoneNumberId: vapiInfo.phoneNumberId,
             quotaMinutes: 250,
             overageRate: 0.20,
             minutesUsed: 0,
@@ -741,8 +866,9 @@ exports.handler = async (event) => {
       const planTitle = isBusiness ? "Business AI Voice Receptionist ($89/mo)" : "Starter AI Voice Receptionist ($29/mo)";
       const tierName = isBusiness ? "VOICE_BUSINESS" : "VOICE_STARTER";
 
-      // Real Live Vapi AI Receptionist Line
-      const forwardingNumber = process.env.VAPI_PRIMARY_PHONE_NUMBER || '+1 (732) 660-9121';
+      // Provision dedicated Vapi AI receptionist assistant & phone line
+      const vapiInfo = await provisionVapiForSubscriber(customerName);
+      const forwardingNumber = vapiInfo.forwardingNumber;
       const cleanDigits = forwardingNumber.replace(/\D/g, '');
       const carrierCode = `*71${cleanDigits.slice(-10)}`;
       const carrierDeactivateCode = '*73';
@@ -776,6 +902,8 @@ exports.handler = async (event) => {
             forwardingNumber,
             carrierCode,
             carrierDeactivateCode,
+            vapiAssistantId: vapiInfo.assistantId,
+            vapiPhoneNumberId: vapiInfo.phoneNumberId,
             quotaMinutes: quotaMinutes,
             overageRate: parseFloat(overageRate),
             minutesUsed: 0,

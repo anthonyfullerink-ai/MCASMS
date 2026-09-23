@@ -47,6 +47,8 @@ exports.handler = async (event) => {
     // Check Voice Pro Bindings (Cloud Firestore with local JSON fallback)
     let voiceActive = false;
     let voiceForwardingNumber = null;
+    let vapiAssistantId = null;
+    let vapiPhoneNumberId = null;
 
     try {
       let _fsModule = null;
@@ -57,6 +59,8 @@ exports.handler = async (event) => {
         if (binding && binding.status === 'ACTIVE' && binding.voiceActive !== false) {
           voiceActive = true;
           voiceForwardingNumber = binding.forwardingNumber;
+          vapiAssistantId = binding.vapiAssistantId || null;
+          vapiPhoneNumberId = binding.vapiPhoneNumberId || null;
         }
       } else {
         const fs = require('fs');
@@ -67,6 +71,8 @@ exports.handler = async (event) => {
           if (bindings[key] && bindings[key].active !== false && bindings[key].status !== 'CANCELLED') {
             voiceActive = true;
             voiceForwardingNumber = bindings[key].forwardingNumber;
+            vapiAssistantId = bindings[key].vapiAssistantId || null;
+            vapiPhoneNumberId = bindings[key].vapiPhoneNumberId || null;
           }
         }
       }
@@ -87,6 +93,8 @@ exports.handler = async (event) => {
         voiceEligible: isPro || isAgency,
         voiceActive: voiceActive,
         voiceForwardingNumber: voiceForwardingNumber,
+        vapiAssistantId: vapiAssistantId,
+        vapiPhoneNumberId: vapiPhoneNumberId,
         type: key.includes('TRIAL') ? 'TRIAL' : (key.includes('DEMO') ? 'DEMO' : 'PAID'),
         deviceId: 'Protected (1 Physical Android Phone Bound)',
         features: {
