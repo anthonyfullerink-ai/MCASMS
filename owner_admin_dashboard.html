@@ -28,6 +28,11 @@
 
         * { box-sizing: border-box; }
 
+        html, body {
+            max-width: 100vw;
+            overflow-x: hidden;
+        }
+
         body {
             font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
             background-color: var(--bg);
@@ -40,6 +45,7 @@
         .container {
             max-width: 1140px;
             margin: 0 auto;
+            width: 100%;
         }
 
         /* Header */
@@ -50,6 +56,8 @@
             border-bottom: 1px solid var(--card-border);
             padding-bottom: 20px;
             margin-bottom: 24px;
+            flex-wrap: wrap;
+            gap: 12px;
         }
 
         .header h1 {
@@ -86,15 +94,12 @@
             margin-bottom: 24px;
         }
 
-        @media (max-width: 768px) {
-            .metrics-grid { grid-template-columns: 1fr 1fr; }
-        }
-
         .metric-card {
             background: var(--card-bg);
             border: 1px solid var(--card-border);
             border-radius: 14px;
             padding: 20px;
+            min-width: 0;
         }
 
         .metric-title {
@@ -110,31 +115,45 @@
             font-weight: 900;
             color: #FFF;
             margin-top: 6px;
+            word-break: break-word;
         }
 
         /* Tabs */
         .tab-bar {
             display: flex;
-            gap: 12px;
+            gap: 8px;
             margin-bottom: 20px;
             border-bottom: 1px solid var(--card-border);
             padding-bottom: 12px;
+            overflow-x: auto;
+            -webkit-overflow-scrolling: touch;
+            scrollbar-width: none;
+            -ms-overflow-style: none;
+            flex-wrap: nowrap;
+            width: 100%;
+        }
+
+        .tab-bar::-webkit-scrollbar {
+            display: none;
         }
 
         .tab-btn {
             background: #161B22;
             color: var(--muted);
             border: 1px solid var(--card-border);
-            padding: 10px 20px;
+            padding: 10px 18px;
             border-radius: 10px;
             font-size: 14px;
             font-weight: 700;
             cursor: pointer;
             transition: all 0.2s;
+            white-space: nowrap;
+            flex-shrink: 0;
+            user-select: none;
         }
 
         .tab-btn:hover { color: #FFF; border-color: var(--primary); }
-        .tab-btn.active { background: var(--primary); color: #000; border-color: var(--primary); }
+        .tab-btn.active { background: var(--primary); color: #000; border-color: var(--primary); font-weight: 800; }
 
         /* Card Container */
         .card {
@@ -143,6 +162,8 @@
             border-radius: 16px;
             padding: 24px;
             margin-bottom: 24px;
+            max-width: 100%;
+            box-sizing: border-box;
         }
 
         .card-header {
@@ -160,8 +181,20 @@
             font-weight: 800;
         }
 
+        /* Table Responsive Horizontal Scroll */
+        .table-responsive {
+            width: 100%;
+            overflow-x: auto;
+            -webkit-overflow-scrolling: touch;
+            margin-bottom: 16px;
+            border: 1px solid var(--card-border);
+            border-radius: 10px;
+            background: #090B0E;
+        }
+
         table {
             width: 100%;
+            min-width: 660px;
             border-collapse: collapse;
         }
 
@@ -180,6 +213,7 @@
             border-radius: 14px;
             font-size: 11px;
             font-weight: 800;
+            white-space: nowrap;
         }
 
         .badge-active { background: rgba(0, 230, 118, 0.15); color: var(--primary); border: 1px solid var(--primary); }
@@ -201,6 +235,7 @@
             font-weight: 700;
             cursor: pointer;
             transition: all 0.2s;
+            white-space: nowrap;
         }
         .filter-pill:hover, .filter-pill.active {
             background: #21262D;
@@ -219,6 +254,10 @@
             font-weight: 700;
             margin-right: 6px;
             transition: background 0.2s;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            gap: 6px;
         }
 
         .btn-action:hover { background: #30364D; }
@@ -238,8 +277,6 @@
             gap: 24px;
         }
 
-        @media (max-width: 768px) { .gen-grid { grid-template-columns: 1fr; } }
-
         label {
             display: block;
             margin-top: 14px;
@@ -248,7 +285,7 @@
             font-weight: 600;
         }
 
-        input[type="text"], input[type="password"], select {
+        input[type="text"], input[type="password"], input[type="number"], select, textarea {
             width: 100%;
             background: #090B0E;
             border: 1px solid var(--card-border);
@@ -259,9 +296,11 @@
             font-weight: 600;
             margin-top: 6px;
             outline: none;
+            box-sizing: border-box;
+            min-width: 0;
         }
 
-        input[type="text"]:focus, input[type="password"]:focus, select:focus {
+        input[type="text"]:focus, input[type="password"]:focus, input[type="number"]:focus, select:focus, textarea:focus {
             border-color: var(--primary);
         }
 
@@ -302,6 +341,7 @@
             display: flex;
             align-items: center;
             justify-content: space-between;
+            gap: 12px;
         }
 
         /* Login Card Overlay */
@@ -310,6 +350,7 @@
             justify-content: center;
             align-items: center;
             min-height: 80vh;
+            padding: 16px;
         }
 
         .login-card {
@@ -321,6 +362,7 @@
             max-width: 440px;
             box-shadow: 0 20px 50px rgba(0,0,0,0.7);
             text-align: center;
+            box-sizing: border-box;
         }
 
         .login-logo { font-size: 40px; margin-bottom: 10px; }
@@ -356,6 +398,248 @@
             font-weight: bold;
             margin-bottom: 18px;
             display: none;
+        }
+
+        /* ══════════════════════════════════════════════════════════════════════
+           MOBILE RESPONSIVE SYSTEM (Phones & Tablets <= 768px)
+           ══════════════════════════════════════════════════════════════════════ */
+        @media (max-width: 768px) {
+            body {
+                padding: 12px 10px;
+            }
+
+            .container {
+                padding: 0;
+            }
+
+            /* Header Stacking */
+            .header {
+                flex-direction: column;
+                align-items: stretch;
+                gap: 12px;
+                padding-bottom: 14px;
+                margin-bottom: 16px;
+            }
+
+            .header h1 {
+                font-size: 18px;
+                line-height: 1.3;
+                word-break: break-word;
+            }
+
+            .header > div {
+                display: flex !important;
+                flex-wrap: wrap !important;
+                justify-content: space-between !important;
+                align-items: center !important;
+                gap: 8px !important;
+                width: 100% !important;
+            }
+
+            .header .btn-action,
+            .header .btn-logout {
+                padding: 8px 12px !important;
+                font-size: 12px !important;
+            }
+
+            /* Sync Banner */
+            .sync-banner {
+                flex-direction: column;
+                align-items: stretch;
+                gap: 10px;
+                padding: 12px;
+                font-size: 12px;
+                line-height: 1.4;
+            }
+
+            .sync-banner button {
+                width: 100% !important;
+                text-align: center !important;
+                padding: 8px 12px !important;
+            }
+
+            /* Universal Metrics Grid -> 2 columns on mobile */
+            .metrics-grid,
+            div[style*="repeat(auto-fit, minmax"],
+            div[style*="repeat(4, 1fr)"] {
+                grid-template-columns: 1fr 1fr !important;
+                gap: 8px !important;
+                margin-bottom: 16px !important;
+                margin-top: 10px !important;
+            }
+
+            .metric-card,
+            div[style*="border: 1px solid var(--card-border); border-radius: 10px; padding: 14px"],
+            div[style*="border: 1px solid var(--card-border); border-radius: 12px; padding: 16px"] {
+                padding: 12px 10px !important;
+                border-radius: 10px !important;
+            }
+
+            .metric-title {
+                font-size: 10px !important;
+                line-height: 1.2 !important;
+            }
+
+            .metric-val, .metric-value {
+                font-size: 20px !important;
+                margin-top: 4px !important;
+            }
+
+            /* Tab Navigation Pills */
+            .tab-bar {
+                gap: 6px;
+                padding-bottom: 8px;
+                margin-bottom: 14px;
+            }
+
+            .tab-btn {
+                padding: 8px 14px;
+                font-size: 12px;
+                border-radius: 8px;
+            }
+
+            .mobile-tab-selector-wrapper {
+                display: block !important;
+            }
+
+            /* Card Layout */
+            .card {
+                padding: 14px 12px !important;
+                border-radius: 12px !important;
+                margin-bottom: 14px !important;
+            }
+
+            .card-header {
+                flex-direction: column !important;
+                align-items: stretch !important;
+                gap: 10px !important;
+                margin-bottom: 14px !important;
+            }
+
+            .card-header h2 {
+                font-size: 17px !important;
+                line-height: 1.3 !important;
+            }
+
+            .card-header > div:last-child {
+                display: flex !important;
+                flex-wrap: wrap !important;
+                gap: 6px !important;
+                width: 100% !important;
+            }
+
+            .card-header .btn-action {
+                flex: 1 1 auto !important;
+                text-align: center !important;
+                justify-content: center !important;
+                padding: 9px 10px !important;
+                font-size: 12px !important;
+                margin: 0 !important;
+            }
+
+            /* All 2-Column Grids collapse to 1 column */
+            .gen-grid,
+            div[style*="grid-template-columns: 1fr 1fr"],
+            div[style*="grid-template-columns: 1fr auto"],
+            div[style*="grid-template-columns: 1fr 1fr;"] {
+                grid-template-columns: 1fr !important;
+                gap: 10px !important;
+            }
+
+            /* Prevent inputs, textareas, and monospace strings from overflowing */
+            input, select, textarea {
+                max-width: 100% !important;
+                min-width: 0 !important;
+            }
+
+            /* Tables Mobile Styling */
+            th, td {
+                padding: 10px 8px !important;
+                font-size: 12px !important;
+            }
+            th {
+                font-size: 11px !important;
+            }
+
+            /* Search Bars in Tables */
+            #dirSearchInput, #fleetClientSearchInput {
+                width: 100% !important;
+                margin: 8px 0 0 0 !important;
+            }
+
+            /* Filter Pill Bar */
+            .filter-pill {
+                padding: 6px 10px !important;
+                font-size: 11px !important;
+            }
+
+            /* Tab 6 Omnichannel Mobile Optimization */
+            .ce-reschedule-bar {
+                padding: 10px !important;
+            }
+
+            .ce-reschedule-chips {
+                grid-template-columns: 1fr 1fr !important;
+                gap: 6px !important;
+            }
+
+            .ce-reschedule-chips .btn-action {
+                width: 100% !important;
+                margin: 0 !important;
+                padding: 8px 4px !important;
+                font-size: 11px !important;
+                text-align: center !important;
+            }
+
+            .ce-action-buttons {
+                width: 100% !important;
+                display: flex !important;
+                flex-direction: column !important;
+                gap: 6px !important;
+            }
+
+            .ce-action-buttons .btn-action {
+                width: 100% !important;
+                text-align: center !important;
+                padding: 10px !important;
+                font-size: 13px !important;
+                margin: 0 !important;
+                justify-content: center !important;
+            }
+
+            .ce-input-grid {
+                grid-template-columns: 1fr !important;
+                gap: 10px !important;
+            }
+
+            #ownerChatWebhookInput, #ownerCeIngestUrl {
+                width: 100% !important;
+                min-width: 0 !important;
+                font-size: 12px !important;
+            }
+
+            /* Login Card Mobile */
+            .login-card {
+                padding: 24px 16px !important;
+                border-radius: 16px !important;
+                max-width: 100% !important;
+            }
+
+            .login-title {
+                font-size: 19px !important;
+            }
+        }
+
+        @media (max-width: 380px) {
+            .metrics-grid,
+            div[style*="repeat(auto-fit, minmax"],
+            div[style*="repeat(4, 1fr)"] {
+                grid-template-columns: 1fr !important;
+            }
+
+            .ce-reschedule-chips {
+                grid-template-columns: 1fr !important;
+            }
         }
     </style>
 </head>
@@ -432,6 +716,21 @@
         </div>
     </div>
 
+    <!-- Mobile Quick Section Selector -->
+    <div class="mobile-tab-selector-wrapper" style="display: none; margin-bottom: 12px;">
+        <label style="font-size: 11px; text-transform: uppercase; color: var(--muted); font-weight: 800; margin-bottom: 4px; display: block;">📍 Current Dashboard Section:</label>
+        <select id="mobileTabSelect" onchange="switchTab(parseInt(this.value))" style="width: 100%; background: #161B22; border: 1px solid var(--primary); color: #FFF; padding: 11px 14px; border-radius: 10px; font-size: 14px; font-weight: 700; outline: none;">
+            <option value="0">👥 Sales & License Directory</option>
+            <option value="1">🔑 Key Issuer & Verifier</option>
+            <option value="2">⚙️ Developer OTA & System Controls</option>
+            <option value="3">📰 AI Blog Engine</option>
+            <option value="4">🎫 Support Tickets</option>
+            <option value="5">🎙️ AI Voice Receptionist</option>
+            <option value="6">📢 Omnichannel Content Engine</option>
+            <option value="7">🏢 Agency Fleet Operations</option>
+        </select>
+    </div>
+
     <!-- Navigation Tabs -->
     <div class="tab-bar">
         <button id="tabBtn0" class="tab-btn active" onclick="switchTab(0)">👥 Sales & License Directory (<span id="countTab0">0</span>)</button>
@@ -471,22 +770,24 @@
             <input type="text" id="dirSearchInput" placeholder="🔍 Quick search client or key..." oninput="renderDashboard()" style="margin-left: auto; width: 220px; padding: 6px 12px; font-size: 12px; background: #161B22; border: 1px solid var(--card-border); border-radius: 8px; color: #FFF; outline: none;">
         </div>
 
-        <table>
-            <thead>
-                <tr>
-                    <th>Date</th>
-                    <th>Customer / Business</th>
-                    <th>Tier & License Key</th>
-                    <th>Bound Hardware Device ID</th>
-                    <th>Voice Add-On ($29/mo)</th>
-                    <th>Status & Revenue</th>
-                    <th>Actions</th>
-                </tr>
-            </thead>
-            <tbody id="registryBody">
-                <!-- Dynamically Rendered via JavaScript Store -->
-            </tbody>
-        </table>
+        <div class="table-responsive">
+            <table>
+                <thead>
+                    <tr>
+                        <th>Date</th>
+                        <th>Customer / Business</th>
+                        <th>Tier & License Key</th>
+                        <th>Bound Hardware Device ID</th>
+                        <th>Voice Add-On ($29/mo)</th>
+                        <th>Status & Revenue</th>
+                        <th>Actions</th>
+                    </tr>
+                </thead>
+                <tbody id="registryBody">
+                    <!-- Dynamically Rendered via JavaScript Store -->
+                </tbody>
+            </table>
+        </div>
     </div>
 
     <!-- TAB 1: Key Issuer & Verifier -->
@@ -874,20 +1175,22 @@
             </div>
 
             <!-- Blog Articles History Table -->
-            <table>
-                <thead>
-                    <tr>
-                        <th style="width: 110px;">Date</th>
-                        <th>Article Title & Summary</th>
-                        <th style="width: 170px;">Category</th>
-                        <th style="width: 100px;">Read Time</th>
-                        <th style="width: 200px; text-align: right;">Actions</th>
-                    </tr>
-                </thead>
-                <tbody id="blogHistoryTableBody">
-                    <tr><td colspan="5" style="text-align: center; color: var(--muted); padding: 24px;">Loading blog history...</td></tr>
-                </tbody>
-            </table>
+            <div class="table-responsive">
+                <table>
+                    <thead>
+                        <tr>
+                            <th style="width: 110px;">Date</th>
+                            <th>Article Title & Summary</th>
+                            <th style="width: 170px;">Category</th>
+                            <th style="width: 100px;">Read Time</th>
+                            <th style="width: 200px; text-align: right;">Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody id="blogHistoryTableBody">
+                        <tr><td colspan="5" style="text-align: center; color: var(--muted); padding: 24px;">Loading blog history...</td></tr>
+                    </tbody>
+                </table>
+            </div>
         </div>
     </div>
 
@@ -978,21 +1281,23 @@
             </div>
         </div>
 
-        <table>
-            <thead>
-                <tr>
-                    <th>Date / Ticket ID</th>
-                    <th>Customer Details</th>
-                    <th>Category & Priority</th>
-                    <th>Subject & Message</th>
-                    <th>Status</th>
-                    <th>Actions</th>
-                </tr>
-            </thead>
-            <tbody id="ticketsTableBody">
-                <tr><td colspan="6" style="text-align: center; color: var(--muted); padding: 24px;">Click "Refresh Tickets" or open this tab to fetch tickets.</td></tr>
-            </tbody>
-        </table>
+        <div class="table-responsive">
+            <table>
+                <thead>
+                    <tr>
+                        <th>Date / Ticket ID</th>
+                        <th>Customer Details</th>
+                        <th>Category & Priority</th>
+                        <th>Subject & Message</th>
+                        <th>Status</th>
+                        <th>Actions</th>
+                    </tr>
+                </thead>
+                <tbody id="ticketsTableBody">
+                    <tr><td colspan="6" style="text-align: center; color: var(--muted); padding: 24px;">Click "Refresh Tickets" or open this tab to fetch tickets.</td></tr>
+                </tbody>
+            </table>
+        </div>
     </div>
 
     <!-- TAB 5: Live Vapi Voice AI Operations Console -->
@@ -1132,21 +1437,23 @@
             <button class="btn-action" style="font-size: 12px;" onclick="loadVoiceDashboard()">🔄 Refresh Subscribers</button>
         </div>
 
-        <table style="margin-bottom: 24px;">
-            <thead>
-                <tr>
-                    <th>Customer</th>
-                    <th>Bound Pro License Key</th>
-                    <th>Inbound Line & Carrier Code</th>
-                    <th>Monthly Quota</th>
-                    <th>Status</th>
-                    <th>Actions</th>
-                </tr>
-            </thead>
-            <tbody id="vapiSubscribersTableBody">
-                <tr><td colspan="6" style="text-align: center; color: var(--muted); padding: 20px;">Loading active voice subscribers...</td></tr>
-            </tbody>
-        </table>
+        <div class="table-responsive">
+            <table style="margin-bottom: 0;">
+                <thead>
+                    <tr>
+                        <th>Customer</th>
+                        <th>Bound Pro License Key</th>
+                        <th>Inbound Line & Carrier Code</th>
+                        <th>Monthly Quota</th>
+                        <th>Status</th>
+                        <th>Actions</th>
+                    </tr>
+                </thead>
+                <tbody id="vapiSubscribersTableBody">
+                    <tr><td colspan="6" style="text-align: center; color: var(--muted); padding: 20px;">Loading active voice subscribers...</td></tr>
+                </tbody>
+            </table>
+        </div>
 
         <!-- Row 5: Voice Call Inbox & Captured Leads -->
         <div class="card-header" style="border-top: 1px solid var(--card-border); padding-top: 20px; margin-top: 10px;">
@@ -1157,21 +1464,23 @@
             <button class="btn-action" style="font-size: 12px;" onclick="loadVoiceDashboard()">🔄 Refresh Inbox</button>
         </div>
 
-        <table>
-            <thead>
-                <tr>
-                    <th>Date / Time</th>
-                    <th>Caller Info</th>
-                    <th>Urgency & Category</th>
-                    <th>AI Call Summary & Address</th>
-                    <th>Audio Recording</th>
-                    <th>Transcript & SMS Status</th>
-                </tr>
-            </thead>
-            <tbody id="voiceCallsTableBody">
-                <tr><td colspan="6" style="text-align: center; color: var(--muted); padding: 24px;">Loading voice call logs...</td></tr>
-            </tbody>
-        </table>
+        <div class="table-responsive">
+            <table>
+                <thead>
+                    <tr>
+                        <th>Date / Time</th>
+                        <th>Caller Info</th>
+                        <th>Urgency & Category</th>
+                        <th>AI Call Summary & Address</th>
+                        <th>Audio Recording</th>
+                        <th>Transcript & SMS Status</th>
+                    </tr>
+                </thead>
+                <tbody id="voiceCallsTableBody">
+                    <tr><td colspan="6" style="text-align: center; color: var(--muted); padding: 24px;">Loading voice call logs...</td></tr>
+                </tbody>
+            </table>
+        </div>
     </div>
 
     <!-- TAB 6: Omnichannel Content Engine & Auto-Publisher -->
@@ -1253,8 +1562,8 @@
                 </ol>
             </div>
 
-            <div style="display: grid; grid-template-columns: 1fr auto; gap: 12px;">
-                <input type="text" id="ownerChatWebhookInput" class="form-control" placeholder="https://chat.googleapis.com/v1/spaces/.../messages?key=...&token=..." style="margin: 0; font-family: monospace; font-size: 12px;">
+            <div class="ce-input-grid" style="display: grid; grid-template-columns: 1fr auto; gap: 12px;">
+                <input type="text" id="ownerChatWebhookInput" class="form-control" placeholder="https://chat.googleapis.com/v1/spaces/.../messages?key=...&token=..." style="margin: 0; font-family: monospace; font-size: 12px; min-width: 0; width: 100%;">
                 <button class="btn-action btn-primary-action" onclick="saveAndTestGoogleChatWebhookFromOwner()">
                     Save & Send Test Card
                 </button>
@@ -1280,7 +1589,7 @@
                         Posts will automatically publish when their scheduled time arrives, provided you have approved them.
                     </div>
                 </div>
-                <div style="display: flex; gap: 8px;">
+                <div style="display: flex; gap: 8px; flex-wrap: wrap;">
                     <button class="btn-action btn-sm" onclick="promptFastAngleGeneration()">✨ Generate 3 New Angles</button>
                     <button class="btn-action btn-sm" onclick="loadContentEngineDashboard()">🔄 Refresh Queue</button>
                 </div>
@@ -1297,8 +1606,8 @@
             <h3 style="font-size: 16px; color: #FFF; margin-bottom: 14px; display: flex; align-items: center; gap: 8px;">
                 <span>📥</span> YouTube & Competitor Research Ingestion (0 API Tokens)
             </h3>
-            <div style="display: grid; grid-template-columns: 1fr auto; gap: 12px; max-width: 800px;">
-                <input type="text" id="ownerCeIngestUrl" class="form-control" placeholder="Paste YouTube Video URL or ID (e.g. https://www.youtube.com/watch?v=...)" style="margin: 0;">
+            <div class="ce-input-grid" style="display: grid; grid-template-columns: 1fr auto; gap: 12px; max-width: 800px;">
+                <input type="text" id="ownerCeIngestUrl" class="form-control" placeholder="Paste YouTube Video URL or ID (e.g. https://www.youtube.com/watch?v=...)" style="margin: 0; min-width: 0; width: 100%;">
                 <button class="btn-action btn-primary-action" id="btnOwnerCeIngest" onclick="triggerIngestFromOwner()">
                     Scrape & Transcribe
                 </button>
@@ -1354,22 +1663,24 @@
             <button class="btn-action" style="font-size: 12px;" onclick="promptCreateAgencyPartner()">+ New Partner</button>
         </div>
 
-        <table style="margin-bottom: 30px;">
-            <thead>
-                <tr>
-                    <th>Agency Partner</th>
-                    <th>Master License Key</th>
-                    <th>Tier & Pricing</th>
-                    <th>Seat Quota Utilization</th>
-                    <th>Voice Pool (Mins)</th>
-                    <th>Status</th>
-                    <th>Actions</th>
-                </tr>
-            </thead>
-            <tbody id="agencyPartnersTableBody">
-                <tr><td colspan="7" style="text-align: center; color: var(--muted); padding: 24px;">Loading agency partner accounts...</td></tr>
-            </tbody>
-        </table>
+        <div class="table-responsive">
+            <table style="margin-bottom: 0;">
+                <thead>
+                    <tr>
+                        <th>Agency Partner</th>
+                        <th>Master License Key</th>
+                        <th>Tier & Pricing</th>
+                        <th>Seat Quota Utilization</th>
+                        <th>Voice Pool (Mins)</th>
+                        <th>Status</th>
+                        <th>Actions</th>
+                    </tr>
+                </thead>
+                <tbody id="agencyPartnersTableBody">
+                    <tr><td colspan="7" style="text-align: center; color: var(--muted); padding: 24px;">Loading agency partner accounts...</td></tr>
+                </tbody>
+            </table>
+        </div>
 
         <!-- SECTION 2: All Deployed Client Appliances Table -->
         <div class="card-header" style="border-top: 1px solid var(--card-border); padding-top: 20px;">
@@ -1380,22 +1691,24 @@
             <input type="text" id="fleetClientSearchInput" placeholder="🔍 Search client appliance or key..." oninput="filterFleetClientsTable()" style="width: 260px; padding: 6px 12px; font-size: 12px; background: #161B22; border: 1px solid var(--card-border); border-radius: 8px; color: #FFF; outline: none;">
         </div>
 
-        <table>
-            <thead>
-                <tr>
-                    <th>Client Business</th>
-                    <th>Parent Agency</th>
-                    <th>Appliance Key</th>
-                    <th>Bound Hardware ID</th>
-                    <th>Voice Usage</th>
-                    <th>Status</th>
-                    <th>Actions</th>
-                </tr>
-            </thead>
-            <tbody id="fleetClientsTableBody">
-                <tr><td colspan="7" style="text-align: center; color: var(--muted); padding: 24px;">Loading deployed client appliances...</td></tr>
-            </tbody>
-        </table>
+        <div class="table-responsive">
+            <table>
+                <thead>
+                    <tr>
+                        <th>Client Business</th>
+                        <th>Parent Agency</th>
+                        <th>Appliance Key</th>
+                        <th>Bound Hardware ID</th>
+                        <th>Voice Usage</th>
+                        <th>Status</th>
+                        <th>Actions</th>
+                    </tr>
+                </thead>
+                <tbody id="fleetClientsTableBody">
+                    <tr><td colspan="7" style="text-align: center; color: var(--muted); padding: 24px;">Loading deployed client appliances...</td></tr>
+                </tbody>
+            </table>
+        </div>
     </div>
 </div>
 
@@ -1678,10 +1991,30 @@
         if (sessionStorage.getItem("owner_authenticated") === "true") {
             document.getElementById("loginContainer").style.display = "none";
             document.getElementById("dashboardContainer").style.display = "block";
-            renderDashboard();
             loadBlogCount();
             loadTicketCount();
             syncMasterLicensesFromServer(true);
+
+            // Auto-detect tab from query param e.g. /owner?tab=6 or /owner?tab=content
+            const urlParams = new URLSearchParams(window.location.search);
+            const tabParam = urlParams.get('tab');
+            if (tabParam !== null) {
+                let targetIdx = parseInt(tabParam);
+                if (isNaN(targetIdx)) {
+                    const norm = tabParam.toLowerCase();
+                    if (norm.includes('content') || norm.includes('omnichannel') || norm.includes('marketing')) targetIdx = 6;
+                    else if (norm.includes('voice')) targetIdx = 5;
+                    else if (norm.includes('ticket') || norm.includes('support')) targetIdx = 4;
+                    else if (norm.includes('blog')) targetIdx = 3;
+                    else if (norm.includes('ota') || norm.includes('system') || norm.includes('dev')) targetIdx = 2;
+                    else if (norm.includes('key') || norm.includes('issue')) targetIdx = 1;
+                    else if (norm.includes('fleet') || norm.includes('agency')) targetIdx = 7;
+                    else targetIdx = 0;
+                }
+                switchTab(targetIdx);
+            } else {
+                renderDashboard();
+            }
         } else {
             document.getElementById("loginContainer").style.display = "flex";
             document.getElementById("dashboardContainer").style.display = "none";
@@ -1716,8 +2049,20 @@
         });
 
         btns.forEach((btn, i) => {
-            btn.classList.toggle("active", i === index);
+            const isActive = (i === index);
+            btn.classList.toggle("active", isActive);
+            if (isActive) {
+                try {
+                    btn.scrollIntoView({ behavior: 'smooth', inline: 'center', block: 'nearest' });
+                } catch (e) {}
+            }
         });
+
+        // Keep mobile dropdown selector in sync
+        const mobileSelect = document.getElementById("mobileTabSelect");
+        if (mobileSelect && mobileSelect.value != index) {
+            mobileSelect.value = index;
+        }
 
         if (index === 0) {
             renderDashboard();
@@ -1921,39 +2266,39 @@
             }
 
             return `
-                <div style="background: #11151F; border: 1px solid ${isApproved ? 'rgba(0, 230, 118, 0.4)' : 'var(--card-border)'}; border-radius: 14px; padding: 18px; position: relative;">
-                    <div style="display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 10px; flex-wrap: wrap; gap: 8px;">
-                        <div>
+                <div class="ce-post-card" style="background: #11151F; border: 1px solid ${isApproved ? 'rgba(0, 230, 118, 0.4)' : 'var(--card-border)'}; border-radius: 14px; padding: 18px; position: relative;">
+                    <div class="ce-post-header" style="display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 10px; flex-wrap: wrap; gap: 8px;">
+                        <div style="flex: 1; min-width: 180px;">
                             <span style="font-size: 11px; font-weight: 800; color: var(--primary); text-transform: uppercase; letter-spacing: 0.5px;">${post.niche || 'General Trade'} • ${post.format || 'Story'}</span>
-                            <div style="font-size: 16px; font-weight: 800; color: #FFF; margin-top: 2px;">${escapeHtml(post.title)}</div>
+                            <div style="font-size: 16px; font-weight: 800; color: #FFF; margin-top: 2px; word-break: break-word;">${escapeHtml(post.title)}</div>
                         </div>
                         <div>${approvalStatusBadge}</div>
                     </div>
 
-                    <div style="background: #090B0E; border-left: 3px solid ${isApproved ? 'var(--primary)' : 'var(--warning)'}; padding: 10px 14px; border-radius: 0 8px 8px 0; font-size: 13px; font-style: italic; color: #E6EDF3; margin-bottom: 12px;">
+                    <div style="background: #090B0E; border-left: 3px solid ${isApproved ? 'var(--primary)' : 'var(--warning)'}; padding: 10px 14px; border-radius: 0 8px 8px 0; font-size: 13px; font-style: italic; color: #E6EDF3; margin-bottom: 12px; word-break: break-word;">
                         "${escapeHtml(post.hook)}"
                     </div>
 
                     <!-- Reschedule Controls Bar -->
-                    <div style="display: flex; align-items: center; justify-content: space-between; background: #161C27; border: 1px solid var(--card-border); border-radius: 10px; padding: 10px 14px; margin-bottom: 14px; flex-wrap: wrap; gap: 10px;">
-                        <div style="display: flex; align-items: center; gap: 8px; flex-wrap: wrap;">
-                            <span style="font-size: 12px; font-weight: 700; color: var(--muted); text-transform: uppercase;">📅 Scheduled For:</span>
-                            <input type="datetime-local" value="${dtLocalValue}" style="background: #090B0E; border: 1px solid var(--card-border); color: #FFF; font-size: 12px; padding: 6px 10px; border-radius: 6px; font-weight: bold; outline: none;" onchange="reschedulePostFromUi('${post.id}', this.value)" ${isPublished ? 'disabled' : ''}>
+                    <div class="ce-reschedule-bar" style="background: #161C27; border: 1px solid var(--card-border); border-radius: 10px; padding: 12px; margin-bottom: 14px;">
+                        <div style="display: flex; flex-direction: column; gap: 6px; margin-bottom: 10px;">
+                            <span style="font-size: 11px; font-weight: 700; color: var(--muted); text-transform: uppercase;">📅 Scheduled For:</span>
+                            <input type="datetime-local" value="${dtLocalValue}" style="background: #090B0E; border: 1px solid var(--card-border); color: #FFF; font-size: 13px; padding: 8px 12px; border-radius: 6px; font-weight: bold; outline: none; width: 100%; min-width: 0; box-sizing: border-box;" onchange="reschedulePostFromUi('${post.id}', this.value)" ${isPublished ? 'disabled' : ''}>
                         </div>
-                        <div style="display: flex; gap: 6px; flex-wrap: wrap;">
-                            <button class="btn-action btn-sm" style="font-size: 11px; padding: 4px 8px;" onclick="quickReschedulePost('${post.id}', 24)" ${isPublished ? 'disabled' : ''}>+24h (Tomorrow)</button>
-                            <button class="btn-action btn-sm" style="font-size: 11px; padding: 4px 8px;" onclick="quickReschedulePost('${post.id}', 48)" ${isPublished ? 'disabled' : ''}>+48h</button>
-                            <button class="btn-action btn-sm" style="font-size: 11px; padding: 4px 8px;" onclick="quickSetTomorrowSlot('${post.id}', 9)" ${isPublished ? 'disabled' : ''}>Tomorrow 9 AM</button>
-                            <button class="btn-action btn-sm" style="font-size: 11px; padding: 4px 8px;" onclick="quickSetTomorrowSlot('${post.id}', 13)" ${isPublished ? 'disabled' : ''}>Tomorrow 1 PM</button>
+                        <div class="ce-reschedule-chips" style="display: grid; grid-template-columns: repeat(auto-fit, minmax(130px, 1fr)); gap: 6px;">
+                            <button class="btn-action btn-sm" style="font-size: 11px; padding: 7px 6px; margin: 0; text-align: center;" onclick="quickReschedulePost('${post.id}', 24)" ${isPublished ? 'disabled' : ''}>+24h (Tomorrow)</button>
+                            <button class="btn-action btn-sm" style="font-size: 11px; padding: 7px 6px; margin: 0; text-align: center;" onclick="quickReschedulePost('${post.id}', 48)" ${isPublished ? 'disabled' : ''}>+48h</button>
+                            <button class="btn-action btn-sm" style="font-size: 11px; padding: 7px 6px; margin: 0; text-align: center;" onclick="quickSetTomorrowSlot('${post.id}', 9)" ${isPublished ? 'disabled' : ''}>Tomorrow 9 AM</button>
+                            <button class="btn-action btn-sm" style="font-size: 11px; padding: 7px 6px; margin: 0; text-align: center;" onclick="quickSetTomorrowSlot('${post.id}', 13)" ${isPublished ? 'disabled' : ''}>Tomorrow 1 PM</button>
                         </div>
                     </div>
 
                     <!-- Action Buttons -->
-                    <div style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 10px;">
-                        <div style="font-size: 12px; color: var(--muted);">
-                            Channels: <strong style="color: #FFF;">${(post.channelTargets || ['blog']).join(', ')}</strong> • 3-Day Trial CTA included
+                    <div class="ce-actions-bar" style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 10px;">
+                        <div style="font-size: 12px; color: var(--muted); min-width: 180px;">
+                            Channels: <strong style="color: #FFF;">${(post.channelTargets || ['blog']).join(', ')}</strong> • 3-Day Trial CTA
                         </div>
-                        <div style="display: flex; gap: 8px; flex-wrap: wrap;">
+                        <div class="ce-action-buttons" style="display: flex; gap: 8px; flex-wrap: wrap;">
                             <button class="btn-action btn-sm" onclick="sendChatCardFromOwner('${post.id}')">💬 Google Chat Card</button>
                             ${!isPublished && !isApproved ? `<button class="btn-action btn-primary-action btn-sm" onclick="approvePostFromOwner('${post.id}')">✓ Approve For Auto-Publish</button>` : ''}
                             ${!isPublished && isApproved ? `<button class="btn-action btn-sm" style="color: var(--warning); border-color: var(--warning);" onclick="unapprovePostFromOwner('${post.id}')">Pause Approval</button>` : ''}
@@ -4792,6 +5137,19 @@ To transfer to a new device at any time, contact your agency administrator.
         });
     }
 
+    // Ensure any tables inside cards are wrapped with .table-responsive for complete mobile safety
+    function ensureResponsiveTables() {
+        document.querySelectorAll('.card table').forEach(tbl => {
+            if (!tbl.parentElement.classList.contains('table-responsive')) {
+                const wrap = document.createElement('div');
+                wrap.className = 'table-responsive';
+                tbl.parentNode.insertBefore(wrap, tbl);
+                wrap.appendChild(tbl);
+            }
+        });
+    }
+
+    ensureResponsiveTables();
     checkAuth();
 </script>
 

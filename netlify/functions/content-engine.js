@@ -194,7 +194,7 @@ exports.handler = async (event) => {
     <div class="badge">✔ APPROVED FOR PUBLICATION</div>
     <h1>Post Successfully Approved</h1>
     <p>This post is now armed for autonomous release across your configured marketing channels (Blog, Facebook, and Instagram).</p>
-    <a href="/owner" class="btn">Open Owner Admin Portal</a>
+    <a href="/owner?tab=6" class="btn">Open Omnichannel Queue & Dashboard</a>
   </div>
 </body>
 </html>`
@@ -241,7 +241,7 @@ exports.handler = async (event) => {
                         {
                           text: "👁️ Open Admin Portal",
                           onClick: {
-                            openLink: { url: "https://missedcallautosms.com/owner" }
+                            openLink: { url: "https://missedcallautosms.com/owner?tab=6" }
                           }
                         }
                       ]

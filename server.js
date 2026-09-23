@@ -3594,7 +3594,7 @@ const server = http.createServer((req, res) => {
                         {
                           text: "👁️ Review in Dashboard",
                           onClick: {
-                            openLink: { url: "https://missedcallautosms.com/owner" }
+                            openLink: { url: "https://missedcallautosms.com/owner?tab=6" }
                           }
                         }
                       ]
@@ -3684,7 +3684,7 @@ const server = http.createServer((req, res) => {
     <h1>Post Successfully Approved</h1>
     <div class="title-box">${post.title}</div>
     <p>This post is now armed for autonomous release according to your schedule (Blog, Facebook, and Instagram).</p>
-    <a href="/owner-admin" class="btn">Open Owner Admin Portal</a>
+    <a href="/owner?tab=6" class="btn">Open Omnichannel Queue & Dashboard</a>
   </div>
 </body>
 </html>`);
@@ -3820,7 +3820,7 @@ function runOmnichannelSchedulerBackgroundCheck() {
                           {
                             text: "👁️ Review in Dashboard",
                             onClick: {
-                              openLink: { url: "https://missedcallautosms.com/owner" }
+                              openLink: { url: "https://missedcallautosms.com/owner?tab=6" }
                             }
                           }
                         ]
