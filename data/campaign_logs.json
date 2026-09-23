@@ -1,0 +1,24 @@
+[
+  {
+    "campaign": "ugc_new_pricing_launch",
+    "timestamp": "2026-09-20T14:41:29.106Z",
+    "assets": {
+      "feedImage": "https://raw.githubusercontent.com/anthonyfullerink-ai/MCASMS/main/assets/social/ugc-feed-post-missed-call.jpg",
+      "reelVideo": "https://raw.githubusercontent.com/anthonyfullerink-ai/MCASMS/main/assets/ads/v150_ai_voice_launch_reel_9x16.mp4",
+      "reelCover": "https://raw.githubusercontent.com/anthonyfullerink-ai/MCASMS/main/assets/social/ugc-reel-cover-contractor.jpg"
+    },
+    "results": {
+      "feed": {
+        "fbId": "122099994327483785",
+        "igId": "18225247966330337"
+      },
+      "reel": {
+        "fbId": "2194788611081679",
+        "igReelId": "17972392041143844"
+      },
+      "story": {
+        "igStoryId": "17930934768404974"
+      }
+    }
+  }
+]

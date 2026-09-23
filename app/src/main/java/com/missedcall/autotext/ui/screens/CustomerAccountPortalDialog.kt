@@ -61,12 +61,9 @@ fun CustomerAccountPortalDialog(
     var isEditingKey by remember { mutableStateOf(false) }
     var showCancelTrialConfirm by remember { mutableStateOf(false) }
     var isCancellingTrial by remember { mutableStateOf(false) }
-    var customGreetingInput by remember {
-        mutableStateOf(settings.voiceReceptionistGreeting.ifBlank { "Thanks for calling ${settings.businessName}! How can I help you today?" })
-    }
-    var isSavingGreeting by remember { mutableStateOf(false) }
     var showCancelVoiceConfirm by remember { mutableStateOf(false) }
     var isCancellingVoice by remember { mutableStateOf(false) }
+
 
     val isCancelled = settings.subscriptionStatus == "CANCELLED"
     val isTrial = settings.subscriptionStatus == "TRIAL" || settings.licenseKey.contains("TRIAL", ignoreCase = true)
@@ -598,100 +595,48 @@ fun CustomerAccountPortalDialog(
                         }
                     }
 
-                    // Card 5: Turnkey AI Voice Receptionist Greeting Configuration
+                    // Card 5: AI Voice Greeting — managed in Prompt Studio (no duplicate here)
                     item {
                         Card(
-                            colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.5f)),
+                            colors = CardDefaults.cardColors(containerColor = Color(0xFF1E1B4B).copy(alpha = 0.5f)),
+                            border = androidx.compose.foundation.BorderStroke(1.dp, Color(0xFF6366F1).copy(alpha = 0.4f)),
                             shape = RoundedCornerShape(16.dp)
                         ) {
-                            Column(modifier = Modifier.padding(16.dp)) {
-                                Row(verticalAlignment = Alignment.CenterVertically) {
-                                    Icon(
-                                        Icons.Default.RecordVoiceOver,
-                                        contentDescription = null,
-                                        tint = MaterialTheme.colorScheme.primary
-                                    )
-                                    Spacer(modifier = Modifier.width(8.dp))
+                            Row(
+                                modifier = Modifier
+                                    .fillMaxWidth()
+                                    .padding(16.dp),
+                                verticalAlignment = Alignment.CenterVertically,
+                                horizontalArrangement = Arrangement.spacedBy(12.dp)
+                            ) {
+                                Icon(
+                                    Icons.Default.RecordVoiceOver,
+                                    contentDescription = null,
+                                    tint = Color(0xFFA5B4FC),
+                                    modifier = Modifier.size(28.dp)
+                                )
+                                Column(modifier = Modifier.weight(1f)) {
                                     Text(
-                                        text = "AI Voice Receptionist Greeting",
+                                        text = "AI Voice Greeting & Persona",
                                         style = MaterialTheme.typography.titleSmall,
-                                        fontWeight = FontWeight.Bold
+                                        fontWeight = FontWeight.Bold,
+                                        color = Color(0xFFE0E7FF)
+                                    )
+                                    Text(
+                                        text = "Edit your AI receptionist's greeting, name, and busy status in the Prompts tab → AI Voice Persona.",
+                                        style = MaterialTheme.typography.bodySmall,
+                                        color = Color(0xFFA5B4FC)
                                     )
                                 }
-
-                                Spacer(modifier = Modifier.height(6.dp))
-
-                                Text(
-                                    text = "Customize the introductory greeting spoken by your AI receptionist when an unanswered call forwards to your Vapi agent.",
-                                    style = MaterialTheme.typography.bodySmall,
-                                    color = MaterialTheme.colorScheme.onSurfaceVariant
+                                Icon(
+                                    Icons.Default.ChevronRight,
+                                    contentDescription = null,
+                                    tint = Color(0xFF6366F1)
                                 )
-
-                                Spacer(modifier = Modifier.height(12.dp))
-
-                                OutlinedTextField(
-                                    value = customGreetingInput,
-                                    onValueChange = { customGreetingInput = it },
-                                    label = { Text("Opening AI Greeting") },
-                                    placeholder = { Text("Thanks for calling ${settings.businessName}! How can I help you today?") },
-                                    modifier = Modifier.fillMaxWidth(),
-                                    maxLines = 3
-                                )
-
-                                Spacer(modifier = Modifier.height(12.dp))
-
-                                Button(
-                                    onClick = {
-                                        isSavingGreeting = true
-                                        coroutineScope.launch {
-                                            withContext(Dispatchers.IO) {
-                                                try {
-                                                    val endpoint = if (settings.remoteUpdateUrl.contains("localhost") || settings.remoteUpdateUrl.contains("10.0.")) {
-                                                        "http://10.0.2.2:8000/api/vapi/custom-greeting"
-                                                    } else {
-                                                        "https://missedcallautosms.com/api/vapi/custom-greeting"
-                                                    }
-                                                    val url = URL(endpoint)
-                                                    val conn = url.openConnection() as HttpURLConnection
-                                                    conn.requestMethod = "POST"
-                                                    conn.doOutput = true
-                                                    conn.setRequestProperty("Content-Type", "application/json; charset=utf-8")
-                                                    conn.connectTimeout = 7000
-                                                    conn.readTimeout = 7000
-                                                    val safeBusiness = businessNameInput.replace("\"", "\\\"")
-                                                    val safeGreeting = customGreetingInput.replace("\"", "\\\"")
-                                                    val payload = """{"businessName":"$safeBusiness","customGreeting":"$safeGreeting"}"""
-                                                    conn.outputStream.use { it.write(payload.toByteArray(StandardCharsets.UTF_8)) }
-                                                    conn.responseCode
-                                                } catch (e: Exception) {
-                                                    // local fallback
-                                                }
-                                            }
-                                            onSettingsChanged(settings.copy(voiceReceptionistGreeting = customGreetingInput))
-                                            isSavingGreeting = false
-                                            Toast.makeText(context, "✅ AI Voice Receptionist greeting updated!", Toast.LENGTH_SHORT).show()
-                                        }
-                                    },
-                                    enabled = !isSavingGreeting,
-                                    modifier = Modifier.align(Alignment.End)
-                                ) {
-                                    if (isSavingGreeting) {
-                                        CircularProgressIndicator(
-                                            modifier = Modifier.size(16.dp),
-                                            color = Color.White,
-                                            strokeWidth = 2.dp
-                                        )
-                                        Spacer(modifier = Modifier.width(6.dp))
-                                        Text("Saving...")
-                                    } else {
-                                        Icon(Icons.Default.Save, contentDescription = null, modifier = Modifier.size(18.dp))
-                                        Spacer(modifier = Modifier.width(6.dp))
-                                        Text("Save Greeting")
-                                    }
-                                }
                             }
                         }
                     }
+
 
                     // Card 6: Voice Pro ($29/mo) Subscription & Automatic Carrier Rollback
                     item {

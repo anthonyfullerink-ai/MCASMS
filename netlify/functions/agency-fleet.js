@@ -74,13 +74,13 @@ function verifyAgencyKey(key) {
 
   // Demo keys
   if (trimmed === 'MCAS-AGENCY-DEMO-89F2' || trimmed === 'MCAS-AGENCY-5-DEMO-89F2') {
-    return { valid: true, agencyName: 'Offgrid Media Demo Agency', quota: 5, tier: 'agency_5', masterKey: trimmed };
+    return { valid: true, agencyName: 'Offgrid Media Demo Agency', quota: 5, tier: 'agency_5', masterKey: 'MCAS-AGENCY-DEMO-89F2' };
   }
   if (trimmed === 'MCAS-AGENCY-10-DEMO-89F2' || trimmed === 'MCAS-AGENCY-PRO-DEMO-89F2') {
-    return { valid: true, agencyName: 'Offgrid Media Fleet Agency', quota: 10, tier: 'agency_10', masterKey: trimmed };
+    return { valid: true, agencyName: 'Offgrid Media Fleet Agency', quota: 10, tier: 'agency_10', masterKey: 'MCAS-AGENCY-10-DEMO-89F2' };
   }
   if (trimmed === 'MCAS-AGENCY-ENT-DEMO-89F2') {
-    return { valid: true, agencyName: 'Enterprise Demo Agency', quota: 999, tier: 'agency_enterprise', masterKey: trimmed };
+    return { valid: true, agencyName: 'Enterprise Demo Agency', quota: 999, tier: 'agency_enterprise', masterKey: 'MCAS-AGENCY-ENT-DEMO-89F2' };
   }
 
   // Format: MCAS-AGENCY-{5|10|ENT}-{payloadHex}-{sig}
@@ -284,12 +284,43 @@ exports.handler = async (event) => {
 
     const setupSheet = buildSetupSheet(clientName, childProKey, agencyRecord.branding);
 
+    // Mirror to master_licenses.json for global dev dashboard tracking
+    try {
+      const MASTER_LICENSES_PATH = path.join(__dirname, '../../data/master_licenses.json');
+      let masterList = [];
+      if (fs.existsSync(MASTER_LICENSES_PATH)) {
+        masterList = JSON.parse(fs.readFileSync(MASTER_LICENSES_PATH, 'utf8'));
+      }
+      const existingIdx = masterList.findIndex(m => m.key === childProKey);
+      const masterRecord = {
+        key: childProKey,
+        customer: `${clientName} (Fleet: ${agencyRecord.agencyName || 'Agency'})`,
+        email: clientContact || '',
+        tier: 'PRO',
+        type: 'AGENCY_FLEET',
+        price: '$0.00 (Agency Seat)',
+        voiceActive: false,
+        voiceNumber: null,
+        carrierCode: null,
+        status: 'ACTIVE',
+        agencyKey: agencyId,
+        agencyName: agencyRecord.agencyName,
+        date: new Date().toISOString()
+      };
+      if (existingIdx >= 0) masterList[existingIdx] = masterRecord;
+      else masterList.unshift(masterRecord);
+      fs.writeFileSync(MASTER_LICENSES_PATH, JSON.stringify(masterList, null, 2), 'utf8');
+    } catch (e) {
+      console.warn('[agency-fleet] master_licenses mirror warning:', e.message);
+    }
+
     return {
       statusCode: 200,
       headers,
       body: JSON.stringify({
         success: true,
         client: newClient,
+        clients: agencyRecord.clients,
         setupSheet,
         usedSeats: agencyRecord.clients.length,
         remainingSeats: agencyRecord.quota - agencyRecord.clients.length
@@ -402,7 +433,25 @@ exports.handler = async (event) => {
       return { statusCode: 404, headers, body: JSON.stringify({ error: 'License key not found in your fleet' }) };
     }
 
+    if (!Array.isArray(fleetCache._revokedKeys)) fleetCache._revokedKeys = [];
+    if (!fleetCache._revokedKeys.includes(keyToRevoke)) {
+      fleetCache._revokedKeys.push(keyToRevoke);
+    }
+
     saveFleetCache(fleetCache);
+
+    // Also mirror revocation to master_licenses.json
+    try {
+      const MASTER_LICENSES_PATH = path.join(__dirname, '../../data/master_licenses.json');
+      if (fs.existsSync(MASTER_LICENSES_PATH)) {
+        const masterList = JSON.parse(fs.readFileSync(MASTER_LICENSES_PATH, 'utf8'));
+        const m = masterList.find(r => r.key === keyToRevoke);
+        if (m) {
+          m.status = 'REVOKED';
+          fs.writeFileSync(MASTER_LICENSES_PATH, JSON.stringify(masterList, null, 2), 'utf8');
+        }
+      }
+    } catch (e) {}
 
     return {
       statusCode: 200,

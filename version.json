@@ -3,8 +3,8 @@
   "versionName": "1.6.1",
   "downloadUrl": "https://raw.githubusercontent.com/anthonyfullerink-ai/MCASMS/main/MissedCallAutoSMS.apk",
   "proDownloadUrl": "https://raw.githubusercontent.com/anthonyfullerink-ai/MCASMS/main/MissedCallAutoSMS-Pro.apk",
-  "releaseNotes": "• ✨ UI Declutter & Polish — streamlined Dashboard, Voice Hub, and Settings menus with zero redundancy\n• 📱 Responsive Chip Layouts — dynamic FlowRow wrapping prevents text clipping on all screen sizes\n• 🎙️ Unified Prompt & AI Studio — one centralized hub for Missed-Call SMS, AI Voice persona/greetings, and Post-Call SMS with live interactive preview bubbles\n• ⏱️ Real-Time Minute Quota & Metering — live tracking of pooled voice minutes and automated overage billing\n• 🛡️ Hardware appliance cryptographic lock & anti-piracy licensing protection",
-  "mandatory": true,
-  "minSupportedVersion": 15,
-  "updatedAt": "2026-09-20T04:30:00.000Z"
+  "releaseNotes": "✅ Autonomous Daily Social Posts — 9AM blog, 12:30PM feed, 6PM reel+story fire automatically every day\n✅ Fixed stale content cache — AI now generates a fresh topic bundle each morning\n✅ Blog articles now automatically cross-post to Facebook & Instagram immediately after publishing\n✅ Nav bar reorganized into clean dropdown menus (Plans, For Business, Learn)\n✅ App: Removed duplicate AI greeting field — one unified source in Prompt Studio\n✅ App: Busy Status chips (Hands Full, On a Job, etc.) now instantly update what Riley tells callers live\n• 🎙️ Unified Prompt & AI Studio — one centralized hub for Missed-Call SMS, AI Voice persona/greetings, and Post-Call SMS with live interactive preview bubbles\n• ⏱️ Real-Time Minute Quota & Metering — live tracking of pooled voice minutes and automated overage billing\n• 🛡️ Hardware appliance cryptographic lock & anti-piracy licensing protection",
+  "mandatory": false,
+  "minSupportedVersion": 14,
+  "updatedAt": "2026-09-23T04:00:00.000Z"
 }

@@ -162,68 +162,8 @@
 
         .nav-links {
             display: flex;
-            gap: 20px;
+            gap: 4px;
             align-items: center;
-        }
-
-        /* Dropdown Styling */
-        .nav-dropdown {
-            position: relative;
-            display: inline-block;
-        }
-
-        .nav-dropdown-btn {
-            color: var(--muted);
-            text-decoration: none;
-            font-size: 15px;
-            font-weight: 500;
-            cursor: pointer;
-            transition: color 0.2s;
-            background: none;
-            border: none;
-            padding: 0;
-            font-family: inherit;
-        }
-
-        .nav-dropdown-btn:hover { color: #FFF; }
-
-        .nav-dropdown-content {
-            display: none;
-            position: absolute;
-            top: 100%;
-            left: 0;
-            background-color: var(--card-bg);
-            min-width: 220px;
-            box-shadow: 0 10px 30px rgba(0,0,0,0.8);
-            border: 1px solid var(--card-border);
-            border-radius: 12px;
-            z-index: 1000;
-            padding: 8px 0;
-            animation: dropdownFade 0.2s ease-out;
-        }
-
-        @keyframes dropdownFade {
-            from { opacity: 0; transform: translateY(10px); }
-            to { opacity: 1; transform: translateY(0); }
-        }
-
-        .nav-dropdown:hover .nav-dropdown-content {
-            display: block;
-        }
-
-        .nav-dropdown-content a {
-            color: var(--muted);
-            padding: 12px 20px;
-            text-decoration: none;
-            display: block;
-            font-size: 14px;
-            font-weight: 500;
-            transition: background 0.2s, color 0.2s;
-        }
-
-        .nav-dropdown-content a:hover {
-            background: rgba(255,255,255,0.05);
-            color: #FFF;
         }
 
         .nav-links a {
@@ -236,6 +176,87 @@
 
         .nav-links a:hover { color: #FFF; }
 
+        /* ── Dropdown Nav ────────────────────────────── */
+        .nav-dropdown {
+            position: relative;
+        }
+
+        .nav-dropdown-btn {
+            background: none;
+            border: none;
+            color: var(--muted);
+            font-size: 14px;
+            font-weight: 600;
+            cursor: pointer;
+            padding: 8px 12px;
+            border-radius: 8px;
+            transition: background 0.2s, color 0.2s;
+            white-space: nowrap;
+            font-family: inherit;
+        }
+
+        .nav-dropdown-btn:hover {
+            background: rgba(255,255,255,0.06);
+            color: #FFF;
+        }
+
+        .nav-dropdown-menu {
+            display: none;
+            position: absolute;
+            top: calc(100% + 6px);
+            left: 50%;
+            transform: translateX(-50%);
+            min-width: 230px;
+            background: #0D1016;
+            border: 1px solid rgba(255,255,255,0.1);
+            border-radius: 14px;
+            padding: 8px;
+            z-index: 9999;
+            box-shadow: 0 16px 40px rgba(0,0,0,0.6);
+        }
+
+        .nav-dropdown:hover .nav-dropdown-menu,
+        .nav-dropdown:focus-within .nav-dropdown-menu {
+            display: flex;
+            flex-direction: column;
+            gap: 2px;
+        }
+
+        .nav-dropdown-menu a {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 9px 12px;
+            border-radius: 8px;
+            color: var(--muted) !important;
+            font-size: 14px;
+            font-weight: 500;
+            text-decoration: none;
+            transition: background 0.15s, color 0.15s;
+            white-space: nowrap;
+        }
+
+        .nav-dropdown-menu a:hover {
+            background: rgba(255,255,255,0.07);
+            color: #FFF !important;
+        }
+
+        .nav-dd-price {
+            background: rgba(0,230,118,0.12);
+            color: var(--primary);
+            border: 1px solid rgba(0,230,118,0.3);
+            font-size: 11px;
+            font-weight: 700;
+            padding: 2px 7px;
+            border-radius: 20px;
+            margin-left: 8px;
+        }
+
+        .nav-dd-divider {
+            height: 1px;
+            background: rgba(255,255,255,0.08);
+            margin: 4px 8px;
+        }
         .nav-btn {
             background: var(--primary);
             color: #000;
@@ -1409,39 +1430,41 @@
             <img src="/favicon.svg?v=2" alt="Missed Call Auto SMS Logo" width="28" height="28" style="vertical-align: middle; border-radius: 6px; display: inline-block;"> <span>MissedCallAutoSMS.com</span>
         </a>
         <div class="nav-links">
-            <a href="#features">Features</a>
-            
+            <!-- DROPDOWN: Plans -->
             <div class="nav-dropdown">
-                <button class="nav-dropdown-btn">Editions ▾</button>
-                <div class="nav-dropdown-content">
-                    <a href="#voice-edition" style="color: #00E676; font-weight: 800;">⚡ Front Desk ($99/mo)</a>
-                    <a href="#checkout" style="color: #38BDF8; font-weight: 800;">📱 Flagship ($49.99)</a>
-                    <a href="#pro-edition" style="color: #C084FC; font-weight: 800;">🛠️ Pro Gateway ($299)</a>
-                    <a href="#voice-edition" style="color: var(--primary); font-weight: 700;">🎙️ AI Voice ($29/mo)</a>
+                <button class="nav-dropdown-btn">Plans &amp; Pricing ▾</button>
+                <div class="nav-dropdown-menu">
+                    <a href="#voice-edition" style="color:#00E676;font-weight:800;">⚡ Front Desk Bundle <span class="nav-dd-price">$99/mo</span></a>
+                    <a href="#checkout" style="color:#38BDF8;font-weight:800;">📱 Flagship Appliance <span class="nav-dd-price">$49.99</span></a>
+                    <a href="#pro-edition" style="color:#C084FC;font-weight:800;">🛠️ Pro Automation Gateway <span class="nav-dd-price">$299</span></a>
+                    <a href="#voice-edition" style="color:var(--primary);font-weight:700;">🎙️ AI Voice Add-On <span class="nav-dd-price">$29/mo</span></a>
+                    <div class="nav-dd-divider"></div>
+                    <a href="#checkout" style="color:var(--primary);font-weight:700;">🎁 Start 3-Day Free Trial</a>
                 </div>
             </div>
-
+            <!-- DROPDOWN: For Business -->
             <div class="nav-dropdown">
-                <button class="nav-dropdown-btn">Resources ▾</button>
-                <div class="nav-dropdown-content">
-                    <a href="/agency" style="color: #38BDF8; font-weight: 800;">🏢 Agency Fleet</a>
-                    <a href="/developers" style="color: #38BDF8; font-weight: 700;">API & Docs</a>
-                    <a href="/support" style="color: var(--primary); font-weight: 700;">Support</a>
-                    <a href="/blog" style="color: var(--primary); font-weight: 700;">Blog</a>
+                <button class="nav-dropdown-btn">For Business ▾</button>
+                <div class="nav-dropdown-menu">
+                    <a href="/agency" style="color:#38BDF8;font-weight:800;">🏢 Agency &amp; Reseller Fleet</a>
+                    <a href="/developers" style="color:#38BDF8;font-weight:700;">⚙️ API &amp; Webhook Docs</a>
+                    <a href="/support" style="color:var(--primary);font-weight:700;">🎫 Support &amp; Helpdesk</a>
+                    <a href="/license_dashboard.html" style="color:#949BAE;">🔑 License Portal</a>
                 </div>
             </div>
-
+            <!-- DROPDOWN: Learn -->
             <div class="nav-dropdown">
-                <button class="nav-dropdown-btn">Explore ▾</button>
-                <div class="nav-dropdown-content">
-                    <a href="#comparison">Why Us</a>
-                    <a href="#calculator">ROI Calculator</a>
-                    <a href="#reviews">Reviews</a>
-                    <a href="#faq">FAQ</a>
+                <button class="nav-dropdown-btn">Learn ▾</button>
+                <div class="nav-dropdown-menu">
+                    <a href="#comparison">🆚 Why Us</a>
+                    <a href="#calculator">💰 ROI Calculator</a>
+                    <a href="#reviews">⭐ Reviews</a>
+                    <a href="#faq">❓ FAQ</a>
+                    <a href="/blog" style="color:var(--primary);">📚 Blog</a>
                 </div>
             </div>
         </div>
-<a href="#checkout" class="nav-btn">Get Appliance ($49.99+)</a>
+        <a href="#checkout" class="nav-btn">Get Appliance ($49.99+)</a>
         <button id="mobileMenuBtn" class="mobile-menu-btn" onclick="toggleMobileMenu()" aria-label="Open Navigation Menu">
             <span></span>
             <span></span>

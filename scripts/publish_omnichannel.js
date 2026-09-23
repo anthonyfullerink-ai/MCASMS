@@ -31,6 +31,39 @@ const IG_USER_ID = (process.env.IG_USER_ID && process.env.IG_USER_ID !== 'true' 
   ? process.env.IG_USER_ID
   : '17841428781387416';
 
+const VERIFIED_GITHUB_SOCIAL_IMAGES = [
+  'contractor-jobsite.jpg',
+  'contractor-speed-rule.jpg',
+  'hvac-speed-to-lead.jpg',
+  'appliance-vs-saas.jpg',
+  'carrier-spam-filter-bypass.jpg',
+  'answering-service-cost.jpg',
+  'speed-to-lead.jpg',
+  'v1-5-0-ai-voice-assistant-launch.jpg',
+  'pro-automation-launch.jpg',
+  'ghl-vs-appliance-ad.jpg'
+];
+
+function recordSlotExecution(slot, data) {
+  try {
+    const histPath = path.join(__dirname, '../data/social_publish_history.json');
+    let hist = {};
+    if (fs.existsSync(histPath)) {
+      try { hist = JSON.parse(fs.readFileSync(histPath, 'utf8')); } catch (e) {}
+    }
+    const today = new Date().toISOString().split('T')[0];
+    if (!hist[today]) hist[today] = {};
+    hist[today][slot] = {
+      timestamp: new Date().toISOString(),
+      ...data
+    };
+    fs.mkdirSync(path.dirname(histPath), { recursive: true });
+    fs.writeFileSync(histPath, JSON.stringify(hist, null, 2), 'utf8');
+  } catch (e) {
+    console.error('Failed to record slot execution history:', e.message);
+  }
+}
+
 function postGraphApi(endpoint, postData) {
   return new Promise((resolve, reject) => {
     const payload = JSON.stringify(postData);
@@ -269,7 +302,18 @@ async function publishMorningBlog(bundle, isDryRun) {
   fs.writeFileSync(sitemapPath, sitemapXml, 'utf8');
   console.log(`✔ Updated sitemap.xml with ${posts.length + 2} URLs`);
 
-  return { status: 'published' };
+  // Cross-post the new blog article to FB + IG immediately after publishing
+  if (!isDryRun) {
+    try {
+      console.log('\n📣 Cross-posting morning blog to social media...');
+      const { publishToSocial } = require('./publish_social_blog');
+      await publishToSocial(newPostEntry);
+    } catch (socialErr) {
+      console.error('⚠️  Social cross-post error (non-fatal):', socialErr.message);
+    }
+  }
+
+  return { status: 'published', slug };
 }
 
 // 2. Lunch Slot: Publish 1:1 Feed Post (FB & IG)
@@ -461,17 +505,30 @@ async function run() {
   }
 
   const bufferPath = path.join(__dirname, '../data/daily_content_buffer.json');
+  const todayStr = new Date().toISOString().split('T')[0];
   let bundle = null;
 
   if (fs.existsSync(bufferPath)) {
     try {
-      bundle = JSON.parse(fs.readFileSync(bufferPath, 'utf8'));
+      const raw = JSON.parse(fs.readFileSync(bufferPath, 'utf8'));
+      if (raw && raw.date === todayStr) {
+        bundle = raw;
+        console.log(`✔ Using cached bundle for ${todayStr} (${raw.trade})`);
+      } else {
+        console.log(`⚠️  Stale buffer found (date: ${raw && raw.date}). Regenerating for ${todayStr}...`);
+      }
     } catch (e) {}
   }
 
   if (!bundle) {
     console.log('Generating fresh daily multi-trade content bundle...');
     bundle = await generateDailyContentBundle({ offline: true });
+    // Save fresh bundle for the other slots to reuse today
+    try {
+      fs.mkdirSync(path.dirname(bufferPath), { recursive: true });
+      fs.writeFileSync(bufferPath, JSON.stringify(bundle, null, 2), 'utf8');
+      console.log(`✔ Fresh bundle saved for ${todayStr}`);
+    } catch (e) {}
   }
 
   if (slotArg === 'morning' || slotArg === 'blog') {

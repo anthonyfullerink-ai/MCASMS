@@ -1028,7 +1028,25 @@
             }
 
             closeDeployModal();
+
+            // Optimistically update fleet clients array immediately
+            if (data.client) {
+                if (!currentFleetData) currentFleetData = {};
+                if (!currentFleetData.clients) currentFleetData.clients = [];
+                if (!currentFleetData.clients.some(c => c.licenseKey === data.client.licenseKey)) {
+                    currentFleetData.clients.unshift(data.client);
+                }
+                if (data.usedSeats !== undefined) currentFleetData.usedSeats = data.usedSeats;
+                if (data.remainingSeats !== undefined) currentFleetData.remainingSeats = data.remainingSeats;
+                // Reset search filter so new client is never hidden
+                const filterEl = document.getElementById('filterInput');
+                if (filterEl) filterEl.value = '';
+                renderDashboard();
+            }
+
+            // Sync with backend
             await fetchFleetData();
+
             currentActiveSheetText = data.setupSheet;
             currentActiveClientName = clientName;
             document.getElementById('setupSheetContent').innerText = data.setupSheet;
