@@ -235,16 +235,157 @@ exports.handler = async (event) => {
         }
 
         const vapiRes = await vapiApiRequest(`/assistant/${targetAssistantId}`, 'PATCH', patchPayload);
+
+        // Store model & tier preferences in Firestore voice_pro_bindings
+        const isPremiumModel = (payload.model || '').toLowerCase().includes('gpt-4o') && !(payload.model || '').toLowerCase().includes('mini');
+        if (key && fsModule && process.env.FIREBASE_SERVICE_ACCOUNT_KEY) {
+          try {
+            await fsModule.saveVoiceBinding(key, {
+              model: payload.model || 'gpt-4o-mini',
+              hasPremiumModel: isPremiumModel,
+              temperature: typeof payload.temperature === 'number' ? payload.temperature : 0.3,
+              lastSyncedAt: new Date().toISOString()
+            });
+          } catch (e) {
+            console.warn('[vapi-live] Failed to save model tier to Firestore:', e.message);
+          }
+        }
+
+        // Also update local .voice_pro_bindings.json if present
+        try {
+          const bindingsPath = path.join(__dirname, '..', '..', '.voice_pro_bindings.json');
+          if (fs.existsSync(bindingsPath)) {
+            const raw = JSON.parse(fs.readFileSync(bindingsPath, 'utf8'));
+            if (raw[key]) {
+              raw[key].model = payload.model || 'gpt-4o-mini';
+              raw[key].hasPremiumModel = isPremiumModel;
+              raw[key].temperature = typeof payload.temperature === 'number' ? payload.temperature : 0.3;
+              fs.writeFileSync(bindingsPath, JSON.stringify(raw, null, 2), 'utf8');
+            }
+          }
+        } catch (e) {}
+
         return {
           statusCode: 200,
           headers,
           body: JSON.stringify({
             success: true,
             message: `Your AI Voice Receptionist settings were updated live in Vapi!`,
-            assistant: vapiRes
+            assistant: vapiRes,
+            hasPremiumModel: isPremiumModel
           })
         };
       }
+    }
+
+    // 2.2 POST /api/vapi/outbound-test-call
+    if (reqPath.includes('outbound-test-call') && event.httpMethod === 'POST') {
+      const payload = JSON.parse(event.body || '{}');
+      const targetPhone = (payload.phoneNumber || payload.phone || '').trim();
+      const key = (payload.licenseKey || payload.key || '').trim().toUpperCase();
+
+      if (!targetPhone) {
+        return {
+          statusCode: 400,
+          headers,
+          body: JSON.stringify({ success: false, error: 'Destination phone number is required.' })
+        };
+      }
+
+      let fsModule = null;
+      try { fsModule = require('../../lib/firestore'); } catch (e) {}
+
+      let targetAssistantId = payload.assistantId || null;
+      let targetPhoneId = payload.phoneNumberId || null;
+
+      if (key && fsModule && process.env.FIREBASE_SERVICE_ACCOUNT_KEY) {
+        try {
+          const binding = await fsModule.getVoiceBinding(key);
+          if (binding) {
+            if (!targetAssistantId && binding.vapiAssistantId) targetAssistantId = binding.vapiAssistantId;
+            if (!targetPhoneId && binding.vapiPhoneNumberId) targetPhoneId = binding.vapiPhoneNumberId;
+          }
+        } catch (e) {}
+      }
+
+      if (!targetAssistantId) {
+        targetAssistantId = assistantId || '5105b379-8cbf-4037-becc-bba45504f781';
+      }
+
+      // If no dedicated phone ID found, try to resolve one from Vapi account
+      if (!targetPhoneId) {
+        try {
+          const pList = await vapiApiRequest('/phone-number');
+          if (Array.isArray(pList) && pList.length > 0) {
+            targetPhoneId = pList[0].id;
+          }
+        } catch (e) {}
+      }
+
+      const callPayload = {
+        assistantId: targetAssistantId,
+        customer: {
+          number: targetPhone
+        }
+      };
+      if (targetPhoneId) {
+        callPayload.phoneNumberId = targetPhoneId;
+      }
+
+      try {
+        const callRes = await vapiApiRequest('/call/phone', 'POST', callPayload);
+        return {
+          statusCode: 200,
+          headers,
+          body: JSON.stringify({
+            success: true,
+            message: `Placing live test call to ${targetPhone} now! Your phone will ring shortly.`,
+            call: callRes
+          })
+        };
+      } catch (callErr) {
+        return {
+          statusCode: 400,
+          headers,
+          body: JSON.stringify({
+            success: false,
+            error: callErr.message || 'Failed to initiate outbound Vapi call'
+          })
+        };
+      }
+    }
+
+    // 2.3 POST /api/vapi/test-call (Simulated test call logger)
+    if (reqPath.includes('test-call') && event.httpMethod === 'POST') {
+      const payload = JSON.parse(event.body || '{}');
+      let fsModule = null;
+      try { fsModule = require('../../lib/firestore'); } catch (e) {}
+
+      if (fsModule && process.env.FIREBASE_SERVICE_ACCOUNT_KEY) {
+        try {
+          await fsModule.logVoiceCall({
+            licenseKey: payload.licenseKey || 'SIMULATION',
+            callerNumber: payload.phoneNumber || '+15550199',
+            callerName: payload.callerName || 'Test Caller',
+            summary: payload.summary || 'Simulated In-App Voice Call Test',
+            transcript: payload.transcript || `AI: ${payload.firstMessage || 'Hello'}`,
+            durationSeconds: payload.durationSeconds || 30,
+            type: 'SIMULATED_TEST',
+            simulatedAt: new Date().toISOString()
+          });
+        } catch (e) {
+          console.warn('[vapi-live] Failed to log simulated call to Firestore:', e.message);
+        }
+      }
+
+      return {
+        statusCode: 200,
+        headers,
+        body: JSON.stringify({
+          success: true,
+          message: 'Simulated call logged successfully.'
+        })
+      };
     }
 
     // 3. GET /api/vapi/live-status or default status

@@ -3,7 +3,9 @@ package com.missedcall.autotext.ui.screens
 import android.content.Context
 import android.content.Intent
 import android.net.Uri
+import android.speech.tts.TextToSpeech
 import android.widget.Toast
+import java.util.Locale
 import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.clickable
@@ -120,6 +122,25 @@ fun VoiceHubScreen(
     var isSavingToVapi by remember { mutableStateOf(false) }
     var saveStatusMessage by remember { mutableStateOf<String?>(null) }
     var selectedCallForDetail by remember { mutableStateOf<VoiceCallEvent?>(null) }
+    var showTestCallDialog by remember { mutableStateOf(false) }
+    var testPhoneNumberInput by remember { mutableStateOf("") }
+    var isPlacingOutboundCall by remember { mutableStateOf(false) }
+    var testCallDialogStatus by remember { mutableStateOf<String?>(null) }
+    var tts by remember { mutableStateOf<TextToSpeech?>(null) }
+
+    DisposableEffect(context) {
+        var localTts: TextToSpeech? = null
+        localTts = TextToSpeech(context) { status ->
+            if (status == TextToSpeech.SUCCESS) {
+                localTts?.language = Locale.US
+            }
+        }
+        tts = localTts
+        onDispose {
+            localTts.stop()
+            localTts.shutdown()
+        }
+    }
 
     // Fetch live assistant data from backend on first launch
     LaunchedEffect(settings.licenseKey) {
@@ -437,7 +458,7 @@ fun VoiceHubScreen(
                                 selectedModel = "gpt-4o-mini"
                                 onSettingsChanged(settings.copy(vapiModel = "gpt-4o-mini"))
                             },
-                            label = { Text("GPT-4o-mini (Fastest)") },
+                            label = { Text("GPT-4o-mini (Included)") },
                             modifier = Modifier.weight(1f)
                         )
                         FilterChip(
@@ -446,10 +467,21 @@ fun VoiceHubScreen(
                                 selectedModel = "gpt-4o"
                                 onSettingsChanged(settings.copy(vapiModel = "gpt-4o"))
                             },
-                            label = { Text("GPT-4o (Smartest)") },
+                            label = { Text("GPT-4o (Premium LLM)") },
                             modifier = Modifier.weight(1f)
                         )
                     }
+
+                    Spacer(modifier = Modifier.height(6.dp))
+                    Text(
+                        text = if (selectedModel == "gpt-4o") {
+                            "⚡ Frontier model with deep reasoning. +1.5% markup applies strictly to overage minutes if quota is exceeded."
+                        } else {
+                            "⚡ Recommended default: <300ms ultra-low latency, zero hallucinations, included at standard rate ($0.20/min overage)."
+                        },
+                        style = MaterialTheme.typography.bodySmall,
+                        color = if (selectedModel == "gpt-4o") Color(0xFFCE93D8) else ActiveGreenText
+                    )
 
                     Spacer(modifier = Modifier.height(14.dp))
 
@@ -648,8 +680,8 @@ fun VoiceHubScreen(
                             withContext(Dispatchers.Main) {
                                 isSavingToVapi = false
                                 if (code in 200..299) {
-                                    saveStatusMessage = "✅ Assistant Updated Live in Vapi Cloud ($0.00 Incurred)!"
-                                    Toast.makeText(context, "Vapi Assistant Updated Live!", Toast.LENGTH_SHORT).show()
+                                    saveStatusMessage = "✅ Assistant Settings Saved & Synced Live!"
+                                    Toast.makeText(context, "AI Voice Assistant Synced Live!", Toast.LENGTH_SHORT).show()
                                 } else {
                                     saveStatusMessage = "⚠️ Saved locally (Vapi Cloud returned HTTP $code)"
                                 }
@@ -673,7 +705,7 @@ fun VoiceHubScreen(
                 } else {
                     Icon(Icons.Default.CloudUpload, contentDescription = null, modifier = Modifier.size(18.dp))
                     Spacer(modifier = Modifier.width(8.dp))
-                    Text("Save & Sync with Vapi Agent ($0.00 Cost)", fontWeight = FontWeight.Bold)
+                    Text("Save & Sync AI Voice Agent", fontWeight = FontWeight.Bold)
                 }
             }
 
@@ -692,32 +724,249 @@ fun VoiceHubScreen(
         item {
             OutlinedButton(
                 onClick = {
-                    coroutineScope.launch(Dispatchers.IO) {
-                        val app = context.applicationContext as? App
-                        val simEvent = VoiceCallEvent(
-                            phoneNumber = "+1 (732) 555-0199",
-                            callerName = "John Doe",
-                            durationSeconds = 48,
-                            intent = "SERVICE_CALL",
-                            summary = "Caller reached digital receptionist and requested an emergency estimate for service.",
-                            transcript = "Caller: 'Hi, I need someone to come check my system.'\nAI Receptionist: '${firstMessageInput}'\nCaller: 'Sounds great, please send the link!'",
-                            recordingUrl = null,
-                            followUpSms = "Hey John! Thanks for calling ${settings.businessName}. As discussed with our digital assistant, here is our booking link: ${contractorGoalLinkInput.ifBlank { "https://missedcallautosms.com" }}",
-                            contractorStatus = settings.contractorStatus,
-                            isRead = false
-                        )
-                        app?.database?.voiceCallDao()?.insert(simEvent)
-                    }
-                    Toast.makeText(context, "Simulated call recorded to Logs!", Toast.LENGTH_SHORT).show()
+                    showTestCallDialog = true
+                    testCallDialogStatus = null
                 },
                 modifier = Modifier.fillMaxWidth()
             ) {
                 Icon(Icons.Default.PlayCircle, contentDescription = null, modifier = Modifier.size(16.dp))
                 Spacer(modifier = Modifier.width(6.dp))
-                Text("Simulate Inbound Voice Call Test")
+                Text("Test AI Voice Assistant")
             }
         }
 
         item { Spacer(modifier = Modifier.height(16.dp)) }
+    }
+
+    // Dual-Mode Test Call Dialog
+    if (showTestCallDialog) {
+        AlertDialog(
+            onDismissRequest = {
+                if (!isPlacingOutboundCall) {
+                    showTestCallDialog = false
+                    testCallDialogStatus = null
+                }
+            },
+            title = {
+                Row(verticalAlignment = Alignment.CenterVertically) {
+                    Icon(Icons.Default.HeadsetMic, contentDescription = null, tint = MaterialTheme.colorScheme.primary)
+                    Spacer(modifier = Modifier.width(8.dp))
+                    Text("Test AI Voice Assistant", fontWeight = FontWeight.Bold)
+                }
+            },
+            text = {
+                Column(modifier = Modifier.fillMaxWidth()) {
+                    Text(
+                        "Verify your AI receptionist's spoken greeting, triage logic, and follow-up messaging:",
+                        style = MaterialTheme.typography.bodySmall,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant
+                    )
+
+                    Spacer(modifier = Modifier.height(14.dp))
+
+                    // Option 1: Instant In-App Speaker Audio Test
+                    Card(
+                        colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.5f)),
+                        shape = RoundedCornerShape(12.dp),
+                        modifier = Modifier.fillMaxWidth()
+                    ) {
+                        Column(modifier = Modifier.padding(12.dp)) {
+                            Row(verticalAlignment = Alignment.CenterVertically) {
+                                Icon(Icons.Default.VolumeUp, contentDescription = null, tint = ActiveGreenText, modifier = Modifier.size(18.dp))
+                                Spacer(modifier = Modifier.width(6.dp))
+                                Text("Option 1: Instant In-App Speaker Test", fontWeight = FontWeight.Bold, style = MaterialTheme.typography.labelLarge)
+                            }
+                            Spacer(modifier = Modifier.height(4.dp))
+                            Text(
+                                "Speaks your customized greeting out loud through this phone's speaker right now and logs a test call to your local inbox. (Zero voice minutes used).",
+                                style = MaterialTheme.typography.bodySmall,
+                                color = MaterialTheme.colorScheme.onSurfaceVariant
+                            )
+                            Spacer(modifier = Modifier.height(8.dp))
+                            Button(
+                                onClick = {
+                                    val textToSpeak = firstMessageInput.ifBlank {
+                                        "Thanks for calling ${settings.businessName}! How can I help you today?"
+                                    }
+                                    tts?.speak(textToSpeak, TextToSpeech.QUEUE_FLUSH, null, "vapi_test_speaker")
+
+                                    coroutineScope.launch(Dispatchers.IO) {
+                                        val app = context.applicationContext as? App
+                                        val simEvent = VoiceCallEvent(
+                                            phoneNumber = "+1 (732) 555-0199",
+                                            callerName = "John Doe (Simulation)",
+                                            durationSeconds = 42,
+                                            intent = "SERVICE_CALL",
+                                            summary = "Caller reached digital receptionist and requested an emergency estimate for service.",
+                                            transcript = "Caller: 'Hi, I need someone to come check my system.'\nAI Receptionist: '${textToSpeak}'\nCaller: 'Sounds great, please send the link!'",
+                                            recordingUrl = null,
+                                            followUpSms = "Hey John! Thanks for calling ${settings.businessName}. As discussed with our digital assistant, here is our booking link: ${contractorGoalLinkInput.ifBlank { "https://missedcallautosms.com" }}",
+                                            contractorStatus = settings.contractorStatus,
+                                            isRead = false
+                                        )
+                                        app?.database?.voiceCallDao()?.insert(simEvent)
+
+                                        try {
+                                            val endpoint = if (settings.remoteUpdateUrl.contains("localhost") || settings.remoteUpdateUrl.contains("10.0.")) {
+                                                "http://10.0.2.2:8000/api/vapi/test-call"
+                                            } else {
+                                                "https://missedcallautosms.com/api/vapi/test-call"
+                                            }
+                                            val url = URL(endpoint)
+                                            val conn = (url.openConnection() as HttpURLConnection).apply {
+                                                requestMethod = "POST"
+                                                connectTimeout = 4000
+                                                readTimeout = 4000
+                                                doOutput = true
+                                                setRequestProperty("Content-Type", "application/json")
+                                                val p = JSONObject().apply {
+                                                    put("licenseKey", settings.licenseKey)
+                                                    put("firstMessage", textToSpeak)
+                                                    put("callerName", "John Doe (Simulation)")
+                                                }
+                                                outputStream.use { os -> os.write(p.toString().toByteArray(StandardCharsets.UTF_8)) }
+                                            }
+                                            conn.responseCode
+                                        } catch (e: Exception) {}
+                                    }
+
+                                    testCallDialogStatus = "✅ Audio playing through speaker! Test call logged."
+                                    Toast.makeText(context, "Playing greeting through speaker...", Toast.LENGTH_SHORT).show()
+                                },
+                                colors = ButtonDefaults.buttonColors(containerColor = Color(0xFF2E7D32)),
+                                modifier = Modifier.fillMaxWidth()
+                            ) {
+                                Icon(Icons.Default.PlayArrow, contentDescription = null, modifier = Modifier.size(16.dp))
+                                Spacer(modifier = Modifier.width(6.dp))
+                                Text("Play Audio Through Speaker")
+                            }
+                        }
+                    }
+
+                    Spacer(modifier = Modifier.height(14.dp))
+
+                    // Option 2: Live Cellular Phone Call
+                    Card(
+                        colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.5f)),
+                        shape = RoundedCornerShape(12.dp),
+                        modifier = Modifier.fillMaxWidth()
+                    ) {
+                        Column(modifier = Modifier.padding(12.dp)) {
+                            Row(verticalAlignment = Alignment.CenterVertically) {
+                                Icon(Icons.Default.PhoneAndroid, contentDescription = null, tint = MaterialTheme.colorScheme.primary, modifier = Modifier.size(18.dp))
+                                Spacer(modifier = Modifier.width(6.dp))
+                                Text("Option 2: Live Cellular Call to Cell", fontWeight = FontWeight.Bold, style = MaterialTheme.typography.labelLarge)
+                            }
+                            Spacer(modifier = Modifier.height(4.dp))
+                            Text(
+                                "Vapi calls your cell phone directly so you can talk with your AI assistant live. (Uses 1 pooled minute).",
+                                style = MaterialTheme.typography.bodySmall,
+                                color = MaterialTheme.colorScheme.onSurfaceVariant
+                            )
+                            Spacer(modifier = Modifier.height(8.dp))
+
+                            OutlinedTextField(
+                                value = testPhoneNumberInput,
+                                onValueChange = { testPhoneNumberInput = it },
+                                modifier = Modifier.fillMaxWidth(),
+                                placeholder = { Text("Your phone number (e.g. +17325550199)") },
+                                label = { Text("Cell Number to Ring") },
+                                singleLine = true
+                            )
+
+                            Spacer(modifier = Modifier.height(8.dp))
+
+                            Button(
+                                onClick = {
+                                    val dest = testPhoneNumberInput.trim()
+                                    if (dest.isBlank()) {
+                                        testCallDialogStatus = "⚠️ Please enter your phone number first."
+                                        return@Button
+                                    }
+                                    isPlacingOutboundCall = true
+                                    testCallDialogStatus = "Initiating live call from Vapi..."
+
+                                    coroutineScope.launch(Dispatchers.IO) {
+                                        try {
+                                            val endpoint = if (settings.remoteUpdateUrl.contains("localhost") || settings.remoteUpdateUrl.contains("10.0.")) {
+                                                "http://10.0.2.2:8000/api/vapi/outbound-test-call"
+                                            } else {
+                                                "https://missedcallautosms.com/api/vapi/outbound-test-call"
+                                            }
+                                            val url = URL(endpoint)
+                                            val conn = (url.openConnection() as HttpURLConnection).apply {
+                                                requestMethod = "POST"
+                                                connectTimeout = 8000
+                                                readTimeout = 8000
+                                                doOutput = true
+                                                setRequestProperty("Content-Type", "application/json")
+                                                val p = JSONObject().apply {
+                                                    put("phoneNumber", dest)
+                                                    put("licenseKey", settings.licenseKey)
+                                                }
+                                                outputStream.use { os -> os.write(p.toString().toByteArray(StandardCharsets.UTF_8)) }
+                                            }
+
+                                            val code = conn.responseCode
+                                            val respBody = (if (code in 200..299) conn.inputStream else conn.errorStream)?.bufferedReader()?.use { it.readText() } ?: ""
+                                            val jsonResp = try { JSONObject(respBody) } catch (e: Exception) { JSONObject() }
+
+                                            withContext(Dispatchers.Main) {
+                                                isPlacingOutboundCall = false
+                                                if (code in 200..299 && jsonResp.optBoolean("success", true)) {
+                                                    testCallDialogStatus = "✅ Calling $dest now! Pick up when your phone rings."
+                                                    Toast.makeText(context, "📞 Ringing your phone now!", Toast.LENGTH_LONG).show()
+                                                } else {
+                                                    val err = jsonResp.optString("error", "HTTP $code")
+                                                    testCallDialogStatus = "⚠️ Could not place call: $err"
+                                                }
+                                            }
+                                        } catch (e: Exception) {
+                                            withContext(Dispatchers.Main) {
+                                                isPlacingOutboundCall = false
+                                                testCallDialogStatus = "⚠️ Call failed: ${e.message}"
+                                            }
+                                        }
+                                    }
+                                },
+                                enabled = !isPlacingOutboundCall,
+                                colors = ButtonDefaults.buttonColors(containerColor = Color(0xFF673AB7)),
+                                modifier = Modifier.fillMaxWidth()
+                            ) {
+                                if (isPlacingOutboundCall) {
+                                    CircularProgressIndicator(modifier = Modifier.size(16.dp), color = Color.White)
+                                    Spacer(modifier = Modifier.width(6.dp))
+                                    Text("Placing Call...")
+                                } else {
+                                    Icon(Icons.Default.PhoneForwarded, contentDescription = null, modifier = Modifier.size(16.dp))
+                                    Spacer(modifier = Modifier.width(6.dp))
+                                    Text("Call My Phone Now")
+                                }
+                            }
+                        }
+                    }
+
+                    testCallDialogStatus?.let { status ->
+                        Spacer(modifier = Modifier.height(10.dp))
+                        Text(
+                            text = status,
+                            style = MaterialTheme.typography.bodySmall,
+                            color = if (status.startsWith("✅")) ActiveGreenText else AmberWarning,
+                            fontWeight = FontWeight.SemiBold
+                        )
+                    }
+                }
+            },
+            confirmButton = {
+                TextButton(
+                    onClick = {
+                        showTestCallDialog = false
+                        testCallDialogStatus = null
+                    }
+                ) {
+                    Text("Close")
+                }
+            }
+        )
     }
 }

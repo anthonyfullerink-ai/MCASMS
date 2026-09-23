@@ -3003,6 +3003,248 @@ const server = http.createServer((req, res) => {
     return;
   }
 
+  // API: User-Specific Voice Assistant Config (GET & POST /api/vapi/user-assistant)
+  if (relativePath === '/api/vapi/user-assistant' || relativePath === '/api/vapi/user-assistant/') {
+    const { assistantId } = getVapiConfig();
+
+    if (req.method === 'GET') {
+      const urlObj = new URL(req.url, `http://localhost:${PORT}`);
+      const key = (urlObj.searchParams.get('licenseKey') || urlObj.searchParams.get('key') || '').trim().toUpperCase();
+
+      (async () => {
+        try {
+          let targetAssistantId = null;
+          let binding = null;
+
+          try {
+            const fsDb = getFirestoreDb();
+            if (key && fsDb && fsDb.getVoiceBinding) {
+              binding = await fsDb.getVoiceBinding(key);
+              if (binding && binding.vapiAssistantId) {
+                targetAssistantId = binding.vapiAssistantId;
+              }
+            }
+          } catch (e) {}
+
+          if (!targetAssistantId) {
+            targetAssistantId = assistantId || '5105b379-8cbf-4037-becc-bba45504f781';
+          }
+
+          let asstData = null;
+          try {
+            asstData = await vapiApiRequest(`/assistant/${targetAssistantId}`);
+          } catch (e) {}
+
+          const systemMessage = asstData?.model?.messages?.find(m => m.role === 'system')?.content ||
+            "You are a friendly, professional AI receptionist. Your job is to answer incoming calls, capture the caller's name and service request, and reassure them that someone will follow up shortly.";
+
+          res.writeHead(200, { 'Content-Type': 'application/json; charset=utf-8', 'Access-Control-Allow-Origin': '*' });
+          res.end(JSON.stringify({
+            success: true,
+            licenseKey: key,
+            assistantId: targetAssistantId,
+            phoneNumberId: binding?.vapiPhoneNumberId || null,
+            forwardingNumber: binding?.forwardingNumber || '+1 (732) 660-9121',
+            carrierCode: binding?.carrierCode || '*717326609121',
+            quotaMinutes: binding?.quotaMinutes || 250,
+            minutesUsed: binding?.minutesUsed || 0,
+            assistant: {
+              id: targetAssistantId,
+              name: asstData?.name || 'Riley (AI Receptionist)',
+              firstMessage: asstData?.firstMessage || 'Hi! Thanks for calling. How can I help you today?',
+              systemPrompt: systemMessage,
+              model: asstData?.model?.model || 'gpt-4o-mini',
+              temperature: asstData?.model?.temperature ?? 0.3,
+              voiceProvider: asstData?.voice?.provider || 'cartesia',
+              voiceId: asstData?.voice?.voiceId || '248be419-c632-4f23-adf1-5324ed7dbf10'
+            }
+          }));
+        } catch (err) {
+          res.writeHead(500, { 'Content-Type': 'application/json; charset=utf-8', 'Access-Control-Allow-Origin': '*' });
+          res.end(JSON.stringify({ success: false, error: err.message }));
+        }
+      })();
+      return;
+    }
+
+    if (req.method === 'POST') {
+      let body = '';
+      req.on('data', chunk => body += chunk);
+      req.on('end', async () => {
+        try {
+          const payload = JSON.parse(body || '{}');
+          const key = (payload.licenseKey || payload.key || '').trim().toUpperCase();
+          let targetAssistantId = payload.assistantId || null;
+
+          try {
+            const fsDb = getFirestoreDb();
+            if (key && fsDb && fsDb.getVoiceBinding) {
+              const binding = await fsDb.getVoiceBinding(key);
+              if (binding && binding.vapiAssistantId) {
+                targetAssistantId = binding.vapiAssistantId;
+              }
+            }
+          } catch (e) {}
+
+          if (!targetAssistantId) {
+            targetAssistantId = assistantId || '5105b379-8cbf-4037-becc-bba45504f781';
+          }
+
+          const patchPayload = {};
+          if (payload.name) patchPayload.name = payload.name;
+          if (payload.firstMessage !== undefined) patchPayload.firstMessage = payload.firstMessage;
+
+          const modelConfig = {
+            provider: 'openai',
+            model: payload.model || 'gpt-4o-mini',
+            temperature: typeof payload.temperature === 'number' ? payload.temperature : 0.3,
+            messages: [
+              { role: 'system', content: payload.systemPrompt || "You are a professional AI receptionist." }
+            ]
+          };
+          patchPayload.model = modelConfig;
+
+          if (payload.voiceProvider || payload.voiceId) {
+            patchPayload.voice = {
+              provider: payload.voiceProvider || 'cartesia',
+              voiceId: payload.voiceId || '248be419-c632-4f23-adf1-5324ed7dbf10'
+            };
+          }
+
+          const vapiRes = await vapiApiRequest(`/assistant/${targetAssistantId}`, 'PATCH', patchPayload);
+          const isPremiumModel = (payload.model || '').toLowerCase().includes('gpt-4o') && !(payload.model || '').toLowerCase().includes('mini');
+
+          // Store in Firestore voice_pro_bindings
+          try {
+            const fsDb = getFirestoreDb();
+            if (key && fsDb && fsDb.saveVoiceBinding) {
+              await fsDb.saveVoiceBinding(key, {
+                model: payload.model || 'gpt-4o-mini',
+                hasPremiumModel: isPremiumModel,
+                temperature: typeof payload.temperature === 'number' ? payload.temperature : 0.3,
+                lastSyncedAt: new Date().toISOString()
+              });
+            }
+          } catch (e) {}
+
+          res.writeHead(200, { 'Content-Type': 'application/json; charset=utf-8', 'Access-Control-Allow-Origin': '*' });
+          res.end(JSON.stringify({
+            success: true,
+            message: 'AI Voice Receptionist settings updated successfully',
+            assistant: vapiRes,
+            hasPremiumModel: isPremiumModel
+          }));
+        } catch (err) {
+          res.writeHead(400, { 'Content-Type': 'application/json; charset=utf-8', 'Access-Control-Allow-Origin': '*' });
+          res.end(JSON.stringify({ success: false, error: err.message }));
+        }
+      });
+      return;
+    }
+  }
+
+  // API: Outbound Live Test Call (POST /api/vapi/outbound-test-call)
+  if ((relativePath === '/api/vapi/outbound-test-call' || relativePath === '/api/vapi/outbound-test-call/') && req.method === 'POST') {
+    let body = '';
+    req.on('data', chunk => body += chunk);
+    req.on('end', async () => {
+      try {
+        const payload = JSON.parse(body || '{}');
+        const targetPhone = (payload.phoneNumber || payload.phone || '').trim();
+        const key = (payload.licenseKey || payload.key || '').trim().toUpperCase();
+
+        if (!targetPhone) {
+          res.writeHead(400, { 'Content-Type': 'application/json; charset=utf-8', 'Access-Control-Allow-Origin': '*' });
+          res.end(JSON.stringify({ success: false, error: 'Destination phone number is required.' }));
+          return;
+        }
+
+        const { assistantId } = getVapiConfig();
+        let targetAssistantId = payload.assistantId || null;
+        let targetPhoneId = payload.phoneNumberId || null;
+
+        try {
+          const fsDb = getFirestoreDb();
+          if (key && fsDb && fsDb.getVoiceBinding) {
+            const binding = await fsDb.getVoiceBinding(key);
+            if (binding) {
+              if (!targetAssistantId && binding.vapiAssistantId) targetAssistantId = binding.vapiAssistantId;
+              if (!targetPhoneId && binding.vapiPhoneNumberId) targetPhoneId = binding.vapiPhoneNumberId;
+            }
+          }
+        } catch (e) {}
+
+        if (!targetAssistantId) {
+          targetAssistantId = assistantId || '5105b379-8cbf-4037-becc-bba45504f781';
+        }
+
+        if (!targetPhoneId) {
+          try {
+            const pList = await vapiApiRequest('/phone-number');
+            if (Array.isArray(pList) && pList.length > 0) {
+              targetPhoneId = pList[0].id;
+            }
+          } catch (e) {}
+        }
+
+        const callPayload = {
+          assistantId: targetAssistantId,
+          customer: {
+            number: targetPhone
+          }
+        };
+        if (targetPhoneId) {
+          callPayload.phoneNumberId = targetPhoneId;
+        }
+
+        const callRes = await vapiApiRequest('/call/phone', 'POST', callPayload);
+        res.writeHead(200, { 'Content-Type': 'application/json; charset=utf-8', 'Access-Control-Allow-Origin': '*' });
+        res.end(JSON.stringify({
+          success: true,
+          message: `Placing live test call to ${targetPhone} now! Your phone will ring shortly.`,
+          call: callRes
+        }));
+      } catch (err) {
+        res.writeHead(400, { 'Content-Type': 'application/json; charset=utf-8', 'Access-Control-Allow-Origin': '*' });
+        res.end(JSON.stringify({ success: false, error: err.message }));
+      }
+    });
+    return;
+  }
+
+  // API: Test Call Simulation Logger (POST /api/vapi/test-call)
+  if ((relativePath === '/api/vapi/test-call' || relativePath === '/api/vapi/test-call/') && req.method === 'POST') {
+    let body = '';
+    req.on('data', chunk => body += chunk);
+    req.on('end', async () => {
+      try {
+        const payload = JSON.parse(body || '{}');
+        try {
+          const fsDb = getFirestoreDb();
+          if (fsDb && fsDb.logVoiceCall) {
+            await fsDb.logVoiceCall({
+              licenseKey: payload.licenseKey || 'SIMULATION',
+              callerNumber: payload.phoneNumber || '+15550199',
+              callerName: payload.callerName || 'Test Caller',
+              summary: payload.summary || 'Simulated In-App Voice Call Test',
+              transcript: payload.transcript || `AI: ${payload.firstMessage || 'Hello'}`,
+              durationSeconds: payload.durationSeconds || 30,
+              type: 'SIMULATED_TEST',
+              simulatedAt: new Date().toISOString()
+            });
+          }
+        } catch (e) {}
+
+        res.writeHead(200, { 'Content-Type': 'application/json; charset=utf-8', 'Access-Control-Allow-Origin': '*' });
+        res.end(JSON.stringify({ success: true, message: 'Simulated call logged successfully.' }));
+      } catch (err) {
+        res.writeHead(400, { 'Content-Type': 'application/json; charset=utf-8', 'Access-Control-Allow-Origin': '*' });
+        res.end(JSON.stringify({ success: false, error: err.message }));
+      }
+    });
+    return;
+  }
+
   // API: One-Click Set Webhook to MissedCallAutoSMS (POST /api/vapi/set-webhook)
   if ((relativePath === '/api/vapi/set-webhook' || relativePath === '/api/vapi/set-webhook/') && req.method === 'POST') {
     let body = '';
@@ -3117,6 +3359,7 @@ const server = http.createServer((req, res) => {
 
     (async () => {
       try {
+        let subscriber = null;
         const fsDb = getFirestoreDb();
         if (fsDb && fsDb.getVoiceBinding) {
           try {
@@ -3146,7 +3389,14 @@ const server = http.createServer((req, res) => {
         ));
 
         const minutesUsed = Number(subscriber?.minutesUsed ?? 0);
-        const overageRatePerMinute = Number(subscriber?.overageRatePerMinute ?? (plan === 'VOICE_STARTER' ? 0.25 : 0.20));
+        let overageRatePerMinute = Number(subscriber?.overageRatePerMinute ?? (plan === 'VOICE_STARTER' ? 0.25 : 0.20));
+
+        const isPremiumModel = subscriber?.hasPremiumModel === true ||
+          (subscriber?.model && subscriber.model.toLowerCase().includes('gpt-4o') && !subscriber.model.toLowerCase().includes('mini'));
+        if (isPremiumModel) {
+          overageRatePerMinute = Number((overageRatePerMinute * 1.015).toFixed(4));
+        }
+
         const remainingMinutes = Math.max(0, quotaMinutes - minutesUsed);
         const overageMinutes = Math.max(0, minutesUsed - quotaMinutes);
         const overageAmount = Number((overageMinutes * overageRatePerMinute).toFixed(2));
@@ -3165,6 +3415,8 @@ const server = http.createServer((req, res) => {
           overageMinutes,
           overageRatePerMinute,
           overageAmount,
+          modelTier: isPremiumModel ? 'PREMIUM (+1.5% Overage Markup)' : 'STANDARD (Included)',
+          hasPremiumModel: isPremiumModel,
           billingCycleEnd: subscriber?.billingCycleEnd || new Date(Date.now() + 30 * 24 * 60 * 60 * 1000).toISOString(),
           forwardingNumber: subscriber?.forwardingNumber || '+18005550199',
           isUnlimitedGateway: plan === 'PRO_GATEWAY'

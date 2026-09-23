@@ -285,19 +285,25 @@ exports.handler = async (event) => {
           }
 
           // Case B: If this call pushed the user into overage (beyond their included pooled quota),
-          // automatically bill the overage increment ($0.20 or $0.25/minute) onto their upcoming monthly invoice
+          // automatically bill the overage increment ($0.20 or $0.25/minute, +1.5% if premium model) onto their upcoming monthly invoice
           if (newOverageMinutes > 0 && customerId) {
-            const rawRate = sub.overageRatePerMinute || sub.overageRate || (sub.plan === 'VOICE_STARTER' || sub.tier === 'VOICE_STARTER' ? 0.25 : 0.20);
+            let rawRate = sub.overageRatePerMinute || sub.overageRate || (sub.plan === 'VOICE_STARTER' || sub.tier === 'VOICE_STARTER' ? 0.25 : 0.20);
+            const isPremiumModel = sub.hasPremiumModel === true ||
+              (sub.model && sub.model.toLowerCase().includes('gpt-4o') && !sub.model.toLowerCase().includes('mini'));
+            if (isPremiumModel) {
+              rawRate = rawRate * 1.015; // 1.5% markup applied strictly to overages
+            }
             const overageRateCents = Math.round(parseFloat(rawRate) * 100);
-            const amountCents = newOverageMinutes * overageRateCents;
-            const rateFormatted = (overageRateCents / 100).toFixed(2);
+            const amountCents = Math.round(newOverageMinutes * parseFloat(rawRate) * 100);
+            const rateFormatted = (parseFloat(rawRate)).toFixed(3);
 
             try {
+              const markupNote = isPremiumModel ? ' (+1.5% Premium Model Markup)' : '';
               const invoiceItemData = {
                 customer: customerId,
                 amount: amountCents,
                 currency: 'usd',
-                description: `24/7 AI Voice Receptionist Overage: ${newOverageMinutes} min(s) @ $${rateFormatted}/min (Call from ${callerNum})`
+                description: `24/7 AI Voice Receptionist Overage: ${newOverageMinutes} min(s) @ $${rateFormatted}/min${markupNote} (Call from ${callerNum})`
               };
               if (subscriptionId && subscriptionId.startsWith('sub_')) {
                 invoiceItemData.subscription = subscriptionId;
@@ -306,7 +312,7 @@ exports.handler = async (event) => {
               const invoiceItem = await stripeApiRequest('/v1/invoice_items', 'POST', invoiceItemData);
               stripeBilled = true;
               stripeInvoiceItemId = invoiceItem.id;
-              console.log(`💳 [STRIPE OVERAGE BILLED] Billed ${newOverageMinutes} min(s) ($${(amountCents/100).toFixed(2)} @ $${rateFormatted}/m) to customer ${customerId} (Invoice Item: ${invoiceItem.id})`);
+              console.log(`💳 [STRIPE OVERAGE BILLED] Billed ${newOverageMinutes} min(s) ($${(amountCents/100).toFixed(2)} @ $${rateFormatted}/m${markupNote}) to customer ${customerId} (Invoice Item: ${invoiceItem.id})`);
             } catch (invErr) {
               console.error('❌ [STRIPE OVERAGE BILLING ERROR]:', invErr.message);
             }

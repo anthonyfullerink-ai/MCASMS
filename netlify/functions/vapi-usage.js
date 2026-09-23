@@ -73,7 +73,13 @@ exports.handler = async (event) => {
     ));
 
     const minutesUsed = Number(subscriber?.minutesUsed ?? 0);
-    const overageRatePerMinute = Number(subscriber?.overageRatePerMinute ?? (plan === 'VOICE_STARTER' ? 0.25 : 0.20));
+    let overageRatePerMinute = Number(subscriber?.overageRatePerMinute ?? (plan === 'VOICE_STARTER' ? 0.25 : 0.20));
+
+    const isPremiumModel = subscriber?.hasPremiumModel === true ||
+      (subscriber?.model && subscriber.model.toLowerCase().includes('gpt-4o') && !subscriber.model.toLowerCase().includes('mini'));
+    if (isPremiumModel) {
+      overageRatePerMinute = Number((overageRatePerMinute * 1.015).toFixed(4));
+    }
 
     const remainingMinutes = Math.max(0, quotaMinutes - minutesUsed);
     const overageMinutes = Math.max(0, minutesUsed - quotaMinutes);
@@ -95,6 +101,8 @@ exports.handler = async (event) => {
         overageMinutes,
         overageRatePerMinute,
         overageAmount,
+        modelTier: isPremiumModel ? 'PREMIUM (+1.5% Overage Markup)' : 'STANDARD (Included)',
+        hasPremiumModel: isPremiumModel,
         billingCycleEnd: subscriber?.billingCycleEnd || new Date(Date.now() + 30 * 24 * 60 * 60 * 1000).toISOString(),
         forwardingNumber: subscriber?.forwardingNumber || '+18005550199',
         isUnlimitedGateway: plan === 'PRO_GATEWAY'
