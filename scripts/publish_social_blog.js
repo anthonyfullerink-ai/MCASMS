@@ -52,22 +52,33 @@ function getSocialImageUrl(article = {}) {
     } catch (e) {}
   }
 
-  // If article already has a valid verified GitHub imageUrl, use it
-  if (article.imageUrl && article.imageUrl.startsWith('https://raw.githubusercontent.com/')) {
-    const baseName = path.basename(article.imageUrl);
-    if (VERIFIED_GITHUB_SOCIAL_IMAGES.includes(baseName)) {
+  const usedImages = new Set(
+    existingPosts
+      .map(p => path.basename(p.imageUrl || p.image || '').toLowerCase())
+      .filter(Boolean)
+  );
+
+  // If article already has an imageUrl, verify it is not already used by another post
+  if (article.imageUrl) {
+    const baseName = path.basename(article.imageUrl).toLowerCase();
+    const isUsedByOther = existingPosts.some(
+      p => p.slug !== article.slug && path.basename(p.imageUrl || p.image || '').toLowerCase() === baseName
+    );
+    if (!isUsedByOther) {
       return article.imageUrl;
     }
   }
 
-  // Find a verified image that was least recently used
-  const usedImages = existingPosts.map(p => path.basename(p.imageUrl || ''));
-  const unusedAsset = VERIFIED_GITHUB_SOCIAL_IMAGES.find(img => !usedImages.includes(img));
-  const chosenAsset = unusedAsset || VERIFIED_GITHUB_SOCIAL_IMAGES[Math.floor(Math.random() * VERIFIED_GITHUB_SOCIAL_IMAGES.length)];
+  // Find an unused asset from verified list
+  const unusedAsset = VERIFIED_GITHUB_SOCIAL_IMAGES.find(img => !usedImages.has(img.toLowerCase()));
+  if (unusedAsset) {
+    const resolvedUrl = `https://raw.githubusercontent.com/anthonyfullerink-ai/MCASMS/main/assets/social/${unusedAsset}`;
+    article.imageUrl = resolvedUrl;
+    return resolvedUrl;
+  }
 
-  const resolvedUrl = `https://raw.githubusercontent.com/anthonyfullerink-ai/MCASMS/main/assets/social/${chosenAsset}`;
-  article.imageUrl = resolvedUrl;
-  return resolvedUrl;
+  // ZERO REUSE STRICT SAFEGUARD: Never recycle previous images
+  throw new Error(`[ZeroReuseGuard] All verified repository social images are already in use in blog/posts.json. Automatic recycling is strictly disabled. Please generate a bespoke image and save it to assets/social/ for "${article.title}".`);
 }
 
 function postGraphApi(endpoint, postData) {

@@ -246,6 +246,22 @@ async function publishMorningBlog(bundle, isDryRun) {
 
   const contentHtml = bundle.blog.contentHtml || markdownToHtml(bundle.blog.contentMarkdown);
 
+  // ─── ZERO IMAGE REUSE SAFEGUARD ───
+  let targetImageUrl = bundle.blog.imageUrl || bundle.blog.image;
+  if (!targetImageUrl && bundle.feedPost && bundle.feedPost.imageAsset) {
+    targetImageUrl = `https://raw.githubusercontent.com/anthonyfullerink-ai/MCASMS/main/assets/social/generated/${bundle.feedPost.imageAsset}`;
+  }
+
+  if (!targetImageUrl) {
+    throw new Error(`[ZeroReuseGuard] Cannot publish blog post "${bundle.blog.title}". No bespoke image URL provided. Automatic fallback to generic recycled images is strictly prohibited.`);
+  }
+
+  const targetBase = path.basename(targetImageUrl).toLowerCase();
+  const isDuplicate = posts.some(p => p.slug !== slug && path.basename(p.imageUrl || p.image || '').toLowerCase() === targetBase);
+  if (isDuplicate) {
+    throw new Error(`[ZeroReuseGuard] Image "${targetBase}" is already in use by another article in blog/posts.json! Every post must have a 100% unique bespoke visual.`);
+  }
+
   const newPostEntry = {
     slug: slug,
     title: bundle.blog.title,
@@ -256,7 +272,7 @@ async function publishMorningBlog(bundle, isDryRun) {
     tags: tags,
     excerpt: bundle.blog.excerpt,
     metaDescription: bundle.blog.excerpt,
-    imageUrl: `https://raw.githubusercontent.com/anthonyfullerink-ai/MCASMS/main/assets/social/contractor-speed-rule.jpg`
+    imageUrl: targetImageUrl
   };
 
   const existingIdx = posts.findIndex(p => p.slug === slug);

@@ -879,6 +879,125 @@ function generateVoiceProOnboardingEmailHtml(params) {
 </html>`;
 }
 
+// ═══════════════════════════════════════════════════════════════════
+//  CONTENT ENGINE & BLOG ZERO-IMAGE-REUSE SAFEGUARDS
+// ═══════════════════════════════════════════════════════════════════
+function isImageAlreadyUsedInBlog(imageUrl, currentSlug = null) {
+  if (!imageUrl) return false;
+  const targetBase = path.basename(imageUrl).toLowerCase();
+  const blogPostsFile = path.join(__dirname, 'blog', 'posts.json');
+  if (fs.existsSync(blogPostsFile)) {
+    try {
+      const blogPosts = JSON.parse(fs.readFileSync(blogPostsFile, 'utf8'));
+      for (const p of blogPosts) {
+        if (currentSlug && p.slug === currentSlug) continue;
+        const pImg = p.imageUrl || p.image || '';
+        if (pImg && path.basename(pImg).toLowerCase() === targetBase) {
+          return true;
+        }
+      }
+    } catch (e) {}
+  }
+  return false;
+}
+
+async function executePostPublish(post) {
+  const blogPostsFile = path.join(__dirname, 'blog', 'posts.json');
+  const slug = (post.title || 'article').toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/(^-|-$)/g, '');
+  const isoDate = new Date().toISOString();
+  const formattedDate = new Date().toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' });
+
+  // STRICT ZERO-REUSE SAFEGUARD
+  if (!post.imageUrl) {
+    throw new Error(`[ZeroReuseGuard] Cannot publish post "${post.title}" because post.imageUrl is missing. Every post must have a bespoke image assigned.`);
+  }
+
+  if (isImageAlreadyUsedInBlog(post.imageUrl, slug)) {
+    throw new Error(`[ZeroReuseGuard] Image "${path.basename(post.imageUrl)}" is already in use by an existing article in blog/posts.json. Automatic recycling of images is strictly forbidden per Workspace Guidelines.`);
+  }
+
+  const imageUrl = post.imageUrl;
+
+  // 1. Append to Blog (posts.json)
+  if (fs.existsSync(blogPostsFile)) {
+    try {
+      const blogPosts = JSON.parse(fs.readFileSync(blogPostsFile, 'utf8'));
+      const newBlogPost = {
+        slug: slug,
+        title: post.title,
+        category: post.niche || "Industry Insights",
+        date: formattedDate,
+        isoDate: isoDate,
+        readTime: 4,
+        tags: ["Speed to Lead", "Local Business", "Telephony"],
+        snippet: post.hook,
+        excerpt: post.hook,
+        metaDescription: post.hook,
+        image: imageUrl,
+        imageUrl: imageUrl
+      };
+      const existingIdx = blogPosts.findIndex(b => b.slug === slug);
+      if (existingIdx >= 0) {
+        blogPosts[existingIdx] = newBlogPost;
+      } else {
+        blogPosts.unshift(newBlogPost);
+      }
+      fs.writeFileSync(blogPostsFile, JSON.stringify(blogPosts, null, 2), 'utf8');
+      console.log(`[ContentEngine] 📚 Appended to blog/posts.json: ${slug} with unique image: ${path.basename(imageUrl)}`);
+    } catch (e) {
+      console.error("[ContentEngine] Failed to update blog/posts.json:", e.message);
+      throw e;
+    }
+  }
+
+  // 2. Generate blog/posts/<slug>.html from template.html
+  const templatePath = path.join(__dirname, 'blog', 'template.html');
+  const postHtmlPath = path.join(__dirname, 'blog', 'posts', `${slug}.html`);
+  if (fs.existsSync(templatePath)) {
+    try {
+      let html = fs.readFileSync(templatePath, 'utf8');
+      const paragraphs = (post.narrativeBody || '').split('\n\n').map(p => `<p>${p.trim()}</p>`).join('\n');
+      html = html
+        .replace(/\{\{TITLE\}\}/g, post.title)
+        .replace(/\{\{DESCRIPTION\}\}/g, post.hook)
+        .replace(/\{\{SLUG\}\}/g, slug)
+        .replace(/\{\{ISO_DATE\}\}/g, isoDate)
+        .replace(/\{\{DATE\}\}/g, formattedDate)
+        .replace(/\{\{CATEGORY\}\}/g, post.niche || "Industry Insights")
+        .replace(/\{\{READ_TIME\}\}/g, "4")
+        .replace(/\{\{IMAGE_URL\}\}/g, imageUrl)
+        .replace(/\{\{CONTENT_HTML\}\}/g, paragraphs);
+      
+      fs.writeFileSync(postHtmlPath, html, 'utf8');
+      console.log(`[ContentEngine] 📄 Generated article HTML: ${postHtmlPath}`);
+    } catch (e) {
+      console.error("[ContentEngine] Failed to generate article HTML:", e.message);
+      throw e;
+    }
+  }
+
+  // 3. Append to published_history.json
+  const CE_DATA_DIR = path.join(__dirname, 'data');
+  const pubHistoryFile = path.join(CE_DATA_DIR, 'published_history.json');
+  let pubHistory = [];
+  if (fs.existsSync(pubHistoryFile)) {
+    try { pubHistory = JSON.parse(fs.readFileSync(pubHistoryFile, 'utf8')); } catch (e) {}
+  }
+  pubHistory.unshift({
+    id: post.id,
+    title: post.title,
+    slug: slug,
+    imageUrl: imageUrl,
+    publishedAt: isoDate,
+    channels: post.channelTargets || ['blog', 'facebook', 'instagram'],
+    niche: post.niche
+  });
+  if (!fs.existsSync(CE_DATA_DIR)) fs.mkdirSync(CE_DATA_DIR, { recursive: true });
+  fs.writeFileSync(pubHistoryFile, JSON.stringify(pubHistory.slice(0, 100), null, 2), 'utf8');
+
+  return { slug, publishedAt: isoDate };
+}
+
 const server = http.createServer((req, res) => {
   let relativePath = decodeURIComponent(req.url.split('?')[0]);
   
@@ -3375,83 +3494,6 @@ const server = http.createServer((req, res) => {
       return;
     }
 
-    // Publish Post Function (Shared between manual trigger and auto-scheduler)
-    const executePostPublish = async (post) => {
-      // 1. Append to Blog (posts.json)
-      const blogPostsFile = path.join(__dirname, 'blog', 'posts.json');
-      const slug = (post.title || 'article').toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/(^-|-$)/g, '');
-      const isoDate = new Date().toISOString();
-      const formattedDate = new Date().toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' });
-      const imageUrl = post.imageUrl || "/assets/social/contractor-speed-rule.jpg";
-
-      if (fs.existsSync(blogPostsFile)) {
-        try {
-          const blogPosts = JSON.parse(fs.readFileSync(blogPostsFile, 'utf8'));
-          const newBlogPost = {
-            slug: slug,
-            title: post.title,
-            category: post.niche || "Industry Insights",
-            date: formattedDate,
-            isoDate: isoDate,
-            readTime: 4,
-            tags: ["Speed to Lead", "Local Business", "Telephony"],
-            snippet: post.hook,
-            excerpt: post.hook,
-            metaDescription: post.hook,
-            image: imageUrl,
-            imageUrl: imageUrl
-          };
-          if (!blogPosts.some(b => b.slug === slug)) {
-            blogPosts.unshift(newBlogPost);
-            fs.writeFileSync(blogPostsFile, JSON.stringify(blogPosts, null, 2), 'utf8');
-            console.log(`[ContentEngine] 📚 Appended to blog/posts.json: ${slug}`);
-          }
-        } catch (e) {
-          console.error("[ContentEngine] Failed to update blog/posts.json:", e.message);
-        }
-      }
-
-      // 2. Generate blog/posts/<slug>.html from template.html
-      const templatePath = path.join(__dirname, 'blog', 'template.html');
-      const postHtmlPath = path.join(__dirname, 'blog', 'posts', `${slug}.html`);
-      if (fs.existsSync(templatePath) && !fs.existsSync(postHtmlPath)) {
-        try {
-          let html = fs.readFileSync(templatePath, 'utf8');
-          const paragraphs = (post.narrativeBody || '').split('\n\n').map(p => `<p>${p.trim()}</p>`).join('\n');
-          html = html
-            .replace(/\{\{TITLE\}\}/g, post.title)
-            .replace(/\{\{DESCRIPTION\}\}/g, post.hook)
-            .replace(/\{\{SLUG\}\}/g, slug)
-            .replace(/\{\{ISO_DATE\}\}/g, isoDate)
-            .replace(/\{\{DATE\}\}/g, formattedDate)
-            .replace(/\{\{CATEGORY\}\}/g, post.niche || "Industry Insights")
-            .replace(/\{\{READ_TIME\}\}/g, "4")
-            .replace(/\{\{IMAGE_URL\}\}/g, imageUrl)
-            .replace(/\{\{CONTENT_HTML\}\}/g, paragraphs);
-          
-          fs.writeFileSync(postHtmlPath, html, 'utf8');
-          console.log(`[ContentEngine] 📄 Generated article HTML: ${postHtmlPath}`);
-        } catch (e) {
-          console.error("[ContentEngine] Failed to generate article HTML:", e.message);
-        }
-      }
-
-      // 3. Append to published_history.json
-      const pubHistoryFile = path.join(CE_DATA_DIR, 'published_history.json');
-      let pubHistory = readJson(pubHistoryFile, []);
-      pubHistory.unshift({
-        id: post.id,
-        title: post.title,
-        slug: slug,
-        publishedAt: isoDate,
-        channels: post.channelTargets || ['blog', 'facebook', 'instagram'],
-        niche: post.niche
-      });
-      writeJson(pubHistoryFile, pubHistory.slice(0, 100));
-
-      return { slug, publishedAt: isoDate };
-    };
-
     // 8. Publish Post (Manual)
     if (relativePath === '/api/content-engine/publish-post' && req.method === 'POST') {
       getRequestBody().then(async ({ postId }) => {
@@ -3463,13 +3505,19 @@ const server = http.createServer((req, res) => {
           return;
         }
 
-        const pubResult = await executePostPublish(post);
-        post.status = 'published';
-        post.publishedAt = pubResult.publishedAt;
-        writeJson(CE_QUEUE_FILE, queue);
+        try {
+          const pubResult = await executePostPublish(post);
+          post.status = 'published';
+          post.publishedAt = pubResult.publishedAt;
+          writeJson(CE_QUEUE_FILE, queue);
 
-        res.writeHead(200, { 'Content-Type': 'application/json; charset=utf-8', 'Access-Control-Allow-Origin': '*' });
-        res.end(JSON.stringify({ success: true, post, message: 'Post published successfully to Blog and Queued for Social Distribution!' }));
+          res.writeHead(200, { 'Content-Type': 'application/json; charset=utf-8', 'Access-Control-Allow-Origin': '*' });
+          res.end(JSON.stringify({ success: true, post, message: 'Post published successfully to Blog and Queued for Social Distribution!' }));
+        } catch (pubErr) {
+          console.error(`[ContentEngine] ❌ Manual publish blocked for "${post.title}":`, pubErr.message);
+          res.writeHead(400, { 'Content-Type': 'application/json; charset=utf-8', 'Access-Control-Allow-Origin': '*' });
+          res.end(JSON.stringify({ success: false, error: pubErr.message }));
+        }
       });
       return;
     }
@@ -3766,7 +3814,7 @@ const server = http.createServer((req, res) => {
 });
 
 // ─── Omnichannel Background Auto-Scheduler Daemon ───
-function runOmnichannelSchedulerBackgroundCheck() {
+async function runOmnichannelSchedulerBackgroundCheck() {
   const CE_DATA_DIR = path.join(__dirname, 'data');
   const CE_QUEUE_FILE = path.join(CE_DATA_DIR, 'content_engine_queue.json');
   const CE_SETTINGS_FILE = path.join(CE_DATA_DIR, 'content_engine_settings.json');
@@ -3861,68 +3909,16 @@ function runOmnichannelSchedulerBackgroundCheck() {
 
       if (isApproved && isDue && isNotPublished) {
         console.log(`[OmnichannelScheduler] 🚀 Auto-publishing due approved post: "${post.title}" (Scheduled: ${post.scheduledFor})`);
-        
-        // 1. Append to Blog (posts.json)
-        const blogPostsFile = path.join(__dirname, 'blog', 'posts.json');
-        const slug = (post.title || 'article').toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/(^-|-$)/g, '');
-        const isoDate = now.toISOString();
-        const formattedDate = now.toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' });
-        const imageUrl = post.imageUrl || "/assets/social/contractor-speed-rule.jpg";
-
-        if (fs.existsSync(blogPostsFile)) {
-          try {
-            const blogPosts = JSON.parse(fs.readFileSync(blogPostsFile, 'utf8'));
-            if (!blogPosts.some(b => b.slug === slug)) {
-              blogPosts.unshift({
-                slug,
-                title: post.title,
-                category: post.niche || "Industry Insights",
-                date: formattedDate,
-                isoDate,
-                readTime: 4,
-                tags: ["Speed to Lead", "Local Business", "Telephony"],
-                snippet: post.hook,
-                excerpt: post.hook,
-                metaDescription: post.hook,
-                image: imageUrl,
-                imageUrl
-              });
-              fs.writeFileSync(blogPostsFile, JSON.stringify(blogPosts, null, 2), 'utf8');
-              console.log(`[OmnichannelScheduler] 📚 Appended to blog/posts.json: ${slug}`);
-            }
-          } catch (e) {
-            console.error("[OmnichannelScheduler] Failed blog/posts.json append:", e.message);
-          }
+        try {
+          const pubResult = await executePostPublish(post);
+          post.status = 'published';
+          post.publishedAt = pubResult.publishedAt;
+          post.publishedVia = 'auto_scheduler';
+          updated = true;
+          console.log(`[OmnichannelScheduler] ✅ Successfully auto-published: "${post.title}"`);
+        } catch (pubErr) {
+          console.error(`[OmnichannelScheduler] ❌ Auto-publish blocked for "${post.title}":`, pubErr.message);
         }
-
-        // 2. Generate blog/posts/<slug>.html from template.html
-        const templatePath = path.join(__dirname, 'blog', 'template.html');
-        const postHtmlPath = path.join(__dirname, 'blog', 'posts', `${slug}.html`);
-        if (fs.existsSync(templatePath) && !fs.existsSync(postHtmlPath)) {
-          try {
-            let html = fs.readFileSync(templatePath, 'utf8');
-            const paragraphs = (post.narrativeBody || '').split('\n\n').map(p => `<p>${p.trim()}</p>`).join('\n');
-            html = html
-              .replace(/\{\{TITLE\}\}/g, post.title)
-              .replace(/\{\{DESCRIPTION\}\}/g, post.hook)
-              .replace(/\{\{SLUG\}\}/g, slug)
-              .replace(/\{\{ISO_DATE\}\}/g, isoDate)
-              .replace(/\{\{DATE\}\}/g, formattedDate)
-              .replace(/\{\{CATEGORY\}\}/g, post.niche || "Industry Insights")
-              .replace(/\{\{READ_TIME\}\}/g, "4")
-              .replace(/\{\{IMAGE_URL\}\}/g, imageUrl)
-              .replace(/\{\{CONTENT_HTML\}\}/g, paragraphs);
-            fs.writeFileSync(postHtmlPath, html, 'utf8');
-          } catch (e) {
-            console.error("[OmnichannelScheduler] Failed article HTML generation:", e.message);
-          }
-        }
-
-        // 3. Update status in queue
-        post.status = 'published';
-        post.publishedAt = isoDate;
-        post.publishedVia = 'auto_scheduler';
-        updated = true;
       }
     }
 
