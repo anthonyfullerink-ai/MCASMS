@@ -1,10 +1,10 @@
 {
-  "versionCode": 15,
-  "versionName": "1.6.1",
+  "versionCode": 17,
+  "versionName": "1.7.0",
   "downloadUrl": "https://raw.githubusercontent.com/anthonyfullerink-ai/MCASMS/main/MissedCallAutoSMS.apk",
   "proDownloadUrl": "https://raw.githubusercontent.com/anthonyfullerink-ai/MCASMS/main/MissedCallAutoSMS-Pro.apk",
-  "releaseNotes": "✅ Autonomous Daily Social Posts — 9AM blog, 12:30PM feed, 6PM reel+story fire automatically every day\n✅ Fixed stale content cache — AI now generates a fresh topic bundle each morning\n✅ Blog articles now automatically cross-post to Facebook & Instagram immediately after publishing\n✅ Nav bar reorganized into clean dropdown menus (Plans, For Business, Learn)\n✅ App: Removed duplicate AI greeting field — one unified source in Prompt Studio\n✅ App: Busy Status chips (Hands Full, On a Job, etc.) now instantly update what Riley tells callers live\n• 🎙️ Unified Prompt & AI Studio — one centralized hub for Missed-Call SMS, AI Voice persona/greetings, and Post-Call SMS with live interactive preview bubbles\n• ⏱️ Real-Time Minute Quota & Metering — live tracking of pooled voice minutes and automated overage billing\n• 🛡️ Hardware appliance cryptographic lock & anti-piracy licensing protection",
-  "mandatory": false,
-  "minSupportedVersion": 14,
-  "updatedAt": "2026-09-23T04:00:00.000Z"
+  "releaseNotes": "✅ Voice Studio Polish — removed internal development copy from user-facing screens\n✅ Dual-Mode AI Voice Test — Instant In-App Speaker test ($0.00) + Live Cellular phone call test to your cell phone\n✅ AI Model Selector & 1.5% Overage Engine — Default GPT-4o-mini at 0.30 temperature with automated 1.5% overage billing for GPT-4o\n✅ Enhanced Real-Time OTA Update Notification Engine with Firebase Cloud Messaging\n✅ Upgraded Telecom Carrier Routing & SIM SMS Delivery Safeguards",
+  "mandatory": true,
+  "minSupportedVersion": 15,
+  "updatedAt": "2026-09-23T19:57:57.981Z"
 }

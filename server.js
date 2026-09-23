@@ -21,13 +21,13 @@ const MIME_TYPES = {
 };
 
 const LATEST_APP_VERSION = {
-  versionCode: 13,
-  versionName: '1.5.0',
+  versionCode: 17,
+  versionName: '1.7.0',
   downloadUrl: 'https://raw.githubusercontent.com/anthonyfullerink-ai/MCASMS/main/MissedCallAutoSMS.apk',
   proDownloadUrl: 'https://raw.githubusercontent.com/anthonyfullerink-ai/MCASMS/main/MissedCallAutoSMS-Pro.apk',
-  releaseNotes: '• 🎛️ Contractor Status Dial & Trade Activity Selector in Settings & Voice Hub\n• 🎙️ Dynamic Voicemail Greeting Generator with 1-tap clipboard copy\n• 🔗 Direct Booking & Goal Link Integration with dynamic {booking_link}, {activity}, and {agent_name} tokens\n• ⚡ Dual-SIM Persistent Subscription ID Caching & Anti-Spam SIM Burn Safeguards\n• 🛡️ Event-Driven Reconciliation Buffer preventing SMS collisions & double-texts\n• 💳 Automated Stripe Multi-Tier Provisioning & Metered Billing',
+  releaseNotes: '• 🎙️ Dual-Mode AI Voice Receptionist Test Call (In-App Speaker & Live Cellular)\n• 🧠 AI Model Selector with 1.5% Overage Markup for GPT-4o\n• 🎛️ Clean Voice Hub Studio with 1-Tap Carrier Forwarding (*71/*73)\n• ⚡ Real-Time Instant OTA Update Trigger & Firebase Push\n• 🛡️ Direct SIM Carrier SMS dispatch with 15s human jitter',
   mandatory: true,
-  minSupportedVersion: 13
+  minSupportedVersion: 15
 };
 
 

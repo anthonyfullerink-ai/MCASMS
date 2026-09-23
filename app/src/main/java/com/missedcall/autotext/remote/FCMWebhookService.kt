@@ -19,6 +19,11 @@ import kotlinx.coroutines.runBlocking
 import kotlinx.coroutines.withContext
 import android.content.Context
 import android.content.Intent
+import android.app.NotificationChannel
+import android.app.NotificationManager
+import android.app.PendingIntent
+import android.os.Build
+import androidx.core.app.NotificationCompat
 import java.net.HttpURLConnection
 import java.net.URL
 import java.nio.charset.StandardCharsets
@@ -86,6 +91,30 @@ class FCMWebhookService : FirebaseMessagingService() {
             return
         }
 
+        // Handle Remote OTA Update Broadcast Signal
+        val isOtaUpdate = data["type"] == "ota_update" ||
+                data["action"] == "check_update" ||
+                data["type"] == "update" ||
+                data["event"] == "ota_published"
+
+        if (isOtaUpdate) {
+            Log.i(TAG, "🚀 [FCM OTA PUSH RECEIVED] Remote OTA update signal received! Querying manifest immediately.")
+            serviceScope.launch {
+                try {
+                    val updateMgr = RemoteUpdateManager(applicationContext)
+                    val checkResult = updateMgr.checkForUpdatesDetailed(forceCheck = true)
+                    if (checkResult is UpdateCheckResult.Available) {
+                        val update = checkResult.updateInfo
+                        Log.i(TAG, "🚀 New OTA update verified: v${update.versionName} (${update.versionCode}). Showing high-priority notification.")
+                        showOtaUpdateNotification(applicationContext, update)
+                    }
+                } catch (e: Exception) {
+                    Log.w(TAG, "Failed to process remote OTA update signal: ${e.message}")
+                }
+            }
+            return
+        }
+
         val app = applicationContext as App
         val settings = runBlocking { app.settingsRepository.getSettings() }
 
@@ -137,5 +166,48 @@ class FCMWebhookService : FirebaseMessagingService() {
             .build()
 
         WorkManager.getInstance(applicationContext).enqueue(workRequest)
+    }
+
+    private fun showOtaUpdateNotification(context: Context, update: UpdateInfo) {
+        val channelId = "mcas_ota_updates"
+        val notificationManager = context.getSystemService(Context.NOTIFICATION_SERVICE) as? NotificationManager ?: return
+
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
+            val channel = NotificationChannel(
+                channelId,
+                "App Updates",
+                NotificationManager.IMPORTANCE_HIGH
+            ).apply {
+                description = "Critical system and software update alerts"
+                enableLights(true)
+                enableVibration(true)
+            }
+            notificationManager.createNotificationChannel(channel)
+        }
+
+        val launchIntent = context.packageManager.getLaunchIntentForPackage(context.packageName)?.apply {
+            flags = Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_CLEAR_TOP
+            putExtra("FORCE_CHECK_UPDATE", true)
+        }
+        val pendingIntent = PendingIntent.getActivity(
+            context,
+            1001,
+            launchIntent,
+            PendingIntent.FLAG_UPDATE_CURRENT or PendingIntent.FLAG_IMMUTABLE
+        )
+
+        val notification = NotificationCompat.Builder(context, channelId)
+            .setSmallIcon(android.R.drawable.stat_sys_download)
+            .setContentTitle("🚀 App Update Available: v${update.versionName}")
+            .setContentText("Build ${update.versionCode} is ready. Tap to install now.")
+            .setStyle(NotificationCompat.BigTextStyle().bigText(
+                "A new update (v${update.versionName}, Build ${update.versionCode}) is available.\n${update.releaseNotes ?: "Tap to download and install immediately."}"
+            ))
+            .setPriority(NotificationCompat.PRIORITY_HIGH)
+            .setAutoCancel(true)
+            .setContentIntent(pendingIntent)
+            .build()
+
+        notificationManager.notify(9001, notification)
     }
 }

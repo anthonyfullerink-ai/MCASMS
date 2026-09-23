@@ -39,9 +39,11 @@ class RemoteUpdateManager(private val context: Context) {
 
     companion object {
         private const val TAG = "RemoteUpdateManager"
-        const val DEFAULT_UPDATE_URL = "https://raw.githubusercontent.com/anthonyfullerink-ai/MCASMS/main/version.json"
+        const val DEFAULT_UPDATE_URL = "https://missedcallautosms.com/version.json"
 
         val CANDIDATE_URLS = listOf(
+            "https://missedcallautosms.com/version.json",
+            "https://missedcallautosms.com/api/version.json",
             "https://raw.githubusercontent.com/anthonyfullerink-ai/MCASMS/main/version.json",
             "https://cdn.jsdelivr.net/gh/anthonyfullerink-ai/MCASMS@main/version.json",
             "http://10.0.0.65:8000/api/version.json",
@@ -53,9 +55,11 @@ class RemoteUpdateManager(private val context: Context) {
     private val gson = Gson()
 
     suspend fun checkForUpdatesDetailed(manifestUrl: String = DEFAULT_UPDATE_URL, forceCheck: Boolean = false): UpdateCheckResult = withContext(Dispatchers.IO) {
-        // Prioritize global public CDN endpoints first so updates work anywhere on mobile data or Wi-Fi
+        // Prioritize production domain endpoints first for instant real-time version updates
         val targets = mutableListOf<String>()
-        targets.add(DEFAULT_UPDATE_URL)
+        targets.add("https://missedcallautosms.com/version.json")
+        targets.add("https://missedcallautosms.com/api/version.json")
+        targets.add("https://raw.githubusercontent.com/anthonyfullerink-ai/MCASMS/main/version.json")
         targets.add("https://cdn.jsdelivr.net/gh/anthonyfullerink-ai/MCASMS@main/version.json")
 
         // If a custom HTTPS manifest was provided and isn't already present, prioritize it
