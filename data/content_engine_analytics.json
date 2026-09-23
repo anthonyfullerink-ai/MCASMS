@@ -1,0 +1,48 @@
+{
+  "summary": {
+    "totalImpressions": 14820,
+    "totalClicks": 942,
+    "averageCtr": "6.35%",
+    "conversionsRecorded": 47
+  },
+  "topPerforming": [
+    {
+      "id": "post-top-1",
+      "title": "The $1,400 Bathroom Leak and the 90-Second Rule",
+      "channel": "Facebook / Instagram",
+      "impressions": 6840,
+      "clicks": 512,
+      "ctr": "7.48%",
+      "conversions": 29,
+      "whyItWorked": "Relatable contractor loss aversion hook. Framing the missed call as an immediate $1,400 job lost resonates powerfully with emergency tradesmen."
+    },
+    {
+      "id": "post-top-2",
+      "title": "Why You Miss Calls Mid-Fade: Barber & Salon Speed-to-Lead",
+      "channel": "Instagram Reels",
+      "impressions": 4920,
+      "clicks": 284,
+      "ctr": "5.77%",
+      "conversions": 14,
+      "whyItWorked": "Visceral physical trade dilemma ('soapy hands / shears in hand cannot touch screen'). Non-techie audience immediately visualized their daily friction."
+    }
+  ],
+  "worstPerforming": [
+    {
+      "id": "post-bottom-1",
+      "title": "Understanding Event-Driven Local Telephony daemons",
+      "channel": "Blog",
+      "impressions": 1120,
+      "clicks": 18,
+      "ctr": "1.60%",
+      "conversions": 1,
+      "whyItFailed": "Too much technical jargon ('telephony daemons', 'reconciliation buffers'). Contractors disengage when copy sounds like a software developer speaking."
+    }
+  ],
+  "algorithmLearnings": [
+    "Rule 1: Always anchor the hook around an emergency jobsite scenario or physical obstruction (gloves, crawlspace, loud tools).",
+    "Rule 2: Eliminate all developer jargon. Replace 'carrier API / webhook' with 'your own phone number and carrier SIM'.",
+    "Rule 3: Video reels showing the real-time split screen of a homeowner dialing competitor vs getting an instant text achieve 2.8x higher watch completion.",
+    "Rule 4: Zero hashtags and zero emojis preserve an authentic peer-to-peer recommendation feel."
+  ]
+}

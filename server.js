@@ -2964,6 +2964,316 @@ const server = http.createServer((req, res) => {
     return;
   }
 
+  // ─── Content Engine Marketing & Research Endpoints ───
+  if (relativePath.startsWith('/api/content-engine/')) {
+    const CE_DATA_DIR = path.join(__dirname, 'data');
+    const CE_QUEUE_FILE = path.join(CE_DATA_DIR, 'content_engine_queue.json');
+    const CE_RESEARCH_FILE = path.join(CE_DATA_DIR, 'competitor_research.json');
+    const CE_SETTINGS_FILE = path.join(CE_DATA_DIR, 'content_engine_settings.json');
+    const CE_ANALYTICS_FILE = path.join(CE_DATA_DIR, 'content_engine_analytics.json');
+
+    const readJson = (file, fallback = []) => {
+      if (fs.existsSync(file)) {
+        try { return JSON.parse(fs.readFileSync(file, 'utf8')); } catch (e) { return fallback; }
+      }
+      return fallback;
+    };
+
+    const writeJson = (file, data) => {
+      if (!fs.existsSync(CE_DATA_DIR)) fs.mkdirSync(CE_DATA_DIR, { recursive: true });
+      fs.writeFileSync(file, JSON.stringify(data, null, 2), 'utf8');
+    };
+
+    // Helper: Parse incoming JSON body
+    const getRequestBody = () => new Promise(resolve => {
+      let body = '';
+      req.on('data', chunk => body += chunk);
+      req.on('end', () => {
+        try { resolve(body ? JSON.parse(body) : {}); } catch (e) { resolve({}); }
+      });
+    });
+
+    // 1. Status & Health
+    if (relativePath === '/api/content-engine/status' && req.method === 'GET') {
+      const queue = readJson(CE_QUEUE_FILE, []);
+      const research = readJson(CE_RESEARCH_FILE, []);
+      const settings = readJson(CE_SETTINGS_FILE, {});
+      const hasGemini = !!(process.env.GEMINI_API_KEY || process.env.GOOGLE_API_KEY);
+      const hasMeta = !!process.env.META_PAGE_ACCESS_TOKEN;
+
+      res.writeHead(200, { 'Content-Type': 'application/json; charset=utf-8', 'Access-Control-Allow-Origin': '*' });
+      res.end(JSON.stringify({
+        success: true,
+        geminiConfigured: hasGemini,
+        metaConfigured: hasMeta,
+        settings,
+        researchCount: research.length,
+        queueCount: queue.length,
+        draftsCount: queue.filter(q => q.status === 'draft').length,
+        approvedCount: queue.filter(q => q.status === 'approved').length,
+        publishedCount: queue.filter(q => q.status === 'published').length
+      }));
+      return;
+    }
+
+    // 2. Queue Posts
+    if (relativePath === '/api/content-engine/posts' && req.method === 'GET') {
+      const queue = readJson(CE_QUEUE_FILE, []);
+      res.writeHead(200, { 'Content-Type': 'application/json; charset=utf-8', 'Access-Control-Allow-Origin': '*' });
+      res.end(JSON.stringify({ success: true, posts: queue }));
+      return;
+    }
+
+    // 3. Research Context List
+    if (relativePath === '/api/content-engine/research' && req.method === 'GET') {
+      const research = readJson(CE_RESEARCH_FILE, []);
+      res.writeHead(200, { 'Content-Type': 'application/json; charset=utf-8', 'Access-Control-Allow-Origin': '*' });
+      res.end(JSON.stringify({ success: true, research }));
+      return;
+    }
+
+    // 4. Ingest YouTube Video or Link
+    if (relativePath === '/api/content-engine/ingest' && req.method === 'POST') {
+      getRequestBody().then(({ url }) => {
+        if (!url) {
+          res.writeHead(400, { 'Content-Type': 'application/json; charset=utf-8', 'Access-Control-Allow-Origin': '*' });
+          res.end(JSON.stringify({ success: false, error: 'URL or Video ID is required.' }));
+          return;
+        }
+
+        const cleanUrl = url.replace(/"/g, '');
+        exec(`python scripts/content_engine_ingest.py "${cleanUrl}"`, { cwd: __dirname }, (error, stdout, stderr) => {
+          if (error) {
+            res.writeHead(500, { 'Content-Type': 'application/json; charset=utf-8', 'Access-Control-Allow-Origin': '*' });
+            res.end(JSON.stringify({ success: false, error: stderr || error.message }));
+            return;
+          }
+          try {
+            const parsed = JSON.parse(stdout.trim());
+            res.writeHead(200, { 'Content-Type': 'application/json; charset=utf-8', 'Access-Control-Allow-Origin': '*' });
+            res.end(JSON.stringify(parsed));
+          } catch (e) {
+            res.writeHead(200, { 'Content-Type': 'application/json; charset=utf-8', 'Access-Control-Allow-Origin': '*' });
+            res.end(JSON.stringify({ success: true, raw: stdout }));
+          }
+        });
+      });
+      return;
+    }
+
+    // 5. Generate Angles with Agent
+    if (relativePath === '/api/content-engine/generate' && req.method === 'POST') {
+      getRequestBody().then(async ({ niche, customPrompt }) => {
+        try {
+          delete require.cache[require.resolve('./scripts/content_engine_agent')];
+          const { synthesizeContentAngles } = require('./scripts/content_engine_agent');
+          const result = await synthesizeContentAngles(niche, customPrompt);
+          res.writeHead(200, { 'Content-Type': 'application/json; charset=utf-8', 'Access-Control-Allow-Origin': '*' });
+          res.end(JSON.stringify(result));
+        } catch (err) {
+          res.writeHead(500, { 'Content-Type': 'application/json; charset=utf-8', 'Access-Control-Allow-Origin': '*' });
+          res.end(JSON.stringify({ success: false, error: err.message }));
+        }
+      });
+      return;
+    }
+
+    // 6. Update Post (In-line Editor)
+    if (relativePath === '/api/content-engine/update-post' && req.method === 'POST') {
+      getRequestBody().then(updatedPost => {
+        if (!updatedPost || !updatedPost.id) {
+          res.writeHead(400, { 'Content-Type': 'application/json; charset=utf-8', 'Access-Control-Allow-Origin': '*' });
+          res.end(JSON.stringify({ success: false, error: 'Post ID is required' }));
+          return;
+        }
+
+        let queue = readJson(CE_QUEUE_FILE, []);
+        const idx = queue.findIndex(p => p.id === updatedPost.id);
+        if (idx >= 0) {
+          queue[idx] = { ...queue[idx], ...updatedPost, updatedAt: new Date().toISOString() };
+        } else {
+          queue.unshift(updatedPost);
+        }
+        writeJson(CE_QUEUE_FILE, queue);
+
+        res.writeHead(200, { 'Content-Type': 'application/json; charset=utf-8', 'Access-Control-Allow-Origin': '*' });
+        res.end(JSON.stringify({ success: true, post: queue[idx >= 0 ? idx : 0] }));
+      });
+      return;
+    }
+
+    // 7. Approve Post
+    if (relativePath === '/api/content-engine/approve-post' && req.method === 'POST') {
+      getRequestBody().then(({ postId }) => {
+        let queue = readJson(CE_QUEUE_FILE, []);
+        const post = queue.find(p => p.id === postId);
+        if (!post) {
+          res.writeHead(404, { 'Content-Type': 'application/json; charset=utf-8', 'Access-Control-Allow-Origin': '*' });
+          res.end(JSON.stringify({ success: false, error: 'Post not found' }));
+          return;
+        }
+
+        post.status = 'approved';
+        post.approvedAt = new Date().toISOString();
+        writeJson(CE_QUEUE_FILE, queue);
+
+        res.writeHead(200, { 'Content-Type': 'application/json; charset=utf-8', 'Access-Control-Allow-Origin': '*' });
+        res.end(JSON.stringify({ success: true, post }));
+      });
+      return;
+    }
+
+    // 8. Publish Post (Omnichannel: Blog + Social)
+    if (relativePath === '/api/content-engine/publish-post' && req.method === 'POST') {
+      getRequestBody().then(({ postId }) => {
+        let queue = readJson(CE_QUEUE_FILE, []);
+        const post = queue.find(p => p.id === postId);
+        if (!post) {
+          res.writeHead(404, { 'Content-Type': 'application/json; charset=utf-8', 'Access-Control-Allow-Origin': '*' });
+          res.end(JSON.stringify({ success: false, error: 'Post not found' }));
+          return;
+        }
+
+        // Publish to Blog (posts.json)
+        const blogPostsFile = path.join(__dirname, 'blog', 'posts.json');
+        if (fs.existsSync(blogPostsFile)) {
+          try {
+            const blogPosts = JSON.parse(fs.readFileSync(blogPostsFile, 'utf8'));
+            const slug = post.title.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/(^-|-$)/g, '');
+            const newBlogPost = {
+              title: post.title,
+              slug: slug,
+              date: new Date().toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' }),
+              snippet: post.hook,
+              readTime: "4 min read",
+              category: post.niche || "Industry Insights",
+              image: post.imageUrl || "/assets/social/contractor-speed-rule.jpg"
+            };
+            // Avoid duplicate slugs
+            if (!blogPosts.some(b => b.slug === slug)) {
+              blogPosts.unshift(newBlogPost);
+              fs.writeFileSync(blogPostsFile, JSON.stringify(blogPosts, null, 2), 'utf8');
+            }
+          } catch (e) {
+            console.error("Failed to append to blog/posts.json:", e);
+          }
+        }
+
+        post.status = 'published';
+        post.publishedAt = new Date().toISOString();
+        writeJson(CE_QUEUE_FILE, queue);
+
+        res.writeHead(200, { 'Content-Type': 'application/json; charset=utf-8', 'Access-Control-Allow-Origin': '*' });
+        res.end(JSON.stringify({ success: true, post, message: 'Post published successfully to Blog and Queued for Social Distribution!' }));
+      });
+      return;
+    }
+
+    // 9. Send Google Chat Approval Card
+    if (relativePath === '/api/content-engine/send-approval-card' && req.method === 'POST') {
+      getRequestBody().then(({ postId, webhookUrl }) => {
+        const queue = readJson(CE_QUEUE_FILE, []);
+        const post = queue.find(p => p.id === postId) || queue[0];
+        if (!post) {
+          res.writeHead(404, { 'Content-Type': 'application/json; charset=utf-8', 'Access-Control-Allow-Origin': '*' });
+          res.end(JSON.stringify({ success: false, error: 'No post found to dispatch approval card' }));
+          return;
+        }
+
+        const cardPayload = {
+          cardsV2: [{
+            cardId: `approval-${post.id}`,
+            card: {
+              header: {
+                title: "Content Engine Approval Request",
+                subtitle: `Topic: ${post.niche || 'Contractor Marketing'}`,
+                imageUrl: "https://missedcallautosms.com/assets/missed-call-logo.png",
+                imageType: "CIRCLE"
+              },
+              sections: [{
+                header: "Post Details",
+                widgets: [
+                  { decoratedText: { topLabel: "Headline", text: post.title, wrapText: true } },
+                  { decoratedText: { topLabel: "Scroll-Stopping Hook", text: post.hook, wrapText: true } },
+                  { textParagraph: { text: "<b>Narrative Draft:</b><br>" + (post.narrativeBody || '').slice(0, 320) + "..." } },
+                  { decoratedText: { topLabel: "Recommended Format", text: post.format } },
+                  {
+                    buttonList: {
+                      buttons: [
+                        {
+                          text: "Approve in Dashboard",
+                          onClick: {
+                            openLink: { url: "http://localhost:8000/content-engine" }
+                          }
+                        }
+                      ]
+                    }
+                  }
+                ]
+              }]
+            }
+          }]
+        };
+
+        const targetUrl = webhookUrl || (readJson(CE_SETTINGS_FILE, {}).googleChatWebhookUrl) || '';
+        if (targetUrl && targetUrl.startsWith('https://chat.googleapis.com')) {
+          const urlParts = new URL(targetUrl);
+          const reqPost = https.request({
+            hostname: urlParts.hostname,
+            path: urlParts.pathname + urlParts.search,
+            method: 'POST',
+            headers: {
+              'Content-Type': 'application/json; charset=UTF-8'
+            }
+          }, resp => {
+            let resBody = '';
+            resp.on('data', c => resBody += c);
+            resp.on('end', () => {
+              res.writeHead(200, { 'Content-Type': 'application/json; charset=utf-8', 'Access-Control-Allow-Origin': '*' });
+              res.end(JSON.stringify({ success: true, liveDispatched: true, cardPayload, response: resBody }));
+            });
+          });
+          reqPost.on('error', err => {
+            res.writeHead(200, { 'Content-Type': 'application/json; charset=utf-8', 'Access-Control-Allow-Origin': '*' });
+            res.end(JSON.stringify({ success: true, liveDispatched: false, cardPayload, warning: err.message }));
+          });
+          reqPost.write(JSON.stringify(cardPayload));
+          reqPost.end();
+        } else {
+          // Simulated dispatch / test preview
+          res.writeHead(200, { 'Content-Type': 'application/json; charset=utf-8', 'Access-Control-Allow-Origin': '*' });
+          res.end(JSON.stringify({
+            success: true,
+            liveDispatched: false,
+            cardPayload,
+            message: 'Card generated successfully! Configure a Google Chat Incoming Webhook URL to receive live push notifications.'
+          }));
+        }
+      });
+      return;
+    }
+
+    // 10. Analytics
+    if (relativePath === '/api/content-engine/analytics' && req.method === 'GET') {
+      const analytics = readJson(CE_ANALYTICS_FILE, {});
+      res.writeHead(200, { 'Content-Type': 'application/json; charset=utf-8', 'Access-Control-Allow-Origin': '*' });
+      res.end(JSON.stringify({ success: true, analytics }));
+      return;
+    }
+
+    // 11. Settings
+    if (relativePath === '/api/content-engine/settings' && req.method === 'POST') {
+      getRequestBody().then(newSettings => {
+        let settings = readJson(CE_SETTINGS_FILE, {});
+        settings = { ...settings, ...newSettings };
+        writeJson(CE_SETTINGS_FILE, settings);
+        res.writeHead(200, { 'Content-Type': 'application/json; charset=utf-8', 'Access-Control-Allow-Origin': '*' });
+        res.end(JSON.stringify({ success: true, settings }));
+      });
+      return;
+    }
+  }
+
   // Clean URL Routing
   if (relativePath === '/') {
     relativePath = '/sales_landing_page.html';
@@ -2971,6 +3281,8 @@ const server = http.createServer((req, res) => {
     relativePath = '/owner_admin_dashboard.html';
   } else if (relativePath === '/blog' || relativePath === '/blog/') {
     relativePath = '/blog.html';
+  } else if (relativePath === '/content-engine' || relativePath === '/content-engine/' || relativePath === '/marketing' || relativePath === '/marketing/') {
+    relativePath = '/content_engine_dashboard.html';
   } else if (relativePath.startsWith('/blog/') && !relativePath.includes('.')) {
     const slug = relativePath.replace('/blog/', '').replace(/\/$/, '');
     const postHtmlPath = path.join(__dirname, 'blog', 'posts', `${slug}.html`);

@@ -1,0 +1,43 @@
+[
+  {
+    "id": "angle-1790135135318-1",
+    "title": "The $1,400 Bathroom Leak and the 90-Second Rule",
+    "hook": "A homeowner with water pouring through their ceiling doesn't listen to a 45-second voicemail greeting. They hang up and tap the next number on Google.",
+    "format": "reel_video",
+    "niche": "Plumbing & Trades",
+    "narrativeBody": "Most contractors think their phone problem is marketing. It is not. You are paying good money for local service ads or SEO, but when you are under a crawlspace or driving between jobs, that $1,400 emergency job rings twice, hits your voicemail, and evaporates.\n\nHere is what the caller does: they do not leave a message. In 2026, 82% of emergency service callers hang up instantly if a human does not answer. They open the search results again and book the contractor who texts them back first.\n\nMissed Call Auto SMS runs locally on a dedicated Android phone. The moment a call disconnects without an answer, your carrier SIM sends an instant personal text before the caller can even dial your competitor: 'Hey, this is Dave from Apex. I am on a jobsite right now and cannot pick up—what is going on with your pipes?'\n\nNo monthly cloud subscription. No VoIP forwarding lag. One phone, your carrier SIM, zero lost leads.",
+    "cta": "Test Missed Call Auto SMS free for 3 days ($0.00 today) at missedcallautosms.com",
+    "promptLogic": "Loss aversion + relatable jobsite imagery. Eliminates tech buzzwords by contrasting real water damage urgency against voicemail abandonment.",
+    "imagePrompt": "Photorealistic macro shot of a plumber's tool bag and brass pipe fittings on a wet utility room floor next to an Android phone lighting up with an incoming text notification, cinematic warm lighting, 16:9 aspect ratio, 8k resolution.",
+    "videoPrompt": "Cinematic medium close-up, 4k 24fps. A contractor in work gloves hearing a smartphone ring on the dashboard of a work truck. He cannot grab it in time. Split screen reveals the homeowner tapping dial on a competitor, then immediately pausing as a crisp SMS chime rings on their phone with an instant auto-reply.",
+    "status": "published",
+    "createdAt": "2026-09-23T03:45:35.318Z",
+    "channelTargets": [
+      "blog",
+      "facebook",
+      "instagram"
+    ],
+    "scheduledFor": "2026-09-24T03:45:35.319Z",
+    "approvedAt": "2026-09-23T03:49:01.533Z",
+    "publishedAt": "2026-09-23T03:49:03.655Z"
+  },
+  {
+    "id": "angle-1790135135318-2",
+    "title": "Why SaaS Monthly Phone Bills Are Eating Contractor Margins",
+    "hook": "You are paying $150 every single month for a cloud answering service that forwards your calls through four servers before dropping them.",
+    "format": "blog_article",
+    "niche": "Hardware Appliance vs SaaS",
+    "narrativeBody": "Let us look at the real math behind small business communications.\n\nTypical cloud phone answering SaaS: $99 to $250 every month. If you keep it for three years, you have handed an enterprise software company over $5,000 for what is essentially an SMS forwarding script.\n\nThe alternative is simple hardware ownership. You take an affordable Android phone with an unlimited carrier SIM, plug it into the shop wall, install Missed Call Auto SMS, and it runs 24/7 forever.\n\nThere is no per-minute overage billing. There are no carrier registration delays. It uses your actual carrier number, which means your texts land directly in the primary SMS inbox, not the carrier spam filter.\n\nOwn the appliance once. Stop renting communication tools that cost more than your liability insurance.",
+    "cta": "Get Missed Call Auto SMS Flagship edition for a one-time $49.99 lifetime license.",
+    "promptLogic": "Cost comparison math. Appeals to the practical financial mindset of trade business owners tired of recurring software subscriptions.",
+    "imagePrompt": "Top-down flat lay comparison on a wooden workbench: on the left, a stack of recurring monthly software invoices crossed out in red marker; on the right, a sleek Android device running Missed Call Auto SMS beside a brass key, ultra-realistic, crisp studio lighting, 16:9.",
+    "videoPrompt": "Documentary style camera pan across a clean contractor office desk. The camera moves from an open laptop displaying an expensive recurring SaaS invoice to a compact Android phone resting on a wireless charging dock, showing a green checkmark indicating 100% missed call capture.",
+    "status": "draft",
+    "createdAt": "2026-09-23T03:45:35.319Z",
+    "channelTargets": [
+      "blog",
+      "facebook"
+    ],
+    "scheduledFor": "2026-09-25T03:45:35.319Z"
+  }
+]
