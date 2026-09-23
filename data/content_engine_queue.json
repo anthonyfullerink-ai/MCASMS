@@ -34,14 +34,16 @@
     "imagePrompt": "Top-down flat lay comparison on a wooden workbench: on the left, a stack of recurring monthly software invoices crossed out in red marker; on the right, a sleek Android device running Missed Call Auto SMS beside a brass key, ultra-realistic, crisp studio lighting, 16:9.",
     "imageUrl": "https://raw.githubusercontent.com/anthonyfullerink-ai/MCASMS/main/assets/social/saas-margins-invoice-comparison.jpg",
     "videoPrompt": "Documentary style camera pan across a clean contractor office desk. The camera moves from an open laptop displaying an expensive recurring SaaS invoice to a compact Android phone resting on a wireless charging dock, showing a green checkmark indicating 100% missed call capture.",
-    "status": "approved",
+    "status": "published",
     "createdAt": "2026-09-23T03:45:35.319Z",
     "channelTargets": [
       "blog",
       "facebook"
     ],
-    "scheduledFor": "2026-09-25T04:17:17.085Z",
+    "scheduledFor": "2026-09-23T17:00:00.000Z",
     "updatedAt": "2026-09-23T04:17:17.087Z",
-    "approvedAt": "2026-09-23T14:49:07.908Z"
+    "approvedAt": "2026-09-23T14:49:07.908Z",
+    "publishedAt": "2026-09-23T17:07:39.967Z",
+    "publishedVia": "auto_scheduler"
   }
 ]

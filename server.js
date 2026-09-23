@@ -992,10 +992,28 @@ async function executePostPublish(post) {
     channels: post.channelTargets || ['blog', 'facebook', 'instagram'],
     niche: post.niche
   });
-  if (!fs.existsSync(CE_DATA_DIR)) fs.mkdirSync(CE_DATA_DIR, { recursive: true });
-  fs.writeFileSync(pubHistoryFile, JSON.stringify(pubHistory.slice(0, 100), null, 2), 'utf8');
+  // 4. Social Cross-Posting to Facebook & Instagram (if targeted)
+  const channels = post.channelTargets || ['blog', 'facebook', 'instagram'];
+  let socialResults = null;
+  if (channels.includes('facebook') || channels.includes('instagram')) {
+    try {
+      const { publishToSocial } = require('./scripts/publish_social_blog');
+      console.log(`[ContentEngine] 📢 Cross-posting "${post.title}" to Social Media (${channels.join(', ')})...`);
+      socialResults = await publishToSocial({
+        title: post.title,
+        slug: slug,
+        excerpt: post.hook || post.narrativeBody,
+        imageUrl: imageUrl,
+        tags: post.tags || ["SpeedToLead", "Contractors", "SmallBusiness"]
+      });
+      console.log(`[ContentEngine] 📢 Social Cross-Post Completed:`, socialResults);
+    } catch (socErr) {
+      console.warn(`[ContentEngine] ⚠️ Social Cross-Post warning:`, socErr.message);
+      socialResults = { error: socErr.message };
+    }
+  }
 
-  return { slug, publishedAt: isoDate };
+  return { slug, publishedAt: isoDate, socialResults };
 }
 
 const server = http.createServer((req, res) => {
@@ -4034,10 +4052,25 @@ server.listen(PORT, '0.0.0.0', () => {
     }, delay);
   }
 
-  // Wire up all 3 daily slots
-  scheduleSlot('morning', 9,  0,  publishMorningBlog);
-  scheduleSlot('lunch',   12, 30, publishLunchFeedPost);
-  scheduleSlot('evening', 18, 0,  publishEveningReelAndStory);
+  // Wire up all 3 daily slots from settings or defaults
+  let slotTimes = ["09:00", "13:00", "18:00"];
+  try {
+    const ceSettingsFile = path.join(__dirname, 'data/content_engine_settings.json');
+    if (fs.existsSync(ceSettingsFile)) {
+      const ceSettings = JSON.parse(fs.readFileSync(ceSettingsFile, 'utf8'));
+      if (ceSettings.postingTimeslots && ceSettings.postingTimeslots.length >= 3) {
+        slotTimes = ceSettings.postingTimeslots;
+      }
+    }
+  } catch (e) {}
 
-  console.log('✅ [SCHEDULER] Daily social automation active (morning 9AM / lunch 12:30PM / evening 6PM ET)');
+  const [mH, mM] = (slotTimes[0] || "09:00").split(':').map(Number);
+  const [lH, lM] = (slotTimes[1] || "13:00").split(':').map(Number);
+  const [eH, eM] = (slotTimes[2] || "18:00").split(':').map(Number);
+
+  scheduleSlot('morning', mH, mM, publishMorningBlog);
+  scheduleSlot('lunch',   lH, lM, publishLunchFeedPost);
+  scheduleSlot('evening', eH, eM, publishEveningReelAndStory);
+
+  console.log(`✅ [SCHEDULER] Daily social automation active (${slotTimes[0]} / ${slotTimes[1]} / ${slotTimes[2]} ET)`);
 })();
