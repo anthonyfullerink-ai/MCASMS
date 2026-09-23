@@ -6,5 +6,5 @@
   "releaseNotes": "✅ Voice Studio Polish — removed internal development copy from user-facing screens\n✅ Dual-Mode AI Voice Test — Instant In-App Speaker test ($0.00) + Live Cellular phone call test to your cell phone\n✅ AI Model Selector & 1.5% Overage Engine — Default GPT-4o-mini at 0.30 temperature with automated 1.5% overage billing for GPT-4o\n✅ Enhanced Real-Time OTA Update Notification Engine with Firebase Cloud Messaging\n✅ Upgraded Telecom Carrier Routing & SIM SMS Delivery Safeguards",
   "mandatory": true,
   "minSupportedVersion": 15,
-  "updatedAt": "2026-09-23T19:57:57.981Z"
+  "updatedAt": "2026-09-23T19:59:26.520Z"
 }
