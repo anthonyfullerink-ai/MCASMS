@@ -3225,6 +3225,10 @@ const server = http.createServer((req, res) => {
       const queue = readJson(CE_QUEUE_FILE, []);
       const research = readJson(CE_RESEARCH_FILE, []);
       const settings = readJson(CE_SETTINGS_FILE, {});
+      const effectiveSettings = {
+        ...settings,
+        googleChatWebhookUrl: settings.googleChatWebhookUrl || process.env.GOOGLE_CHAT_WEBHOOK_URL || ''
+      };
       const hasGemini = !!(process.env.GEMINI_API_KEY || process.env.GOOGLE_API_KEY);
       const hasMeta = !!process.env.META_PAGE_ACCESS_TOKEN;
 
@@ -3233,7 +3237,7 @@ const server = http.createServer((req, res) => {
         success: true,
         geminiConfigured: hasGemini,
         metaConfigured: hasMeta,
-        settings,
+        settings: effectiveSettings,
         researchCount: research.length,
         queueCount: queue.length,
         draftsCount: queue.filter(q => q.status === 'draft').length,
@@ -3584,13 +3588,13 @@ const server = http.createServer((req, res) => {
                         {
                           text: "✅ 1-Tap Approve & Schedule",
                           onClick: {
-                            openLink: { url: `http://localhost:8000/api/content-engine/one-click-approve?postId=${post.id}` }
+                            openLink: { url: `https://missedcallautosms.com/api/content-engine/one-click-approve?postId=${post.id}` }
                           }
                         },
                         {
                           text: "👁️ Review in Dashboard",
                           onClick: {
-                            openLink: { url: "http://localhost:8000/owner-admin" }
+                            openLink: { url: "https://missedcallautosms.com/owner" }
                           }
                         }
                       ]
@@ -3602,7 +3606,7 @@ const server = http.createServer((req, res) => {
           }]
         };
 
-        const targetUrl = webhookUrl || (readJson(CE_SETTINGS_FILE, {}).googleChatWebhookUrl) || '';
+        const targetUrl = webhookUrl || (readJson(CE_SETTINGS_FILE, {}).googleChatWebhookUrl) || process.env.GOOGLE_CHAT_WEBHOOK_URL || '';
         if (targetUrl && targetUrl.startsWith('https://chat.googleapis.com')) {
           const urlParts = new URL(targetUrl);
           const reqPost = https.request({
@@ -3810,13 +3814,13 @@ function runOmnichannelSchedulerBackgroundCheck() {
                           {
                             text: "✅ 1-Tap Approve & Schedule",
                             onClick: {
-                              openLink: { url: `http://localhost:8000/api/content-engine/one-click-approve?postId=${post.id}` }
+                              openLink: { url: `https://missedcallautosms.com/api/content-engine/one-click-approve?postId=${post.id}` }
                             }
                           },
                           {
                             text: "👁️ Review in Dashboard",
                             onClick: {
-                              openLink: { url: "http://localhost:8000/owner-admin" }
+                              openLink: { url: "https://missedcallautosms.com/owner" }
                             }
                           }
                         ]
