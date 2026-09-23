@@ -902,82 +902,289 @@ function isImageAlreadyUsedInBlog(imageUrl, currentSlug = null) {
 }
 
 async function executePostPublish(post) {
-  const blogPostsFile = path.join(__dirname, 'blog', 'posts.json');
-  const slug = (post.title || 'article').toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/(^-|-$)/g, '');
+  const CE_DATA_DIR = path.join(__dirname, 'data');
   const isoDate = new Date().toISOString();
   const formattedDate = new Date().toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' });
+  const format = post.format || ((post.channelTargets && post.channelTargets.includes('blog')) ? 'blog_article' : 'social_card');
+  const channels = post.channelTargets || (format === 'blog_article' ? ['blog', 'facebook'] : ['facebook', 'instagram']);
 
-  // STRICT ZERO-REUSE SAFEGUARD
-  if (!post.imageUrl) {
-    throw new Error(`[ZeroReuseGuard] Cannot publish post "${post.title}" because post.imageUrl is missing. Every post must have a bespoke image assigned.`);
-  }
+  const token = process.env.META_PAGE_ACCESS_TOKEN || '';
+  const fbPageId = (process.env.FB_PAGE_ID && process.env.FB_PAGE_ID !== 'true' && process.env.FB_PAGE_ID !== 'false') ? process.env.FB_PAGE_ID : '1248332278370968';
+  const igUserId = (process.env.IG_USER_ID && process.env.IG_USER_ID !== 'true' && process.env.IG_USER_ID !== 'false') ? process.env.IG_USER_ID : '17841428781387416';
 
-  if (isImageAlreadyUsedInBlog(post.imageUrl, slug)) {
-    throw new Error(`[ZeroReuseGuard] Image "${path.basename(post.imageUrl)}" is already in use by an existing article in blog/posts.json. Automatic recycling of images is strictly forbidden per Workspace Guidelines.`);
-  }
+  const { postGraphApi, getGraphApi } = require('./scripts/publish_omnichannel');
 
-  const imageUrl = post.imageUrl;
+  let slug = null;
+  let socialResults = { facebook: null, instagram: null };
 
-  // 1. Append to Blog (posts.json)
-  if (fs.existsSync(blogPostsFile)) {
-    try {
-      const blogPosts = JSON.parse(fs.readFileSync(blogPostsFile, 'utf8'));
-      const newBlogPost = {
-        slug: slug,
-        title: post.title,
-        category: post.niche || "Industry Insights",
-        date: formattedDate,
-        isoDate: isoDate,
-        readTime: 4,
-        tags: ["Speed to Lead", "Local Business", "Telephony"],
-        snippet: post.hook,
-        excerpt: post.hook,
-        metaDescription: post.hook,
-        image: imageUrl,
-        imageUrl: imageUrl
-      };
-      const existingIdx = blogPosts.findIndex(b => b.slug === slug);
-      if (existingIdx >= 0) {
-        blogPosts[existingIdx] = newBlogPost;
-      } else {
-        blogPosts.unshift(newBlogPost);
+  // ─────────────────────────────────────────────────────────────
+  // 1. FORMAT: blog_article (Long-form educational authority + FB link post)
+  // ─────────────────────────────────────────────────────────────
+  if (format === 'blog_article' || channels.includes('blog')) {
+    slug = (post.title || 'article').toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/(^-|-$)/g, '');
+    const blogPostsFile = path.join(__dirname, 'blog', 'posts.json');
+
+    // STRICT ZERO-REUSE SAFEGUARD
+    if (!post.imageUrl) {
+      throw new Error(`[ZeroReuseGuard] Cannot publish blog post "${post.title}" because post.imageUrl is missing. Every post must have a bespoke image assigned.`);
+    }
+
+    if (isImageAlreadyUsedInBlog(post.imageUrl, slug)) {
+      throw new Error(`[ZeroReuseGuard] Image "${path.basename(post.imageUrl)}" is already in use by an existing article in blog/posts.json. Automatic recycling of images is strictly forbidden per Workspace Guidelines.`);
+    }
+
+    const imageUrl = post.imageUrl;
+
+    // A. Update blog/posts.json
+    if (fs.existsSync(blogPostsFile)) {
+      try {
+        const blogPosts = JSON.parse(fs.readFileSync(blogPostsFile, 'utf8'));
+        const newBlogPost = {
+          slug: slug,
+          title: post.title,
+          category: post.niche || "Industry Insights",
+          date: formattedDate,
+          isoDate: isoDate,
+          readTime: 4,
+          tags: post.tags || ["Speed to Lead", "Local Business", "Telephony"],
+          snippet: post.hook,
+          excerpt: post.hook,
+          metaDescription: post.hook,
+          image: imageUrl,
+          imageUrl: imageUrl
+        };
+        const existingIdx = blogPosts.findIndex(b => b.slug === slug);
+        if (existingIdx >= 0) {
+          blogPosts[existingIdx] = newBlogPost;
+        } else {
+          blogPosts.unshift(newBlogPost);
+        }
+        fs.writeFileSync(blogPostsFile, JSON.stringify(blogPosts, null, 2), 'utf8');
+        console.log(`[ContentEngine] 📚 Appended to blog/posts.json: ${slug} with unique image: ${path.basename(imageUrl)}`);
+      } catch (e) {
+        console.error("[ContentEngine] Failed to update blog/posts.json:", e.message);
+        throw e;
       }
-      fs.writeFileSync(blogPostsFile, JSON.stringify(blogPosts, null, 2), 'utf8');
-      console.log(`[ContentEngine] 📚 Appended to blog/posts.json: ${slug} with unique image: ${path.basename(imageUrl)}`);
-    } catch (e) {
-      console.error("[ContentEngine] Failed to update blog/posts.json:", e.message);
-      throw e;
     }
-  }
 
-  // 2. Generate blog/posts/<slug>.html from template.html
-  const templatePath = path.join(__dirname, 'blog', 'template.html');
-  const postHtmlPath = path.join(__dirname, 'blog', 'posts', `${slug}.html`);
-  if (fs.existsSync(templatePath)) {
+    // B. Generate blog/posts/<slug>.html from template.html
+    const templatePath = path.join(__dirname, 'blog', 'template.html');
+    const postHtmlPath = path.join(__dirname, 'blog', 'posts', `${slug}.html`);
+    if (fs.existsSync(templatePath)) {
+      try {
+        let html = fs.readFileSync(templatePath, 'utf8');
+        const paragraphs = (post.narrativeBody || '').split('\n\n').map(p => `<p>${p.trim()}</p>`).join('\n');
+        html = html
+          .replace(/\{\{TITLE\}\}/g, post.title)
+          .replace(/\{\{DESCRIPTION\}\}/g, post.hook)
+          .replace(/\{\{SLUG\}\}/g, slug)
+          .replace(/\{\{ISO_DATE\}\}/g, isoDate)
+          .replace(/\{\{DATE\}\}/g, formattedDate)
+          .replace(/\{\{CATEGORY\}\}/g, post.niche || "Industry Insights")
+          .replace(/\{\{READ_TIME\}\}/g, "4")
+          .replace(/\{\{IMAGE_URL\}\}/g, imageUrl)
+          .replace(/\{\{CONTENT_HTML\}\}/g, paragraphs);
+        fs.writeFileSync(postHtmlPath, html, 'utf8');
+        console.log(`[ContentEngine] 📄 Generated article HTML: ${postHtmlPath}`);
+      } catch (e) {
+        console.error("[ContentEngine] Failed to generate article HTML:", e.message);
+        throw e;
+      }
+    }
+
+    // C. Update sitemap.xml
     try {
-      let html = fs.readFileSync(templatePath, 'utf8');
-      const paragraphs = (post.narrativeBody || '').split('\n\n').map(p => `<p>${p.trim()}</p>`).join('\n');
-      html = html
-        .replace(/\{\{TITLE\}\}/g, post.title)
-        .replace(/\{\{DESCRIPTION\}\}/g, post.hook)
-        .replace(/\{\{SLUG\}\}/g, slug)
-        .replace(/\{\{ISO_DATE\}\}/g, isoDate)
-        .replace(/\{\{DATE\}\}/g, formattedDate)
-        .replace(/\{\{CATEGORY\}\}/g, post.niche || "Industry Insights")
-        .replace(/\{\{READ_TIME\}\}/g, "4")
-        .replace(/\{\{IMAGE_URL\}\}/g, imageUrl)
-        .replace(/\{\{CONTENT_HTML\}\}/g, paragraphs);
-      
-      fs.writeFileSync(postHtmlPath, html, 'utf8');
-      console.log(`[ContentEngine] 📄 Generated article HTML: ${postHtmlPath}`);
-    } catch (e) {
-      console.error("[ContentEngine] Failed to generate article HTML:", e.message);
-      throw e;
+      const sitemapPath = path.join(__dirname, 'sitemap.xml');
+      if (fs.existsSync(sitemapPath) && fs.existsSync(blogPostsFile)) {
+        const blogPosts = JSON.parse(fs.readFileSync(blogPostsFile, 'utf8'));
+        let sitemapXml = `<?xml version="1.0" encoding="UTF-8"?>\n<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">\n  <url>\n    <loc>https://missedcallautosms.com/</loc>\n    <changefreq>daily</changefreq>\n    <priority>1.0</priority>\n  </url>\n  <url>\n    <loc>https://missedcallautosms.com/blog</loc>\n    <changefreq>daily</changefreq>\n    <priority>0.9</priority>\n  </url>\n`;
+        blogPosts.forEach(p => {
+          sitemapXml += `  <url>\n    <loc>https://missedcallautosms.com/blog/${p.slug}</loc>\n    <lastmod>${(p.isoDate || p.date || new Date().toISOString()).split('T')[0]}</lastmod>\n    <changefreq>monthly</changefreq>\n    <priority>0.8</priority>\n  </url>\n`;
+        });
+        sitemapXml += `</urlset>\n`;
+        fs.writeFileSync(sitemapPath, sitemapXml, 'utf8');
+      }
+    } catch (siteErr) {
+      console.warn('[ContentEngine] Could not update sitemap.xml:', siteErr.message);
+    }
+
+    // D. Social Cross-Posting to Facebook Page & Instagram Feed
+    const articleUrl = `https://missedcallautosms.com/blog/${slug}`;
+    if (token) {
+      if (channels.includes('facebook')) {
+        try {
+          const fbMessage = `📢 New Article Published!\n\n${post.title}\n\n${post.hook || ''}\n\n👉 Read the full breakdown: ${articleUrl}\n\n#missedcallautosms #smallbusiness #contractorlife #speedtolead`;
+          const fbRes = await postGraphApi(`/v20.0/${fbPageId}/feed`, {
+            message: fbMessage,
+            link: articleUrl,
+            access_token: token
+          });
+          socialResults.facebook = { success: true, id: fbRes.id };
+          console.log(`[ContentEngine] 🎉 Facebook Blog Link Post LIVE! ID: ${fbRes.id}`);
+        } catch (err) {
+          socialResults.facebook = { success: false, error: err.message };
+          console.warn(`[ContentEngine] ⚠️ Facebook Blog Link failed:`, err.message);
+        }
+      }
+
+      if (channels.includes('instagram')) {
+        try {
+          const igCaption = `🚀 ${post.title}\n\n${post.hook || ''}\n\nRead the full guide at missedcallautosms.com/blog/${slug} (Link in bio!)\n\n#missedcallautosms #speedtolead #contractors`;
+          const containerRes = await postGraphApi(`/v20.0/${igUserId}/media`, {
+            image_url: imageUrl,
+            caption: igCaption,
+            access_token: token
+          });
+          await new Promise(r => setTimeout(r, 3000));
+          const pubRes = await postGraphApi(`/v20.0/${igUserId}/media_publish`, {
+            creation_id: containerRes.id,
+            access_token: token
+          });
+          socialResults.instagram = { success: true, id: pubRes.id };
+          console.log(`[ContentEngine] 🎉 Instagram Feed Post LIVE! ID: ${pubRes.id}`);
+        } catch (err) {
+          socialResults.instagram = { success: false, error: err.message };
+          console.warn(`[ContentEngine] ⚠️ Instagram Feed Post failed:`, err.message);
+        }
+      }
     }
   }
 
-  // 3. Append to published_history.json
-  const CE_DATA_DIR = path.join(__dirname, 'data');
+  // ─────────────────────────────────────────────────────────────
+  // 2. FORMAT: social_card / feed_post (1:1 Square Feed Graphics)
+  // ─────────────────────────────────────────────────────────────
+  else if (format === 'social_card' || format === 'feed_post') {
+    if (!post.imageUrl) {
+      throw new Error(`[ZeroReuseGuard] Cannot publish social card "${post.title}" without post.imageUrl.`);
+    }
+
+    const captionText = `${post.title}\n\n${post.narrativeBody || post.hook}\n\nTry Missed Call Auto SMS free for 3 days ($0.00 today) at missedcallautosms.com`;
+
+    if (token) {
+      // Facebook Page Photo Post
+      if (channels.includes('facebook')) {
+        try {
+          console.log(`[ContentEngine] 📸 Posting 1:1 Photo to Facebook Page...`);
+          const fbRes = await postGraphApi(`/v20.0/${fbPageId}/photos`, {
+            url: post.imageUrl,
+            caption: captionText,
+            access_token: token
+          });
+          socialResults.facebook = { success: true, id: fbRes.id };
+          console.log(`[ContentEngine] 🎉 Facebook Feed Photo LIVE! ID: ${fbRes.id}`);
+        } catch (err) {
+          socialResults.facebook = { success: false, error: err.message };
+          console.warn(`[ContentEngine] ⚠️ Facebook Feed Photo failed:`, err.message);
+        }
+      }
+
+      // Instagram Feed Post
+      if (channels.includes('instagram')) {
+        try {
+          console.log(`[ContentEngine] 📸 Posting 1:1 Photo to Instagram Feed...`);
+          const container = await postGraphApi(`/v20.0/${igUserId}/media`, {
+            image_url: post.imageUrl,
+            caption: captionText,
+            access_token: token
+          });
+          await new Promise(r => setTimeout(r, 3000));
+          const pubRes = await postGraphApi(`/v20.0/${igUserId}/media_publish`, {
+            creation_id: container.id,
+            access_token: token
+          });
+          socialResults.instagram = { success: true, id: pubRes.id };
+          console.log(`[ContentEngine] 🎉 Instagram Feed Photo LIVE! ID: ${pubRes.id}`);
+        } catch (err) {
+          socialResults.instagram = { success: false, error: err.message };
+          console.warn(`[ContentEngine] ⚠️ Instagram Feed Photo failed:`, err.message);
+        }
+      }
+    }
+  }
+
+  // ─────────────────────────────────────────────────────────────
+  // 3. FORMAT: reel_video (9:16 Vertical Video Reels & Stories)
+  // ─────────────────────────────────────────────────────────────
+  else if (format === 'reel_video') {
+    let videoUrl = post.videoUrl;
+    if (!videoUrl || !videoUrl.startsWith('http')) {
+      if (post.videoAsset) {
+        videoUrl = `https://raw.githubusercontent.com/anthonyfullerink-ai/MCASMS/main/${post.videoAsset}`;
+      } else {
+        videoUrl = `https://raw.githubusercontent.com/anthonyfullerink-ai/MCASMS/main/assets/ads/v150_ai_voice_launch_reel_9x16.mp4`;
+      }
+    }
+    const coverUrl = post.imageUrl || `https://raw.githubusercontent.com/anthonyfullerink-ai/MCASMS/main/assets/social/contractor-speed-rule.jpg`;
+    const reelCaption = `${post.title}\n\n${post.narrativeBody || post.hook}\n\nTry Missed Call Auto SMS free for 3 days ($0.00 today) - link in bio!`;
+
+    if (token) {
+      // Facebook Video / Reel
+      if (channels.includes('facebook')) {
+        try {
+          console.log(`[ContentEngine] 🎬 Publishing Reel to Facebook Video API...`);
+          const fbRes = await postGraphApi(`/v20.0/${fbPageId}/videos`, {
+            file_url: videoUrl,
+            title: post.title,
+            description: reelCaption,
+            access_token: token
+          });
+          socialResults.facebook = { success: true, id: fbRes.id };
+          console.log(`[ContentEngine] 🎉 Facebook Reel LIVE! ID: ${fbRes.id}`);
+        } catch (err) {
+          socialResults.facebook = { success: false, error: err.message };
+          console.warn(`[ContentEngine] ⚠️ Facebook Reel failed:`, err.message);
+        }
+      }
+
+      // Instagram 9:16 Reel with Status Polling
+      if (channels.includes('instagram')) {
+        try {
+          console.log(`[ContentEngine] 🎬 Creating Instagram Reel container (9:16)...`);
+          const container = await postGraphApi(`/v20.0/${igUserId}/media`, {
+            media_type: 'REELS',
+            video_url: videoUrl,
+            cover_url: coverUrl,
+            caption: reelCaption,
+            share_to_feed: true,
+            access_token: token
+          });
+
+          console.log(`[ContentEngine] Polling Instagram Reel container ${container.id}...`);
+          const delays = [4000, 6000, 8000, 10000, 15000, 20000];
+          let ready = false;
+          for (const d of delays) {
+            await new Promise(r => setTimeout(r, d));
+            const statusRes = await getGraphApi(`/v20.0/${container.id}?fields=status_code,status&access_token=${token}`);
+            const statusCode = (statusRes.status_code || statusRes.status || '').toUpperCase();
+            if (statusCode === 'FINISHED' || statusCode === 'READY') {
+              ready = true;
+              break;
+            }
+            if (statusCode === 'ERROR') {
+              throw new Error(`Instagram Reel processing failed: ${JSON.stringify(statusRes)}`);
+            }
+          }
+
+          if (ready) {
+            const pubRes = await postGraphApi(`/v20.0/${igUserId}/media_publish`, {
+              creation_id: container.id,
+              access_token: token
+            });
+            socialResults.instagram = { success: true, id: pubRes.id };
+            console.log(`[ContentEngine] 🎉 Instagram Reel LIVE! ID: ${pubRes.id}`);
+          } else {
+            console.warn(`[ContentEngine] Instagram Reel container still processing; proceeding asynchronously.`);
+            socialResults.instagram = { success: true, containerId: container.id, status: 'processing' };
+          }
+        } catch (err) {
+          socialResults.instagram = { success: false, error: err.message };
+          console.warn(`[ContentEngine] ⚠️ Instagram Reel failed:`, err.message);
+        }
+      }
+    }
+  }
+
+  // 4. Record to published_history.json
   const pubHistoryFile = path.join(CE_DATA_DIR, 'published_history.json');
   let pubHistory = [];
   if (fs.existsSync(pubHistoryFile)) {
@@ -987,34 +1194,19 @@ async function executePostPublish(post) {
     id: post.id,
     title: post.title,
     slug: slug,
-    imageUrl: imageUrl,
+    format: format,
+    imageUrl: post.imageUrl,
+    videoUrl: post.videoUrl || post.videoAsset,
     publishedAt: isoDate,
-    channels: post.channelTargets || ['blog', 'facebook', 'instagram'],
-    niche: post.niche
+    channels: channels,
+    niche: post.niche,
+    socialResults: socialResults
   });
-  // 4. Social Cross-Posting to Facebook & Instagram (if targeted)
-  const channels = post.channelTargets || ['blog', 'facebook', 'instagram'];
-  let socialResults = null;
-  if (channels.includes('facebook') || channels.includes('instagram')) {
-    try {
-      const { publishToSocial } = require('./scripts/publish_social_blog');
-      console.log(`[ContentEngine] 📢 Cross-posting "${post.title}" to Social Media (${channels.join(', ')})...`);
-      socialResults = await publishToSocial({
-        title: post.title,
-        slug: slug,
-        excerpt: post.hook || post.narrativeBody,
-        imageUrl: imageUrl,
-        tags: post.tags || ["SpeedToLead", "Contractors", "SmallBusiness"]
-      });
-      console.log(`[ContentEngine] 📢 Social Cross-Post Completed:`, socialResults);
-    } catch (socErr) {
-      console.warn(`[ContentEngine] ⚠️ Social Cross-Post warning:`, socErr.message);
-      socialResults = { error: socErr.message };
-    }
-  }
+  fs.writeFileSync(pubHistoryFile, JSON.stringify(pubHistory, null, 2), 'utf8');
 
-  return { slug, publishedAt: isoDate, socialResults };
+  return { slug, format, publishedAt: isoDate, socialResults };
 }
+
 
 const server = http.createServer((req, res) => {
   let relativePath = decodeURIComponent(req.url.split('?')[0]);
@@ -3845,9 +4037,23 @@ async function runOmnichannelSchedulerBackgroundCheck() {
       return; // Auto-posting paused by owner
     }
 
-    const queue = JSON.parse(fs.readFileSync(CE_QUEUE_FILE, 'utf8'));
+    let queue = JSON.parse(fs.readFileSync(CE_QUEUE_FILE, 'utf8'));
     const now = new Date();
     let updated = false;
+
+    // Auto-population guard: Ensure the 3 daily format-specific slots are populated if empty
+    const pendingSlots = queue.filter(q => q.status === 'draft' || q.status === 'approved');
+    if (pendingSlots.length === 0) {
+      console.log(`[OmnichannelScheduler] ℹ️ Queue has 0 pending items. Synthesizing 3 format-specific slots for upcoming schedule...`);
+      try {
+        const { synthesizeContentAngles } = require('./scripts/content_engine_agent');
+        await synthesizeContentAngles(settings.defaultNiche || 'Small Service Contractors & Trades');
+        queue = JSON.parse(fs.readFileSync(CE_QUEUE_FILE, 'utf8'));
+        console.log(`[OmnichannelScheduler] ✅ Successfully auto-populated queue with ${queue.length} items across 3 formats.`);
+      } catch (synthErr) {
+        console.warn(`[OmnichannelScheduler] Could not auto-populate queue: ${synthErr.message}`);
+      }
+    }
 
     for (const post of queue) {
       // Auto-dispatch Google Chat approval cards for unnotified drafts
@@ -3898,24 +4104,32 @@ async function runOmnichannelSchedulerBackgroundCheck() {
             }]
           };
 
-          const urlParts = new URL(targetUrl);
-          const reqPost = https.request({
-            hostname: urlParts.hostname,
-            path: urlParts.pathname + urlParts.search,
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json; charset=UTF-8' }
-          }, resp => {
-            let resBody = '';
-            resp.on('data', c => resBody += c);
-            resp.on('end', () => {
-              console.log(`[GoogleChat] Delivered approval card for "${post.title}" (Status: ${resp.statusCode})`);
+          await new Promise(resolve => {
+            const urlParts = new URL(targetUrl);
+            const reqPost = https.request({
+              hostname: urlParts.hostname,
+              path: urlParts.pathname + urlParts.search,
+              method: 'POST',
+              headers: { 'Content-Type': 'application/json; charset=UTF-8' }
+            }, resp => {
+              let resBody = '';
+              resp.on('data', c => resBody += c);
+              resp.on('end', () => {
+                console.log(`[GoogleChat] Delivered approval card for "${post.title}" (Status: ${resp.statusCode})`);
+                if (resp.statusCode === 429) {
+                  post.chatCardDispatched = false; // Retry next cycle
+                }
+                setTimeout(resolve, 1500); // 1.5s pace to avoid rate limits
+              });
             });
+            reqPost.on('error', err => {
+              console.warn(`[GoogleChat] Webhook delivery error: ${err.message}`);
+              post.chatCardDispatched = false;
+              resolve();
+            });
+            reqPost.write(JSON.stringify(cardPayload));
+            reqPost.end();
           });
-          reqPost.on('error', err => {
-            console.warn(`[GoogleChat] Webhook delivery error: ${err.message}`);
-          });
-          reqPost.write(JSON.stringify(cardPayload));
-          reqPost.end();
         } catch (e) {
           console.warn(`[GoogleChat] Error formatting card: ${e.message}`);
         }

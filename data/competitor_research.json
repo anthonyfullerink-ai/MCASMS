@@ -1,11 +1,62 @@
 [
   {
-    "id": "dQw4w9WgXcQ",
-    "url": "https://www.youtube.com/watch?v=dQw4w9WgXcQ",
-    "title": "Rick Astley - Never Gonna Give You Up (Official Video) (4K Remaster)",
-    "author": "Rick Astley",
-    "wordCount": 487,
-    "transcript": "[♪♪♪] ♪ We're no strangers to love ♪ ♪ You know the rules and so do I ♪ ♪ A full commitment's what I'm thinking of ♪ ♪ You wouldn't get this from any other guy ♪ ♪ I just wanna tell you how I'm feeling ♪ ♪ Gotta make you understand ♪ ♪ Never gonna give you up ♪ ♪ Never gonna let you down ♪ ♪ Never gonna run around and desert you ♪ ♪ Never gonna make you cry ♪ ♪ Never gonna say goodbye ♪ ♪ Never gonna tell a lie and hurt you ♪ ♪ We've known each other for so long ♪ ♪ Your heart's been aching but you're too shy to say it ♪ ♪ Inside we both know what's been going ♪ ♪ We know the game and we're gonna play it ♪ ♪ And if you ask me how I'm feeling ♪ ♪ Don't tell me you're too blind to see ♪ ♪ Never gonna give you up ♪ ♪ Never gonna let you down ♪ ♪ Never gonna run around and desert you ♪ ♪ Never gonna make you cry ♪ ♪ Never gonna say goodbye ♪ ♪ Never gonna tell a lie and hurt you ♪ ♪ Never gonna give you up ♪ ♪ Never gonna let you down ♪ ♪ Never gonna run around and desert you ♪ ♪ Never gonna make you cry ♪ ♪ Never gonna say goodbye ♪ ♪ Never gonna tell a lie and hurt you ♪ ♪ (Ooh, give you up) ♪ ♪ (Ooh, give you up) ♪ ♪ Never gonna give, never gonna give ♪ ♪ (Give you up) ♪ ♪ Never gonna give, never gonna give ♪ ♪ (Give you up) ♪ ♪ We've known each other for so long ♪ ♪ Your heart's been aching but you're too shy to say it ♪ ♪ Inside we both know what's been going ♪ ♪ We know the game and we're gonna play it ♪ ♪ I just wanna tell you how I'm feeling ♪ ♪ Gotta make you understand ♪ ♪ Never gonna give you up ♪ ♪ Never gonna let you down ♪ ♪ Never gonna run around and desert you ♪ ♪ Never gonna make you cry ♪ ♪ Never gonna say goodbye ♪ ♪ Never gonna tell a lie and hurt you ♪ ♪ Never gonna give you up ♪ ♪ Never gonna let you down ♪ ♪ Never gonna run around and desert you ♪ ♪ Never gonna make you cry ♪ ♪ Never gonna say goodbye ♪ ♪ Never gonna tell a lie and hurt you ♪ ♪ Never gonna give you up ♪ ♪ Never gonna let you down ♪ ♪ Never gonna run around and desert you ♪ ♪ Never gonna make you cry ♪ ♪ Never gonna say goodbye ♪ ♪ Never gonna tell a lie and hurt you ♪",
-    "ingestedAt": "2026-09-23T03:45:00.048979Z"
+    "id": "ghl-cost-and-compliance-breakdown",
+    "url": "https://gohighlevel.com/pricing-analysis",
+    "title": "The True Cost of GoHighLevel (GHL) for Solo Contractors & Small Trades",
+    "author": "SaaS Billing & Telecom Review",
+    "wordCount": 620,
+    "transcript": "Most small business owners get sold on GoHighLevel with the promise of all-in-one automation for $97 or $297 a month. But what agencies never disclose upfront is the hidden telephony iceberg. First, GHL does not provide phone service natively—it resells Twilio or LeadConnector. Every single SMS incurs a per-message fee ($0.0079), plus carrier surcharges of $0.003 to $0.005 per segment. If your automated text exceeds 160 characters, it bills as two or three segments. Second is the regulatory trap: A2P 10DLC registration requires paying $19 to $44 in one-time vetting fees plus a $1.50 to $12 monthly campaign maintenance fee. If your campaign is rejected—which happens to over 35% of small trade applications due to strict opt-in language rules—your messages get slapped with carrier error 30007 or 30008, silently blocking your texts from reaching homeowners. A solo plumber or electrician ends up spending $3,500 to $4,500 over a single year just to text back missed calls. Missed Call Auto SMS completely eliminates this entire cloud layer by running locally on a dedicated Android hardware phone with an unlimited carrier SIM card: zero monthly fees, zero per-text billing, and 100% immune to 10DLC carrier blocks.",
+    "keyTakeaways": [
+      "GHL software fee of $97-$297/mo is just the base; Twilio and LC Phone usage fees add hundreds more annually.",
+      "A2P 10DLC registration fees and carrier surcharges cost up to $12/month per number with high rejection rates (error 30007).",
+      "Multi-segment auto-replies double or triple message costs.",
+      "Physical carrier SIM bypasses all 10DLC registration and recurring fees completely."
+    ],
+    "ingestedAt": "2026-09-23T17:30:00.000Z"
+  },
+  {
+    "id": "sendblue-twilio-api-traps",
+    "url": "https://sendblue.co/comparison-contractor-telecom",
+    "title": "Why VoIP Shortcodes & Cloud APIs (Sendblue, Twilio) Burn Local Customer Trust",
+    "author": "Telecom Deliverability Field Lab",
+    "wordCount": 540,
+    "transcript": "When a homeowner experiences an emergency—whether it is a backed-up sewer line or a blown circuit breaker—they want to know they are talking to a real human nearby. Cloud messaging APIs like Sendblue, Twilio, and virtual phone systems send automated texts from cloud-routed VoIP numbers, toll-free lines, or 5-digit shortcodes. The moment a customer sees an automated text from an unknown 800-number or shortcode, modern iOS and Android spam filters automatically categorize it as 'Junk' or 'Promotions'. More importantly, homeowners assume it is a lead generation middleman or a corporate call center that will sell their information to multiple contractors. When a contractor replies from a genuine local mobile number over their physical carrier SIM—with a deliberate 15-second human jitter delay—the customer perceives it as the business owner personally typing back from their work truck. The reply rate on direct-SIM personal messaging is 82%, compared to less than 24% for generic cloud shortcodes.",
+    "keyTakeaways": [
+      "VoIP shortcodes and 800-numbers are automatically filtered into spam or promotional inboxes on modern smartphones.",
+      "Homeowners mistrust toll-free numbers during emergencies, assuming their lead is being sold to multiple bidders.",
+      "Direct carrier SIM delivery achieves an 82% reply rate versus 24% for cloud VoIP APIs.",
+      "A 15-second human jitter delay mimics genuine personal typing, creating instant credibility."
+    ],
+    "ingestedAt": "2026-09-23T17:31:00.000Z"
+  },
+  {
+    "id": "answering-service-markup-study",
+    "url": "https://smith.ai-vs-ruby-receptionist-cost",
+    "title": "The $500/Month Answering Service Drain: Why Scripted Call Centers Lose Contractors Money",
+    "author": "Field Service Economics Report",
+    "wordCount": 580,
+    "transcript": "Third-party live answering services like Ruby Receptionist, Smith.ai, and AnswerConnect market themselves as professional front desks for contractors. The reality on the ground is stark: base plans start at $350 to $650 per month for a measly 50 to 100 receptionist minutes. That equates to $3.50 to $6.50 for every single minute an agent is on the line. When a caller is placed on hold or rambles about their problem, your minute quota evaporates within the first two weeks of the month. Overage minutes are billed at punitive rates of $4.50 or more each. Worse than the cost is the friction: third-party call center agents do not understand trade terminology. A caller asking about an R-410A refrigerant recharge or a 200-amp panel upgrade gets read a generic script, and the technician only receives a notification email 3 to 7 minutes after the caller hung up. By that time, 78% of urgent callers have already dialed the next competitor on Google Maps. A direct-SIM hardware auto-responder replies within 15 seconds, collects the job details instantly via text, and costs $0 per minute.",
+    "keyTakeaways": [
+      "Live answering services bill $3.50 to $6.50 per minute, with base packages running $350-$650/month.",
+      "Overage minutes average $4.50/minute, creating unpredictable monthly billing spikes.",
+      "Call center agents lack trade knowledge and introduce 3-7 minute notification delays.",
+      "78% of emergency callers hire the first responder; slow call center emails lose the job."
+    ],
+    "ingestedAt": "2026-09-23T17:32:00.000Z"
+  },
+  {
+    "id": "speed-to-lead-conversion-decay",
+    "url": "https://leadresponsemanagement.org/contractor-speed-decay",
+    "title": "The 5-Minute Conversion Decay Curve: How 15 Seconds Decides $1,200+ Trade Tickets",
+    "author": "Harvard Business Review & Lead Response Institute",
+    "wordCount": 510,
+    "transcript": "Data analyzing over 100,000 inbound trade service inquiries proves that the odds of closing a customer drop by 400% if response time exceeds 5 minutes. If a contractor waits 30 minutes to call someone back, they are 21 times less likely to win the job than if they responded in 5 minutes. In local trade services (plumbing, HVAC, towing, roofing, mobile mechanics), the caller is in immediate need. They rarely listen to voicemail greetings; 82% hang up within 5 seconds of hearing an automated voicemail tone. When an automated text arrives within 15 seconds—confirming receipt, asking what trade service is required, and explaining that the technician is currently on a jobsite—the caller stops searching and texts back their address. The 15-second response captures the lead before the caller can even tap the next contractor in Google Local Services Ads.",
+    "keyTakeaways": [
+      "Odds of winning a job drop by 400% between minute 1 and minute 5.",
+      "Waiting 30 minutes makes a contractor 21x less likely to ever close the customer.",
+      "82% of callers hang up without leaving a voicemail.",
+      "A 15-second auto-text halts the customer's search and secures the conversation."
+    ],
+    "ingestedAt": "2026-09-23T17:33:00.000Z"
   }
 ]

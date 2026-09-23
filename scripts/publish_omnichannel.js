@@ -570,8 +570,11 @@ if (require.main === module) {
 module.exports = {
   loadEnv,
   checkMetaTokenHealth,
+  postGraphApi,
+  getGraphApi,
   publishMorningBlog,
   publishLunchFeedPost,
   publishEveningReelAndStory,
   run
 };
+

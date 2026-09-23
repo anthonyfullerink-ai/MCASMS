@@ -33,95 +33,134 @@ if (!fs.existsSync(DATA_DIR)) {
 }
 
 function callGemini(promptText) {
-  return new Promise((resolve, reject) => {
+  return new Promise(async (resolve, reject) => {
     if (!GEMINI_API_KEY) {
       return reject(new Error('GEMINI_API_KEY not found in environment or .env'));
     }
 
-    const payload = JSON.stringify({
-      contents: [{
-        parts: [{ text: promptText }]
-      }],
-      generationConfig: {
-        temperature: 0.7,
-        topP: 0.95,
-        maxOutputTokens: 2500,
-        responseMimeType: "application/json"
+    const modelsToTry = ['gemini-3.1-pro-preview', 'gemini-3.6-flash', 'gemini-flash-latest'];
+    let lastError = null;
+
+    for (const model of modelsToTry) {
+      try {
+        const result = await new Promise((subResolve, subReject) => {
+          const payload = JSON.stringify({
+            contents: [{ parts: [{ text: promptText }] }],
+            generationConfig: {
+              temperature: 0.7,
+              topP: 0.95,
+              maxOutputTokens: 2500,
+              responseMimeType: "application/json"
+            }
+          });
+
+          const options = {
+            hostname: 'generativelanguage.googleapis.com',
+            port: 443,
+            path: `/v1beta/models/${model}:generateContent?key=${GEMINI_API_KEY}`,
+            method: 'POST',
+            headers: {
+              'Content-Type': 'application/json',
+              'Content-Length': Buffer.byteLength(payload)
+            }
+          };
+
+          const req = https.request(options, res => {
+            let body = '';
+            res.on('data', chunk => body += chunk);
+            res.on('end', () => {
+              try {
+                const json = JSON.parse(body);
+                if (res.statusCode >= 200 && res.statusCode < 300) {
+                  const rawText = json.candidates?.[0]?.content?.parts?.[0]?.text;
+                  if (!rawText) return subReject(new Error('Empty Gemini response'));
+                  subResolve(JSON.parse(rawText));
+                } else {
+                  subReject(new Error(`Gemini API Error (${res.statusCode}): ` + (json.error ? json.error.message : body)));
+                }
+              } catch (e) {
+                subReject(new Error(`Failed to parse response: ${e.message}`));
+              }
+            });
+          });
+
+          req.on('error', subReject);
+          req.write(payload);
+          req.end();
+        });
+
+        return resolve(result);
+      } catch (err) {
+        lastError = err;
       }
-    });
+    }
 
-    const options = {
-      hostname: 'generativelanguage.googleapis.com',
-      port: 443,
-      path: `/v1beta/models/gemini-2.5-flash:generateContent?key=${GEMINI_API_KEY}`,
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-        'Content-Length': Buffer.byteLength(payload)
-      }
-    };
-
-    const req = https.request(options, res => {
-      let body = '';
-      res.on('data', chunk => body += chunk);
-      res.on('end', () => {
-        try {
-          const json = JSON.parse(body);
-          if (res.statusCode >= 200 && res.statusCode < 300) {
-            const rawText = json.candidates?.[0]?.content?.parts?.[0]?.text;
-            if (!rawText) return reject(new Error('Empty Gemini response'));
-            const parsed = JSON.parse(rawText);
-            resolve(parsed);
-          } else {
-            reject(new Error(`Gemini API Error (${res.statusCode}): ` + (json.error ? json.error.message : body)));
-          }
-        } catch (e) {
-          reject(new Error(`Failed to parse Gemini response: ${e.message}\nBody: ${body.slice(0, 300)}`));
-        }
-      });
-    });
-
-    req.on('error', reject);
-    req.write(payload);
-    req.end();
+    reject(lastError || new Error('All Gemini models failed'));
   });
 }
 
 // Fallback high-converting templates if API key is unconfigured or rate limited
 function generateFallbackAngles(niche = 'Contractor Speed-to-Lead') {
   const ts = Date.now();
+  const today = new Date();
+  
+  // Format dates for 09:00, 13:00, and 18:00 ET
+  const targetDate = new Date(today);
+  targetDate.setDate(targetDate.getDate() + 1);
+  const dateStr = targetDate.toISOString().split('T')[0];
+
   return [
     {
-      id: `angle-${ts}-1`,
-      title: "The $1,400 Bathroom Leak and the 90-Second Rule",
-      hook: "A homeowner with water pouring through their ceiling doesn't listen to a 45-second voicemail greeting. They hang up and tap the next number on Google.",
-      format: "reel_video",
-      niche: "Plumbing & Trades",
-      narrativeBody: "Most contractors think their phone problem is marketing. It is not. You are paying good money for local service ads or SEO, but when you are under a crawlspace or driving between jobs, that $1,400 emergency job rings twice, hits your voicemail, and evaporates.\n\nHere is what the caller does: they do not leave a message. In 2026, 82% of emergency service callers hang up instantly if a human does not answer. They open the search results again and book the contractor who texts them back first.\n\nMissed Call Auto SMS runs locally on a dedicated Android phone. The moment a call disconnects without an answer, your carrier SIM sends an instant personal text before the caller can even dial your competitor: 'Hey, this is Dave from Apex. I am on a jobsite right now and cannot pick up—what is going on with your pipes?'\n\nNo monthly cloud subscription. No VoIP forwarding lag. One phone, your carrier SIM, zero lost leads.",
-      cta: "Test Missed Call Auto SMS free for 3 days ($0.00 today) at missedcallautosms.com",
-      promptLogic: "Loss aversion + relatable jobsite imagery. Eliminates tech buzzwords by contrasting real water damage urgency against voicemail abandonment.",
-      imagePrompt: "Photorealistic macro shot of a plumber's tool bag and brass pipe fittings on a wet utility room floor next to an Android phone lighting up with an incoming text notification, cinematic warm lighting, 16:9 aspect ratio, 8k resolution.",
-      videoPrompt: "Cinematic medium close-up, 4k 24fps. A contractor in work gloves hearing a smartphone ring on the dashboard of a work truck. He cannot grab it in time. Split screen reveals the homeowner tapping dial on a competitor, then immediately pausing as a crisp SMS chime rings on their phone with an instant auto-reply.",
-      status: "draft",
-      createdAt: new Date().toISOString(),
-      channelTargets: ["blog", "facebook", "instagram"],
-      scheduledFor: new Date(Date.now() + 86400000).toISOString()
-    },
-    {
-      id: `angle-${ts}-2`,
-      title: "Why SaaS Monthly Phone Bills Are Eating Contractor Margins",
-      hook: "You are paying $150 every single month for a cloud answering service that forwards your calls through four servers before dropping them.",
+      id: `angle-${ts}-blog`,
+      title: "The $3,500 Cloud Telephony Trap: Why Local Contractors Are Ditching SaaS for Dedicated Hardware",
+      hook: "Most contractors think paying $297 a month for cloud automation is normal until they calculate the hidden Twilio usage fees, A2P 10DLC surcharges, and filtered customer texts.",
       format: "blog_article",
-      niche: "Hardware Appliance vs SaaS",
-      narrativeBody: "Let us look at the real math behind small business communications.\n\nTypical cloud phone answering SaaS: $99 to $250 every month. If you keep it for three years, you have handed an enterprise software company over $5,000 for what is essentially an SMS forwarding script.\n\nThe alternative is simple hardware ownership. You take an affordable Android phone with an unlimited carrier SIM, plug it into the shop wall, install Missed Call Auto SMS, and it runs 24/7 forever.\n\nThere is no per-minute overage billing. There are no carrier registration delays. It uses your actual carrier number, which means your texts land directly in the primary SMS inbox, not the carrier spam filter.\n\nOwn the appliance once. Stop renting communication tools that cost more than your liability insurance.",
-      cta: "Get Missed Call Auto SMS Flagship edition for a one-time $49.99 lifetime license.",
-      promptLogic: "Cost comparison math. Appeals to the practical financial mindset of trade business owners tired of recurring software subscriptions.",
-      imagePrompt: "Top-down flat lay comparison on a wooden workbench: on the left, a stack of recurring monthly software invoices crossed out in red marker; on the right, a sleek Android device running Missed Call Auto SMS beside a brass key, ultra-realistic, crisp studio lighting, 16:9.",
-      videoPrompt: "Documentary style camera pan across a clean contractor office desk. The camera moves from an open laptop displaying an expensive recurring SaaS invoice to a compact Android phone resting on a wireless charging dock, showing a green checkmark indicating 100% missed call capture.",
+      niche: "Appliance vs. SaaS Math",
+      narrativeBody: "Let us examine the real math behind home service communications.\n\nWhen trade businesses sign up for platforms like GoHighLevel or third-party answering services, they are rarely told about the telecom iceberg below the surface. Twilio charges $0.0079 per message plus carrier surcharges. A single 2-sentence automated text exceeding 160 characters bills as two or three segments.\n\nAdd $19 to $44 in mandatory A2P 10DLC registration fees and up to $12 a month in ongoing campaign maintenance fees. If your campaign is rejected—which happens to over 35% of small trade applications due to strict opt-in wording rules—your messages get silently dropped under carrier error 30007. You are paying thousands per year for an answering script that cannot even guarantee delivery.\n\nMissed Call Auto SMS runs locally on a dedicated Android phone connected to your real carrier SIM card. Zero monthly software fees. Zero per-SMS markups. 100% exempt from A2P 10DLC carrier compliance delays.\n\nOwn the appliance once for $49.99 for life. Stop paying software companies more than you pay for vehicle maintenance.",
+      cta: "Get Missed Call Auto SMS Flagship edition for a one-time $49.99 lifetime license at missedcallautosms.com",
+      promptLogic: "Cost comparison math. Contrasts expensive recurring GHL/Twilio stacks against one-time hardware ownership.",
+      imagePrompt: "Top-down flat lay comparison on a wooden workbench: on the left, a stack of recurring monthly software invoices crossed out in red marker; on the right, a sleek Android device running Missed Call Auto SMS beside brass tools, ultra-realistic, 16:9 aspect ratio.",
+      imageUrl: "https://raw.githubusercontent.com/anthonyfullerink-ai/MCASMS/main/assets/social/saas-margins-invoice-comparison.jpg",
+      videoPrompt: "Documentary style camera pan across a contractor office desk from an open laptop showing an expensive recurring invoice to a compact Android phone resting on a wireless charging dock.",
       status: "draft",
       createdAt: new Date().toISOString(),
       channelTargets: ["blog", "facebook"],
-      scheduledFor: new Date(Date.now() + 172800000).toISOString()
+      scheduledFor: `${dateStr}T13:00:00.000Z` // 09:00 AM EDT
+    },
+    {
+      id: `angle-${ts}-feed`,
+      title: "Hands Full on the Jobsite: The 15-Second Lead Capture Rule",
+      hook: "You are under a crawlspace with a flashlight and a pipe wrench. The phone rings twice. By the time you climb out, that $1,400 emergency job called your competitor.",
+      format: "social_card",
+      niche: "Contractor Speed-to-Lead",
+      narrativeBody: "In trade services, your hands are your livelihood. But when your hands are occupied, who is answering your phone?\n\nHarvard Business Review data shows that 78% of customers hire the first business to respond. Waiting just 5 minutes causes conversion rates to drop by 400%.\n\nMissed Call Auto SMS turns any spare Android phone into an autonomous speed-to-lead appliance:\n• Replies within 15 seconds from your REAL business number\n• 100% carrier compliant direct-SIM technology\n• 82% response rate\n• $49.99 one-time lifetime license (zero monthly fees)\n\nTry it free for 3 days ($0.00 today) at missedcallautosms.com",
+      cta: "Start your 3-day free trial at missedcallautosms.com",
+      promptLogic: "Relatable physical dilemma. High conversion quote comparing voicemail loss to 15-second instant recovery.",
+      imagePrompt: "Split screen high-contrast square graphic: Left side shows a plumber under a sink unable to reach a ringing phone; Right side shows Missed Call Auto SMS auto-replying in 15 seconds, 1:1 aspect ratio.",
+      imageUrl: "https://raw.githubusercontent.com/anthonyfullerink-ai/MCASMS/main/assets/social/bathroom-leak-90s-rule.jpg",
+      videoPrompt: "Close-up of contractor hands holding heavy tools, phone glowing on dashboard with auto-text sent chime.",
+      status: "draft",
+      createdAt: new Date().toISOString(),
+      channelTargets: ["facebook", "instagram"],
+      scheduledFor: `${dateStr}T17:00:00.000Z` // 01:00 PM EDT
+    },
+    {
+      id: `angle-${ts}-reel`,
+      title: "Why Voicemail Is Dead for Emergency Contractors (9:16 Reel)",
+      hook: "If a homeowner has water pouring through their ceiling, they do not listen to your 45-second voicemail greeting. They tap the next phone number.",
+      format: "reel_video",
+      niche: "Plumbing & Emergency Trades",
+      narrativeBody: "When an emergency strikes, 82% of callers hang up the moment voicemail clicks on. They don't leave a message. They move down the Google search results.\n\nWatch what happens when you run Missed Call Auto SMS: The phone finishes ringing. 15 seconds later, your real carrier SIM texts them: 'Hey! Dave here from Apex Plumbing. I am on a jobsite right now and cannot pick up—what is going on with your pipes?'\n\nThe customer stops dialing. They reply with their address. When you finish your call 20 minutes later, you have an open invoice ready to go.",
+      cta: "Tap the link in bio to try Missed Call Auto SMS free for 3 days.",
+      promptLogic: "Urgent problem demonstration for short-form video discovery. Focuses on customer behavior psychology.",
+      imagePrompt: "Macro cinematic shot of water dripping through ceiling drywall next to a glowing smartphone displaying a 15-second auto-reply text, 16:9.",
+      imageUrl: "https://raw.githubusercontent.com/anthonyfullerink-ai/MCASMS/main/assets/social/universal-service-appliance.jpg",
+      videoPrompt: "Cinematic vertical 9:16 24fps. A homeowner looking stressed holding their phone as a dripping pipe sounds in the background. Split screen reveals an instant SMS notification chime landing on their screen saying 'Hey, Dave here from Apex Plumbing - what is going on with your pipes?'.",
+      videoAsset: "assets/ads/v150_ai_voice_launch_reel_9x16.mp4",
+      status: "draft",
+      createdAt: new Date().toISOString(),
+      channelTargets: ["facebook", "instagram"],
+      scheduledFor: `${dateStr}T22:00:00.000Z` // 06:00 PM EDT
     }
   ];
 }
@@ -131,7 +170,7 @@ async function synthesizeContentAngles(userNiche = '', customPrompt = '') {
   if (fs.existsSync(RESEARCH_FILE)) {
     try {
       const items = JSON.parse(fs.readFileSync(RESEARCH_FILE, 'utf8'));
-      researchContext = items.slice(0, 3).map(it => `[Source: ${it.title} (${it.url})]\n${it.transcript.slice(0, 1500)}`).join('\n\n');
+      researchContext = items.slice(0, 4).map(it => `[Source: ${it.title}]\n${it.transcript.slice(0, 1200)}`).join('\n\n');
     } catch (e) {
       console.warn("Could not read competitor research:", e.message);
     }
@@ -148,8 +187,11 @@ STRICT BRAND RULES (MANDATORY):
    - Build interest/desire through authentic industry reality.
    - Actionable clear Call to Action (3-day free trial at $0.00 today or $49.99 lifetime).
 3. AVOID ALL TECHNICAL JARGON: No "APIs", "webhooks", "LLM fine-tuning". Speak to a tradesman or shop owner who works with their hands.
-4. Provide unique narrative angles inspired by the provided research transcripts, DO NOT copy or repeat them verbatim.
-5. Provide a bespoke image prompt (for Imagen / Nano Banana) and a bespoke video prompt (for Veo 3.1).
+4. Integrate the competitor research data (GoHighLevel $297/mo fee, Twilio per-text surcharges, 10DLC error 30007 blocks, Smith.ai $350-$650/mo live answering bills, 400% 5-minute lead decay curve).
+5. MANDATORY FORMAT VARIATION: You must generate EXACTLY 3 items representing the 3 daily publishing slots:
+   - Slot 1: format = "blog_article" (Deep educational authority, comparison table, 16:9 hero image prompt, channelTargets: ["blog", "facebook"])
+   - Slot 2: format = "social_card" (1:1 square graphic quote/comparison hook, punchy copy, channelTargets: ["facebook", "instagram"])
+   - Slot 3: format = "reel_video" (9:16 vertical video script, 15-30s hook, split-screen prompt for Veo 3.1, channelTargets: ["facebook", "instagram"])
 
 OUTPUT FORMAT:
 Return a JSON array of 3 distinct angle objects with this exact structure:
@@ -158,24 +200,24 @@ Return a JSON array of 3 distinct angle objects with this exact structure:
     "id": "angle-unique-id",
     "title": "Short, clear headline",
     "hook": "Scroll-stopping first sentence",
-    "format": "reel_video | blog_article | social_card",
+    "format": "blog_article | social_card | reel_video",
     "niche": "Specific trade or business category",
     "narrativeBody": "Full multi-paragraph authentic story without emojis or hashtags",
     "cta": "Clear call to action referencing the product",
     "promptLogic": "Why this angle converts and target emotional trigger",
-    "imagePrompt": "Detailed prompt for generating a bespoke 16:9 image",
-    "videoPrompt": "Detailed prompt for generating a 4k Veo 3.1 video reel",
-    "channelTargets": ["blog", "facebook", "instagram"]
+    "imagePrompt": "Detailed prompt for generating a bespoke 16:9 or 1:1 image",
+    "videoPrompt": "Detailed prompt for generating a 4k 9:16 Veo 3.1 video reel",
+    "channelTargets": ["blog", "facebook"]
   }
 ]
 `;
 
   const userQuery = `
-Target Niche / Focus: ${userNiche || 'Small Service Contractors and Urgent Local Businesses'}
-Custom Directive: ${customPrompt || 'Focus on the real financial cost of a missed call during peak hours.'}
+Target Niche / Focus: ${userNiche || 'Small Service Contractors, Plumbers, and Field Trades'}
+Custom Directive: ${customPrompt || 'Emphasize competitor pricing traps (GoHighLevel/Twilio surcharges, expensive answering services) versus one-time hardware ownership.'}
 
-Research Context Transcripts to draw inspiration from:
-${researchContext || 'General trade business context: Homeowners hiring the first contractor who responds.'}
+Empirical Research Context (Use these real numbers and findings):
+${researchContext || 'General trade business context: Homeowners hiring the first contractor who responds within 15 seconds.'}
 `;
 
   try {
@@ -186,13 +228,20 @@ ${researchContext || 'General trade business context: Homeowners hiring the firs
       throw new Error("No angles generated by Gemini");
     }
 
-    // Enhance with runtime metadata
-    const queueItems = angles.map((a, idx) => ({
+    // Enhance with runtime metadata and slot scheduling
+    const today = new Date();
+    const targetDate = new Date(today);
+    targetDate.setDate(targetDate.getDate() + 1);
+    const dateStr = targetDate.toISOString().split('T')[0];
+
+    const slotHours = ["13:00:00.000Z", "17:00:00.000Z", "22:00:00.000Z"]; // 9 AM, 1 PM, 6 PM EDT
+
+    const queueItems = angles.slice(0, 3).map((a, idx) => ({
       ...a,
       id: a.id || `angle-${Date.now()}-${idx + 1}`,
       status: "draft",
       createdAt: new Date().toISOString(),
-      scheduledFor: new Date(Date.now() + (idx + 1) * 86400000).toISOString()
+      scheduledFor: `${dateStr}T${slotHours[idx] || "17:00:00.000Z"}`
     }));
 
     // Save to queue
