@@ -146,8 +146,30 @@
 
 # API Route: Master Licenses
 [[redirects]]
+  from = "/api/licenses/*"
+  to = "/.netlify/functions/licenses"
+  status = 200
+
+[[redirects]]
   from = "/api/licenses"
   to = "/.netlify/functions/licenses"
+  status = 200
+
+# API Route: Referrals & Rev-Share
+[[redirects]]
+  from = "/api/referrals/*"
+  to = "/.netlify/functions/referrals"
+  status = 200
+
+[[redirects]]
+  from = "/api/referrals"
+  to = "/.netlify/functions/referrals"
+  status = 200
+
+# API Route: Stripe Webhook Alias
+[[redirects]]
+  from = "/api/webhook/stripe"
+  to = "/.netlify/functions/stripe-webhook"
   status = 200
 
 # Direct access to Agency Fleet Dashboard

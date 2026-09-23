@@ -24,10 +24,19 @@
   "postCallSmsEnabled": true,
   "postCallSmsTemplate": "Hey {{NAME}}, this is {{OWNER}}. Got your note about {{SUMMARY}}. Reaching out shortly!",
   "updatedAt": "2026-09-23T21:24:40.000Z",
+  "voiceSubActive": true,
+  "voiceMinutesBalance": 80,
+  "autoRebillEnabled": true,
+  "isVoicePaused": false,
+  "ratePerMinute": 0.25,
+  "packSizeMinutes": 40,
+  "packPriceDollars": 10,
+  "initialCreditsGranted": true,
   "vapiPhoneNumberId": "b16ab805-d29b-4635-8740-338abeda3abf",
   "subscriberEmail": "",
   "subscriberName": "",
   "stripeSubscriptionId": "",
   "activatedAt": "2026-09-20T00:15:00.000Z",
-  "customGreeting": "Hi, thank you for calling! This is Riley, the AI front desk assistant for our team. Whether you need emergency dispatch, a service estimate, or want to book an appointment, how can I help you today?"
+  "customGreeting": "Hi, thank you for calling! This is Riley, the AI front desk assistant for our team. Whether you need emergency dispatch, a service estimate, or want to book an appointment, how can I help you today?",
+  "vapiProvisioned": true
 }

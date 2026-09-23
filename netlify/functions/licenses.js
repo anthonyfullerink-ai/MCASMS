@@ -30,24 +30,80 @@ exports.handler = async (event) => {
       } catch (e) {}
     }
 
+    if (event.httpMethod === 'POST') {
+      let payload = {};
+      try { payload = JSON.parse(event.body || '{}'); } catch (e) {}
+      const key = (payload.key || payload.licenseKey || '').trim().toUpperCase();
+      if (!key) {
+        return { statusCode: 400, headers, body: JSON.stringify({ success: false, error: 'Key is required' }) };
+      }
+      const isFree = (payload.price === 0 || payload.price === '0.00' || payload.type === 'FREE' || payload.type === 'FREE_VOICE_COMP');
+      const hasVoice = !!(payload.voiceEntitlement || payload.voiceActive);
+      const isWaived = !!(payload.voiceSubWaived || (isFree && hasVoice));
+      const rec = {
+        key: key,
+        customer: payload.name || payload.customer || 'Valued Customer',
+        email: payload.email || '',
+        tier: payload.tier || 'STANDARD',
+        type: payload.type || (isWaived ? 'FREE_VOICE_COMP' : (isFree ? 'FREE' : 'PAID')),
+        price: typeof payload.price === 'number' ? `$${payload.price.toFixed(2)}` : (payload.price || (isFree ? '$0.00' : '$49.99')),
+        voiceEntitlement: hasVoice,
+        voiceSubWaived: isWaived,
+        vapiProvisioned: !!payload.vapiProvisioned,
+        voiceActive: !!(payload.vapiProvisioned && payload.voiceActive),
+        voiceNumber: payload.voiceNumber || null,
+        carrierCode: payload.carrierCode || null,
+        voiceMinutesBalance: payload.voiceMinutesBalance || 0.0,
+        status: payload.status || 'ACTIVE',
+        date: payload.date || new Date().toISOString()
+      };
+
+      try {
+        let current = [];
+        if (fs.existsSync(masterPath)) {
+          try { current = JSON.parse(fs.readFileSync(masterPath, 'utf8')); } catch (e) {}
+        }
+        const idx = current.findIndex(c => c.key === rec.key);
+        if (idx >= 0) current[idx] = { ...current[idx], ...rec };
+        else current.unshift(rec);
+        fs.writeFileSync(masterPath, JSON.stringify(current, null, 2), 'utf8');
+      } catch (writeErr) {
+        console.warn('Non-fatal write warning in serverless:', writeErr.message);
+      }
+
+      return {
+        statusCode: 200,
+        headers,
+        body: JSON.stringify({ success: true, message: 'License saved successfully', license: rec })
+      };
+    }
+
     const combined = [...masterList];
     for (const vb of voiceBindings) {
       const existing = combined.find(c => c.key === vb.licenseKey);
       if (existing) {
-        existing.voiceActive = true;
-        existing.voiceNumber = vb.forwardingNumber;
-        existing.carrierCode = vb.carrierCode;
+        if (vb.voiceEntitlement !== undefined) existing.voiceEntitlement = vb.voiceEntitlement;
+        if (vb.voiceSubWaived !== undefined) existing.voiceSubWaived = vb.voiceSubWaived;
+        if (vb.vapiProvisioned !== undefined) existing.vapiProvisioned = vb.vapiProvisioned;
+        if (vb.voiceMinutesBalance !== undefined) existing.voiceMinutesBalance = vb.voiceMinutesBalance;
+        if (vb.forwardingNumber) existing.voiceNumber = vb.forwardingNumber;
+        if (vb.carrierCode) existing.carrierCode = vb.carrierCode;
+        existing.voiceActive = !!(vb.vapiProvisioned && vb.active !== false && (vb.voiceMinutesBalance > 0));
       } else {
         combined.unshift({
           key: vb.licenseKey,
           customer: vb.name || 'Valued Customer',
           email: vb.email || '',
           tier: 'PRO',
-          type: 'PAID',
-          price: '29.00/mo',
-          voiceActive: true,
-          voiceNumber: vb.forwardingNumber,
-          carrierCode: vb.carrierCode,
+          type: vb.voiceSubWaived ? 'FREE_VOICE_COMP' : 'PAID',
+          price: vb.voiceSubWaived ? '$0.00' : '9.99/mo',
+          voiceEntitlement: !!vb.voiceEntitlement,
+          voiceSubWaived: !!vb.voiceSubWaived,
+          vapiProvisioned: !!vb.vapiProvisioned,
+          voiceMinutesBalance: vb.voiceMinutesBalance || 0.0,
+          voiceActive: !!(vb.vapiProvisioned && vb.active !== false && (vb.voiceMinutesBalance > 0)),
+          voiceNumber: vb.forwardingNumber || null,
+          carrierCode: vb.carrierCode || null,
           status: vb.active !== false ? 'ACTIVE' : 'INACTIVE',
           date: vb.boundAt || new Date().toISOString()
         });

@@ -644,7 +644,6 @@ function saveMasterLicense(rec) {
   }
 }
 
-
 // Multi-Channel Emergency Email Notification (Step 3)
 function dispatchEmergencyLeadEmail(callEntry) {
   try {
@@ -807,6 +806,76 @@ function sendResendEmail(apiKey, toEmail, subject, htmlContent) {
     req.write(payload);
     req.end();
   });
+}
+
+function generateVoiceUnlockEmailHtml(params) {
+  const { customerName, customerEmail, licenseKey, voiceSubWaived } = params;
+  return `<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="utf-8">
+  <title>Your 24/7 AI Voice Receptionist Engine is Unlocked</title>
+</head>
+<body style="font-family: -apple-system, BlinkMacSystemFont, Arial, sans-serif; background-color: #090B0E; color: #FFFFFF; margin: 0; padding: 24px;">
+  <div style="max-width: 620px; margin: 0 auto; background: #131720; border: 1px solid #222836; border-radius: 16px; padding: 32px;">
+    <div style="text-align: center; margin-bottom: 24px;">
+      <div style="font-size: 46px; margin-bottom: 8px;">🎙️⚡</div>
+      <h1 style="color: #A855F7; margin: 0; font-size: 24px; font-weight: 900;">Missed Call Auto SMS</h1>
+      <div style="display: inline-block; margin-top: 6px; padding: 4px 14px; border-radius: 20px; font-size: 11px; font-weight: 800; background: rgba(168, 85, 247, 0.15); color: #C084FC; border: 1px solid rgba(168, 85, 247, 0.35);">
+        ${voiceSubWaived ? 'AI VOICE PLATFORM COMP WAIVED ($0.00)' : 'AI VOICE PLATFORM ACCESS ($9.99/MO)'}
+      </div>
+    </div>
+
+    <div style="background: #1A202C; border-left: 4px solid #A855F7; padding: 16px; border-radius: 8px; margin-bottom: 24px;">
+      <h2 style="margin: 0 0 6px 0; font-size: 18px; color: #FFF;">Welcome, ${escapeHtml(customerName)}!</h2>
+      <p style="margin: 0; color: #CBD5E0; font-size: 14px; line-height: 1.5;">
+        Your 24/7 AI Voice Receptionist platform feature is unlocked and active on your license key <strong>${escapeHtml(licenseKey)}</strong>. You can now customize your AI business instructions, triage flows, and emergency rules directly inside the Android app.
+      </p>
+    </div>
+
+    <!-- Activation Card: Next Step -->
+    <div style="background: #090B0E; border: 1px dashed #F59E0B; border-radius: 12px; padding: 24px; text-align: center; margin-bottom: 24px;">
+      <div style="font-size: 13px; color: #FBBF24; text-transform: uppercase; font-weight: bold; margin-bottom: 8px;">⚡ Final Step: Activate Your Dedicated Carrier Line</div>
+      <p style="font-size: 14px; color: #CBD5E0; line-height: 1.6; margin: 0 0 16px 0;">
+        To instantly allocate your dedicated local phone number and generate your <strong>*71</strong> carrier conditional forwarding code, load your first <strong>$10 Credit Pack (40 minutes at $0.25/min)</strong>.
+      </p>
+      <a href="https://buy.stripe.com/5kA8wPfRY0PS6M014f" style="display: inline-block; background: #F59E0B; color: #000000; font-weight: 900; font-size: 15px; padding: 14px 32px; border-radius: 30px; text-decoration: none; box-shadow: 0 6px 20px rgba(245, 158, 11, 0.35);">
+        💳 Load $10 Voice Credit Pack (40 Mins) →
+      </a>
+      <div style="font-size: 11px; color: #949BAE; margin-top: 10px;">
+        Zero monthly call minimums. Credits never expire. Unused minutes roll over automatically.
+      </div>
+    </div>
+
+    <div style="border-top: 1px solid #222836; padding-top: 18px; text-align: center; font-size: 12px; color: #718096;">
+      Missed Call Auto SMS • Need assistance? Reply directly to this email or visit <a href="https://missedcallautosms.com" style="color: #A855F7;">missedcallautosms.com</a>
+    </div>
+  </div>
+</body>
+</html>`;
+}
+
+function generateCreditPackEmailHtml(customerName, minutesAdded = 40, packAmount = "10.00", newBalance = 40) {
+  return `<!DOCTYPE html>
+<html>
+<head><meta charset="utf-8"><title>AI Voice Minutes Loaded</title></head>
+<body style="font-family: -apple-system, BlinkMacSystemFont, Arial, sans-serif; background-color: #090B0E; color: #FFFFFF; margin: 0; padding: 24px;">
+    <div style="max-width: 600px; margin: 0 auto; background: #131720; border: 1px solid #222836; border-radius: 16px; padding: 32px; text-align: center;">
+        <div style="font-size: 44px; margin-bottom: 8px;">⚡🎙️</div>
+        <h1 style="color: #00E676; margin: 0 0 10px 0; font-size: 24px; font-weight: 900;">+${minutesAdded} AI Minutes Added!</h1>
+        <p style="color: #CBD5E0; font-size: 14px; line-height: 1.5; margin-bottom: 24px;">
+            Hi ${escapeHtml(customerName)}, your payment of <strong>$${packAmount}</strong> was successful. We've added <strong>${minutesAdded} minutes</strong> to your AI Voice Receptionist balance. Current Balance: <strong>${newBalance} minutes</strong>.
+        </p>
+        <div style="background: #090B0E; border: 1px dashed #00E676; border-radius: 12px; padding: 18px; margin-bottom: 24px;">
+            <div style="font-size: 12px; color: #949BAE; text-transform: uppercase;">Status</div>
+            <div style="font-size: 18px; color: #00E676; font-weight: bold; margin-top: 4px;">🟢 AI Voice Receptionist ACTIVE</div>
+        </div>
+        <div style="font-size: 12px; color: #718096;">
+            Missed Call Auto SMS • <a href="https://missedcallautosms.com/owner_admin_dashboard.html" style="color: #00E676;">Owner Portal</a>
+        </div>
+    </div>
+</body>
+</html>`;
 }
 
 function generateVoiceProOnboardingEmailHtml(params) {
@@ -1207,6 +1276,219 @@ async function executePostPublish(post) {
   return { slug, format, publishedAt: isoDate, socialResults };
 }
 
+// ══════════════════════════════════════════════════════════════════════════════
+// 🤝 REFERRAL & NET-PROFIT REV-SHARE ENGINE
+// ══════════════════════════════════════════════════════════════════════════════
+const REFERRAL_PARTNERS_FILE = path.join(__dirname, 'data/referral_partners.json');
+const REFERRAL_LEDGER_FILE = path.join(__dirname, 'data/referral_ledger.json');
+const REFERRAL_PAYOUTS_FILE = path.join(__dirname, 'data/referral_payouts.json');
+
+function getReferralEconomics(productType, grossAmount = null) {
+  let gross = 49.99;
+  let cogs = 1.79;
+  let productName = 'Base Appliance ($49.99 Lifetime)';
+
+  switch (productType) {
+    case 'base_appliance':
+    case 'standard':
+      gross = 49.99;
+      cogs = 1.79; // $1.75 Stripe + $0.04 server delivery
+      productName = 'Base Appliance ($49.99 Lifetime)';
+      break;
+    case 'pro_gateway':
+    case 'pro':
+      gross = 299.99;
+      cogs = 10.00; // $9.00 Stripe fee + $1.00 relay reserve
+      productName = 'Perpetual Pro Gateway ($299.99 Lifetime)';
+      break;
+    case 'pro_upgrade':
+      gross = 249.99;
+      cogs = 8.55; // $7.55 Stripe + $1.00 relay reserve
+      productName = 'Perpetual Pro Upgrade ($249.99 Lifetime)';
+      break;
+    case 'voice_addon':
+    case 'voice_sub':
+      gross = 9.99;
+      cogs = 2.09; // $0.59 Stripe + $1.50 DID line
+      productName = 'AI Voice Receptionist ($9.99/mo)';
+      break;
+    case 'credit_pack':
+      gross = 10.00;
+      cogs = 4.79; // $0.59 Stripe + $4.20 Vapi raw 40m
+      productName = 'Voice Credit Pack ($10.00 / 40 Mins)';
+      break;
+    default:
+      if (grossAmount) {
+        gross = Number(grossAmount);
+        cogs = Math.round((gross * 0.035 + 0.30) * 100) / 100;
+        productName = `Product ($${gross.toFixed(2)})`;
+      }
+      break;
+  }
+
+  if (grossAmount !== null && grossAmount !== undefined && !isNaN(grossAmount)) {
+    gross = Number(grossAmount);
+  }
+
+  const netProfit = Math.max(0, Math.round((gross - cogs) * 100) / 100);
+  return { gross, cogs, netProfit, productName };
+}
+
+function calculateReferralCommission(productType, grossAmount = null, revSharePct = 25) {
+  const econ = getReferralEconomics(productType, grossAmount);
+  const pct = Number(revSharePct) || 25;
+  const commissionEarned = Math.round((econ.netProfit * (pct / 100)) * 100) / 100;
+  return {
+    ...econ,
+    commissionPct: pct,
+    commissionEarned
+  };
+}
+
+function getReferralPartners() {
+  if (fs.existsSync(REFERRAL_PARTNERS_FILE)) {
+    try {
+      return JSON.parse(fs.readFileSync(REFERRAL_PARTNERS_FILE, 'utf8'));
+    } catch (e) {
+      console.warn('[Referrals] Failed to parse referral_partners.json:', e.message);
+    }
+  }
+  return [];
+}
+
+function saveReferralPartners(partners) {
+  fs.mkdirSync(path.dirname(REFERRAL_PARTNERS_FILE), { recursive: true });
+  fs.writeFileSync(REFERRAL_PARTNERS_FILE, JSON.stringify(partners, null, 2), 'utf8');
+}
+
+function getReferralLedger() {
+  if (fs.existsSync(REFERRAL_LEDGER_FILE)) {
+    try {
+      const ledger = JSON.parse(fs.readFileSync(REFERRAL_LEDGER_FILE, 'utf8'));
+      // Auto-transition PENDING_BUFFER to AVAILABLE if clearsAt <= now
+      const now = new Date();
+      let changed = false;
+      ledger.forEach(tx => {
+        if (tx.status === 'PENDING_BUFFER' && tx.clearsAt && new Date(tx.clearsAt) <= now) {
+          tx.status = 'AVAILABLE';
+          changed = true;
+        }
+      });
+      if (changed) {
+        saveReferralLedger(ledger);
+      }
+      return ledger;
+    } catch (e) {
+      console.warn('[Referrals] Failed to parse referral_ledger.json:', e.message);
+    }
+  }
+  return [];
+}
+
+function saveReferralLedger(ledger) {
+  fs.mkdirSync(path.dirname(REFERRAL_LEDGER_FILE), { recursive: true });
+  fs.writeFileSync(REFERRAL_LEDGER_FILE, JSON.stringify(ledger, null, 2), 'utf8');
+}
+
+function getReferralPayouts() {
+  if (fs.existsSync(REFERRAL_PAYOUTS_FILE)) {
+    try {
+      return JSON.parse(fs.readFileSync(REFERRAL_PAYOUTS_FILE, 'utf8'));
+    } catch (e) {
+      console.warn('[Referrals] Failed to parse referral_payouts.json:', e.message);
+    }
+  }
+  return [];
+}
+
+function saveReferralPayouts(payouts) {
+  fs.mkdirSync(path.dirname(REFERRAL_PAYOUTS_FILE), { recursive: true });
+  fs.writeFileSync(REFERRAL_PAYOUTS_FILE, JSON.stringify(payouts, null, 2), 'utf8');
+}
+
+// Sync computed stats from ledger back to partners
+function syncPartnerMetrics() {
+  const partners = getReferralPartners();
+  const ledger = getReferralLedger();
+
+  partners.forEach(partner => {
+    const txs = ledger.filter(t => t.partnerCode && t.partnerCode.toUpperCase() === partner.code.toUpperCase());
+    let totalGross = 0;
+    let totalNet = 0;
+    let totalEarned = 0;
+    let totalPaid = 0;
+    let pendingBuffer = 0;
+    let availablePayout = 0;
+
+    txs.forEach(t => {
+      if (t.status !== 'REFUNDED') {
+        totalGross += Number(t.grossAmount) || 0;
+        totalNet += Number(t.netProfit) || 0;
+        totalEarned += Number(t.commissionEarned) || 0;
+        if (t.status === 'PAID') {
+          totalPaid += Number(t.commissionEarned) || 0;
+        } else if (t.status === 'AVAILABLE') {
+          availablePayout += Number(t.commissionEarned) || 0;
+        } else if (t.status === 'PENDING_BUFFER') {
+          pendingBuffer += Number(t.commissionEarned) || 0;
+        }
+      }
+    });
+
+    partner.totalGrossReferred = Math.round(totalGross * 100) / 100;
+    partner.totalNetProfitReferred = Math.round(totalNet * 100) / 100;
+    partner.totalEarnedCommission = Math.round(totalEarned * 100) / 100;
+    partner.totalPaidCommission = Math.round(totalPaid * 100) / 100;
+    partner.pendingBufferCommission = Math.round(pendingBuffer * 100) / 100;
+    partner.availablePayoutCommission = Math.round(availablePayout * 100) / 100;
+  });
+
+  saveReferralPartners(partners);
+  return partners;
+}
+
+function addReferralTransaction({ partnerCode, orderId, customerEmail, productType, grossAmount }) {
+  if (!partnerCode) return null;
+  const cleanCode = String(partnerCode).trim().toUpperCase();
+  const partners = getReferralPartners();
+  const partner = partners.find(p => p.code.toUpperCase() === cleanCode);
+  if (!partner) {
+    console.log(`⚠️ [Referral Engine] Code "${cleanCode}" not found in registered partners. Skipping ledger.`);
+    return null;
+  }
+
+  const commission = calculateReferralCommission(productType, grossAmount, partner.revSharePct || 25);
+  const now = new Date();
+  const clearsAt = new Date(now.getTime() + 14 * 24 * 60 * 60 * 1000).toISOString(); // 14-day anti-fraud buffer
+
+  const newTx = {
+    id: `ref_tx_${Date.now()}_${Math.random().toString(36).slice(2, 6)}`,
+    orderId: orderId || `order_${Date.now()}`,
+    date: now.toISOString(),
+    partnerCode: partner.code,
+    partnerName: partner.name,
+    customerEmail: customerEmail || 'customer@unknown.com',
+    productType: productType,
+    productName: commission.productName,
+    grossAmount: commission.gross,
+    cogs: commission.cogs,
+    netProfit: commission.netProfit,
+    commissionPct: commission.commissionPct,
+    commissionEarned: commission.commissionEarned,
+    status: 'PENDING_BUFFER',
+    clearsAt: clearsAt,
+    payoutBatchId: null,
+    payoutDate: null
+  };
+
+  const ledger = getReferralLedger();
+  ledger.unshift(newTx);
+  saveReferralLedger(ledger);
+  syncPartnerMetrics();
+  console.log(`🤝 [REFERRAL LOGGED] Partner ${partner.code} credited $${newTx.commissionEarned} (25% on net profit $${newTx.netProfit}) from order ${orderId}`);
+  return newTx;
+}
+
 
 const server = http.createServer((req, res) => {
   let relativePath = decodeURIComponent(req.url.split('?')[0]);
@@ -1316,7 +1598,7 @@ const server = http.createServer((req, res) => {
   }
 
   // API Route: Stripe Webhook Ingestion with Automatic Post-Payment Provisioning & Deployment
-  if ((relativePath === '/api/stripe-webhook' || relativePath === '/api/stripe-webhook/') && req.method === 'POST') {
+  if ((relativePath === '/api/stripe-webhook' || relativePath === '/api/stripe-webhook/' || relativePath === '/api/webhook/stripe' || relativePath === '/api/webhook/stripe/') && req.method === 'POST') {
     let rawBody = '';
     req.on('data', chunk => rawBody += chunk);
     req.on('end', async () => {
@@ -1431,6 +1713,18 @@ const server = http.createServer((req, res) => {
                 .catch(err => console.warn('Resend live email dispatch notice:', err.message));
             }
 
+            // Check Referral Tracking
+            const refCode = session.client_reference_id || metadata.referral_code || metadata.ref || metadata.aff;
+            if (refCode) {
+              addReferralTransaction({
+                partnerCode: refCode,
+                orderId: session.id,
+                customerEmail,
+                productType: 'voice_addon',
+                grossAmount: 29.00
+              });
+            }
+
             console.log(`🎉 [POST-PAYMENT AUTOMATION COMPLETE] Provisioned dedicated line ${forwardingNumber}, generated key ${licenseKey}, email sent!`);
 
             res.writeHead(200, { 'Content-Type': 'application/json; charset=utf-8', 'Access-Control-Allow-Origin': '*' });
@@ -1448,17 +1742,241 @@ const server = http.createServer((req, res) => {
             return;
           }
 
-          // AUTOMATION 2: Tier Determination (Front Desk $99/mo, Pro Gateway $299, Standalone Voice $29/$89, Standard $49.99, or Trial $0.00)
+          // AUTOMATION 2: Tier Determination ($9.99 Voice Add-On, $10 Credit Pack, $249 Upgrade, $299 Pro, $49.99 Base, or Legacy)
           const tierMeta = (metadata.tier || '').toLowerCase();
+          const isVoiceAddon = (amountTotal === 999) || tierMeta === 'voice_addon' || tierMeta === 'voice_999';
+          const isCreditPack = (amountTotal === 1000) || tierMeta === 'credit_pack' || tierMeta === 'voice_credits';
+          const isProUpgrade = (amountTotal === 24999) || tierMeta === 'pro_upgrade' || tierMeta === 'pro_upgrade_249';
+          const isProGateway = (amountTotal === 29999) || (amountTotal === 29900) || tierMeta === 'pro_gateway' || tierMeta === 'pro_automation';
           const isFrontDesk = (amountTotal === 9900) || tierMeta === 'front_desk_bundle' || tierMeta === 'autonomous_front_desk';
-          const isVoiceBusiness = (amountTotal === 8900) || tierMeta === 'voice_business';
-          const isVoiceStarter = (amountTotal === 2900) || tierMeta === 'voice_starter';
-          const isProGateway = (amountTotal === 29900) || (amountTotal === 14999) || tierMeta === 'pro_gateway' || tierMeta === 'pro_automation';
           const isTrial = (amountTotal === 0) || tierMeta === 'standard_trial';
-          const isPro = isFrontDesk || isProGateway;
-          const isBundle = isFrontDesk;
+          const isPro = isProGateway || isProUpgrade || isFrontDesk;
+          const isBundle = isFrontDesk; // Stage 1 voice addon is now separate soft gate
 
-          const licenseKey = generateKey(customerName, isTrial ? 4 : 0, isPro);
+          // === STAGE 2: $10 Credit Pack (+40 minutes & 1st-Time Telephony Provisioning) ===
+          if (isCreditPack) {
+            const candidateKey = (session.client_reference_id || metadata.license_key || metadata.key || '').trim().toUpperCase();
+            const subscribers = getVoiceSubscribers();
+            let sub = subscribers.find(s => (candidateKey && s.licenseKey === candidateKey) || (customerEmail && s.email && s.email.toLowerCase() === customerEmail.toLowerCase()));
+            const masterList = getMasterLicenses();
+            let masterLic = masterList.find(m => (candidateKey && m.key === candidateKey) || (customerEmail && m.email && m.email.toLowerCase() === customerEmail.toLowerCase()));
+
+            const targetKey = candidateKey || sub?.licenseKey || masterLic?.key || generateKey(customerName, 0, true);
+            const isFirstTimeProvisioning = !(sub?.vapiProvisioned || masterLic?.vapiProvisioned);
+
+            let forwardingNumber = sub?.forwardingNumber || masterLic?.voiceNumber;
+            let carrierCode = sub?.carrierCode || masterLic?.carrierCode;
+            const carrierDeactivateCode = '*73';
+
+            if (isFirstTimeProvisioning) {
+              forwardingNumber = process.env.VAPI_PRIMARY_PHONE_NUMBER || '+1 (732) 660-9121';
+              const cleanDigits = forwardingNumber.replace(/\D/g, '');
+              carrierCode = `*71${cleanDigits.slice(-10)}`;
+              console.log(`🎙️ [STAGE 2 PROVISIONING] Dedicated AI voice line ${forwardingNumber} (*71 code: ${carrierCode}) assigned to ${customerEmail}`);
+            }
+
+            const currentBalance = (typeof sub?.voiceMinutesBalance === 'number') ? sub.voiceMinutesBalance : ((typeof masterLic?.voiceMinutesBalance === 'number') ? masterLic.voiceMinutesBalance : 0);
+            const newBalance = Math.round((currentBalance + 40) * 100) / 100;
+
+            const settings = getVoiceSettings();
+            settings.voiceMinutesBalance = newBalance;
+            settings.isVoicePaused = false;
+            settings.vapiProvisioned = true;
+            settings.forwardingNumber = forwardingNumber;
+            settings.carrierCode = carrierCode;
+            settings.status = 'ACTIVE';
+            saveVoiceSettings(settings);
+
+            saveVoiceSubscriber(targetKey, {
+              active: true,
+              name: customerName,
+              email: customerEmail,
+              voiceEntitlement: true,
+              voiceSubActive: true,
+              vapiProvisioned: true,
+              forwardingNumber,
+              carrierCode,
+              carrierDeactivateCode,
+              voiceMinutesBalance: newBalance,
+              ratePerMinute: 0.25,
+              autoRebillEnabled: true,
+              isVoicePaused: false,
+              status: 'ACTIVE',
+              provisionedAt: isFirstTimeProvisioning ? new Date().toISOString() : (sub?.provisionedAt || new Date().toISOString())
+            });
+
+            saveMasterLicense({
+              key: targetKey,
+              customer: customerName,
+              email: customerEmail,
+              voiceEntitlement: true,
+              vapiProvisioned: true,
+              voiceActive: true,
+              voiceNumber: forwardingNumber,
+              carrierCode: carrierCode,
+              voiceMinutesBalance: newBalance,
+              status: 'ACTIVE'
+            });
+
+            console.log(`💳 [STRIPE CREDIT PACK INGESTED] Credited +40 minutes for ${customerEmail}. New balance: ${newBalance} min (First-Time Telephony Provisioned: ${isFirstTimeProvisioning})`);
+
+            // Dispatch Email
+            try {
+              const resendKey = process.env.RESEND_API_KEY || (fs.existsSync('.env') && fs.readFileSync('.env', 'utf8').match(/RESEND_API_KEY=(.*)/)?.[1]?.trim());
+              if (isFirstTimeProvisioning) {
+                const emailHtml = generateVoiceProOnboardingEmailHtml({
+                  customerName,
+                  customerEmail,
+                  licenseKey: targetKey,
+                  forwardingNumber,
+                  carrierCode,
+                  carrierDeactivateCode,
+                  monthlyMinutesQuota: 40
+                });
+                const safeEmail = customerEmail.replace(/[^a-zA-Z0-9]/g, '_');
+                const fileName = `voice_provisioned_${Date.now()}_${safeEmail}.html`;
+                fs.writeFileSync(path.join(SENT_EMAILS_DIR, fileName), emailHtml, 'utf8');
+
+                if (resendKey) {
+                  sendResendEmail(resendKey, customerEmail, `🎙️ Your Dedicated AI Voice Receptionist Line is Live! Line: ${forwardingNumber}`, emailHtml)
+                    .catch(err => console.warn('Resend email error:', err.message));
+                }
+              } else {
+                const emailHtml = generateCreditPackEmailHtml(customerName, 40, "10.00", newBalance);
+                const safeEmail = customerEmail.replace(/[^a-zA-Z0-9]/g, '_');
+                const fileName = `credit_pack_${Date.now()}_${safeEmail}.html`;
+                fs.writeFileSync(path.join(SENT_EMAILS_DIR, fileName), emailHtml, 'utf8');
+
+                if (resendKey) {
+                  sendResendEmail(resendKey, customerEmail, `⚡ +40 AI Voice Minutes Added to Your Account ($10.00)`, emailHtml)
+                    .catch(err => console.warn('Resend email error:', err.message));
+                }
+              }
+            } catch (e) {
+              console.warn('Credit pack email warning:', e.message);
+            }
+
+            // Check Referral Tracking for Credit Pack
+            const refCode = session.client_reference_id || metadata.referral_code || metadata.ref || metadata.aff;
+            if (refCode) {
+              addReferralTransaction({
+                partnerCode: refCode,
+                orderId: session.id,
+                customerEmail,
+                productType: 'credit_pack',
+                grossAmount: 10.00
+              });
+            }
+
+            res.writeHead(200, { 'Content-Type': 'application/json; charset=utf-8', 'Access-Control-Allow-Origin': '*' });
+            res.end(JSON.stringify({
+              received: true,
+              type: 'voice_credit_pack',
+              customerEmail,
+              minutesCredited: 40,
+              newBalance: newBalance,
+              firstTimeProvisioned: isFirstTimeProvisioning,
+              forwardingNumber: forwardingNumber,
+              carrierCode: carrierCode
+            }));
+            return;
+          }
+
+          // === STAGE 1: $9.99/mo AI Voice Add-On (Soft Gate — $0 Out-of-Pocket Telephony COGS) ===
+          if (isVoiceAddon) {
+            const licenseKey = metadata.license_key || metadata.key || generateKey(customerName, 0, true);
+
+            saveVoiceSubscriber(licenseKey, {
+              active: true,
+              name: customerName,
+              email: customerEmail,
+              voiceEntitlement: true,
+              voiceSubActive: true,
+              voiceSubWaived: false,
+              vapiProvisioned: false,
+              forwardingNumber: null,
+              carrierCode: null,
+              carrierDeactivateCode: '*73',
+              voiceMinutesBalance: 0.0,
+              ratePerMinute: 0.25,
+              autoRebillEnabled: true,
+              subscriptionId: session.subscription || session.id,
+              customerId: session.customer || null,
+              stripeCustomerId: session.customer || null,
+              status: 'UNLOCKED_PENDING_PACK',
+              boundAt: new Date().toISOString()
+            });
+
+            saveMasterLicense({
+              key: licenseKey,
+              customer: customerName,
+              email: customerEmail,
+              tier: 'VOICE_ADDON',
+              type: 'SUBSCRIPTION',
+              price: '9.99/mo',
+              voiceEntitlement: true,
+              voiceSubActive: true,
+              voiceSubWaived: false,
+              vapiProvisioned: false,
+              voiceActive: false,
+              voiceNumber: null,
+              carrierCode: null,
+              voiceMinutesBalance: 0.0,
+              status: 'ACTIVE',
+              date: new Date().toISOString()
+            });
+
+            // Dispatch Stage 1 Platform Unlock Email
+            try {
+              const emailHtml = generateVoiceUnlockEmailHtml({
+                customerName,
+                customerEmail,
+                licenseKey,
+                voiceSubWaived: false
+              });
+              const safeEmail = customerEmail.replace(/[^a-zA-Z0-9]/g, '_');
+              const fileName = `voice_unlocked_${Date.now()}_${safeEmail}.html`;
+              fs.writeFileSync(path.join(SENT_EMAILS_DIR, fileName), emailHtml, 'utf8');
+
+              const resendKey = process.env.RESEND_API_KEY || (fs.existsSync('.env') && fs.readFileSync('.env', 'utf8').match(/RESEND_API_KEY=(.*)/)?.[1]?.trim());
+              if (resendKey) {
+                sendResendEmail(resendKey, customerEmail, `⚡ Your 24/7 AI Voice Receptionist Engine is Unlocked! (Key: ${licenseKey})`, emailHtml)
+                  .catch(err => console.warn('Resend live email dispatch notice:', err.message));
+              }
+            } catch (e) {
+              console.warn('Voice unlock email dispatch warning:', e.message);
+            }
+
+            // Referral tracking
+            const refCode = session.client_reference_id || metadata.referral_code || metadata.ref || metadata.aff;
+            if (refCode) {
+              addReferralTransaction({
+                partnerCode: refCode,
+                orderId: session.id,
+                customerEmail,
+                productType: 'voice_addon',
+                grossAmount: 9.99
+              });
+            }
+
+            console.log(`🎙️ [STAGE 1 SOFT GATE COMPLETE] Voice Engine Unlocked for ${customerEmail}. Zero COGS incurred. Awaiting first $10 credit pack.`);
+
+            res.writeHead(200, { 'Content-Type': 'application/json; charset=utf-8', 'Access-Control-Allow-Origin': '*' });
+            res.end(JSON.stringify({
+              received: true,
+              tier: 'voice_addon',
+              licenseKey,
+              customerEmail,
+              voiceEntitlement: true,
+              vapiProvisioned: false,
+              voiceMinutesBalance: 0.0,
+              status: 'UNLOCKED_PENDING_PACK',
+              checkoutCreditPackUrl: 'https://buy.stripe.com/5kA8wPfRY0PS6M014f'
+            }));
+            return;
+          }
+
+          const licenseKey = metadata.license_key || metadata.key || generateKey(customerName, isTrial ? 4 : 0, isPro);
 
           let bundleForwardingNumber = null;
           let bundleCarrierCode = null;
@@ -1468,6 +1986,20 @@ const server = http.createServer((req, res) => {
             const cleanDigits = bundleForwardingNumber.replace(/\D/g, '');
             bundleCarrierCode = `*71${cleanDigits.slice(-10)}`;
 
+            const settings = getVoiceSettings();
+            settings.voiceSubActive = true;
+            settings.isVoicePaused = false;
+            settings.forwardingNumber = bundleForwardingNumber;
+            settings.carrierCode = bundleCarrierCode;
+            settings.subscriberEmail = customerEmail;
+            settings.subscriberName = customerName;
+            settings.stripeSubscriptionId = session.subscription || session.id;
+            if (!settings.initialCreditsGranted) {
+              settings.voiceMinutesBalance = 15.0; // 15 free test minutes
+              settings.initialCreditsGranted = true;
+            }
+            saveVoiceSettings(settings);
+
             saveVoiceSubscriber(licenseKey, {
               active: true,
               name: customerName,
@@ -1475,25 +2007,32 @@ const server = http.createServer((req, res) => {
               forwardingNumber: bundleForwardingNumber,
               carrierCode: bundleCarrierCode,
               carrierDeactivateCode: '*73',
-              quotaMinutes: 250,
-              overageRatePerMinute: 0.20,
-              minutesUsed: 0,
+              voiceMinutesBalance: settings.voiceMinutesBalance || 15.0,
+              ratePerMinute: 0.25,
+              autoRebillEnabled: true,
               subscriptionId: session.subscription || session.id,
               customerId: session.customer || null,
               stripeCustomerId: session.customer || null,
               boundAt: new Date().toISOString()
             });
 
-            console.log(`🎙️ [FRONT DESK BUNDLE BOUND] Key ${licenseKey} bound to ${bundleForwardingNumber} (250 mins)`);
+            console.log(`🎙️ [VOICE FRONT DESK BUNDLE BOUND] Key ${licenseKey} bound to ${bundleForwardingNumber}`);
           }
 
-          const priceStr = isFrontDesk ? '99.00' : (isProGateway ? '299.00' : (isTrial ? '0.00' : '49.99'));
+          let priceStr = '49.99';
+          let tierLabel = 'STANDARD';
+          if (isVoiceAddon) { priceStr = '9.99/mo'; tierLabel = 'VOICE_ADDON'; }
+          else if (isProUpgrade) { priceStr = '249.99'; tierLabel = 'PRO'; }
+          else if (isProGateway) { priceStr = '299.99'; tierLabel = 'PRO'; }
+          else if (isFrontDesk) { priceStr = '99.00/mo'; tierLabel = 'AUTONOMOUS_FRONT_DESK'; }
+          else if (isTrial) { priceStr = '0.00'; tierLabel = 'TRIAL'; }
+
           saveMasterLicense({
             key: licenseKey,
             customer: customerName,
             email: customerEmail,
-            tier: isFrontDesk ? 'AUTONOMOUS_FRONT_DESK' : (isProGateway ? 'PRO' : (isTrial ? 'TRIAL' : 'STANDARD')),
-            type: (isTrial || isFrontDesk) ? 'SUBSCRIPTION' : 'PAID',
+            tier: tierLabel,
+            type: (isTrial || isFrontDesk || isVoiceAddon) ? 'SUBSCRIPTION' : 'PAID',
             price: priceStr,
             voiceActive: isBundle,
             voiceNumber: bundleForwardingNumber,
@@ -1508,8 +2047,8 @@ const server = http.createServer((req, res) => {
               customerName,
               customerEmail,
               licenseKey,
-              tier: isFrontDesk ? 'AUTONOMOUS_FRONT_DESK' : (isProGateway ? 'PRO' : (isTrial ? 'TRIAL' : 'PAID')),
-              price: isFrontDesk ? '$99.00/mo (Front Desk Bundle)' : (isProGateway ? '$299.00 (Pro Gateway)' : (isTrial ? '$0.00 (Trial)' : '$49.99')),
+              tier: tierLabel,
+              price: priceStr,
               voiceActive: isBundle,
               voiceForwardingNumber: bundleForwardingNumber
             });
@@ -1528,6 +2067,26 @@ const server = http.createServer((req, res) => {
             }
           } catch (e) {
             console.warn('Email dispatch warning:', e.message);
+          }
+
+          // Record Referral Transaction if Referral Code Present
+          const refCode = session.client_reference_id || metadata.referral_code || metadata.ref || metadata.aff;
+          if (refCode && !isTrial) {
+            let prodType = 'base_appliance';
+            let gross = 49.99;
+            if (isVoiceAddon) { prodType = 'voice_addon'; gross = 9.99; }
+            else if (isProUpgrade) { prodType = 'pro_upgrade'; gross = 249.99; }
+            else if (isProGateway) { prodType = 'pro_gateway'; gross = 299.99; }
+            else if (isFrontDesk) { prodType = 'pro_gateway'; gross = 99.00; }
+            else if (amountTotal > 0) { gross = amountTotal / 100; }
+
+            addReferralTransaction({
+              partnerCode: refCode,
+              orderId: session.id,
+              customerEmail,
+              productType: prodType,
+              grossAmount: gross
+            });
           }
 
           console.log(`🔑 [STRIPE CHECKOUT COMPLETE] Issued ${isBundle ? 'Pro + Voice Bundle' : (isPro ? 'Pro' : (isTrial ? 'Trial' : 'Standard'))} license: ${licenseKey} to ${customerEmail}`);
@@ -1634,19 +2193,59 @@ const server = http.createServer((req, res) => {
 
       const isPro = key.startsWith('MCAS-PRO-') || key.startsWith('MCAT-PRO-') || key.includes('PRO-DEMO');
       const isAgency = key.startsWith('MCAS-AGENCY-') || key.startsWith('MCAT-AGENCY-');
+      const settings = getVoiceSettings();
+
+      // Check Master Licenses
+      const masterList = getMasterLicenses();
+      const masterLic = masterList.find(m => m.key === key);
+
+      let voiceEntitlement = false;
+      let voiceSubWaived = false;
+      let vapiProvisioned = false;
+      let voiceMinutesBalance = 0.0;
+      let voiceForwardingNumber = null;
+      let voiceCarrierCode = null;
 
       // Check Voice Pro Bindings
-      let voiceActive = false;
-      let voiceForwardingNumber = null;
       const voiceBindingsFile = path.join(__dirname, '.voice_pro_bindings.json');
       if (fs.existsSync(voiceBindingsFile)) {
         try {
           const bindings = JSON.parse(fs.readFileSync(voiceBindingsFile, 'utf8'));
-          if (bindings[key] && bindings[key].active !== false) {
-            voiceActive = true;
-            voiceForwardingNumber = bindings[key].forwardingNumber;
+          if (bindings[key]) {
+            const b = bindings[key];
+            voiceEntitlement = !!(b.voiceEntitlement || b.voiceSubActive || b.voiceSubWaived || b.active);
+            voiceSubWaived = !!b.voiceSubWaived;
+            vapiProvisioned = !!b.vapiProvisioned;
+            voiceForwardingNumber = b.forwardingNumber || null;
+            voiceCarrierCode = b.carrierCode || null;
+            voiceMinutesBalance = typeof b.voiceMinutesBalance === 'number' ? b.voiceMinutesBalance : 0.0;
           }
         } catch (e) {}
+      }
+
+      // Check Master License record
+      if (masterLic) {
+        if (masterLic.voiceEntitlement !== undefined) voiceEntitlement = !!masterLic.voiceEntitlement;
+        if (masterLic.voiceSubWaived !== undefined) voiceSubWaived = !!masterLic.voiceSubWaived;
+        if (masterLic.vapiProvisioned !== undefined) vapiProvisioned = !!masterLic.vapiProvisioned;
+        if (masterLic.voiceNumber) voiceForwardingNumber = voiceForwardingNumber || masterLic.voiceNumber;
+        if (masterLic.carrierCode) voiceCarrierCode = voiceCarrierCode || masterLic.carrierCode;
+        if (masterLic.voiceMinutesBalance !== undefined) voiceMinutesBalance = masterLic.voiceMinutesBalance;
+        if (masterLic.voiceActive) {
+          voiceEntitlement = true;
+          if (masterLic.voiceNumber) {
+            vapiProvisioned = true;
+          }
+        }
+      }
+
+      // Master Pro Demo Key Bypass for instant testing
+      if (key === 'MCAS-PRO-DEMO-89F2') {
+        voiceEntitlement = true;
+        vapiProvisioned = true;
+        voiceForwardingNumber = voiceForwardingNumber || '+1 (555) 349-2810';
+        voiceCarrierCode = voiceCarrierCode || '*715553492810';
+        voiceMinutesBalance = 50.0;
       }
 
       // Check registered devices
@@ -1661,22 +2260,48 @@ const server = http.createServer((req, res) => {
         } catch (e) {}
       }
 
+      const isPaused = settings.isVoicePaused === true || (voiceMinutesBalance <= 0 && settings.autoRebillEnabled === false);
+      const isVoiceActive = voiceEntitlement && vapiProvisioned && (voiceMinutesBalance > 0) && !isPaused;
+
+      let keyStatus = isPaused ? 'PAUSED' : 'ACTIVE';
+      let activationPrompt = null;
+      if (voiceEntitlement && !vapiProvisioned) {
+        keyStatus = 'UNLOCKED_PENDING_PACK';
+        activationPrompt = 'Voice Engine Unlocked! Fund your first 40-minute credit pack ($10) to generate your dedicated carrier line and activate AI answering.';
+      }
+
       return {
         valid: true,
         licenseKey: key,
-        status: 'ACTIVE',
+        status: keyStatus,
         tier: isAgency ? 'AGENCY' : (isPro ? 'PRO' : 'STANDARD'),
-        edition: isAgency ? 'Agency Fleet Management' : (isPro ? 'Pro Automation Gateway ($299)' : 'Flagship Appliance Edition ($49.99)'),
-        voiceActive: voiceActive,
+        edition: isAgency ? 'Agency Fleet Partner' : (isPro ? 'Pro Automation Gateway ($299)' : 'Flagship Appliance Edition ($49.99)'),
+        isPro: isPro || voiceEntitlement,
+        perpetualPro: isPro && !key.includes('TRIAL'),
+        voiceEntitlement: voiceEntitlement,
+        voiceSubActive: voiceEntitlement && !voiceSubWaived,
+        voiceSubWaived: voiceSubWaived,
+        vapiProvisioned: vapiProvisioned,
+        voiceActive: isVoiceActive,
         voiceForwardingNumber: voiceForwardingNumber,
-        voiceEligible: isPro || isAgency,
-        type: key.includes('TRIAL') ? 'TRIAL' : (key.includes('DEMO') ? 'DEMO' : 'PAID'),
+        carrierCode: voiceCarrierCode,
+        voiceEligible: true,
+        voiceMinutesBalance: voiceMinutesBalance,
+        autoRebillEnabled: settings.autoRebillEnabled !== false,
+        isVoicePaused: isPaused,
+        ratePerMinute: 0.25,
+        packPriceDollars: 10.00,
+        packMinutes: 40,
+        checkoutCreditPackUrl: 'https://buy.stripe.com/5kA8wPfRY0PS6M014f',
+        activationPrompt: activationPrompt,
+        type: key.includes('TRIAL') ? 'TRIAL' : (key.includes('DEMO') ? 'DEMO' : (voiceSubWaived ? 'FREE_VOICE_COMP' : 'PAID')),
         deviceId: boundDevice,
         features: {
-          dualSim: isPro || isAgency,
-          n8nWebhook: isPro || isAgency,
-          centralWebhookBridge: isPro || isAgency,
-          aiVoiceReceptionist: isPro || isAgency,
+          dualSim: true,
+          n8nWebhook: isPro || voiceEntitlement,
+          centralWebhookBridge: isPro || voiceEntitlement,
+          aiVoiceReceptionist: voiceEntitlement, // Unlocks UI controls inside the Android APK!
+          aiVoiceLiveTelephony: isVoiceActive,   // True once carrier forwarding is active
           p2pSmsExempt: true
         },
         createdAt: new Date().toISOString()
@@ -2000,54 +2625,103 @@ const server = http.createServer((req, res) => {
     return;
   }
 
-  // API: Voice Receptionist Status & Quota Health (Step 1)
+  // API: Voice Receptionist Status & Quota Health
   if ((relativePath === '/api/vapi/status' || relativePath === '/api/vapi/status/')) {
     const settings = getVoiceSettings();
     const hasMasterKey = !!(process.env.VAPI_API_KEY || process.env.VAPI_PRIVATE_API_KEY);
     const calls = getVoiceCallLogs();
     const queue = getVoiceSmsQueue();
     const pendingSms = queue.filter(q => q.status === 'PENDING').length;
+    const balance = typeof settings.voiceMinutesBalance === 'number' ? settings.voiceMinutesBalance : 15.0;
+    const isPaused = settings.isVoicePaused === true || (balance <= 0 && settings.autoRebillEnabled === false);
 
     res.writeHead(200, { 'Content-Type': 'application/json; charset=utf-8', 'Access-Control-Allow-Origin': '*' });
     res.end(JSON.stringify({
       success: true,
       mode: settings.mode,
-      status: settings.status,
+      status: isPaused ? 'PAUSED' : settings.status,
       businessName: settings.businessName,
       forwardingNumber: settings.forwardingNumber,
       carrierCode: settings.carrierCode,
       carrierDeactivateCode: settings.carrierDeactivateCode,
       forwardingVerified: settings.forwardingVerified,
       forwardingVerifiedAt: settings.forwardingVerifiedAt,
+      voiceSubActive: settings.voiceSubActive !== false,
+      voiceMinutesBalance: balance,
+      autoRebillEnabled: settings.autoRebillEnabled !== false,
+      isVoicePaused: isPaused,
+      ratePerMinute: 0.25,
+      packPriceDollars: 10.00,
+      packSizeMinutes: 40,
       monthlyMinutesQuota: settings.monthlyMinutesQuota,
       minutesUsed: settings.minutesUsed,
-      minutesRemaining: Math.max(0, settings.monthlyMinutesQuota - settings.minutesUsed),
       totalCallsLogged: calls.length,
       pendingSmsQueueCount: pendingSms,
       maxCallDurationCap: settings.maxCallDurationCap,
       hasLiveVapiKey: hasMasterKey || !!settings.byokApiKey,
       isBYOK: settings.mode === 'BYOK',
-      isManagedPro: settings.mode === 'MANAGED_PRO',
-      isQuotaExhausted: settings.minutesUsed >= settings.monthlyMinutesQuota
+      isManagedPro: settings.mode === 'MANAGED_PRO'
     }));
     return;
   }
 
-  // API: Top-Up 100 Voice Minutes (Step 1 Financial Safety)
-  if ((relativePath === '/api/vapi/topup-minutes' || relativePath === '/api/vapi/topup-minutes/') && req.method === 'POST') {
+  // API: Top-Up $10 Voice Credit Pack (40 Minutes at $0.25/min)
+  if ((relativePath === '/api/vapi/topup-minutes' || relativePath === '/api/vapi/topup-minutes/' || relativePath === '/api/vapi/buy-credits') && req.method === 'POST') {
     const settings = getVoiceSettings();
-    settings.monthlyMinutesQuota = (settings.monthlyMinutesQuota || 200) + 100;
-    if (settings.status === 'QUOTA_FALLBACK') settings.status = 'ACTIVE';
+    settings.voiceMinutesBalance = (settings.voiceMinutesBalance || 0) + 40;
+    settings.isVoicePaused = false;
+    if (settings.status === 'PAUSED_CREDITS_EXHAUSTED' || settings.status === 'PAUSED' || settings.status === 'QUOTA_FALLBACK') {
+      settings.status = 'ACTIVE';
+    }
     saveVoiceSettings(settings);
 
-    console.log(`💳 [TOP-UP APPLIED] Added 100 minutes. New quota: ${settings.monthlyMinutesQuota} min.`);
+    console.log(`💳 [CREDITS TOP-UP APPLIED] Added 40 minutes ($10 pack). New balance: ${settings.voiceMinutesBalance} min.`);
     res.writeHead(200, { 'Content-Type': 'application/json; charset=utf-8', 'Access-Control-Allow-Origin': '*' });
     res.end(JSON.stringify({
       success: true,
-      message: '100 Voice Minutes added successfully! ($10 recharge)',
-      newQuota: settings.monthlyMinutesQuota,
-      minutesRemaining: Math.max(0, settings.monthlyMinutesQuota - settings.minutesUsed)
+      message: '40 Voice Minutes added successfully! ($10 recharge at $0.25/min)',
+      newBalance: settings.voiceMinutesBalance,
+      isVoicePaused: false
     }));
+    return;
+  }
+
+  // API: Toggle Auto-Rebill ($10 auto-pack when balance < 5 min)
+  if ((relativePath === '/api/vapi/toggle-autorebill' || relativePath === '/api/vapi/toggle-autorebill/') && req.method === 'POST') {
+    let body = '';
+    req.on('data', chunk => body += chunk);
+    req.on('end', () => {
+      try {
+        const payload = JSON.parse(body || '{}');
+        const settings = getVoiceSettings();
+        if (payload.autoRebillEnabled !== undefined) {
+          settings.autoRebillEnabled = Boolean(payload.autoRebillEnabled);
+        } else {
+          settings.autoRebillEnabled = !settings.autoRebillEnabled;
+        }
+
+        if (!settings.autoRebillEnabled && (settings.voiceMinutesBalance || 0) <= 0) {
+          settings.isVoicePaused = true;
+          settings.status = 'PAUSED_CREDITS_EXHAUSTED';
+        } else if (settings.autoRebillEnabled && (settings.voiceMinutesBalance || 0) > 0) {
+          settings.isVoicePaused = false;
+          settings.status = 'ACTIVE';
+        }
+        saveVoiceSettings(settings);
+        console.log(`⚙️ [AUTO-REBILL TOGGLE] Auto-rebill set to [${settings.autoRebillEnabled}]. Paused: [${settings.isVoicePaused}]`);
+
+        res.writeHead(200, { 'Content-Type': 'application/json; charset=utf-8', 'Access-Control-Allow-Origin': '*' });
+        res.end(JSON.stringify({
+          success: true,
+          autoRebillEnabled: settings.autoRebillEnabled,
+          isVoicePaused: settings.isVoicePaused,
+          balance: settings.voiceMinutesBalance
+        }));
+      } catch (err) {
+        res.writeHead(400, { 'Content-Type': 'application/json; charset=utf-8', 'Access-Control-Allow-Origin': '*' });
+        res.end(JSON.stringify({ success: false, error: err.message }));
+      }
+    });
     return;
   }
 
@@ -2700,10 +3374,26 @@ const server = http.createServer((req, res) => {
           smsFollowUpSent: settings.postCallSmsEnabled,
           smsFollowUpText: followUpText
         };
-
         saveVoiceCallLog(logEntry);
 
-        // Step 3: Enqueue persistent outbound SMS for Android real-SIM dispatch
+        // Step 3: Meter Call Duration against Customer Voice Minute Credits ($0.25/min)
+        const durationMins = Math.max(0.1, durationSec / 60);
+        settings.minutesUsed = Math.round(((settings.minutesUsed || 0) + durationMins) * 100) / 100;
+        settings.voiceMinutesBalance = Math.max(0, Math.round(((settings.voiceMinutesBalance || 15.0) - durationMins) * 100) / 100);
+
+        // Auto-Recharge Check ($10 pack = +40 mins when balance < 5 min)
+        if (settings.autoRebillEnabled !== false && settings.voiceMinutesBalance < 5) {
+          settings.voiceMinutesBalance = Math.round((settings.voiceMinutesBalance + 40) * 100) / 100;
+          settings.isVoicePaused = false;
+          console.log(`💳 [AUTO-RECHARGE] Balance dropped below 5 min. Auto-reloaded $10 pack (+40 min). New balance: ${settings.voiceMinutesBalance} min`);
+        } else if (settings.autoRebillEnabled === false && settings.voiceMinutesBalance <= 0) {
+          settings.isVoicePaused = true;
+          settings.status = 'PAUSED_CREDITS_EXHAUSTED';
+          console.log(`🛑 [VOICE CREDITS EXHAUSTED] Auto-rebill is OFF and balance reached 0. Pausing Vapi receptionist.`);
+        }
+        saveVoiceSettings(settings);
+
+        // Step 4: Enqueue persistent outbound SMS for Android real-SIM dispatch
         if (settings.postCallSmsEnabled) {
           enqueueVoiceSms({
             callId: logEntry.id,
@@ -2713,12 +3403,12 @@ const server = http.createServer((req, res) => {
           });
         }
 
-        // Step 3: Dispatch multi-channel email alert for high emergencies
+        // Step 5: Dispatch multi-channel email alert for high emergencies
         if (isUrgent) {
           dispatchEmergencyLeadEmail(logEntry);
         }
 
-        console.log(`📞 [VAPI WEBHOOK] Call processed from ${logEntry.callerNumber} (${durationFormatted}) - Urgency: [${logEntry.urgency}]`);
+        console.log(`📞 [VAPI WEBHOOK] Call processed from ${logEntry.callerNumber} (${durationFormatted}) - Urgency: [${logEntry.urgency}] - Credits remaining: ${settings.voiceMinutesBalance} min`);
 
         res.writeHead(200, { 'Content-Type': 'application/json; charset=utf-8', 'Access-Control-Allow-Origin': '*' });
         res.end(JSON.stringify({
@@ -3440,20 +4130,28 @@ const server = http.createServer((req, res) => {
     for (const vb of voiceBindings) {
       const existing = combined.find(c => c.key === vb.licenseKey);
       if (existing) {
-        existing.voiceActive = true;
-        existing.voiceNumber = vb.forwardingNumber;
-        existing.carrierCode = vb.carrierCode;
+        if (vb.voiceEntitlement !== undefined) existing.voiceEntitlement = vb.voiceEntitlement;
+        if (vb.voiceSubWaived !== undefined) existing.voiceSubWaived = vb.voiceSubWaived;
+        if (vb.vapiProvisioned !== undefined) existing.vapiProvisioned = vb.vapiProvisioned;
+        if (vb.voiceMinutesBalance !== undefined) existing.voiceMinutesBalance = vb.voiceMinutesBalance;
+        if (vb.forwardingNumber) existing.voiceNumber = vb.forwardingNumber;
+        if (vb.carrierCode) existing.carrierCode = vb.carrierCode;
+        existing.voiceActive = !!(vb.vapiProvisioned && vb.active !== false && (vb.voiceMinutesBalance > 0));
       } else {
         combined.unshift({
           key: vb.licenseKey,
           customer: vb.name || 'Valued Customer',
           email: vb.email || '',
           tier: 'PRO',
-          type: 'PAID',
-          price: '29.00/mo',
-          voiceActive: true,
-          voiceNumber: vb.forwardingNumber,
-          carrierCode: vb.carrierCode,
+          type: vb.voiceSubWaived ? 'FREE_VOICE_COMP' : 'PAID',
+          price: vb.voiceSubWaived ? '$0.00' : '9.99/mo',
+          voiceEntitlement: !!vb.voiceEntitlement,
+          voiceSubWaived: !!vb.voiceSubWaived,
+          vapiProvisioned: !!vb.vapiProvisioned,
+          voiceMinutesBalance: vb.voiceMinutesBalance || 0.0,
+          voiceActive: !!(vb.vapiProvisioned && vb.active !== false && (vb.voiceMinutesBalance > 0)),
+          voiceNumber: vb.forwardingNumber || null,
+          carrierCode: vb.carrierCode || null,
           status: vb.active !== false ? 'ACTIVE' : 'INACTIVE',
           date: vb.boundAt || new Date().toISOString()
         });
@@ -3538,6 +4236,76 @@ const server = http.createServer((req, res) => {
 
     res.writeHead(200, { 'Content-Type': 'application/json; charset=utf-8', 'Access-Control-Allow-Origin': '*' });
     res.end(JSON.stringify({ success: true, licenses: combined, count: combined.length }));
+    return;
+  }
+
+  // API: Issue or Save Master License (from Admin Dashboard)
+  if ((relativePath === '/api/licenses' || relativePath === '/api/licenses/' || relativePath === '/api/licenses/issue') && req.method === 'POST') {
+    let body = '';
+    req.on('data', chunk => body += chunk);
+    req.on('end', () => {
+      try {
+        const payload = JSON.parse(body || '{}');
+        const key = (payload.key || payload.licenseKey || '').trim().toUpperCase();
+        if (!key) {
+          res.writeHead(400, { 'Content-Type': 'application/json' });
+          res.end(JSON.stringify({ success: false, error: 'Key is required' }));
+          return;
+        }
+
+        const isFree = (payload.price === 0 || payload.price === '0.00' || payload.type === 'FREE' || payload.type === 'FREE_VOICE_COMP');
+        const hasVoice = !!(payload.voiceEntitlement || payload.voiceActive);
+        const isWaived = !!(payload.voiceSubWaived || (isFree && hasVoice));
+
+        const rec = {
+          key: key,
+          customer: payload.name || payload.customer || 'Valued Customer',
+          email: payload.email || '',
+          tier: payload.tier || 'STANDARD',
+          type: payload.type || (isWaived ? 'FREE_VOICE_COMP' : (isFree ? 'FREE' : 'PAID')),
+          price: typeof payload.price === 'number' ? `$${payload.price.toFixed(2)}` : (payload.price || (isFree ? '$0.00' : '$49.99')),
+          voiceEntitlement: hasVoice,
+          voiceSubWaived: isWaived,
+          vapiProvisioned: !!payload.vapiProvisioned,
+          voiceActive: !!(payload.vapiProvisioned && payload.voiceActive),
+          voiceNumber: payload.voiceNumber || null,
+          carrierCode: payload.carrierCode || null,
+          voiceMinutesBalance: payload.voiceMinutesBalance || 0.0,
+          status: payload.status || 'ACTIVE',
+          date: payload.date || new Date().toISOString()
+        };
+
+        saveMasterLicense(rec);
+
+        if (hasVoice) {
+          saveVoiceSubscriber(rec.key, {
+            active: true,
+            name: rec.customer,
+            email: rec.email,
+            voiceEntitlement: true,
+            voiceSubActive: !isWaived,
+            voiceSubWaived: isWaived,
+            vapiProvisioned: !!payload.vapiProvisioned,
+            forwardingNumber: rec.voiceNumber,
+            carrierCode: rec.carrierCode,
+            carrierDeactivateCode: '*73',
+            voiceMinutesBalance: rec.voiceMinutesBalance,
+            ratePerMinute: 0.25,
+            autoRebillEnabled: true,
+            status: payload.vapiProvisioned ? 'ACTIVE' : 'UNLOCKED_PENDING_PACK',
+            boundAt: new Date().toISOString()
+          });
+        }
+
+        console.log(`🔑 [ADMIN LICENSE SAVED] Key: ${rec.key}, Tier: ${rec.tier}, Voice Comp: ${isWaived}, Provisioned: ${rec.vapiProvisioned}`);
+
+        res.writeHead(200, { 'Content-Type': 'application/json; charset=utf-8', 'Access-Control-Allow-Origin': '*' });
+        res.end(JSON.stringify({ success: true, license: rec }));
+      } catch (err) {
+        res.writeHead(500, { 'Content-Type': 'application/json; charset=utf-8', 'Access-Control-Allow-Origin': '*' });
+        res.end(JSON.stringify({ success: false, error: err.message }));
+      }
+    });
     return;
   }
 
@@ -4301,6 +5069,235 @@ const server = http.createServer((req, res) => {
         res.writeHead(200, { 'Content-Type': 'application/json; charset=utf-8', 'Access-Control-Allow-Origin': '*' });
         res.end(JSON.stringify({ success: true, settings }));
       });
+      return;
+    }
+  }
+
+  // ─── 🤝 Referral & Net-Profit Rev-Share API Endpoints ───
+  if (relativePath.startsWith('/api/referrals/')) {
+    const parseJsonBody = () => new Promise(resolve => {
+      let b = '';
+      req.on('data', c => b += c);
+      req.on('end', () => {
+        try { resolve(b ? JSON.parse(b) : {}); } catch (e) { resolve({}); }
+      });
+    });
+
+    // 1. Get Partners & Summary Stats
+    if (relativePath === '/api/referrals/partners' && req.method === 'GET') {
+      const partners = syncPartnerMetrics();
+      const ledger = getReferralLedger();
+      const summary = {
+        totalPartners: partners.length,
+        activePartners: partners.filter(p => p.status === 'ACTIVE').length,
+        totalGrossReferred: Math.round(partners.reduce((s, p) => s + (p.totalGrossReferred || 0), 0) * 100) / 100,
+        totalNetProfitReferred: Math.round(partners.reduce((s, p) => s + (p.totalNetProfitReferred || 0), 0) * 100) / 100,
+        totalEarnedCommission: Math.round(partners.reduce((s, p) => s + (p.totalEarnedCommission || 0), 0) * 100) / 100,
+        totalPaidCommission: Math.round(partners.reduce((s, p) => s + (p.totalPaidCommission || 0), 0) * 100) / 100,
+        pendingBufferCommission: Math.round(partners.reduce((s, p) => s + (p.pendingBufferCommission || 0), 0) * 100) / 100,
+        availablePayoutCommission: Math.round(partners.reduce((s, p) => s + (p.availablePayoutCommission || 0), 0) * 100) / 100,
+        totalTransactions: ledger.length
+      };
+      res.writeHead(200, { 'Content-Type': 'application/json; charset=utf-8', 'Access-Control-Allow-Origin': '*' });
+      res.end(JSON.stringify({ success: true, summary, partners }));
+      return;
+    }
+
+    // 2. Create or Update Partner Profile
+    if (relativePath === '/api/referrals/partners' && req.method === 'POST') {
+      parseJsonBody().then(payload => {
+        if (!payload.code || !payload.name) {
+          res.writeHead(400, { 'Content-Type': 'application/json; charset=utf-8', 'Access-Control-Allow-Origin': '*' });
+          res.end(JSON.stringify({ success: false, error: 'Partner code and name are required' }));
+          return;
+        }
+
+        const partners = getReferralPartners();
+        const cleanCode = String(payload.code).trim().toUpperCase();
+        let existingIndex = partners.findIndex(p => p.code.toUpperCase() === cleanCode);
+
+        const partnerRecord = {
+          code: cleanCode,
+          name: String(payload.name).trim(),
+          email: String(payload.email || '').trim(),
+          phone: String(payload.phone || '').trim(),
+          revSharePct: Number(payload.revSharePct) || 25,
+          payoutMethod: payload.payoutMethod || 'cash_app',
+          payoutHandle: String(payload.payoutHandle || '').trim(),
+          notes: String(payload.notes || '').trim(),
+          status: payload.status || 'ACTIVE',
+          createdAt: (existingIndex >= 0 ? partners[existingIndex].createdAt : new Date().toISOString()),
+          updatedAt: new Date().toISOString(),
+          totalGrossReferred: existingIndex >= 0 ? partners[existingIndex].totalGrossReferred : 0,
+          totalNetProfitReferred: existingIndex >= 0 ? partners[existingIndex].totalNetProfitReferred : 0,
+          totalEarnedCommission: existingIndex >= 0 ? partners[existingIndex].totalEarnedCommission : 0,
+          totalPaidCommission: existingIndex >= 0 ? partners[existingIndex].totalPaidCommission : 0,
+          pendingBufferCommission: existingIndex >= 0 ? partners[existingIndex].pendingBufferCommission : 0,
+          availablePayoutCommission: existingIndex >= 0 ? partners[existingIndex].availablePayoutCommission : 0
+        };
+
+        if (existingIndex >= 0) {
+          partners[existingIndex] = partnerRecord;
+        } else {
+          partners.push(partnerRecord);
+        }
+
+        saveReferralPartners(partners);
+        syncPartnerMetrics();
+
+        res.writeHead(200, { 'Content-Type': 'application/json; charset=utf-8', 'Access-Control-Allow-Origin': '*' });
+        res.end(JSON.stringify({ success: true, message: `Partner ${cleanCode} saved successfully`, partner: partnerRecord }));
+      });
+      return;
+    }
+
+    // 3. Delete / Archive Partner
+    if (relativePath === '/api/referrals/partners/delete' && req.method === 'POST') {
+      parseJsonBody().then(payload => {
+        if (!payload.code) {
+          res.writeHead(400, { 'Content-Type': 'application/json; charset=utf-8', 'Access-Control-Allow-Origin': '*' });
+          res.end(JSON.stringify({ success: false, error: 'Partner code required' }));
+          return;
+        }
+        let partners = getReferralPartners();
+        const cleanCode = String(payload.code).trim().toUpperCase();
+        partners = partners.filter(p => p.code.toUpperCase() !== cleanCode);
+        saveReferralPartners(partners);
+
+        res.writeHead(200, { 'Content-Type': 'application/json; charset=utf-8', 'Access-Control-Allow-Origin': '*' });
+        res.end(JSON.stringify({ success: true, message: `Partner ${cleanCode} deleted` }));
+      });
+      return;
+    }
+
+    // 4. Get Ledger Transactions
+    if (relativePath === '/api/referrals/ledger' && req.method === 'GET') {
+      const ledger = getReferralLedger();
+      syncPartnerMetrics();
+      res.writeHead(200, { 'Content-Type': 'application/json; charset=utf-8', 'Access-Control-Allow-Origin': '*' });
+      res.end(JSON.stringify({ success: true, ledger }));
+      return;
+    }
+
+    // 5. Add Transaction (Manual or Hook)
+    if (relativePath === '/api/referrals/ledger/add' && req.method === 'POST') {
+      parseJsonBody().then(payload => {
+        const tx = addReferralTransaction(payload);
+        if (!tx) {
+          res.writeHead(400, { 'Content-Type': 'application/json; charset=utf-8', 'Access-Control-Allow-Origin': '*' });
+          res.end(JSON.stringify({ success: false, error: 'Could not record referral transaction' }));
+          return;
+        }
+        res.writeHead(200, { 'Content-Type': 'application/json; charset=utf-8', 'Access-Control-Allow-Origin': '*' });
+        res.end(JSON.stringify({ success: true, transaction: tx }));
+      });
+      return;
+    }
+
+    // 6. Execute Payout Batch (Cash App / Chime / PayPal / Stripe)
+    if (relativePath === '/api/referrals/payout' && req.method === 'POST') {
+      parseJsonBody().then(payload => {
+        const targetPartner = (payload.partnerCode || 'ALL').trim().toUpperCase();
+        const note = payload.note || 'Missed Call Auto SMS Net-Profit Rev-Share Payout';
+        const ledger = getReferralLedger();
+        const partners = getReferralPartners();
+
+        // Filter transactions ready for payout
+        const eligibleTxs = ledger.filter(tx => {
+          if (tx.status !== 'AVAILABLE') return false;
+          if (targetPartner !== 'ALL' && tx.partnerCode.toUpperCase() !== targetPartner) return false;
+          return true;
+        });
+
+        if (eligibleTxs.length === 0) {
+          res.writeHead(400, { 'Content-Type': 'application/json; charset=utf-8', 'Access-Control-Allow-Origin': '*' });
+          res.end(JSON.stringify({ success: false, error: 'No cleared commissions currently available for payout' }));
+          return;
+        }
+
+        const batchId = `payout_batch_${Date.now()}`;
+        const nowIso = new Date().toISOString();
+
+        // Group by partner
+        const grouped = {};
+        eligibleTxs.forEach(tx => {
+          if (!grouped[tx.partnerCode]) {
+            const partner = partners.find(p => p.code.toUpperCase() === tx.partnerCode.toUpperCase()) || {};
+            grouped[tx.partnerCode] = {
+              partnerCode: tx.partnerCode,
+              partnerName: tx.partnerName || partner.name || tx.partnerCode,
+              payoutMethod: partner.payoutMethod || 'cash_app',
+              payoutHandle: partner.payoutHandle || 'N/A',
+              amount: 0,
+              transactionIds: [],
+              processedAt: nowIso,
+              referenceNote: note
+            };
+          }
+          grouped[tx.partnerCode].amount = Math.round((grouped[tx.partnerCode].amount + tx.commissionEarned) * 100) / 100;
+          grouped[tx.partnerCode].transactionIds.push(tx.id);
+
+          // Update transaction in ledger
+          tx.status = 'PAID';
+          tx.payoutBatchId = batchId;
+          tx.payoutDate = nowIso;
+        });
+
+        const payoutItems = Object.values(grouped);
+        const totalBatchAmount = Math.round(payoutItems.reduce((s, item) => s + item.amount, 0) * 100) / 100;
+
+        const batchRecord = {
+          batchId,
+          createdAt: nowIso,
+          totalAmount: totalBatchAmount,
+          payoutCount: payoutItems.length,
+          status: 'COMPLETED',
+          notes: note,
+          payouts: payoutItems
+        };
+
+        const payouts = getReferralPayouts();
+        payouts.unshift(batchRecord);
+        saveReferralPayouts(payouts);
+        saveReferralLedger(ledger);
+        syncPartnerMetrics();
+
+        console.log(`💰 [PAYOUT BATCH PROCESSED] ${batchId}: $${totalBatchAmount} across ${payoutItems.length} partners.`);
+
+        res.writeHead(200, { 'Content-Type': 'application/json; charset=utf-8', 'Access-Control-Allow-Origin': '*' });
+        res.end(JSON.stringify({
+          success: true,
+          message: `Payout batch ${batchId} executed successfully for $${totalBatchAmount}`,
+          batch: batchRecord
+        }));
+      });
+      return;
+    }
+
+    // 7. Get Past Payout Batches
+    if (relativePath === '/api/referrals/payouts' && req.method === 'GET') {
+      const payouts = getReferralPayouts();
+      res.writeHead(200, { 'Content-Type': 'application/json; charset=utf-8', 'Access-Control-Allow-Origin': '*' });
+      res.end(JSON.stringify({ success: true, payouts }));
+      return;
+    }
+
+    // 8. Export Payout CSV (Formatted for Chime/Cash App/Bank ACH Mass Pay)
+    if (relativePath === '/api/referrals/export-payouts' && req.method === 'GET') {
+      const partners = syncPartnerMetrics();
+      const availablePartners = partners.filter(p => (p.availablePayoutCommission || 0) > 0);
+
+      let csv = 'Partner Code,Partner Name,Payout Method,Payout Handle,Available Commission,Email,Phone,Notes\n';
+      availablePartners.forEach(p => {
+        csv += `"${p.code}","${p.name}","${p.payoutMethod || 'cash_app'}","${p.payoutHandle || ''}",${p.availablePayoutCommission.toFixed(2)},"${p.email || ''}","${p.phone || ''}","${p.notes || ''}"\n`;
+      });
+
+      res.writeHead(200, {
+        'Content-Type': 'text/csv; charset=utf-8',
+        'Content-Disposition': `attachment; filename="mcasms_referral_payouts_${Date.now()}.csv"`,
+        'Access-Control-Allow-Origin': '*'
+      });
+      res.end(csv);
       return;
     }
   }

@@ -428,9 +428,134 @@ function generateVoiceProEmailHtml(customerName, licenseKey, forwardingNumber, c
                 <strong>Admin Portal:</strong> <a href="https://missedcallautosms.com/owner_admin_dashboard.html" style="color: #38BDF8;">missedcallautosms.com/owner_admin_dashboard.html</a>
             </div>
         </div>
+    </div>
+</body>
+</html>`;
+}
+
+function generateVoiceUnlockEmailHtml(customerName, licenseKey, voiceSubWaived = false) {
+  return `<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="utf-8">
+    <title>Your 24/7 AI Voice Receptionist Engine is Unlocked</title>
+</head>
+<body style="font-family: -apple-system, BlinkMacSystemFont, Arial, sans-serif; background-color: #090B0E; color: #FFFFFF; margin: 0; padding: 24px;">
+    <div style="max-width: 620px; margin: 0 auto; background: #131720; border: 1px solid #222836; border-radius: 16px; padding: 32px;">
+        <div style="text-align: center; margin-bottom: 24px;">
+            <div style="font-size: 46px; margin-bottom: 8px;">🎙️⚡</div>
+            <h1 style="color: #A855F7; margin: 0; font-size: 24px; font-weight: 900;">Missed Call Auto SMS</h1>
+            <div style="display: inline-block; margin-top: 6px; padding: 4px 14px; border-radius: 20px; font-size: 11px; font-weight: 800; background: rgba(168, 85, 247, 0.15); color: #C084FC; border: 1px solid rgba(168, 85, 247, 0.35);">
+                ${voiceSubWaived ? 'AI VOICE PLATFORM COMP WAIVED ($0.00)' : 'AI VOICE PLATFORM ACCESS ($9.99/MO)'}
+            </div>
+        </div>
+
+        <div style="background: #1A202C; border-left: 4px solid #A855F7; padding: 16px; border-radius: 8px; margin-bottom: 24px;">
+            <h2 style="margin: 0 0 6px 0; font-size: 18px; color: #FFF;">Welcome, ${customerName}!</h2>
+            <p style="margin: 0; color: #CBD5E0; font-size: 14px; line-height: 1.5;">
+                Your 24/7 AI Voice Receptionist platform feature is unlocked and active on your license key <strong>${licenseKey}</strong>. You can now configure your AI business instructions, triage flows, and emergency rules directly inside the Android app.
+            </p>
+        </div>
+
+        <!-- Activation Card: Next Step -->
+        <div style="background: #090B0E; border: 1px dashed #F59E0B; border-radius: 12px; padding: 24px; text-align: center; margin-bottom: 24px;">
+            <div style="font-size: 13px; color: #FBBF24; text-transform: uppercase; font-weight: bold; margin-bottom: 8px;">⚡ Final Step: Activate Your Dedicated Carrier Line</div>
+            <p style="font-size: 14px; color: #CBD5E0; line-height: 1.6; margin: 0 0 16px 0;">
+                To instantly allocate your dedicated local phone number and generate your <strong>*71</strong> carrier conditional forwarding code, load your first <strong>$10 Credit Pack (40 minutes at $0.25/min)</strong>.
+            </p>
+            <a href="https://buy.stripe.com/5kA8wPfRY0PS6M014f" style="display: inline-block; background: #F59E0B; color: #000000; font-weight: 900; font-size: 15px; padding: 14px 32px; border-radius: 30px; text-decoration: none; box-shadow: 0 6px 20px rgba(245, 158, 11, 0.35);">
+                💳 Load $10 Voice Credit Pack (40 Mins) →
+            </a>
+            <div style="font-size: 11px; color: #949BAE; margin-top: 10px;">
+                Zero monthly call minimums. Credits never expire. Unused minutes roll over automatically.
+            </div>
+        </div>
+
+        <div style="border-top: 1px solid #222836; padding-top: 18px; text-align: center; font-size: 12px; color: #718096;">
+            Missed Call Auto SMS • Need assistance? Reply directly to this email or visit <a href="https://missedcallautosms.com" style="color: #A855F7;">missedcallautosms.com</a>
+        </div>
+    </div>
+</body>
+</html>`;
+}
+
+function generateVoiceAddonEmailHtml(customerName, licenseKey, forwardingNumber, carrierCode, carrierDeactivateCode, freeMinutes = 15, ratePerMin = "0.25") {
+  return `<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="utf-8">
+    <title>Your AI Voice Receptionist Add-On is Live</title>
+</head>
+<body style="font-family: -apple-system, BlinkMacSystemFont, Arial, sans-serif; background-color: #090B0E; color: #FFFFFF; margin: 0; padding: 24px;">
+    <div style="max-width: 620px; margin: 0 auto; background: #131720; border: 1px solid #222836; border-radius: 16px; padding: 32px;">
+        <div style="text-align: center; margin-bottom: 24px;">
+            <div style="font-size: 46px; margin-bottom: 8px;">🎙️</div>
+            <h1 style="color: #00E676; margin: 0; font-size: 24px; font-weight: 900;">Missed Call Auto SMS</h1>
+            <div style="display: inline-block; margin-top: 6px; padding: 4px 14px; border-radius: 20px; font-size: 11px; font-weight: 800; background: rgba(0, 230, 118, 0.15); color: #00E676; border: 1px solid rgba(0, 230, 118, 0.35);">
+                AI VOICE RECEPTIONIST ADD-ON ($9.99/MO)
+            </div>
+        </div>
+
+        <div style="background: #1A202C; border-left: 4px solid #00E676; padding: 16px; border-radius: 8px; margin-bottom: 24px;">
+            <h2 style="margin: 0 0 6px 0; font-size: 18px; color: #FFF;">Welcome, ${customerName}!</h2>
+            <p style="margin: 0; color: #CBD5E0; font-size: 14px; line-height: 1.5;">
+                Your <strong>AI Voice Receptionist Add-On</strong> is active! Your dedicated local AI line has been provisioned and loaded with <strong>${freeMinutes} FREE test minutes</strong>.
+            </p>
+        </div>
+
+        <!-- Assigned Line Card -->
+        <div style="background: #090B0E; border: 1px dashed #00E676; border-radius: 12px; padding: 20px; text-align: center; margin-bottom: 20px;">
+            <div style="font-size: 12px; color: #949BAE; text-transform: uppercase; font-weight: bold; margin-bottom: 6px;">Your Dedicated Inbound AI Line</div>
+            <div style="font-family: monospace; font-size: 24px; color: #38BDF8; font-weight: bold; letter-spacing: 1px; margin-bottom: 6px;">
+                ${forwardingNumber}
+            </div>
+            <div style="font-size: 12px; color: #00E676;">🟢 Status: ACTIVE • ${freeMinutes} Free Test Minutes Included • $${ratePerMin}/min Usage</div>
+        </div>
+
+        <!-- 1-Step Carrier Activation (*71) -->
+        <div style="background: rgba(0, 230, 118, 0.06); border: 1px solid rgba(0, 230, 118, 0.3); border-radius: 12px; padding: 20px; margin-bottom: 24px;">
+            <h3 style="color: #FFF; font-size: 16px; margin: 0 0 10px 0;">📲 1-Step Carrier Forwarding (*71)</h3>
+            <p style="color: #CBD5E0; font-size: 13px; line-height: 1.5; margin: 0 0 12px 0;">
+                Open your phone dialer, call this code once, and your carrier will automatically route unanswered calls to your AI receptionist:
+            </p>
+            <div style="background: #090B0E; padding: 12px; border-radius: 8px; border: 1px solid #222836; text-align: center; font-family: monospace; font-size: 20px; color: #00E676; font-weight: bold; margin-bottom: 12px;">
+                ${carrierCode}
+            </div>
+            <p style="color: #949BAE; font-size: 12px; margin: 0; line-height: 1.4;">
+                💡 Unconditional ringing (15s) before transfer. Revert anytime by dialing <code>${carrierDeactivateCode || '*73'}</code>.
+            </p>
+        </div>
+
+        <!-- Metered Telephony Usage Explanation -->
+        <div style="background: #0D1117; border: 1px solid #222836; border-radius: 8px; padding: 14px; margin-bottom: 20px; font-size: 12px; color: #CBD5E0; line-height: 1.5;">
+            💳 <strong>Transparent Usage Billing:</strong> Usage is billed at flat <strong>$${ratePerMin}/minute</strong> in automatic $10 reload packs (40 minutes). You can toggle auto-recharge ON/OFF anytime in your app or portal. If credits reach zero with auto-reload disabled, the AI voice agent safely pauses while your native SIM missed-call SMS remains 100% active.
+        </div>
 
         <div style="border-top: 1px solid #222836; padding-top: 18px; text-align: center; font-size: 12px; color: #718096;">
             Need help? Reply directly to this email or visit our <a href="https://missedcallautosms.com/owner_admin_dashboard.html" style="color: #00E676;">Owner Portal</a>.
+        </div>
+    </div>
+</body>
+</html>`;
+}
+
+function generateCreditPackEmailHtml(customerName, minutesAdded = 40, packAmount = "10.00") {
+  return `<!DOCTYPE html>
+<html>
+<head><meta charset="utf-8"><title>AI Voice Minutes Loaded</title></head>
+<body style="font-family: -apple-system, BlinkMacSystemFont, Arial, sans-serif; background-color: #090B0E; color: #FFFFFF; margin: 0; padding: 24px;">
+    <div style="max-width: 600px; margin: 0 auto; background: #131720; border: 1px solid #222836; border-radius: 16px; padding: 32px; text-align: center;">
+        <div style="font-size: 44px; margin-bottom: 8px;">⚡🎙️</div>
+        <h1 style="color: #00E676; margin: 0 0 10px 0; font-size: 24px; font-weight: 900;">+${minutesAdded} AI Minutes Added!</h1>
+        <p style="color: #CBD5E0; font-size: 14px; line-height: 1.5; margin-bottom: 24px;">
+            Hi ${customerName}, your payment of <strong>$${packAmount}</strong> was successful. We've added <strong>${minutesAdded} minutes</strong> to your AI Voice Receptionist balance.
+        </p>
+        <div style="background: #090B0E; border: 1px dashed #00E676; border-radius: 12px; padding: 18px; margin-bottom: 24px;">
+            <div style="font-size: 12px; color: #949BAE; text-transform: uppercase;">Status</div>
+            <div style="font-size: 18px; color: #00E676; font-weight: bold; margin-top: 4px;">🟢 AI Voice Receptionist ACTIVE</div>
+        </div>
+        <div style="font-size: 12px; color: #718096;">
+            Missed Call Auto SMS • <a href="https://missedcallautosms.com/owner_admin_dashboard.html" style="color: #00E676;">Owner Portal</a>
         </div>
     </div>
 </body>
@@ -701,42 +826,62 @@ exports.handler = async (event) => {
       return { statusCode: 200, body: JSON.stringify({ received: true, warning: 'No email found' }) };
     }
 
-    // 1. Autonomous Front Desk Bundle ($99/mo, or legacy $178.99 bundle)
-    const isBundle = (session.metadata && (
-      session.metadata.tier === 'autonomous_front_desk' ||
-      session.metadata.tier === 'front_desk_bundle' ||
-      session.metadata.tier === 'pro_plus_voice' ||
-      session.metadata.include_voice === 'true'
-    )) || (amountTotal === 9900) || (amountTotal === 17899);
+    // 0. Voice Credit Pack ($10.00 / 40 min auto reload)
+    const isCreditPack = (amountTotal === 1000) || (session.metadata && (
+      session.metadata.tier === 'credit_pack' ||
+      session.metadata.tier === 'voice_credits'
+    ));
 
-    // 2. Standalone Managed AI Voice: Business ($89/mo) or Starter ($29/mo)
-    const isVoiceBusiness = !isBundle && (
+    // 1. AI Voice Add-on ($9.99/mo with 15 free test minutes)
+    const isVoiceAddon = !isCreditPack && (
+      (amountTotal === 999) || (session.metadata && (
+        session.metadata.tier === 'voice_addon' ||
+        session.metadata.tier === 'voice_999'
+      ))
+    );
+
+    // 2. Autonomous Front Desk Bundle ($99/mo, or legacy $178.99 bundle)
+    const isBundle = !isCreditPack && !isVoiceAddon && (
+      (session.metadata && (
+        session.metadata.tier === 'autonomous_front_desk' ||
+        session.metadata.tier === 'front_desk_bundle' ||
+        session.metadata.tier === 'pro_plus_voice' ||
+        session.metadata.include_voice === 'true'
+      )) || (amountTotal === 9900) || (amountTotal === 17899)
+    );
+
+    // 3. Standalone Managed AI Voice: Business ($89/mo) or Starter ($29/mo)
+    const isVoiceBusiness = !isCreditPack && !isVoiceAddon && !isBundle && (
       (session.metadata && (session.metadata.tier === 'voice_business' || session.metadata.tier === 'voice_pro_business')) ||
       (amountTotal === 8900)
     );
 
-    const isVoiceStarter = !isBundle && !isVoiceBusiness && (
+    const isVoiceStarter = !isCreditPack && !isVoiceAddon && !isBundle && !isVoiceBusiness && (
       (session.metadata && (session.metadata.tier === 'voice_starter' || session.metadata.tier === 'managed_voice_pro' || session.metadata.service === 'voice_receptionist')) ||
       (amountTotal === 2900 && (!session.metadata || !session.metadata.tier || !session.metadata.tier.includes('pro')))
     );
 
     const isVoiceStandalone = isVoiceBusiness || isVoiceStarter;
 
-    // 3. 3-Day Free Trial ($0.00)
-    const isTrial = !isVoiceStandalone && !isBundle && (
+    // 4. 3-Day Free Trial ($0.00)
+    const isTrial = !isCreditPack && !isVoiceAddon && !isVoiceStandalone && !isBundle && (
       (amountTotal === 0 && (!session.metadata || (session.metadata.tier !== 'pro_automation' && session.metadata.tier !== 'pro_gateway'))) ||
       (session.metadata && session.metadata.tier === 'standard_trial')
     );
 
-    // 4. Agency Fleet Bundles ($229 / $349 / $649 / $1,249)
-    const isAgency25 = !isTrial && !isVoiceStandalone && !isBundle && ((amountTotal >= 100000) || (session.metadata && (session.metadata.tier === 'agency_25' || session.metadata.tier === 'agency_enterprise')));
-    const isAgency10 = !isTrial && !isVoiceStandalone && !isBundle && !isAgency25 && ((amountTotal >= 50000 && amountTotal < 100000) || (session.metadata && session.metadata.tier === 'agency_10'));
-    const isAgency5 = !isTrial && !isVoiceStandalone && !isBundle && !isAgency25 && !isAgency10 && ((amountTotal >= 30000 && amountTotal < 50000) || (session.metadata && session.metadata.tier === 'agency_5'));
-    const isAgency3 = !isTrial && !isVoiceStandalone && !isBundle && !isAgency25 && !isAgency10 && !isAgency5 && ((amountTotal >= 20000 && amountTotal < 30000) || (session.metadata && session.metadata.tier === 'agency_3'));
+    // 5. Agency Fleet Bundles ($229 / $349 / $649 / $1,249)
+    const isAgency25 = !isCreditPack && !isVoiceAddon && !isTrial && !isVoiceStandalone && !isBundle && ((amountTotal >= 100000) || (session.metadata && (session.metadata.tier === 'agency_25' || session.metadata.tier === 'agency_enterprise')));
+    const isAgency10 = !isCreditPack && !isVoiceAddon && !isTrial && !isVoiceStandalone && !isBundle && !isAgency25 && ((amountTotal >= 50000 && amountTotal < 100000) || (session.metadata && session.metadata.tier === 'agency_10'));
+    const isAgency5 = !isCreditPack && !isVoiceAddon && !isTrial && !isVoiceStandalone && !isBundle && !isAgency25 && !isAgency10 && ((amountTotal >= 30000 && amountTotal < 50000) || (session.metadata && session.metadata.tier === 'agency_5'));
+    const isAgency3 = !isCreditPack && !isVoiceAddon && !isTrial && !isVoiceStandalone && !isBundle && !isAgency25 && !isAgency10 && !isAgency5 && ((amountTotal >= 20000 && amountTotal < 30000) || (session.metadata && session.metadata.tier === 'agency_3'));
     const isAgency = isAgency3 || isAgency5 || isAgency10 || isAgency25;
 
-    // 5. Pro Automation Gateway ($299 Perpetual or $29/mo) - NO VAPI LINE INCLUDED
-    const isPro = !isTrial && !isVoiceStandalone && !isBundle && !isAgency && (
+    // 6. Pro Automation Gateway / Pro Upgrade ($249.99 Upgrade, $299.99 Perpetual, or $149.99)
+    const isProUpgrade = (amountTotal === 24999) || (session.metadata && (session.metadata.tier === 'pro_upgrade' || session.metadata.tier === 'pro_upgrade_249'));
+    const isProGateway = (amountTotal === 29999) || (amountTotal === 29900) || (session.metadata && (session.metadata.tier === 'pro_gateway' || session.metadata.tier === 'pro_automation'));
+    const isPro = !isCreditPack && !isVoiceAddon && !isTrial && !isVoiceStandalone && !isBundle && !isAgency && (
+      isProUpgrade ||
+      isProGateway ||
       (amountTotal >= 14900) ||
       (session.metadata && (session.metadata.tier === 'pro' || session.metadata.tier === 'pro_automation' || session.metadata.tier === 'pro_gateway')) ||
       (session.client_reference_id && session.client_reference_id.toLowerCase().includes('pro'))
@@ -745,6 +890,248 @@ exports.handler = async (event) => {
     const host = (event.headers && event.headers.host) || 'missedcallautosms.com';
     const apkFileName = (isPro || isBundle) ? 'MissedCallAutoSMS-Pro.apk' : 'MissedCallAutoSMS.apk';
     const apkDownloadUrl = `https://${host}/${apkFileName}`;
+
+    // === REFERRAL & NET-PROFIT REV-SHARE INGESTION ===
+    const refCode = (session.metadata && (session.metadata.referral_code || session.metadata.ref || session.metadata.aff)) ||
+                    (session.client_reference_id && !session.client_reference_id.startsWith('MCAS-') && !session.client_reference_id.toLowerCase().includes('pro') ? session.client_reference_id : null);
+
+    if (refCode && !isTrial) {
+      let prodType = 'base_appliance';
+      let gross = 49.99;
+      if (isCreditPack) { prodType = 'credit_pack'; gross = 10.00; }
+      else if (isVoiceAddon) { prodType = 'voice_addon'; gross = 9.99; }
+      else if (isProUpgrade) { prodType = 'pro_upgrade'; gross = 249.99; }
+      else if (isProGateway) { prodType = 'pro_gateway'; gross = 299.99; }
+      else if (isVoiceStandalone) { prodType = 'voice_addon'; gross = isVoiceBusiness ? 89.00 : 29.00; }
+      else if (isBundle) { prodType = 'pro_gateway'; gross = 99.00; }
+      else if (amountTotal > 0) { gross = amountTotal / 100; }
+
+      try {
+        const referralsEngine = require('./referrals');
+        referralsEngine.addReferralTransaction({
+          partnerCode: refCode,
+          orderId: session.id,
+          customerEmail,
+          productType: prodType,
+          grossAmount: gross
+        });
+      } catch (refErr) {
+        console.warn('⚠️ [Referrals] Webhook referral logging notice:', refErr.message);
+      }
+    }
+
+    // === BRANCH 0A: $10 VOICE CREDIT PACK (+40 MINUTES & STAGE 2 TELEPHONY ACTIVATION) ===
+    if (isCreditPack) {
+      console.log(`💳 [STRIPE CREDIT PACK INGESTED] Crediting +40 minutes for ${customerEmail}`);
+      const candidateKey = (session.client_reference_id ||
+                           (session.metadata && session.metadata.license_key) || '').trim().toUpperCase();
+      const db = getFirestore();
+      let existing = null;
+      if (db && candidateKey) {
+        try {
+          existing = await db.getVoiceBinding(candidateKey);
+        } catch (dbErr) {
+          console.warn('[stripe-webhook] Firestore getVoiceBinding notice:', dbErr.message);
+        }
+      }
+
+      const isFirstTimeProvisioning = !existing || !existing.vapiProvisioned;
+      let forwardingNumber = existing?.forwardingNumber || null;
+      let carrierCode = existing?.carrierCode || null;
+      const carrierDeactivateCode = '*73';
+      let vapiAssistantId = existing?.vapiAssistantId || null;
+      let vapiPhoneNumberId = existing?.vapiPhoneNumberId || null;
+
+      if (isFirstTimeProvisioning) {
+        try {
+          const vapiInfo = await provisionVapiForSubscriber(customerName);
+          forwardingNumber = vapiInfo.forwardingNumber;
+          vapiAssistantId = vapiInfo.assistantId;
+          vapiPhoneNumberId = vapiInfo.phoneNumberId;
+          const cleanDigits = forwardingNumber.replace(/\D/g, '');
+          carrierCode = `*71${cleanDigits.slice(-10)}`;
+          console.log(`🎙️ [STAGE 2 PROVISIONING] Dedicated AI voice line ${forwardingNumber} assigned to ${customerEmail}`);
+        } catch (vapiErr) {
+          console.error('[stripe-webhook] Vapi provisioning error on credit pack:', vapiErr.message);
+          forwardingNumber = process.env.VAPI_PRIMARY_PHONE_NUMBER || '+1 (732) 660-9121';
+          const cleanDigits = forwardingNumber.replace(/\D/g, '');
+          carrierCode = `*71${cleanDigits.slice(-10)}`;
+        }
+      }
+
+      const currentBal = (existing && typeof existing.voiceMinutesBalance === 'number') ? existing.voiceMinutesBalance : 0;
+      const newBal = Math.round((currentBal + 40) * 100) / 100;
+      const targetKey = candidateKey || generateKey(customerName, 0, true);
+
+      if (db) {
+        try {
+          await db.saveVoiceBinding(targetKey, {
+            customerEmail,
+            customerName,
+            status: 'ACTIVE',
+            voiceEntitlement: true,
+            voiceSubActive: true,
+            vapiProvisioned: true,
+            forwardingNumber,
+            carrierCode,
+            carrierDeactivateCode,
+            vapiAssistantId,
+            vapiPhoneNumberId,
+            voiceMinutesBalance: newBal,
+            ratePerMinute: 0.25,
+            autoRebillEnabled: true,
+            isVoicePaused: false,
+            provisionedAt: isFirstTimeProvisioning ? new Date().toISOString() : (existing?.provisionedAt || new Date().toISOString())
+          });
+
+          await db.saveMasterLicense({
+            key: targetKey,
+            customer: customerName,
+            email: customerEmail,
+            voiceEntitlement: true,
+            vapiProvisioned: true,
+            voiceActive: true,
+            voiceNumber: forwardingNumber,
+            carrierCode,
+            voiceMinutesBalance: newBal,
+            status: 'ACTIVE'
+          });
+
+          const vSettings = await db.getVoiceSettings();
+          await db.saveVoiceSettings({
+            voiceMinutesBalance: newBal,
+            forwardingNumber: forwardingNumber || vSettings.forwardingNumber,
+            carrierCode: carrierCode || vSettings.carrierCode,
+            isVoicePaused: false
+          });
+        } catch (dbErr) {
+          console.error('[stripe-webhook] Firestore credit pack save error:', dbErr.message);
+        }
+      }
+
+      if (RESEND_API_KEY && customerEmail) {
+        if (isFirstTimeProvisioning) {
+          const emailSubject = `🎙️ Your Dedicated AI Voice Receptionist Line is Live! Line: ${forwardingNumber}`;
+          const emailHtml = generateVoiceAddonEmailHtml(
+            customerName,
+            targetKey,
+            forwardingNumber,
+            carrierCode,
+            carrierDeactivateCode,
+            40,
+            "0.25"
+          );
+          sendEmail(RESEND_API_KEY, customerEmail, emailSubject, emailHtml).catch(() => {});
+        } else {
+          const emailSubject = `⚡ +40 AI Voice Minutes Added to Your Account ($10.00)`;
+          const emailHtml = generateCreditPackEmailHtml(customerName, 40, "10.00");
+          sendEmail(RESEND_API_KEY, customerEmail, emailSubject, emailHtml).catch(() => {});
+        }
+      }
+
+      return {
+        statusCode: 200,
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          received: true,
+          type: 'voice_credit_pack',
+          minutesCredited: 40,
+          newBalance: newBal,
+          firstTimeProvisioned: isFirstTimeProvisioning,
+          forwardingNumber,
+          carrierCode,
+          customerEmail
+        })
+      };
+    }
+
+    // === BRANCH 0B: $9.99/MO AI VOICE RECEPTIONIST ADD-ON (STAGE 1 SOFT GATE - $0 COGS) ===
+    if (isVoiceAddon) {
+      const candidateKey = (session.client_reference_id ||
+                           (session.metadata && session.metadata.license_key) || '').trim().toUpperCase();
+      const voiceLicenseKey = candidateKey || generateKey(customerName, 0, true);
+
+      const db = getFirestore();
+      if (db) {
+        try {
+          await db.saveVoiceBinding(voiceLicenseKey, {
+            subscriptionId: session.subscription || session.id,
+            customerId: session.customer || null,
+            stripeCustomerId: session.customer || null,
+            customerEmail,
+            customerName,
+            status: 'UNLOCKED_PENDING_PACK',
+            tier: 'VOICE_ADDON',
+            voiceEntitlement: true,
+            voiceSubActive: true,
+            voiceSubWaived: false,
+            vapiProvisioned: false,
+            forwardingNumber: null,
+            carrierCode: null,
+            carrierDeactivateCode: '*73',
+            voiceMinutesBalance: 0.0,
+            ratePerMinute: 0.25,
+            autoRebillEnabled: true,
+            isVoicePaused: false,
+            boundAt: new Date().toISOString()
+          });
+
+          await db.saveMasterLicense({
+            key: voiceLicenseKey,
+            customer: customerName,
+            email: customerEmail,
+            tier: 'VOICE_ADDON',
+            type: 'SUBSCRIPTION',
+            price: '9.99/mo',
+            voiceEntitlement: true,
+            voiceSubActive: true,
+            voiceSubWaived: false,
+            vapiProvisioned: false,
+            voiceActive: false,
+            voiceNumber: null,
+            carrierCode: null,
+            status: 'ACTIVE',
+            subscriptionId: session.subscription || session.id,
+            voiceMinutesBalance: 0.0,
+            ratePerMinute: 0.25,
+            date: new Date().toISOString()
+          });
+        } catch (dbErr) {
+          console.error('[stripe-webhook] Firestore voice addon soft gate error:', dbErr.message);
+        }
+      }
+
+      console.log(`🎙️ [VOICE ADD-ON SOFT GATE COMPLETE] Voice Engine Unlocked for ${customerEmail}. Zero COGS incurred.`);
+
+      if (RESEND_API_KEY && customerEmail) {
+        const emailSubject = `⚡ Your 24/7 AI Voice Receptionist Engine is Unlocked! (Key: ${voiceLicenseKey})`;
+        const emailHtml = generateVoiceUnlockEmailHtml(customerName, voiceLicenseKey, false);
+
+        try {
+          await sendEmail(RESEND_API_KEY, customerEmail, emailSubject, emailHtml);
+          console.log(`📧 [VOICE UNLOCK EMAIL DELIVERED] Dispatched to ${customerEmail}`);
+        } catch (emailErr) {
+          console.error(`❌ [VOICE UNLOCK EMAIL FAILED] for ${customerEmail}:`, emailErr.message);
+        }
+      }
+
+      return {
+        statusCode: 200,
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          received: true,
+          tier: 'voice_addon',
+          voiceEntitlement: true,
+          vapiProvisioned: false,
+          voiceMinutesBalance: 0.0,
+          status: 'UNLOCKED_PENDING_PACK',
+          licenseKey: voiceLicenseKey,
+          customerEmail,
+          subscriptionId: session.subscription || session.id,
+          checkoutCreditPackUrl: 'https://buy.stripe.com/5kA8wPfRY0PS6M014f'
+        })
+      };
+    }
 
     // === BRANCH 1: AUTONOMOUS FRONT DESK BUNDLE ($99/mo - SIM Auto SMS + AI Voice Receptionist, 250 mins) ===
     if (isBundle) {
@@ -1106,10 +1493,27 @@ exports.handler = async (event) => {
       };
     }
 
-    // Direct Purchase (Founder's Flagship $49.99 or Pro Gateway $299 / $149.99)
     // 1. Generate Signed Lifetime License Key
     const licenseKey = generateKey(customerName, 0, isPro);
     console.log(`🔑 [${isPro ? 'PRO GATEWAY ' : 'FLAGSHIP FOUNDER '}LIFETIME LICENSE GENERATED] ${licenseKey} for ${customerEmail} ($${amountPaid})`);
+
+    const dbDirect = getFirestore();
+    if (dbDirect) {
+      try {
+        await dbDirect.saveMasterLicense({
+          key: licenseKey,
+          customer: customerName,
+          email: customerEmail,
+          tier: isPro ? 'PRO' : 'STANDARD',
+          type: 'PAID',
+          price: amountPaid,
+          status: 'ACTIVE',
+          date: new Date().toISOString()
+        });
+      } catch (fErr) {
+        console.warn('[stripe-webhook] Firestore saveMasterLicense error:', fErr.message);
+      }
+    }
 
     // 2. Automatically Dispatch Delivery Email
     if (RESEND_API_KEY) {

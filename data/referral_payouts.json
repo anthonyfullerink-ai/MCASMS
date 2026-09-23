@@ -1,0 +1,48 @@
+[
+  {
+    "batchId": "payout_batch_1790204579258",
+    "createdAt": "2026-09-23T23:02:59.258Z",
+    "totalAmount": 72.41,
+    "payoutCount": 1,
+    "status": "COMPLETED",
+    "notes": "Chime & Cash App Cleared Payout Batch",
+    "payouts": [
+      {
+        "partnerCode": "AGENCY25",
+        "partnerName": "Apex Digital Partners",
+        "payoutMethod": "cash_app",
+        "payoutHandle": "$ApexGrowth",
+        "amount": 72.41,
+        "transactionIds": [
+          "ref_tx_1725540000000_101",
+          "ref_tx_1725885600000_104"
+        ],
+        "processedAt": "2026-09-23T23:02:59.258Z",
+        "referenceNote": "Chime & Cash App Cleared Payout Batch"
+      }
+    ]
+  },
+  {
+    "batchId": "payout_batch_20260922_001",
+    "createdAt": "2026-09-22T16:00:00.000Z",
+    "totalAmount": 84.55,
+    "payoutCount": 2,
+    "status": "COMPLETED",
+    "notes": "Weekly cleared affiliate batch processed",
+    "payouts": [
+      {
+        "partnerCode": "TRADEOPS",
+        "partnerName": "Trade Ops Automation Co",
+        "payoutMethod": "chime",
+        "payoutHandle": "tradeops@chime.me",
+        "amount": 84.55,
+        "transactionIds": [
+          "ref_tx_1725712800000_102",
+          "ref_tx_1725799200000_103"
+        ],
+        "processedAt": "2026-09-22T16:00:00.000Z",
+        "referenceNote": "Missed Call Auto SMS Net Rev-Share - Trade Ops"
+      }
+    ]
+  }
+]

@@ -681,14 +681,28 @@
         </div>
     </div>
 
+    <!-- Unified Omnichannel Ecosystem Quick Switcher -->
+    <div style="display: flex; gap: 8px; flex-wrap: wrap; margin-bottom: 20px; background: rgba(22, 27, 34, 0.9); border: 1px solid var(--card-border); padding: 10px 16px; border-radius: 12px; align-items: center; justify-content: space-between;">
+        <div style="display: flex; align-items: center; gap: 8px; flex-wrap: wrap;">
+            <span style="font-size: 11px; text-transform: uppercase; color: var(--muted); font-weight: 800; letter-spacing: 0.5px;">🌐 Global Control Hub:</span>
+            <a href="/agency_dashboard.html" target="_blank" class="filter-pill" style="text-decoration: none; border-color: #38BDF8; color: #38BDF8;">🏢 Agency Fleet Portal ↗</a>
+            <a href="/content_engine_dashboard.html" target="_blank" class="filter-pill" style="text-decoration: none; border-color: #A855F7; color: #C084FC;">📢 Content Studio ↗</a>
+            <a href="/license_dashboard.html" target="_blank" class="filter-pill" style="text-decoration: none; border-color: #00E676; color: #00E676;">🔑 Customer License Portal ↗</a>
+            <a href="/developers.html" target="_blank" class="filter-pill" style="text-decoration: none; border-color: var(--muted); color: #FFF;">📚 Developer API Docs ↗</a>
+            <a href="/voice.html" target="_blank" class="filter-pill" style="text-decoration: none; border-color: #22D3EE; color: #22D3EE;">🎙️ Voice Receptionist Demo ↗</a>
+            <a href="/index.html" target="_blank" class="filter-pill" style="text-decoration: none; border-color: #FFB300; color: #FFB300;">🛒 Public Storefront ↗</a>
+        </div>
+        <div style="font-size: 12px; color: var(--muted);">v1.7.0 Unified Engine Active</div>
+    </div>
+
     <!-- Live Sync Alert Banner -->
     <div class="sync-banner">
-        <span>⚡ <strong>Real-Time Sync Active</strong>: Free licenses ($0.00) are excluded from Gross Revenue. 3-Day Free Trials and Paid Licenses track automatically.</span>
+        <span>⚡ <strong>Real-Time Sync Active</strong>: Free licenses ($0.00) are excluded from Gross Revenue. 3-Day Free Trials, Paid Licenses, and 25% Net-Profit Rev-Shares track automatically.</span>
         <button class="btn-action" style="margin: 0; font-size: 11px;" onclick="resetDemoData()">Reset Demo Database</button>
     </div>
 
     <!-- Metrics Header -->
-    <div class="metrics-grid" style="grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));">
+    <div class="metrics-grid" style="grid-template-columns: repeat(auto-fit, minmax(210px, 1fr));">
         <div class="metric-card">
             <div class="metric-title">Total Gross Revenue</div>
             <div class="metric-val" id="metricGross">$0.00</div>
@@ -710,6 +724,16 @@
             <div style="font-size: 11px; color: var(--muted); margin-top: 4px;">Bound to Pro Keys</div>
         </div>
         <div class="metric-card">
+            <div class="metric-title">🤝 Net Rev-Share Commissions</div>
+            <div class="metric-val" id="metricReferralEarned" style="color: #34D399;">$0.00</div>
+            <div style="font-size: 11px; color: var(--muted); margin-top: 4px;" id="metricReferralSub">25% Net Profit Cut</div>
+        </div>
+        <div class="metric-card">
+            <div class="metric-title">💰 Cleared for Payout</div>
+            <div class="metric-val" id="metricReferralReady" style="color: #FBBF24;">$0.00</div>
+            <div style="font-size: 11px; color: var(--muted); margin-top: 4px;" id="metricReferralBuffer">14-Day Hold: $0.00</div>
+        </div>
+        <div class="metric-card">
             <div class="metric-title">Revoked / Refunded</div>
             <div class="metric-val" id="metricRevoked" style="color: var(--danger);">0</div>
             <div style="font-size: 11px; color: var(--muted); margin-top: 4px;">Revoked Access</div>
@@ -728,6 +752,7 @@
             <option value="5">🎙️ AI Voice Receptionist</option>
             <option value="6">📢 Omnichannel Content Engine</option>
             <option value="7">🏢 Agency Fleet Operations</option>
+            <option value="8">🤝 Referral Partners & Rev-Share</option>
         </select>
     </div>
 
@@ -741,6 +766,7 @@
         <button id="tabBtn5" class="tab-btn" onclick="switchTab(5)">🎙️ AI Voice Receptionist (<span id="countTabVoice">0</span>)</button>
         <button id="tabBtn6" class="tab-btn" onclick="switchTab(6)">📢 Omnichannel Content Engine (<span id="countTabContent">0</span>)</button>
         <button id="tabBtn7" class="tab-btn" onclick="switchTab(7)" style="border-color: #6366F1; color: #818CF8;">🏢 Agency Fleet Operations (<span id="countTabFleet">0</span>)</button>
+        <button id="tabBtn8" class="tab-btn" onclick="switchTab(8)" style="border-color: #10B981; color: #34D399;">🤝 Referral Partners & Rev-Share (<span id="countTabReferrals">0</span>)</button>
     </div>
 
     <!-- TAB 0: Sales & License Directory -->
@@ -820,10 +846,10 @@
             <div id="voiceAddonOptionWrap" style="margin-top: 14px; padding: 12px; background: rgba(168,85,247,0.08); border: 1px solid rgba(168,85,247,0.3); border-radius: 10px;">
                 <label style="display: flex; align-items: center; gap: 10px; cursor: pointer; color: #FFF; font-weight: 700; margin: 0;">
                     <input type="checkbox" id="checkIssueVoiceAddon" checked style="width: 18px; height: 18px; accent-color: #A855F7;">
-                    <span>🎙️ Bind 24/7 AI Voice Receptionist ($29/mo)</span>
+                    <span id="lblVoiceAddon">🎙️ Enable 24/7 AI Voice Receptionist ($9.99/mo)</span>
                 </label>
-                <div style="font-size: 11px; color: #CBD5E0; margin-top: 6px; padding-left: 28px;">
-                    Enables *71 live carrier call forwarding and assigns dedicated local inbound AI receptionist line.
+                <div id="descVoiceAddon" style="font-size: 11px; color: #CBD5E0; margin-top: 6px; padding-left: 28px;">
+                    Unlocks AI Voice settings in app. Dedicated phone line and *71 carrier code activate when first $10 credit pack (40 min) is loaded.
                 </div>
             </div>
 
@@ -1710,6 +1736,130 @@
             </table>
         </div>
     </div>
+
+    <!-- TAB 8: 🤝 Partner Referral & Net-Profit Rev-Share Hub -->
+    <div id="tab8" class="tab-content card" style="display: none;">
+        <div class="card-header">
+            <div>
+                <h2 style="display: flex; align-items: center; gap: 8px;">
+                    <span style="color: #10B981;">🤝</span> Partner Referral & Net-Profit Rev-Share Hub
+                </h2>
+                <div style="font-size: 12px; color: var(--muted); margin-top: 4px;">
+                    Automated 25% Revenue Share on Net Profit (Gross minus provider COGS: <strong>$12.05</strong> Base, <strong>$72.50</strong> Pro Gateway, <strong>$60.36</strong> Pro Upgrade, <strong>$1.98/mo</strong> Voice Sub, <strong>$1.30/pack</strong> Credits). 14-day anti-fraud clearing hold protects against chargebacks.
+                </div>
+            </div>
+            <div style="display: flex; gap: 10px; flex-wrap: wrap;">
+                <button class="btn-action btn-primary-action" onclick="openCreatePartnerModal()">+ Create Referral Partner</button>
+                <button class="btn-action" style="border-color: #F59E0B; color: #FBBF24;" onclick="openPayoutModal('ALL')">⚡ Execute Batch Payout</button>
+                <button class="btn-action" style="border-color: #38BDF8; color: #38BDF8;" onclick="exportPayoutsCsv()">📥 Export Payout CSV</button>
+                <button class="btn-action" onclick="loadReferralDashboard()">🔄 Refresh Engine</button>
+            </div>
+        </div>
+
+        <!-- Referral Metric Grid -->
+        <div class="metrics-grid" style="grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); margin-bottom: 24px;">
+            <div class="metric-card">
+                <div class="metric-title">Active Partners</div>
+                <div class="metric-val" id="refMetricPartners" style="color: #38BDF8;">0</div>
+                <div style="font-size: 11px; color: var(--muted); margin-top: 4px;">Registered Affiliates</div>
+            </div>
+            <div class="metric-card">
+                <div class="metric-title">Referred Gross Sales</div>
+                <div class="metric-val" id="refMetricGross" style="color: #FFF;">$0.00</div>
+                <div style="font-size: 11px; color: var(--muted); margin-top: 4px;">Top-Line Customer Spend</div>
+            </div>
+            <div class="metric-card">
+                <div class="metric-title">Net Profit Pool</div>
+                <div class="metric-val" id="refMetricNet" style="color: var(--primary);">$0.00</div>
+                <div style="font-size: 11px; color: var(--muted); margin-top: 4px;">Deducted COGS & Fees</div>
+            </div>
+            <div class="metric-card">
+                <div class="metric-title">Commissions Earned</div>
+                <div class="metric-val" id="refMetricEarned" style="color: #A855F7;">$0.00</div>
+                <div style="font-size: 11px; color: var(--muted); margin-top: 4px;">25% Lifetime Share</div>
+            </div>
+            <div class="metric-card">
+                <div class="metric-title">14-Day Hold Buffer</div>
+                <div class="metric-val" id="refMetricBuffer" style="color: #F59E0B;">$0.00</div>
+                <div style="font-size: 11px; color: var(--muted); margin-top: 4px;">Clearing for Payout</div>
+            </div>
+            <div class="metric-card">
+                <div class="metric-title">Cleared for Payout</div>
+                <div class="metric-val" id="refMetricReady" style="color: #10B981;">$0.00</div>
+                <div style="font-size: 11px; color: var(--muted); margin-top: 4px;">Available Immediately</div>
+            </div>
+        </div>
+
+        <!-- SECTION 1: Registered Partner Profiles -->
+        <div class="card-header" style="border-top: 1px solid var(--card-border); padding-top: 20px;">
+            <div>
+                <h3 style="margin: 0; font-size: 16px; color: #FFF;">👥 Referral Partners & Tracking Codes (<span id="refPartnersCount">0</span>)</h3>
+                <div style="font-size: 12px; color: var(--muted); margin-top: 4px;">Affiliate profiles, custom rev-share %, and automated payout destinations (Cash App $cashtag, Chime, PayPal, Stripe).</div>
+            </div>
+            <button class="btn-action" style="font-size: 12px;" onclick="openCreatePartnerModal()">+ New Partner</button>
+        </div>
+
+        <div class="table-responsive">
+            <table>
+                <thead>
+                    <tr>
+                        <th>Partner & Code</th>
+                        <th>Payout Method / Handle</th>
+                        <th>Rev-Share</th>
+                        <th>Referred Gross</th>
+                        <th>Net Profit</th>
+                        <th>Earned Share</th>
+                        <th>14-Day Hold</th>
+                        <th>Cleared Payout</th>
+                        <th>Actions</th>
+                    </tr>
+                </thead>
+                <tbody id="refPartnersTableBody">
+                    <tr><td colspan="9" style="text-align: center; color: var(--muted); padding: 24px;">Loading referral partners...</td></tr>
+                </tbody>
+            </table>
+        </div>
+
+        <!-- SECTION 2: Master Referral Ledger -->
+        <div class="card-header" style="border-top: 1px solid var(--card-border); padding-top: 24px; margin-top: 12px;">
+            <div>
+                <h3 style="margin: 0; font-size: 16px; color: #FFF;">📑 Master Referral Transaction Ledger (<span id="refLedgerCount">0</span>)</h3>
+                <div style="font-size: 12px; color: var(--muted); margin-top: 4px;">Granular line-item audit trail with direct COGS breakdown, net profit basis, clearing status, and payout batch tracking.</div>
+            </div>
+            <input type="text" id="refLedgerSearchInput" placeholder="🔍 Search partner, order ID, email..." oninput="filterReferralLedgerTable()" style="width: 260px; padding: 6px 12px; font-size: 12px; background: #161B22; border: 1px solid var(--card-border); border-radius: 8px; color: #FFF; outline: none;">
+        </div>
+
+        <!-- Ledger Filter Bar -->
+        <div style="display: flex; gap: 8px; margin-bottom: 16px; flex-wrap: wrap; align-items: center; background: #0D1017; padding: 10px 14px; border-radius: 10px; border: 1px solid var(--card-border);">
+            <span style="font-size: 11px; color: var(--muted); font-weight: 800; letter-spacing: 0.5px;">LEDGER STATUS:</span>
+            <button class="filter-pill active" id="refFilterAll" onclick="setLedgerFilter('ALL', this)">All Transactions</button>
+            <button class="filter-pill" id="refFilterAvailable" onclick="setLedgerFilter('AVAILABLE', this)">🟢 Cleared & Available</button>
+            <button class="filter-pill" id="refFilterBuffer" onclick="setLedgerFilter('PENDING_BUFFER', this)">⏳ 14-Day Hold Buffer</button>
+            <button class="filter-pill" id="refFilterPaid" onclick="setLedgerFilter('PAID', this)">💰 Paid Out</button>
+        </div>
+
+        <div class="table-responsive">
+            <table>
+                <thead>
+                    <tr>
+                        <th>Date</th>
+                        <th>Order & Customer</th>
+                        <th>Partner Code</th>
+                        <th>Product</th>
+                        <th>Gross ($)</th>
+                        <th>COGS ($)</th>
+                        <th>Net Profit ($)</th>
+                        <th>Partner Cut (25%)</th>
+                        <th>Status</th>
+                        <th>Clears At / Batch</th>
+                    </tr>
+                </thead>
+                <tbody id="refLedgerTableBody">
+                    <tr><td colspan="10" style="text-align: center; color: var(--muted); padding: 24px;">Loading referral ledger transactions...</td></tr>
+                </tbody>
+            </table>
+        </div>
+    </div>
 </div>
 
 <script>
@@ -1731,6 +1881,10 @@
             status: "ACTIVE",
             price: 299.00,
             type: "PRO",
+            voiceEntitlement: true,
+            voiceSubWaived: true,
+            vapiProvisioned: true,
+            voiceMinutesBalance: 50.0,
             voiceActive: true,
             voiceNumber: "+1 (555) 349-2810"
         },
@@ -1745,6 +1899,10 @@
             status: "ACTIVE",
             price: 49.99,
             type: "MASTER_DEMO",
+            voiceEntitlement: false,
+            voiceSubWaived: false,
+            vapiProvisioned: false,
+            voiceMinutesBalance: 0.0,
             voiceActive: false,
             voiceNumber: null
         }
@@ -1789,8 +1947,21 @@
     function onLicenseTypeChange(val) {
         const wrap = document.getElementById('voiceAddonOptionWrap');
         if (!wrap) return;
+        const lbl = document.getElementById('lblVoiceAddon');
+        const desc = document.getElementById('descVoiceAddon');
+        const isFree = val.includes('FREE');
         const isPro = val.includes('PRO') || val.includes('AGENCY');
-        wrap.style.display = isPro ? 'block' : 'none';
+
+        // Always show for Pro or Free/Comp licenses
+        wrap.style.display = (isPro || isFree) ? 'block' : 'none';
+
+        if (isFree) {
+            if (lbl) lbl.innerText = '🎙️ Waive $9.99/mo Voice Platform Fee (Comp Voice Entitlement — $0 COGS)';
+            if (desc) desc.innerText = 'Grants full voice settings in APK with $0 out-of-pocket telephone leasing costs until user loads their first $10 credit pack.';
+        } else {
+            if (lbl) lbl.innerText = '🎙️ Enable 24/7 AI Voice Receptionist ($9.99/mo)';
+            if (desc) desc.innerText = 'Unlocks AI Voice settings in app. Dedicated phone line and *71 carrier code activate when first $10 credit pack (40 min) is loaded.';
+        }
     }
 
     let currentDirFilter = 'ALL';
@@ -1835,9 +2006,13 @@
             if (isFleetClient) fleetCount++;
             if (isPro) proCount++;
 
-            if (r.voiceActive) {
+            const hasVoice = !!(r.voiceEntitlement || r.voiceActive);
+            const isWaivedVoice = !!(r.voiceSubWaived || r.type === "FREE_VOICE_COMP" || (r.price === 0 && hasVoice));
+            if (hasVoice) {
                 voiceCount++;
-                voiceRev += 29.00;
+                if (!isWaivedVoice && !isAgencyMaster && !isFleetClient && r.status === "ACTIVE") {
+                    voiceRev += 9.99;
+                }
             }
 
             // Sum revenue if active
@@ -1923,15 +2098,26 @@
                 tierBadge = `<span class="badge badge-pro">⚡ PRO GATEWAY ($299)</span>`;
             }
 
-            let voiceDisplay = r.voiceActive
-                ? `<span class="badge badge-voice">🎙️ ACTIVE (${r.voiceNumber || '+1 (555) 349-2810'})</span>`
-                : `<span style="color: var(--muted); font-size: 12px;">— Inactive</span>`;
+            let voiceDisplay = `<span style="color: var(--muted); font-size: 12px;">— Inactive</span>`;
+            if (r.voiceEntitlement || r.voiceActive) {
+                if (r.voiceSubWaived || r.type === "FREE_VOICE_COMP") {
+                    if (r.vapiProvisioned) {
+                        voiceDisplay = `<span class="badge" style="background: rgba(168,85,247,0.2); color: #C084FC; border: 1px solid rgba(168,85,247,0.4);">🎙️ COMP WAIVED</span><br><span class="badge badge-voice" style="margin-top:4px;">*71 ACTIVE (${escapeHtml(r.voiceNumber || '+1 (732) 660-9121')})</span>`;
+                    } else {
+                        voiceDisplay = `<span class="badge" style="background: rgba(168,85,247,0.2); color: #C084FC; border: 1px solid rgba(168,85,247,0.4);">🎙️ COMP WAIVED</span><br><span class="badge" style="background: rgba(245,158,11,0.15); color: #FBBF24; border: 1px solid rgba(245,158,11,0.3); font-size: 10px; margin-top:4px;">⏳ PENDING 1ST PACK ($10)</span>`;
+                    }
+                } else if (r.vapiProvisioned) {
+                    voiceDisplay = `<span class="badge badge-voice">🎙️ *71 ACTIVE (${escapeHtml(r.voiceNumber || '+1 (732) 660-9121')})</span>`;
+                } else {
+                    voiceDisplay = `<span class="badge" style="background: rgba(168,85,247,0.15); color: #C084FC; border: 1px solid rgba(168,85,247,0.3);">🎙️ UNLOCKED ($9.99/mo)</span><br><span class="badge" style="background: rgba(245,158,11,0.15); color: #FBBF24; border: 1px solid rgba(245,158,11,0.3); font-size: 10px; margin-top:4px;">⏳ PENDING 1ST PACK ($10)</span>`;
+                }
+            }
 
             let priceDisplay = typeof r.price === 'number' ? `$${r.price.toFixed(2)}` : (r.price || '$49.99');
             let statusBadge = `<span class="badge badge-active">ACTIVE (${priceDisplay})</span>`;
             if (isRevoked) {
                 statusBadge = `<span class="badge badge-revoked">REVOKED</span>`;
-            } else if (r.price === 0 || r.type === "FREE" || r.type === "FREE_PRO") {
+            } else if (r.price === 0 || r.type === "FREE" || r.type === "FREE_PRO" || r.type === "FREE_VOICE_COMP" || r.voiceSubWaived) {
                 statusBadge = `<span class="badge badge-free">COMP ($0.00)</span>`;
             } else if (r.type === "TRIAL") {
                 statusBadge = `<span class="badge badge-trial">3-DAY TRIAL</span>`;
@@ -2081,6 +2267,8 @@
             loadContentEngineDashboard();
         } else if (index === 7) {
             loadAgencyFleetTab();
+        } else if (index === 8) {
+            loadReferralDashboard();
         }
     }
 
@@ -3417,7 +3605,7 @@ ${isVoiceActive ? `🎙️ AI Voice Receptionist Line: ${voiceNumber}\n📲 Acti
     }
 
     async function promptFreeLicense() {
-        const name = prompt("Enter Colleague, Client, or Business Name for FREE Flagship License:");
+        const name = prompt("Enter Colleague, Client, or Business Name for FREE Comp License:");
         if (!name || !name.trim()) return;
         
         const email = prompt(`Enter REAL Email Address for ${name.trim()} (e.g. user@gmail.com):`, "");
@@ -3431,6 +3619,14 @@ ${isVoiceActive ? `🎙️ AI Voice Receptionist Line: ${voiceNumber}\n📲 Acti
             alert("Please enter a valid, real recipient email address (cannot end in @test.com or @example.com).");
             return;
         }
+
+        const waiveVoice = confirm(
+            `🎙️ Waive $9.99/mo AI Voice Platform Fee for ${name.trim()}?\n\n` +
+            `• Stage 1 Soft Gate: Unlocks AI Voice settings in their app at $0 COGS to you.\n` +
+            `• Stage 2 Hard Provisioning: Dedicated line (*71) is generated ONLY when they fund their first $10 credit pack.\n` +
+            `• Revenue: Counts toward issued licenses but has $0 impact on Gross Revenue.\n\n` +
+            `Click OK to grant Comp Voice Waiver, or Cancel for standard SMS only.`
+        );
 
         const nowSec = Math.floor(Date.now() / 1000);
         const payloadStr = `${name.trim()}|0|${nowSec}`;
@@ -3453,15 +3649,31 @@ ${isVoiceActive ? `🎙️ AI Voice Receptionist Line: ${voiceNumber}\n📲 Acti
             deviceId: null,
             status: "ACTIVE",
             price: 0.00,
-            type: "FREE",
+            type: waiveVoice ? "FREE_VOICE_COMP" : "FREE",
+            voiceEntitlement: waiveVoice,
+            voiceSubWaived: waiveVoice,
+            vapiProvisioned: false,
+            voiceMinutesBalance: 0.0,
             voiceActive: false,
             voiceNumber: null
         };
 
         records.unshift(newRecord);
-
         saveStore(records);
+
+        // Sync with Server Registry
+        try {
+            await safeFetchJson('/api/licenses', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(newRecord)
+            });
+        } catch (e) {
+            console.warn('Backend license sync notice:', e.message);
+        }
+
         sendLicenseEmail(newRecord);
+        alert(`🎉 Complimentary License Issued!\n\nKey: ${formattedKey}\nVoice Fee: ${waiveVoice ? 'WAIVED ($0 COGS until $10 pack loaded)' : 'Inactive'}\nStatus: Active`);
     }
 
     async function resetDevice(key) {
@@ -3568,10 +3780,12 @@ ${isVoiceActive ? `🎙️ AI Voice Receptionist Line: ${voiceNumber}\n📲 Acti
         const price = parseFloat(priceStr);
         const days = parseInt(daysStr);
 
+        const isFree = (price === 0 || typeTag.includes('FREE'));
         const isPro = typeTag.includes('PRO') || typeTag.includes('AGENCY');
         const isAgency = typeTag.includes('AGENCY');
         const checkVoice = document.getElementById('checkIssueVoiceAddon');
-        const voiceActive = isPro && checkVoice && checkVoice.checked;
+        const voiceEntitlement = !!(checkVoice && checkVoice.checked);
+        const voiceSubWaived = isFree && voiceEntitlement;
 
         const nowSec = Math.floor(Date.now() / 1000);
         const expiryTs = days === 0 ? 0 : nowSec + (days * 86400);
@@ -3599,7 +3813,10 @@ ${isVoiceActive ? `🎙️ AI Voice Receptionist Line: ${voiceNumber}\n📲 Acti
 
         const metaDetails = document.getElementById('genMetaDetails');
         if (metaDetails) {
-            metaDetails.innerHTML = `Tier: <strong style="color: ${isPro ? '#C084FC' : 'var(--primary)'}">${tier}</strong> | Price: <strong>$${price.toFixed(2)}</strong> | Voice Receptionist: <strong>${voiceActive ? '🎙️ Attached ($29/mo)' : 'Inactive'}</strong>`;
+            const voiceLabel = voiceEntitlement
+                ? (voiceSubWaived ? '🎙️ Comp Waived ($0 COGS until funded)' : '🎙️ Engine Unlocked ($9.99/mo)')
+                : 'Inactive';
+            metaDetails.innerHTML = `Tier: <strong style="color: ${isPro ? '#C084FC' : 'var(--primary)'}">${tier}</strong> | Price: <strong>$${price.toFixed(2)}</strong> | Voice Receptionist: <strong>${voiceLabel}</strong>`;
         }
 
         // Automatically populate verify key input field for instant verification
@@ -3649,14 +3866,30 @@ ${isVoiceActive ? `🎙️ AI Voice Receptionist Line: ${voiceNumber}\n📲 Acti
             deviceId: null,
             status: "ACTIVE",
             price: price,
-            type: typeTag || "PAID",
-            voiceActive: voiceActive,
-            voiceNumber: voiceActive ? "+1 (555) 349-2810" : null
+            type: voiceSubWaived ? "FREE_VOICE_COMP" : (typeTag || "PAID"),
+            voiceEntitlement: voiceEntitlement,
+            voiceSubWaived: voiceSubWaived,
+            vapiProvisioned: false,
+            voiceMinutesBalance: 0.0,
+            voiceActive: false,
+            voiceNumber: null
         };
 
         records.unshift(newRecord);
 
         saveStore(records);
+
+        // Sync with Server Registry
+        try {
+            await safeFetchJson('/api/licenses', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(newRecord)
+            });
+        } catch (e) {
+            console.warn('Backend license sync notice:', e.message);
+        }
+
         sendLicenseEmail(newRecord);
     }
 
@@ -4736,6 +4969,10 @@ OPERATIONAL PROTOCOL:
                             tier: lic.tier || 'PRO',
                             type: lic.type || 'PAID',
                             price: lic.price || '$299.00',
+                            voiceEntitlement: !!lic.voiceEntitlement,
+                            voiceSubWaived: !!lic.voiceSubWaived,
+                            vapiProvisioned: !!lic.vapiProvisioned,
+                            voiceMinutesBalance: lic.voiceMinutesBalance || 0.0,
                             voiceActive: !!lic.voiceActive,
                             voiceNumber: lic.voiceNumber || '',
                             deviceId: lic.deviceId || null,
@@ -4747,12 +4984,17 @@ OPERATIONAL PROTOCOL:
                         });
                         addedCount++;
                     } else {
+                        if (lic.voiceEntitlement !== undefined) existing.voiceEntitlement = lic.voiceEntitlement;
+                        if (lic.voiceSubWaived !== undefined) existing.voiceSubWaived = lic.voiceSubWaived;
+                        if (lic.vapiProvisioned !== undefined) existing.vapiProvisioned = lic.vapiProvisioned;
+                        if (lic.voiceMinutesBalance !== undefined) existing.voiceMinutesBalance = lic.voiceMinutesBalance;
                         if (lic.voiceActive !== undefined) existing.voiceActive = lic.voiceActive;
                         if (lic.voiceNumber) existing.voiceNumber = lic.voiceNumber;
                         if (lic.status) existing.status = lic.status;
                         if (lic.deviceId !== undefined) existing.deviceId = lic.deviceId;
                         if (lic.tier) existing.tier = lic.tier;
                         if (lic.type) existing.type = lic.type;
+                        if (lic.price !== undefined) existing.price = lic.price;
                         if (lic.quota !== undefined) existing.quota = lic.quota;
                         if (lic.usedSeats !== undefined) existing.usedSeats = lic.usedSeats;
                         if (lic.agencyKey) existing.agencyKey = lic.agencyKey;
@@ -5149,8 +5391,420 @@ To transfer to a new device at any time, contact your agency administrator.
         });
     }
 
+    // ══════════════════════════════════════════════════════════════════════════
+    // 🤝 TAB 8: REFERRAL PARTNERS & REV-SHARE HUB CONTROLLER
+    // ══════════════════════════════════════════════════════════════════════════
+    let refAllPartners = [];
+    let refAllLedger = [];
+    let refCurrentFilter = 'ALL';
+
+    async function loadReferralDashboard() {
+        try {
+            await Promise.all([loadReferralPartners(), loadReferralLedger()]);
+        } catch (e) {
+            console.warn('[Referrals] Error loading dashboard:', e);
+        }
+    }
+
+    async function loadReferralPartners() {
+        try {
+            const res = await fetch('/api/referrals/partners');
+            const data = await res.json();
+            if (data.success) {
+                refAllPartners = data.partners || [];
+                renderReferralPartners(refAllPartners);
+                updateReferralMetrics(data.summary || {});
+            }
+        } catch (err) {
+            console.error('Failed to fetch referral partners:', err);
+        }
+    }
+
+    async function loadReferralLedger() {
+        try {
+            const res = await fetch('/api/referrals/ledger');
+            const data = await res.json();
+            if (data.success) {
+                refAllLedger = data.ledger || [];
+                renderReferralLedger(refAllLedger);
+            }
+        } catch (err) {
+            console.error('Failed to fetch referral ledger:', err);
+        }
+    }
+
+    function updateReferralMetrics(summary) {
+        const fmt = n => '$' + (Number(n) || 0).toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+
+        if (document.getElementById('refMetricPartners')) document.getElementById('refMetricPartners').textContent = summary.activePartners || summary.totalPartners || 0;
+        if (document.getElementById('refMetricGross')) document.getElementById('refMetricGross').textContent = fmt(summary.totalGrossReferred);
+        if (document.getElementById('refMetricNet')) document.getElementById('refMetricNet').textContent = fmt(summary.totalNetProfitReferred);
+        if (document.getElementById('refMetricEarned')) document.getElementById('refMetricEarned').textContent = fmt(summary.totalEarnedCommission);
+        if (document.getElementById('refMetricBuffer')) document.getElementById('refMetricBuffer').textContent = fmt(summary.pendingBufferCommission);
+        if (document.getElementById('refMetricReady')) document.getElementById('refMetricReady').textContent = fmt(summary.availablePayoutCommission);
+
+        // Update Top Header metrics too
+        if (document.getElementById('metricReferralEarned')) document.getElementById('metricReferralEarned').textContent = fmt(summary.totalEarnedCommission);
+        if (document.getElementById('metricReferralReady')) document.getElementById('metricReferralReady').textContent = fmt(summary.availablePayoutCommission);
+        if (document.getElementById('metricReferralBuffer')) document.getElementById('metricReferralBuffer').textContent = `14-Day Hold: ${fmt(summary.pendingBufferCommission)}`;
+        if (document.getElementById('countTabReferrals')) document.getElementById('countTabReferrals').textContent = summary.totalPartners || 0;
+    }
+
+    function renderReferralPartners(partners) {
+        const tbody = document.getElementById('refPartnersTableBody');
+        const countSpan = document.getElementById('refPartnersCount');
+        if (countSpan) countSpan.textContent = partners.length;
+        if (!tbody) return;
+
+        if (!partners || partners.length === 0) {
+            tbody.innerHTML = `<tr><td colspan="9" style="text-align: center; color: var(--muted); padding: 28px;">No referral partners created yet. Click "+ Create Referral Partner" to register your first affiliate!</td></tr>`;
+            return;
+        }
+
+        const fmt = n => '$' + (Number(n) || 0).toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+
+        tbody.innerHTML = partners.map(p => {
+            const statusBadge = p.status === 'ACTIVE' 
+                ? '<span class="badge badge-active">ACTIVE</span>' 
+                : '<span class="badge badge-revoked">PAUSED</span>';
+
+            const methodIcon = {
+                cash_app: '🟩 Cash App',
+                chime: '🟢 Chime',
+                paypal: '🟦 PayPal',
+                stripe_connect: '🟣 Stripe'
+            }[p.payoutMethod] || p.payoutMethod || 'Direct';
+
+            const readyPayout = Number(p.availablePayoutCommission) || 0;
+            const readyBadge = readyPayout > 0 
+                ? `<span style="font-weight: 800; color: #10B981; background: rgba(16, 185, 129, 0.15); padding: 4px 8px; border-radius: 6px; border: 1px solid #10B981;">${fmt(readyPayout)}</span>`
+                : `<span style="color: var(--muted);">$0.00</span>`;
+
+            return `
+                <tr>
+                    <td>
+                        <strong style="color: #FFF; font-size: 14px;">${escapeHtml(p.name)}</strong>
+                        <div style="margin-top: 4px; display: flex; align-items: center; gap: 6px;">
+                            <span style="font-family: monospace; color: var(--primary); font-weight: 800; background: rgba(0, 230, 118, 0.1); padding: 2px 6px; border-radius: 4px;">${escapeHtml(p.code)}</span>
+                            ${statusBadge}
+                        </div>
+                    </td>
+                    <td>
+                        <div style="font-weight: 600; color: #FFF;">${methodIcon}</div>
+                        <div style="font-size: 12px; font-family: monospace; color: var(--accent); margin-top: 2px;">${escapeHtml(p.payoutHandle || 'None set')}</div>
+                    </td>
+                    <td><strong style="color: #C084FC;">${p.revSharePct || 25}%</strong> <span style="font-size: 11px; color: var(--muted);">Net Profit</span></td>
+                    <td style="color: #FFF;">${fmt(p.totalGrossReferred)}</td>
+                    <td style="color: var(--primary); font-weight: 600;">${fmt(p.totalNetProfitReferred)}</td>
+                    <td style="color: #A855F7; font-weight: 700;">${fmt(p.totalEarnedCommission)}</td>
+                    <td style="color: #F59E0B;">${fmt(p.pendingBufferCommission)}</td>
+                    <td>${readyBadge}</td>
+                    <td>
+                        <div style="display: flex; gap: 6px; flex-wrap: wrap;">
+                            <button class="btn-action" style="font-size: 11px; padding: 4px 8px;" onclick="copyPartnerLink('${p.code}')" title="Copy Referral Link">🔗 Link</button>
+                            <button class="btn-action" style="font-size: 11px; padding: 4px 8px;" onclick="openCreatePartnerModal('${p.code}')" title="Edit Partner">✏️ Edit</button>
+                            ${readyPayout > 0 ? `<button class="btn-action" style="font-size: 11px; padding: 4px 8px; border-color: #10B981; color: #10B981;" onclick="openPayoutModal('${p.code}')">💰 Pay</button>` : ''}
+                        </div>
+                    </td>
+                </tr>
+            `;
+        }).join('');
+    }
+
+    function renderReferralLedger(ledger) {
+        const tbody = document.getElementById('refLedgerTableBody');
+        const countSpan = document.getElementById('refLedgerCount');
+        if (countSpan) countSpan.textContent = ledger.length;
+        if (!tbody) return;
+
+        const filtered = ledger.filter(tx => {
+            if (refCurrentFilter === 'ALL') return true;
+            return tx.status === refCurrentFilter;
+        });
+
+        if (!filtered || filtered.length === 0) {
+            tbody.innerHTML = `<tr><td colspan="10" style="text-align: center; color: var(--muted); padding: 28px;">No ledger transactions match current filter "${refCurrentFilter}".</td></tr>`;
+            return;
+        }
+
+        const fmt = n => '$' + (Number(n) || 0).toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+
+        tbody.innerHTML = filtered.map(tx => {
+            let statusBadge = '';
+            if (tx.status === 'AVAILABLE') {
+                statusBadge = '<span class="badge badge-active">🟢 AVAILABLE</span>';
+            } else if (tx.status === 'PENDING_BUFFER') {
+                statusBadge = '<span class="badge badge-trial">⏳ 14-DAY HOLD</span>';
+            } else if (tx.status === 'PAID') {
+                statusBadge = '<span class="badge badge-pro">💰 PAID</span>';
+            } else if (tx.status === 'REFUNDED') {
+                statusBadge = '<span class="badge badge-revoked">❌ REFUNDED</span>';
+            } else {
+                statusBadge = `<span class="badge">${tx.status}</span>`;
+            }
+
+            const dt = new Date(tx.date).toLocaleDateString('en-US', { month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit' });
+            
+            let clearInfo = '-';
+            if (tx.status === 'PENDING_BUFFER' && tx.clearsAt) {
+                const clearDate = new Date(tx.clearsAt);
+                const diffDays = Math.ceil((clearDate - new Date()) / (1000 * 60 * 60 * 24));
+                clearInfo = `<span style="color: #F59E0B; font-size: 11px;">Clears in ${diffDays}d (${clearDate.toLocaleDateString()})</span>`;
+            } else if (tx.status === 'PAID') {
+                clearInfo = `<span style="color: #C084FC; font-size: 11px; font-family: monospace;">${tx.payoutBatchId || 'BATCH-PAID'}</span>`;
+            } else if (tx.status === 'AVAILABLE') {
+                clearInfo = `<span style="color: #10B981; font-weight: 700; font-size: 11px;">Ready Now</span>`;
+            }
+
+            return `
+                <tr>
+                    <td style="font-size: 12px; color: var(--muted); white-space: nowrap;">${dt}</td>
+                    <td>
+                        <div style="font-size: 12px; font-family: monospace; color: #FFF;">${escapeHtml(tx.orderId || '')}</div>
+                        <div style="font-size: 11px; color: var(--muted);">${escapeHtml(tx.customerEmail || '')}</div>
+                    </td>
+                    <td>
+                        <strong style="color: var(--primary); font-family: monospace; background: rgba(0,230,118,0.1); padding: 2px 6px; border-radius: 4px;">${escapeHtml(tx.partnerCode || '')}</strong>
+                    </td>
+                    <td style="font-size: 13px;">${escapeHtml(tx.productName || tx.productType || 'Appliance')}</td>
+                    <td style="color: #FFF;">${fmt(tx.grossAmount)}</td>
+                    <td style="color: var(--danger); font-size: 12px;">-${fmt(tx.cogs)}</td>
+                    <td style="color: var(--primary); font-weight: 700;">${fmt(tx.netProfit)}</td>
+                    <td style="color: #A855F7; font-weight: 800; font-size: 14px;">${fmt(tx.commissionEarned)}</td>
+                    <td>${statusBadge}</td>
+                    <td>${clearInfo}</td>
+                </tr>
+            `;
+        }).join('');
+    }
+
+    function setLedgerFilter(filter, btn) {
+        refCurrentFilter = filter;
+        document.querySelectorAll('#tab8 .filter-pill').forEach(p => p.classList.remove('active'));
+        if (btn) btn.classList.add('active');
+        renderReferralLedger(refAllLedger);
+    }
+
+    function filterReferralLedgerTable() {
+        const q = (document.getElementById('refLedgerSearchInput').value || '').trim().toLowerCase();
+        if (!q) {
+            renderReferralLedger(refAllLedger);
+            return;
+        }
+        const filtered = refAllLedger.filter(tx => 
+            (tx.partnerCode && tx.partnerCode.toLowerCase().includes(q)) ||
+            (tx.orderId && tx.orderId.toLowerCase().includes(q)) ||
+            (tx.customerEmail && tx.customerEmail.toLowerCase().includes(q)) ||
+            (tx.productName && tx.productName.toLowerCase().includes(q))
+        );
+        renderReferralLedger(filtered);
+    }
+
+    function copyPartnerLink(code) {
+        const url = `https://missedcallautosms.com/?ref=${encodeURIComponent(code)}`;
+        if (navigator.clipboard) {
+            navigator.clipboard.writeText(url).then(() => {
+                alert(`📋 Referral link copied to clipboard:\n${url}`);
+            }).catch(() => {
+                prompt("Copy this referral link:", url);
+            });
+        } else {
+            prompt("Copy this referral link:", url);
+        }
+    }
+
+    function openCreatePartnerModal(editCode = null) {
+        const modal = document.getElementById('referralPartnerModal');
+        if (!modal) return;
+
+        const titleEl = document.getElementById('refModalTitle');
+        const codeInput = document.getElementById('refPartnerCode');
+        const nameInput = document.getElementById('refPartnerName');
+        const emailInput = document.getElementById('refPartnerEmail');
+        const phoneInput = document.getElementById('refPartnerPhone');
+        const revShareInput = document.getElementById('refPartnerRevShare');
+        const methodSelect = document.getElementById('refPartnerPayoutMethod');
+        const handleInput = document.getElementById('refPartnerPayoutHandle');
+        const notesInput = document.getElementById('refPartnerNotes');
+        const statusSelect = document.getElementById('refPartnerStatus');
+        const deleteBtn = document.getElementById('refPartnerDeleteBtn');
+
+        if (editCode) {
+            const partner = refAllPartners.find(p => p.code.toUpperCase() === editCode.toUpperCase());
+            if (partner) {
+                titleEl.textContent = `✏️ Edit Partner: ${partner.name}`;
+                codeInput.value = partner.code;
+                codeInput.disabled = true;
+                nameInput.value = partner.name || '';
+                emailInput.value = partner.email || '';
+                phoneInput.value = partner.phone || '';
+                revShareInput.value = partner.revSharePct || 25;
+                methodSelect.value = partner.payoutMethod || 'cash_app';
+                handleInput.value = partner.payoutHandle || '';
+                notesInput.value = partner.notes || '';
+                statusSelect.value = partner.status || 'ACTIVE';
+                if (deleteBtn) deleteBtn.style.display = 'inline-block';
+            }
+        } else {
+            titleEl.textContent = '🤝 Create New Referral Partner';
+            codeInput.value = '';
+            codeInput.disabled = false;
+            nameInput.value = '';
+            emailInput.value = '';
+            phoneInput.value = '';
+            revShareInput.value = '25';
+            methodSelect.value = 'cash_app';
+            handleInput.value = '';
+            notesInput.value = '';
+            statusSelect.value = 'ACTIVE';
+            if (deleteBtn) deleteBtn.style.display = 'none';
+        }
+
+        modal.style.display = 'flex';
+    }
+
+    async function savePartnerFromModal() {
+        const codeInput = document.getElementById('refPartnerCode');
+        const nameInput = document.getElementById('refPartnerName');
+        const emailInput = document.getElementById('refPartnerEmail');
+        const phoneInput = document.getElementById('refPartnerPhone');
+        const revShareInput = document.getElementById('refPartnerRevShare');
+        const methodSelect = document.getElementById('refPartnerPayoutMethod');
+        const handleInput = document.getElementById('refPartnerPayoutHandle');
+        const notesInput = document.getElementById('refPartnerNotes');
+        const statusSelect = document.getElementById('refPartnerStatus');
+
+        const payload = {
+            code: (codeInput.value || '').trim().toUpperCase(),
+            name: (nameInput.value || '').trim(),
+            email: (emailInput.value || '').trim(),
+            phone: (phoneInput.value || '').trim(),
+            revSharePct: Number(revShareInput.value) || 25,
+            payoutMethod: methodSelect.value || 'cash_app',
+            payoutHandle: (handleInput.value || '').trim(),
+            notes: (notesInput.value || '').trim(),
+            status: statusSelect.value || 'ACTIVE'
+        };
+
+        if (!payload.code || !payload.name) {
+            alert('Please provide both a unique partner tracking code and partner business name.');
+            return;
+        }
+
+        try {
+            const res = await fetch('/api/referrals/partners', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(payload)
+            });
+            const data = await res.json();
+            if (data.success) {
+                document.getElementById('referralPartnerModal').style.display = 'none';
+                await loadReferralDashboard();
+            } else {
+                alert('Error saving partner: ' + (data.error || 'Unknown error'));
+            }
+        } catch (err) {
+            alert('Network error saving partner: ' + err.message);
+        }
+    }
+
+    async function deletePartnerFromModal() {
+        const code = (document.getElementById('refPartnerCode').value || '').trim().toUpperCase();
+        if (!code) return;
+        if (!confirm(`Are you sure you want to delete or deactivate partner "${code}"?`)) return;
+
+        try {
+            const res = await fetch('/api/referrals/partners/delete', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ code })
+            });
+            const data = await res.json();
+            if (data.success) {
+                document.getElementById('referralPartnerModal').style.display = 'none';
+                await loadReferralDashboard();
+            } else {
+                alert('Error deleting partner: ' + (data.error || 'Unknown error'));
+            }
+        } catch (err) {
+            alert('Network error: ' + err.message);
+        }
+    }
+
+    function openPayoutModal(partnerCode = 'ALL') {
+        const modal = document.getElementById('referralPayoutModal');
+        if (!modal) return;
+
+        const partnerSelect = document.getElementById('payoutPartnerSelect');
+        if (partnerSelect) {
+            let options = `<option value="ALL">All Cleared Partners (Batch)</option>`;
+            refAllPartners.forEach(p => {
+                const ready = Number(p.availablePayoutCommission) || 0;
+                if (ready > 0) {
+                    options += `<option value="${p.code}" ${p.code.toUpperCase() === partnerCode.toUpperCase() ? 'selected' : ''}>${p.name} (${p.code}) - $${ready.toFixed(2)} [${p.payoutMethod || 'Cash App'}: ${p.payoutHandle || 'N/A'}]</option>`;
+                }
+            });
+            partnerSelect.innerHTML = options;
+        }
+
+        updatePayoutModalSummary();
+        modal.style.display = 'flex';
+    }
+
+    function updatePayoutModalSummary() {
+        const partnerSelect = document.getElementById('payoutPartnerSelect');
+        const selectedCode = partnerSelect ? partnerSelect.value : 'ALL';
+        const fmt = n => '$' + (Number(n) || 0).toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+
+        let total = 0;
+        let eligibleCount = 0;
+
+        refAllPartners.forEach(p => {
+            if (selectedCode === 'ALL' || p.code.toUpperCase() === selectedCode.toUpperCase()) {
+                const amt = Number(p.availablePayoutCommission) || 0;
+                if (amt > 0) {
+                    total += amt;
+                    eligibleCount++;
+                }
+            }
+        });
+
+        document.getElementById('payoutModalTotal').textContent = fmt(total);
+        document.getElementById('payoutModalCount').textContent = `${eligibleCount} partner${eligibleCount === 1 ? '' : 's'}`;
+    }
+
+    async function executePayoutBatch() {
+        const partnerSelect = document.getElementById('payoutPartnerSelect');
+        const partnerCode = partnerSelect ? partnerSelect.value : 'ALL';
+        const note = (document.getElementById('payoutNoteInput').value || '').trim() || 'Net-Profit Rev-Share Payout';
+
+        try {
+            const res = await fetch('/api/referrals/payout', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ partnerCode, note })
+            });
+            const data = await res.json();
+            if (data.success) {
+                alert(`✅ ${data.message}!\n\nAll corresponding transactions marked as PAID.`);
+                document.getElementById('referralPayoutModal').style.display = 'none';
+                await loadReferralDashboard();
+            } else {
+                alert('Payout notice: ' + (data.error || 'No cleared funds available'));
+            }
+        } catch (err) {
+            alert('Payout execution error: ' + err.message);
+        }
+    }
+
+    function exportPayoutsCsv() {
+        window.location.href = '/api/referrals/export-payouts';
+    }
+
     ensureResponsiveTables();
     checkAuth();
+    loadReferralPartners();
 </script>
 
 <!-- License Delivery Action Modal -->
@@ -5181,6 +5835,126 @@ To transfer to a new device at any time, contact your agency administrator.
             <button onclick="document.getElementById('licenseDeliveryModal').style.display='none'" class="btn-action" style="background: #21262D; color: var(--muted); border: none; padding: 10px; font-size: 13px; border-radius: 8px;">
                 Close
             </button>
+        </div>
+    </div>
+</div>
+
+<!-- Referral Partner Create / Edit Modal -->
+<div id="referralPartnerModal" style="display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.85); backdrop-filter: blur(6px); z-index: 99999; justify-content: center; align-items: center; padding: 20px;">
+    <div style="background: #131720; border: 1px solid var(--card-border); border-radius: 16px; max-width: 540px; width: 100%; padding: 26px; box-shadow: 0 16px 50px rgba(0,0,0,0.8); max-height: 90vh; overflow-y: auto;">
+        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 16px; border-bottom: 1px solid var(--card-border); padding-bottom: 12px;">
+            <h3 id="refModalTitle" style="margin: 0; color: #FFF; font-size: 18px; display: flex; align-items: center; gap: 8px;">
+                <span>🤝</span> Create Referral Partner
+            </h3>
+            <button onclick="document.getElementById('referralPartnerModal').style.display='none'" style="background: none; border: none; color: var(--muted); font-size: 24px; cursor: pointer; padding: 4px;">✕</button>
+        </div>
+
+        <div style="font-size: 13px; color: var(--muted); margin-bottom: 16px;">
+            Issue tracking codes with custom net-profit rev-shares (default 25%) and direct Cash App/Chime/PayPal payout handles.
+        </div>
+
+        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 14px;">
+            <div>
+                <label style="margin-top: 0;">Referral Code (Unique ID)*</label>
+                <input type="text" id="refPartnerCode" placeholder="e.g. AGENCY25" style="text-transform: uppercase;">
+            </div>
+            <div>
+                <label style="margin-top: 0;">Partner / Business Name*</label>
+                <input type="text" id="refPartnerName" placeholder="e.g. Apex Digital">
+            </div>
+        </div>
+
+        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 14px; margin-top: 10px;">
+            <div>
+                <label>Contact Email</label>
+                <input type="text" id="refPartnerEmail" placeholder="partner@example.com">
+            </div>
+            <div>
+                <label>Contact Phone</label>
+                <input type="text" id="refPartnerPhone" placeholder="+1 (555) 000-0000">
+            </div>
+        </div>
+
+        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 14px; margin-top: 10px;">
+            <div>
+                <label>Rev-Share % on Net Profit</label>
+                <input type="number" id="refPartnerRevShare" value="25" min="1" max="100">
+            </div>
+            <div>
+                <label>Account Status</label>
+                <select id="refPartnerStatus">
+                    <option value="ACTIVE">🟢 Active</option>
+                    <option value="PAUSED">⏸️ Paused</option>
+                </select>
+            </div>
+        </div>
+
+        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 14px; margin-top: 10px;">
+            <div>
+                <label>Payout Method</label>
+                <select id="refPartnerPayoutMethod">
+                    <option value="cash_app">🟩 Cash App ($Cashtag)</option>
+                    <option value="chime">🟢 Chime (Handle / Email)</option>
+                    <option value="paypal">🟦 PayPal (Email)</option>
+                    <option value="stripe_connect">🟣 Stripe Connect / Bank ACH</option>
+                </select>
+            </div>
+            <div>
+                <label>Payout Handle / Account</label>
+                <input type="text" id="refPartnerPayoutHandle" placeholder="e.g. $ApexGrowth or email">
+            </div>
+        </div>
+
+        <div style="margin-top: 10px;">
+            <label>Partner Notes & Niche</label>
+            <input type="text" id="refPartnerNotes" placeholder="e.g. GoHighLevel community host, plumbing focus">
+        </div>
+
+        <div style="display: flex; justify-content: space-between; align-items: center; margin-top: 24px; border-top: 1px solid var(--card-border); padding-top: 16px;">
+            <button id="refPartnerDeleteBtn" class="btn-action btn-danger" style="display: none;" onclick="deletePartnerFromModal()">🗑️ Delete Partner</button>
+            <div style="display: flex; gap: 10px; margin-left: auto;">
+                <button onclick="document.getElementById('referralPartnerModal').style.display='none'" class="btn-action" style="background: #21262D; color: var(--muted); border: none;">Cancel</button>
+                <button onclick="savePartnerFromModal()" class="btn-action btn-primary-action">💾 Save Partner</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Referral Batch Payout Modal -->
+<div id="referralPayoutModal" style="display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.85); backdrop-filter: blur(6px); z-index: 99999; justify-content: center; align-items: center; padding: 20px;">
+    <div style="background: #131720; border: 1px solid var(--card-border); border-radius: 16px; max-width: 520px; width: 100%; padding: 26px; box-shadow: 0 16px 50px rgba(0,0,0,0.8);">
+        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 16px; border-bottom: 1px solid var(--card-border); padding-bottom: 12px;">
+            <h3 style="margin: 0; color: #FFF; font-size: 18px; display: flex; align-items: center; gap: 8px;">
+                <span>💰</span> Execute Partner Payout Batch
+            </h3>
+            <button onclick="document.getElementById('referralPayoutModal').style.display='none'" style="background: none; border: none; color: var(--muted); font-size: 24px; cursor: pointer; padding: 4px;">✕</button>
+        </div>
+
+        <div style="background: #090B0E; border: 1px solid var(--card-border); border-radius: 12px; padding: 18px; margin-bottom: 18px; text-align: center;">
+            <div style="font-size: 12px; color: var(--muted); text-transform: uppercase; font-weight: 700;">Total Cleared Funds to Disburse</div>
+            <div id="payoutModalTotal" style="font-size: 36px; font-weight: 900; color: #10B981; margin: 4px 0;">$0.00</div>
+            <div id="payoutModalCount" style="font-size: 12px; color: var(--muted);">0 partners ready</div>
+        </div>
+
+        <div>
+            <label style="margin-top: 0;">Disburse Payouts To:</label>
+            <select id="payoutPartnerSelect" onchange="updatePayoutModalSummary()" style="width: 100%; margin-top: 6px;">
+                <option value="ALL">All Cleared Partners (Batch)</option>
+            </select>
+        </div>
+
+        <div style="margin-top: 14px;">
+            <label>Payout Reference / Bookkeeping Note</label>
+            <input type="text" id="payoutNoteInput" value="Missed Call Auto SMS Net-Profit Rev-Share" style="width: 100%;">
+        </div>
+
+        <div style="font-size: 12px; color: var(--muted); line-height: 1.5; margin-top: 16px; background: rgba(245, 158, 11, 0.1); border: 1px solid rgba(245, 158, 11, 0.3); border-radius: 8px; padding: 10px;">
+            ⚠️ <strong>Action Notice:</strong> Executing this batch marks all associated available ledger items as <strong>PAID</strong>, archives the payout batch, and allows 1-click CSV download for instant Cash App/Chime/Bank disbursement.
+        </div>
+
+        <div style="display: flex; justify-content: flex-end; gap: 10px; margin-top: 20px;">
+            <button onclick="document.getElementById('referralPayoutModal').style.display='none'" class="btn-action" style="background: #21262D; color: var(--muted); border: none;">Cancel</button>
+            <button onclick="executePayoutBatch()" class="btn-action" style="background: #10B981; color: #000; font-weight: 800; border: none; padding: 10px 20px; border-radius: 20px;">⚡ Confirm & Mark Paid</button>
         </div>
     </div>
 </div>
