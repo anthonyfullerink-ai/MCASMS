@@ -3419,7 +3419,8 @@ const server = http.createServer((req, res) => {
           hasPremiumModel: isPremiumModel,
           billingCycleEnd: subscriber?.billingCycleEnd || new Date(Date.now() + 30 * 24 * 60 * 60 * 1000).toISOString(),
           forwardingNumber: subscriber?.forwardingNumber || '+18005550199',
-          isUnlimitedGateway: plan === 'PRO_GATEWAY'
+          isUnlimitedGateway: plan === 'PRO_GATEWAY',
+          cloudApiActive: subscriber ? subscriber.cloudApiActive !== false && subscriber.status !== 'CANCELLED' : true
         }));
       } catch (err) {
         res.writeHead(500, { 'Content-Type': 'application/json; charset=utf-8', 'Access-Control-Allow-Origin': '*' });
@@ -3470,8 +3471,8 @@ const server = http.createServer((req, res) => {
           if (agencyKey.startsWith('_')) continue;
 
           const isAgencyRevoked = revokedKeys.includes(agencyKey);
-          const tierPriceMap = { agency_5: '$349.00/mo', agency_10: '$649.00/mo', agency_enterprise: '$1,500.00/mo' };
-          const tierLabelMap = { agency_5: 'AGENCY_5', agency_10: 'AGENCY_10', agency_enterprise: 'AGENCY_ENT' };
+          const tierPriceMap = { agency_3: '$229.00/mo', agency_5: '$349.00/mo', agency_10: '$649.00/mo', agency_25: '$1,249.00/mo', agency_enterprise: '$1,249.00/mo' };
+          const tierLabelMap = { agency_3: 'AGENCY_3', agency_5: 'AGENCY_5', agency_10: 'AGENCY_10', agency_25: 'AGENCY_25', agency_enterprise: 'AGENCY_ENT' };
           const agencyPrice = tierPriceMap[agencyRecord.tier] || '$349.00/mo';
           const agencyTierLabel = tierLabelMap[agencyRecord.tier] || 'AGENCY_5';
 
@@ -3732,9 +3733,11 @@ const server = http.createServer((req, res) => {
       }
 
       const TIER_CONFIG = {
-        agency_5:          { voiceMinsPool: 1250, overageRatePerMin: 0.20 },
-        agency_10:         { voiceMinsPool: 2500, overageRatePerMin: 0.20 },
-        agency_enterprise: { voiceMinsPool: 9999, overageRatePerMin: 0.15 }
+        agency_3:          { voiceMinsPool: 750,  quota: 3,  overageRatePerMin: 0.20 },
+        agency_5:          { voiceMinsPool: 1250, quota: 5,  overageRatePerMin: 0.20 },
+        agency_10:         { voiceMinsPool: 2500, quota: 10, overageRatePerMin: 0.20 },
+        agency_25:         { voiceMinsPool: 6250, quota: 25, overageRatePerMin: 0.15 },
+        agency_enterprise: { voiceMinsPool: 6250, quota: 25, overageRatePerMin: 0.15 }
       };
       const tierCfg = TIER_CONFIG[agencyRecord.tier] || TIER_CONFIG['agency_5'];
       const voiceMinsPool = agencyRecord.voiceMinsPool || tierCfg.voiceMinsPool;
@@ -4307,6 +4310,14 @@ const server = http.createServer((req, res) => {
     relativePath = '/sales_landing_page.html';
   } else if (relativePath === '/owner' || relativePath === '/owner/') {
     relativePath = '/owner_admin_dashboard.html';
+  } else if (relativePath === '/voice' || relativePath === '/voice/') {
+    relativePath = '/voice.html';
+  } else if (relativePath === '/agency' || relativePath === '/agency/') {
+    relativePath = '/agency.html';
+  } else if (relativePath === '/developers' || relativePath === '/developers/' || relativePath === '/docs' || relativePath === '/docs/') {
+    relativePath = '/developers.html';
+  } else if (relativePath === '/support' || relativePath === '/support/') {
+    relativePath = '/support.html';
   } else if (relativePath === '/blog' || relativePath === '/blog/') {
     relativePath = '/blog.html';
   } else if (relativePath === '/content-engine' || relativePath === '/content-engine/' || relativePath === '/marketing' || relativePath === '/marketing/') {

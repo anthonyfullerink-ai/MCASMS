@@ -332,9 +332,9 @@
         /* Pricing Bundles */
         .pricing-grid {
             display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
-            gap: 24px;
-            max-width: 1060px;
+            grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
+            gap: 20px;
+            max-width: 1200px;
             margin: 0 auto 60px auto;
         }
 
@@ -710,10 +710,35 @@
     <section id="pricing">
         <div class="section-header">
             <h2>Agency Fleet Bundles</h2>
-            <p>Monthly recurring platform licenses with pooled AI voice minutes. Hardware is a separate one-time client cost.</p>
+            <p>Monthly recurring wholesale platform licenses with pooled AI voice minutes. Hardware is a separate one-time client cost (~$40 Android phone).</p>
         </div>
 
         <div class="pricing-grid">
+            <!-- 3-Pack ($229/mo) -->
+            <div class="price-card">
+                <h3 class="plan-name">Agency 3-Pack</h3>
+                <div class="plan-price">$229 <span>/mo</span></div>
+                <div class="plan-sub">$76.33/seat · 3 client appliances</div>
+                <div class="pool-badge">🎙️ 750 Pooled AI Voice Mins/mo</div>
+
+                <div class="plan-features">
+                    <div>✓ <strong>3 Pro Appliance Seats</strong> for client deployments</div>
+                    <div>✓ <strong>Agency Fleet Management Portal</strong></div>
+                    <div>✓ <strong>1-Click Client Key Generator</strong></div>
+                    <div>✓ <strong>Per-Client Voice Usage Dashboard</strong></div>
+                    <div>✓ <strong>Pooled Minute Overage Alerts</strong> ($0.20/min wholesale)</div>
+                    <div>✓ <strong>Hardware Reset & Rebind</strong> (switch client phones anytime)</div>
+                    <div>✓ <strong>Full Cloud Relay API & n8n Webhooks</strong></div>
+                    <div>✓ <strong>Mute Native Auto-Reply</strong> (zero double-sends)</div>
+                    <div>✓ <strong>Dual SIM Outbound Line Selector</strong></div>
+                    <div>✓ <strong>Client Setup Sheet Generator</strong></div>
+                </div>
+
+                <a href="https://buy.stripe.com/9B6aEX8pw2X03zOddf2go0d" class="btn-primary" style="justify-content: center; width: 100%;">
+                    Start Agency 3-Pack ($229/mo) ➔
+                </a>
+            </div>
+
             <!-- 5-Pack ($349/mo) -->
             <div class="price-card">
                 <h3 class="plan-name">Agency 5-Pack</h3>
@@ -723,15 +748,12 @@
 
                 <div class="plan-features">
                     <div>✓ <strong>5 Pro Appliance Seats</strong> for client deployments</div>
-                    <div>✓ <strong>Agency Fleet Management Portal</strong></div>
-                    <div>✓ <strong>1-Click Client Key Generator</strong></div>
+                    <div>✓ <strong>Everything in Agency 3-Pack</strong></div>
+                    <div>✓ <strong>Priority Setup Support</strong></div>
                     <div>✓ <strong>Per-Client Voice Usage Dashboard</strong></div>
-                    <div>✓ <strong>Pooled Minute Overage Alerts</strong> (auto-billed $0.20/min)</div>
-                    <div>✓ <strong>Hardware Reset & Rebind</strong> (switch client phones anytime)</div>
-                    <div>✓ <strong>n8n & Make.com Webhook Forwarder</strong></div>
-                    <div>✓ <strong>Mute Native Auto-Reply</strong> (zero double-sends)</div>
-                    <div>✓ <strong>Dual SIM Outbound Line Selector</strong></div>
-                    <div>✓ <strong>SIM Burn Safeguard™</strong> anti-spam pacing</div>
+                    <div>✓ <strong>Pooled Minute Overage Alerts</strong> ($0.20/min wholesale)</div>
+                    <div>✓ <strong>Turnkey n8n Lead Qualification Templates</strong></div>
+                    <div>✓ <strong>Free Lifetime OTA Updates for All Devices</strong></div>
                     <div>✓ <strong>Client Setup Sheet Generator</strong></div>
                 </div>
 
@@ -752,7 +774,7 @@
                     <div>✓ <strong>10 Pro Appliance Seats</strong> for client deployments</div>
                     <div>✓ <strong>Everything in Agency 5-Pack</strong></div>
                     <div>✓ <strong>Priority Engineer Onboarding & Setup Call</strong></div>
-                    <div>✓ <strong>Direct Slack/WhatsApp Channel with Developers</strong></div>
+                    <div>✓ <strong>Direct Developer Slack/WhatsApp Channel</strong></div>
                     <div>✓ <strong>White-Label Client PDF Onboarding Pack</strong></div>
                     <div>✓ <strong>Turnkey n8n AI Lead Qualification Templates</strong></div>
                     <div>✓ <strong>Free Lifetime OTA Updates for All Devices</strong></div>
@@ -764,29 +786,28 @@
                 </a>
             </div>
 
-            <!-- Enterprise White-Label ($1,500+/mo) -->
+            <!-- Enterprise White-Label ($1,249/mo) -->
             <div class="price-card enterprise">
                 <div class="badge-enterprise">🏆 ENTERPRISE / WHITE-LABEL</div>
-                <h3 class="plan-name" style="color: #C084FC;">Enterprise Fleet</h3>
-                <div class="plan-price" style="color: #C084FC;">$1,500+ <span>/mo</span></div>
-                <div class="plan-sub">Unlimited seats · Custom voice pool</div>
-                <div class="pool-badge" style="background: rgba(168,85,247,0.15); color: #C084FC; border-color: rgba(168,85,247,0.4);">🎙️ Custom Pooled Voice Mins — You Set the Quota</div>
+                <h3 class="plan-name" style="color: #C084FC;">Enterprise 25-Pack</h3>
+                <div class="plan-price" style="color: #C084FC;">$1,249 <span>/mo</span></div>
+                <div class="plan-sub">$49.96/seat · 25 client appliances</div>
+                <div class="pool-badge" style="background: rgba(168,85,247,0.15); color: #C084FC; border-color: rgba(168,85,247,0.4);">🎙️ 6,250 Pooled Voice Mins ($0.15/min overage)</div>
 
                 <div class="plan-features">
-                    <div>✓ <strong>Unlimited Client Appliance Seats</strong></div>
+                    <div>✓ <strong>25 Pro Appliance Seats</strong> for client deployments</div>
                     <div>✓ <strong>Everything in Agency 10-Pack</strong></div>
-                    <div>✓ <strong>White-Label Fleet Dashboard</strong> (your brand, logo & colors)</div>
-                    <div>✓ <strong>Custom Agency Domain</strong> (e.g. fleet.youragency.com)</div>
+                    <div>✓ <strong>White-Label Fleet Dashboard</strong> (your brand & colors)</div>
+                    <div>✓ <strong>Custom Agency Subdomain</strong> (e.g. fleet.youragency.com)</div>
                     <div>✓ <strong>Branded Setup Sheets & Client PDFs</strong> with your logo</div>
                     <div>✓ <strong>Branded Customer Email Templates</strong></div>
-                    <div>✓ <strong>Custom Voice Pool Sizing</strong> (negotiate your overage rate)</div>
-                    <div>✓ <strong>Dedicated Account Manager</strong></div>
+                    <div>✓ <strong>Dedicated Agency Account Manager</strong></div>
                     <div>✓ <strong>SLA-Backed Uptime Guarantee</strong></div>
                     <div>✓ <strong>Bulk Key CSV Import/Export</strong></div>
                 </div>
 
-                <a href="mailto:contactus@offgridmediagroup.com?subject=Enterprise Fleet Inquiry" class="btn-primary" style="justify-content: center; width: 100%; background: linear-gradient(135deg, #7C3AED, #A855F7);">
-                    Contact Sales for Enterprise Pricing ➔
+                <a href="mailto:contactus@offgridmediagroup.com?subject=Enterprise 25-Pack Fleet Inquiry" class="btn-primary" style="justify-content: center; width: 100%; background: linear-gradient(135deg, #7C3AED, #A855F7);">
+                    Get Enterprise 25-Pack ➔
                 </a>
             </div>
         </div>
@@ -802,9 +823,10 @@
                 <div>
                     <div class="calc-label">Agency Bundle</div>
                     <select id="calc-plan" style="width: 100%; background: #090B0E; border: 1px solid var(--card-border); color: #FFF; padding: 10px 12px; border-radius: 10px; font-size: 14px; outline: none;" onchange="calcMargin()">
+                        <option value="229:3">Agency 3-Pack — $229/mo (3 seats)</option>
                         <option value="349:5">Agency 5-Pack — $349/mo (5 seats)</option>
                         <option value="649:10" selected>Agency 10-Pack — $649/mo (10 seats)</option>
-                        <option value="1500:25">Enterprise — $1,500/mo (25 seats)</option>
+                        <option value="1249:25">Enterprise 25-Pack — $1,249/mo (25 seats)</option>
                     </select>
                 </div>
                 <div>

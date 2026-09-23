@@ -728,10 +728,12 @@ exports.handler = async (event) => {
       (session.metadata && session.metadata.tier === 'standard_trial')
     );
 
-    // 4. Agency Fleet Bundles ($399+ or $799+)
-    const isAgency10 = !isTrial && !isVoiceStandalone && !isBundle && ((amountTotal >= 70000) || (session.metadata && session.metadata.tier === 'agency_10'));
-    const isAgency5 = !isTrial && !isVoiceStandalone && !isBundle && !isAgency10 && ((amountTotal >= 30000 && amountTotal < 70000) || (session.metadata && session.metadata.tier === 'agency_5'));
-    const isAgency = isAgency5 || isAgency10;
+    // 4. Agency Fleet Bundles ($229 / $349 / $649 / $1,249)
+    const isAgency25 = !isTrial && !isVoiceStandalone && !isBundle && ((amountTotal >= 100000) || (session.metadata && (session.metadata.tier === 'agency_25' || session.metadata.tier === 'agency_enterprise')));
+    const isAgency10 = !isTrial && !isVoiceStandalone && !isBundle && !isAgency25 && ((amountTotal >= 50000 && amountTotal < 100000) || (session.metadata && session.metadata.tier === 'agency_10'));
+    const isAgency5 = !isTrial && !isVoiceStandalone && !isBundle && !isAgency25 && !isAgency10 && ((amountTotal >= 30000 && amountTotal < 50000) || (session.metadata && session.metadata.tier === 'agency_5'));
+    const isAgency3 = !isTrial && !isVoiceStandalone && !isBundle && !isAgency25 && !isAgency10 && !isAgency5 && ((amountTotal >= 20000 && amountTotal < 30000) || (session.metadata && session.metadata.tier === 'agency_3'));
+    const isAgency = isAgency3 || isAgency5 || isAgency10 || isAgency25;
 
     // 5. Pro Automation Gateway ($299 Perpetual or $29/mo) - NO VAPI LINE INCLUDED
     const isPro = !isTrial && !isVoiceStandalone && !isBundle && !isAgency && (
@@ -1036,9 +1038,10 @@ exports.handler = async (event) => {
       };
     }
 
-    // Agency Fleet Bundle ($399 for 5-Pack or $799 for 10-Pack)
+    // Agency Fleet Bundle ($229 for 3-Pack, $349 for 5-Pack, $649 for 10-Pack, $1,249 for 25-Pack)
     if (isAgency) {
-      const quota = isAgency10 ? 10 : 5;
+      const quota = isAgency25 ? 25 : isAgency10 ? 10 : isAgency5 ? 5 : 3;
+      const agencyTier = isAgency25 ? 'agency_25' : isAgency10 ? 'agency_10' : isAgency5 ? 'agency_5' : 'agency_3';
       const agencyMasterKey = generateAgencyKey(customerName, quota);
       const dashboardUrl = `https://${host}/agency_dashboard.html`;
       console.log(`🏢 [AGENCY ${quota}-PACK ACTIVATED] ${agencyMasterKey} for ${customerEmail} ($${amountPaid})`);
@@ -1053,7 +1056,7 @@ exports.handler = async (event) => {
           agencyName: customerName,
           customerEmail: customerEmail,
           quota: quota,
-          tier: isAgency10 ? 'agency_10' : 'agency_5',
+          tier: agencyTier,
           createdAt: new Date().toISOString(),
           clients: []
         };
@@ -1093,7 +1096,7 @@ exports.handler = async (event) => {
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           received: true,
-          tier: isAgency10 ? 'agency_10' : 'agency_5',
+          tier: agencyTier,
           quota: quota,
           amountPaid: amountPaid,
           masterAgencyKey: agencyMasterKey,

@@ -880,9 +880,11 @@
         document.getElementById('textAgencyName').innerText = d.agencyName || 'Agency Partner';
 
         const tierLabels = {
+            agency_3: 'AGENCY 3-PACK · $229/mo',
             agency_5: 'AGENCY 5-PACK · $349/mo',
             agency_10: 'AGENCY 10-PACK · $649/mo',
-            agency_enterprise: 'ENTERPRISE FLEET'
+            agency_25: 'ENTERPRISE 25-PACK · $1,249/mo',
+            agency_enterprise: 'ENTERPRISE 25-PACK · $1,249/mo'
         };
         document.getElementById('badgePlan').innerText = tierLabels[d.tier] || 'AGENCY FLEET';
         document.getElementById('textMasterKey').innerText = currentAgencyKey;

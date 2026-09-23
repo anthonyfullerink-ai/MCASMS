@@ -3,8 +3,8 @@
   "versionName": "1.7.0",
   "downloadUrl": "https://raw.githubusercontent.com/anthonyfullerink-ai/MCASMS/main/MissedCallAutoSMS.apk",
   "proDownloadUrl": "https://raw.githubusercontent.com/anthonyfullerink-ai/MCASMS/main/MissedCallAutoSMS-Pro.apk",
-  "releaseNotes": "✅ Voice Studio Polish — removed internal development copy from user-facing screens\n✅ Dual-Mode AI Voice Test — Instant In-App Speaker test ($0.00) + Live Cellular phone call test to your cell phone\n✅ AI Model Selector & 1.5% Overage Engine — Default GPT-4o-mini at 0.30 temperature with automated 1.5% overage billing for GPT-4o\n✅ Enhanced Real-Time OTA Update Notification Engine with Firebase Cloud Messaging\n✅ Upgraded Telecom Carrier Routing & SIM SMS Delivery Safeguards",
+  "releaseNotes": "🚀 Beta Release v1.7.0 Complete:\n✅ Dedicated Autonomous Front Desk & AI Voice Hub with *71 Carrier Forwarding\n✅ Dual-Mode AI Voice Test (In-App Speaker + Live Phone Call)\n✅ Option C Cloud Relay API Gating & Key Entitlements\n✅ Agency Fleet 4-Tier Wholesale Platform (3, 5, 10, 25 Seats) with Pooled Minutes\n✅ High-Priority Instant OTA Updates & P2P Native SIM Routing",
   "mandatory": true,
   "minSupportedVersion": 15,
-  "updatedAt": "2026-09-23T19:59:26.520Z"
+  "updatedAt": "2026-09-23T21:01:00.000Z"
 }

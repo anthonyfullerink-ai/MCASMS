@@ -175,6 +175,31 @@ exports.handler = async (event) => {
     };
   }
 
+  // Cloud Relay API subscription enforcement for recurring monthly bundles
+  const { db } = initFirebase();
+  if (db) {
+    try {
+      const bindingDoc = await db.collection('voice_pro_bindings').doc(licenseKey).get();
+      if (bindingDoc.exists) {
+        const binding = bindingDoc.data();
+        if (binding.status === 'CANCELLED' || binding.voiceActive === false || binding.cloudApiActive === false) {
+          return {
+            statusCode: 403,
+            headers: { 'Access-Control-Allow-Origin': '*' },
+            body: JSON.stringify({
+              error: 'Subscription Inactive',
+              message: 'Cloud Relay API access is inactive because your Front Desk subscription was cancelled. Upgrade to Perpetual Pro ($299) for lifetime unmetered API access, or reactivate your subscription at https://missedcallautosms.com/voice.',
+              upgradeUrl: 'https://buy.stripe.com/cNi5kDdJQ558c6k2yB2go0b',
+              reactivateUrl: 'https://missedcallautosms.com/voice'
+            })
+          };
+        }
+      }
+    } catch (dbCheckErr) {
+      console.warn('[dispatch-sms] Subscription check notice:', dbCheckErr.message);
+    }
+  }
+
   // Extract SMS payload fields
   const targetPhone = (body.to || body.phone || body.phone_number || body.recipient || '').trim();
   const messageText = (body.message || body.text || body.message_text || '').trim();
