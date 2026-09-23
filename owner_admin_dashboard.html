@@ -1223,6 +1223,52 @@
             </div>
         </div>
 
+        <!-- Google Chat Webhook & Approval Pipeline Integration -->
+        <div style="background: rgba(56, 189, 248, 0.05); border: 1px solid rgba(56, 189, 248, 0.3); border-radius: 14px; padding: 20px; margin-top: 24px;">
+            <div style="display: flex; justify-content: space-between; align-items: flex-start; flex-wrap: wrap; gap: 14px; margin-bottom: 14px;">
+                <div>
+                    <h3 style="margin: 0; font-size: 16px; color: #FFF; display: flex; align-items: center; gap: 8px;">
+                        <span>💬</span> Google Chat Mobile Approval Webhook
+                        <span id="ownerChatWebhookStatusBadge" class="badge" style="background: rgba(245, 158, 11, 0.15); color: #F59E0B; border: 1px solid #F59E0B; font-size: 11px;">⚠️ Needs Webhook URL</span>
+                    </h3>
+                    <div style="font-size: 12px; color: var(--muted); margin-top: 4px; line-height: 1.5;">
+                        Receive interactive Card V2 push notifications directly in your Google Chat app on your phone whenever a post is drafted. Includes <strong>1-Tap Approve</strong> buttons to authorize posts without opening a browser.
+                    </div>
+                </div>
+                <div style="display: flex; gap: 8px; flex-wrap: wrap;">
+                    <button class="btn-action" style="font-size: 11px; padding: 6px 12px; border-color: #38BDF8; color: #38BDF8;" onclick="toggleChatSetupGuide()">📖 30-Sec Setup Guide</button>
+                    <button class="btn-action btn-primary-action" style="font-size: 11px; padding: 6px 12px;" onclick="saveAndTestGoogleChatWebhookFromOwner()">💾 Save & Test Webhook</button>
+                </div>
+            </div>
+
+            <!-- Setup Guide (Collapsible) -->
+            <div id="ownerChatSetupGuide" style="display: none; background: #090B0E; border: 1px solid var(--card-border); border-radius: 10px; padding: 14px; margin-bottom: 16px; font-size: 12px; color: #CBD5E0; line-height: 1.6;">
+                <div style="font-weight: 800; color: #38BDF8; margin-bottom: 6px;">How to get your Google Chat Webhook URL (30 Seconds):</div>
+                <ol style="margin: 0; padding-left: 20px;">
+                    <li>Open <strong>Google Chat</strong> (chat.google.com or in your phone / Gmail).</li>
+                    <li>Create or open any Space (e.g. <em>"Content Approvals"</em>).</li>
+                    <li>Click the Space name at the top ➔ select <strong>Apps & integrations</strong> ➔ <strong>Webhooks</strong>.</li>
+                    <li>Click <strong>Add webhook</strong>, name it <em>"Content Engine Bot"</em>, and click <strong>Save</strong>.</li>
+                    <li>Click <strong>Copy link</strong> and paste the URL into the box below, then click <strong>Save & Test</strong>!</li>
+                </ol>
+            </div>
+
+            <div style="display: grid; grid-template-columns: 1fr auto; gap: 12px;">
+                <input type="text" id="ownerChatWebhookInput" class="form-control" placeholder="https://chat.googleapis.com/v1/spaces/.../messages?key=...&token=..." style="margin: 0; font-family: monospace; font-size: 12px;">
+                <button class="btn-action btn-primary-action" onclick="saveAndTestGoogleChatWebhookFromOwner()">
+                    Save & Send Test Card
+                </button>
+            </div>
+
+            <div style="margin-top: 12px; display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 10px; font-size: 12px; color: var(--muted);">
+                <label style="display: flex; align-items: center; gap: 8px; cursor: pointer; color: #E2E8F0;">
+                    <input type="checkbox" id="ownerAutoPublishApprovedOnlyCheck" checked onchange="toggleAutoPublishApprovedOnly(this.checked)">
+                    <span>Require explicit approval before auto-publishing (Recommended — unapproved drafts stay safe in queue)</span>
+                </label>
+                <div id="ownerChatTestFeedback" style="font-size: 11px; font-weight: bold;"></div>
+            </div>
+        </div>
+
         <!-- Upcoming Scheduled Queue (Tomorrow & Beyond) -->
         <div style="margin-top: 28px;">
             <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 16px; flex-wrap: wrap; gap: 10px;">
@@ -1734,6 +1780,23 @@
 
                 const tabBadge = document.getElementById('countTabContent');
                 if (tabBadge) tabBadge.innerText = statusRes.queueCount || 0;
+
+                const chatWebhookInput = document.getElementById('ownerChatWebhookInput');
+                if (chatWebhookInput) chatWebhookInput.value = ceSettings.googleChatWebhookUrl || '';
+
+                const chatBadge = document.getElementById('ownerChatWebhookStatusBadge');
+                if (chatBadge) {
+                    const hasWebhook = !!(ceSettings.googleChatWebhookUrl && ceSettings.googleChatWebhookUrl.startsWith('https://chat.googleapis.com'));
+                    chatBadge.innerHTML = hasWebhook ? '🟢 Connected (Active Webhook)' : '⚠️ Needs Webhook URL';
+                    chatBadge.style.color = hasWebhook ? 'var(--primary)' : 'var(--warning)';
+                    chatBadge.style.borderColor = hasWebhook ? 'var(--primary)' : 'var(--warning)';
+                    chatBadge.style.background = hasWebhook ? 'rgba(0, 230, 118, 0.15)' : 'rgba(255, 179, 0, 0.15)';
+                }
+
+                const approvedOnlyCheck = document.getElementById('ownerAutoPublishApprovedOnlyCheck');
+                if (approvedOnlyCheck) {
+                    approvedOnlyCheck.checked = ceSettings.autoPublishApprovedOnly !== false;
+                }
             }
 
             if (postsRes && postsRes.success) {
@@ -1742,6 +1805,67 @@
             }
         } catch (e) {
             console.error('Failed to load content engine dashboard:', e);
+        }
+    }
+
+    function toggleChatSetupGuide() {
+        const guide = document.getElementById('ownerChatSetupGuide');
+        if (guide) guide.style.display = guide.style.display === 'none' ? 'block' : 'none';
+    }
+
+    async function toggleAutoPublishApprovedOnly(val) {
+        try {
+            const base = getApiBaseUrl();
+            await safeFetchJson(`${base}/api/content-engine/settings`, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ autoPublishApprovedOnly: val })
+            });
+        } catch (e) {}
+    }
+
+    async function saveAndTestGoogleChatWebhookFromOwner() {
+        const input = document.getElementById('ownerChatWebhookInput');
+        const feedback = document.getElementById('ownerChatTestFeedback');
+        const webhookUrl = input ? input.value.trim() : '';
+
+        if (!webhookUrl) {
+            alert('Please paste your Google Chat Incoming Webhook URL first.\n\nClick "30-Sec Setup Guide" above for quick instructions.');
+            return;
+        }
+
+        if (!webhookUrl.startsWith('https://chat.googleapis.com')) {
+            alert('Invalid webhook URL format.\n\nIt must begin with: https://chat.googleapis.com');
+            return;
+        }
+
+        if (feedback) feedback.innerHTML = '<span style="color:var(--accent);">⏳ Saving and dispatching test card...</span>';
+
+        try {
+            const base = getApiBaseUrl();
+            // 1. Save settings
+            await safeFetchJson(`${base}/api/content-engine/settings`, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ googleChatWebhookUrl: webhookUrl })
+            });
+
+            // 2. Dispatch test approval card
+            const testRes = await safeFetchJson(`${base}/api/content-engine/send-approval-card`, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ webhookUrl: webhookUrl })
+            });
+
+            if (testRes && testRes.success) {
+                if (feedback) feedback.innerHTML = '<span style="color:var(--primary);">🎉 Webhook verified! Test card delivered to Google Chat.</span>';
+                alert('🎉 Success! Webhook saved and test card delivered to your Google Chat Space!\n\nCheck your Google Chat app on your phone or desktop.');
+                loadContentEngineDashboard();
+            } else {
+                if (feedback) feedback.innerHTML = '<span style="color:var(--danger);">⚠️ Dispatch warning: ' + (testRes?.warning || 'Failed') + '</span>';
+            }
+        } catch (e) {
+            if (feedback) feedback.innerHTML = '<span style="color:var(--danger);">Error: ' + e.message + '</span>';
         }
     }
 

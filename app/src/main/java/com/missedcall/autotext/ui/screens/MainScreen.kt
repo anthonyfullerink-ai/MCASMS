@@ -80,18 +80,23 @@ fun MainScreen(
         }
     }
 
-    // Trigger onboarding dialog if missing permissions exist
-    LaunchedEffect(missingPermissions) {
-        if (missingPermissions.isNotEmpty()) {
+    // Trigger onboarding dialog if missing permissions exist and user hasn't completed/dismissed onboarding
+    LaunchedEffect(missingPermissions, settings.permissionsOnboardingCompleted) {
+        if (!settings.permissionsOnboardingCompleted && missingPermissions.isNotEmpty()) {
             showOnboardingDialog = true
+        } else if (settings.permissionsOnboardingCompleted) {
+            showOnboardingDialog = false
         }
     }
 
-    if (showOnboardingDialog && missingPermissions.isNotEmpty()) {
+    if (showOnboardingDialog && !settings.permissionsOnboardingCompleted && missingPermissions.isNotEmpty()) {
         PermissionOnboardingDialog(
             missingPermissions = missingPermissions,
             onRequestPermissionBatch = onRequestPermissionBatch,
-            onDismiss = { showOnboardingDialog = false }
+            onDismiss = {
+                showOnboardingDialog = false
+                onSettingsChanged(settings.copy(permissionsOnboardingCompleted = true))
+            }
         )
     }
 

@@ -75,6 +75,7 @@ class SettingsRepository(private val context: Context) {
         val VAPI_VOICE_PROVIDER = stringPreferencesKey("vapi_voice_provider")
         val DASHBOARD_CARD_ORDER = stringPreferencesKey("dashboard_card_order")
         val DASHBOARD_HIDDEN_CARDS = stringPreferencesKey("dashboard_hidden_cards")
+        val PERMISSIONS_ONBOARDING_COMPLETED = booleanPreferencesKey("permissions_onboarding_completed")
     }
 
 
@@ -155,7 +156,8 @@ class SettingsRepository(private val context: Context) {
             vapiVoiceId = preferences[VAPI_VOICE_ID] ?: "",
             vapiVoiceProvider = preferences[VAPI_VOICE_PROVIDER] ?: "cartesia",
             dashboardCardOrder = preferences[DASHBOARD_CARD_ORDER] ?: "HERO,SMS_METRICS,VOICE_METRICS,REVENUE,QUOTA,HARDWARE",
-            dashboardHiddenCards = preferences[DASHBOARD_HIDDEN_CARDS] ?: ""
+            dashboardHiddenCards = preferences[DASHBOARD_HIDDEN_CARDS] ?: "",
+            permissionsOnboardingCompleted = preferences[PERMISSIONS_ONBOARDING_COMPLETED] ?: false
         )
 
 
@@ -254,6 +256,7 @@ class SettingsRepository(private val context: Context) {
             preferences[VAPI_VOICE_PROVIDER] = settings.vapiVoiceProvider
             preferences[DASHBOARD_CARD_ORDER] = settings.dashboardCardOrder
             preferences[DASHBOARD_HIDDEN_CARDS] = settings.dashboardHiddenCards
+            preferences[PERMISSIONS_ONBOARDING_COMPLETED] = settings.permissionsOnboardingCompleted
         }
     }
 

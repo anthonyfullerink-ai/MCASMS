@@ -3,6 +3,7 @@ package com.missedcall.autotext.ui.screens
 import android.content.Context
 import android.content.Intent
 import android.net.Uri
+import android.os.Build
 import android.os.PowerManager
 import android.provider.Settings
 import androidx.compose.foundation.layout.*
@@ -13,6 +14,7 @@ import androidx.compose.material.icons.filled.Call
 import androidx.compose.material.icons.filled.CheckCircle
 import androidx.compose.material.icons.filled.Contacts
 import androidx.compose.material.icons.filled.Message
+import androidx.compose.material.icons.filled.Notifications
 import androidx.compose.material.icons.filled.Security
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
@@ -47,7 +49,7 @@ fun PermissionOnboardingDialog(
     var currentStepIndex by remember { mutableIntStateOf(0) }
 
     val steps = remember {
-        listOf(
+        val list = mutableListOf(
             PermissionStep(
                 title = "1. Call & Phone State Detection",
                 description = "Required to intercept incoming calls and detect when a call is missed or rejected.",
@@ -55,25 +57,41 @@ fun PermissionOnboardingDialog(
                 permissions = listOf(android.Manifest.permission.READ_PHONE_STATE, android.Manifest.permission.READ_CALL_LOG)
             ),
             PermissionStep(
-                title = "2. Automatic SMS Reply Dispatch",
-                description = "Required to send the automated text reply from your device SIM card.",
+                title = "2. SMS Auto-Reply & Delivery",
+                description = "Required to dispatch the automated text reply from your device SIM card and verify message status.",
                 icon = Icons.Default.Message,
-                permissions = listOf(android.Manifest.permission.SEND_SMS)
+                permissions = listOf(
+                    android.Manifest.permission.SEND_SMS,
+                    android.Manifest.permission.READ_SMS,
+                    android.Manifest.permission.RECEIVE_SMS
+                )
             ),
             PermissionStep(
                 title = "3. Contacts Exclusion Filter",
                 description = "Required to check your address book so saved contacts are not texted automatically.",
                 icon = Icons.Default.Contacts,
                 permissions = listOf(android.Manifest.permission.READ_CONTACTS)
-            ),
-            // ── Item 7: OEM Battery Optimization Exemption ───────────────────────
+            )
+        )
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
+            list.add(
+                PermissionStep(
+                    title = "4. Background Notifications",
+                    description = "Required to display status alerts and persistent foreground service indicators.",
+                    icon = Icons.Default.Notifications,
+                    permissions = listOf(android.Manifest.permission.POST_NOTIFICATIONS)
+                )
+            )
+        }
+        list.add(
             PermissionStep(
-                title = "4. Disable Battery Optimization",
+                title = "${list.size + 1}. Disable Battery Optimization",
                 description = "Android's battery manager can kill this app mid-call, causing missed texts. Tap 'Exempt App' to ensure 100% reliable auto-reply delivery — even while your phone is locked.",
                 icon = Icons.Default.BatteryFull,
                 permissions = listOf(BATTERY_OPTIMIZATION_SENTINEL)
             )
         )
+        list.toList()
     }
 
     val currentStep = steps.getOrNull(currentStepIndex) ?: steps.last()
@@ -245,6 +263,19 @@ fun PermissionOnboardingDialog(
                             Text(if (currentStepIndex < steps.size - 1) "Allow & Next" else "Allow & Finish")
                         }
                     }
+                }
+
+                Spacer(modifier = Modifier.height(10.dp))
+
+                TextButton(
+                    onClick = onDismiss,
+                    modifier = Modifier.fillMaxWidth()
+                ) {
+                    Text(
+                        text = "Skip for Now (Don't Ask Again)",
+                        style = MaterialTheme.typography.bodySmall,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant
+                    )
                 }
             }
         }

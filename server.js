@@ -3582,9 +3582,15 @@ const server = http.createServer((req, res) => {
                     buttonList: {
                       buttons: [
                         {
-                          text: "Approve in Dashboard",
+                          text: "✅ 1-Tap Approve & Schedule",
                           onClick: {
-                            openLink: { url: "http://localhost:8000/content-engine" }
+                            openLink: { url: `http://localhost:8000/api/content-engine/one-click-approve?postId=${post.id}` }
+                          }
+                        },
+                        {
+                          text: "👁️ Review in Dashboard",
+                          onClick: {
+                            openLink: { url: "http://localhost:8000/owner-admin" }
                           }
                         }
                       ]
@@ -3631,6 +3637,53 @@ const server = http.createServer((req, res) => {
           }));
         }
       });
+      return;
+    }
+
+    // 9b. One-Click Approval from Google Chat
+    if (relativePath === '/api/content-engine/one-click-approve' && req.method === 'GET') {
+      const parsedUrl = new URL(req.url, 'http://localhost:8000');
+      const postId = parsedUrl.searchParams.get('postId') || parsedUrl.searchParams.get('id');
+      let queue = readJson(CE_QUEUE_FILE, []);
+      const post = queue.find(p => p.id === postId);
+      if (!post) {
+        res.writeHead(404, { 'Content-Type': 'text/html; charset=utf-8' });
+        res.end('<h1>Post not found</h1>');
+        return;
+      }
+
+      post.status = 'approved';
+      post.approvedAt = new Date().toISOString();
+      writeJson(CE_QUEUE_FILE, queue);
+
+      res.writeHead(200, { 'Content-Type': 'text/html; charset=utf-8' });
+      res.end(`<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="utf-8">
+  <title>Post Approved - Missed Call Auto SMS</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <style>
+    body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; background: #0b0f19; color: #f8fafc; display: flex; align-items: center; justify-content: center; min-height: 100vh; margin: 0; padding: 20px; }
+    .card { background: #131b2e; border: 1px solid #1e293b; border-radius: 16px; padding: 36px; max-width: 520px; text-align: center; box-shadow: 0 20px 40px rgba(0,0,0,0.5); }
+    .badge { display: inline-flex; align-items: center; gap: 6px; background: rgba(16, 185, 129, 0.15); color: #10b981; font-weight: 700; font-size: 13px; padding: 6px 14px; border-radius: 999px; margin-bottom: 20px; border: 1px solid rgba(16, 185, 129, 0.3); }
+    h1 { font-size: 22px; font-weight: 800; margin: 0 0 12px 0; color: #ffffff; }
+    p { color: #94a3b8; font-size: 14px; line-height: 1.6; margin: 0 0 24px 0; }
+    .title-box { background: rgba(255,255,255,0.03); border: 1px solid rgba(255,255,255,0.08); padding: 14px; border-radius: 10px; font-weight: 600; color: #38bdf8; margin-bottom: 24px; font-size: 15px; }
+    .btn { display: inline-block; background: #2563eb; color: #ffffff; font-weight: 700; font-size: 14px; text-decoration: none; padding: 12px 24px; border-radius: 10px; transition: background 0.2s; }
+    .btn:hover { background: #1d4ed8; }
+  </style>
+</head>
+<body>
+  <div class="card">
+    <div class="badge">✔ APPROVED FOR PUBLICATION</div>
+    <h1>Post Successfully Approved</h1>
+    <div class="title-box">${post.title}</div>
+    <p>This post is now armed for autonomous release according to your schedule (Blog, Facebook, and Instagram).</p>
+    <a href="/owner-admin" class="btn">Open Owner Admin Portal</a>
+  </div>
+</body>
+</html>`);
       return;
     }
 
@@ -3727,6 +3780,77 @@ function runOmnichannelSchedulerBackgroundCheck() {
     let updated = false;
 
     for (const post of queue) {
+      // Auto-dispatch Google Chat approval cards for unnotified drafts
+      const targetUrl = settings.googleChatWebhookUrl || process.env.GOOGLE_CHAT_WEBHOOK_URL || '';
+      if (targetUrl && targetUrl.startsWith('https://chat.googleapis.com') && post.status === 'draft' && !post.chatCardDispatched) {
+        post.chatCardDispatched = true;
+        updated = true;
+        console.log(`[OmnichannelScheduler] 🔔 Auto-dispatching Google Chat approval card for draft: "${post.title}"`);
+        try {
+          const cardPayload = {
+            cardsV2: [{
+              cardId: `approval-${post.id}`,
+              card: {
+                header: {
+                  title: "Content Engine Approval Request",
+                  subtitle: `Topic: ${post.niche || 'Contractor Marketing'} | Format: ${post.format || 'Blog / Social'}`,
+                  imageUrl: "https://missedcallautosms.com/assets/missed-call-logo.png",
+                  imageType: "CIRCLE"
+                },
+                sections: [{
+                  header: "Post Details",
+                  widgets: [
+                    { decoratedText: { topLabel: "Headline", text: post.title, wrapText: true } },
+                    { decoratedText: { topLabel: "Scroll-Stopping Hook", text: post.hook, wrapText: true } },
+                    { textParagraph: { text: "<b>Narrative Draft:</b><br>" + (post.narrativeBody || '').slice(0, 320) + "..." } },
+                    { decoratedText: { topLabel: "Scheduled For", text: post.scheduledFor ? new Date(post.scheduledFor).toLocaleString() : 'Immediate' } },
+                    {
+                      buttonList: {
+                        buttons: [
+                          {
+                            text: "✅ 1-Tap Approve & Schedule",
+                            onClick: {
+                              openLink: { url: `http://localhost:8000/api/content-engine/one-click-approve?postId=${post.id}` }
+                            }
+                          },
+                          {
+                            text: "👁️ Review in Dashboard",
+                            onClick: {
+                              openLink: { url: "http://localhost:8000/owner-admin" }
+                            }
+                          }
+                        ]
+                      }
+                    }
+                  ]
+                }]
+              }
+            }]
+          };
+
+          const urlParts = new URL(targetUrl);
+          const reqPost = https.request({
+            hostname: urlParts.hostname,
+            path: urlParts.pathname + urlParts.search,
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json; charset=UTF-8' }
+          }, resp => {
+            let resBody = '';
+            resp.on('data', c => resBody += c);
+            resp.on('end', () => {
+              console.log(`[GoogleChat] Delivered approval card for "${post.title}" (Status: ${resp.statusCode})`);
+            });
+          });
+          reqPost.on('error', err => {
+            console.warn(`[GoogleChat] Webhook delivery error: ${err.message}`);
+          });
+          reqPost.write(JSON.stringify(cardPayload));
+          reqPost.end();
+        } catch (e) {
+          console.warn(`[GoogleChat] Error formatting card: ${e.message}`);
+        }
+      }
+
       const isApproved = settings.autoPublishApprovedOnly !== false ? (post.status === 'approved') : (post.status === 'approved' || post.status === 'draft');
       const isDue = post.scheduledFor && new Date(post.scheduledFor) <= now;
       const isNotPublished = post.status !== 'published' && !post.publishedAt;

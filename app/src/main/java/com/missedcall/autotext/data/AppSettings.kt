@@ -60,7 +60,8 @@ data class AppSettings(
     val vapiVoiceId: String = "",
     val vapiVoiceProvider: String = "cartesia",
     val dashboardCardOrder: String = "HERO,SMS_METRICS,VOICE_METRICS,REVENUE,QUOTA,HARDWARE",
-    val dashboardHiddenCards: String = ""
+    val dashboardHiddenCards: String = "",
+    val permissionsOnboardingCompleted: Boolean = false
 )
 
 
