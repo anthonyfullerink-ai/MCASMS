@@ -1435,7 +1435,7 @@
                 <button class="nav-dropdown-btn">Plans &amp; Pricing ▾</button>
                 <div class="nav-dropdown-menu">
                     <a href="#checkout" style="color:#38BDF8;font-weight:800;">📱 Flagship Appliance <span class="nav-dd-price">$49.99</span></a>
-                    <a href="#pro-edition" style="color:#C084FC;font-weight:800;">🛠️ Pro Automation Gateway <span class="nav-dd-price">$299.99</span></a>
+                    <a href="/pro" style="color:#C084FC;font-weight:800;">⚡ Pro Automation Gateway <span class="nav-dd-price">$299.99</span></a>
                     <a href="/voice" style="color:#00E676;font-weight:800;">🎙️ AI Voice Add-On <span class="nav-dd-price">$9.99/mo</span></a>
                     <div class="nav-dd-divider"></div>
                     <a href="javascript:initiateFreeTrialCheckout()" style="color:var(--primary);font-weight:700;">🎁 Start 3-Day Free Trial ($0 Today)</a>
@@ -1446,6 +1446,7 @@
                 <button class="nav-dropdown-btn">For Business ▾</button>
                 <div class="nav-dropdown-menu">
                     <a href="/voice" style="color:#00E676;font-weight:800;">🎙️ AI Voice Receptionist</a>
+                    <a href="/pro" style="color:#C084FC;font-weight:800;">⚡ Pro Automations &amp; Webhooks</a>
                     <a href="/agency" style="color:#38BDF8;font-weight:800;">🏢 Agency &amp; Reseller Fleet</a>
                     <a href="/developers" style="color:#38BDF8;font-weight:700;">⚙️ API &amp; Webhook Docs</a>
                     <a href="/support" style="color:var(--primary);font-weight:700;">🎫 Support &amp; Helpdesk</a>
@@ -1891,7 +1892,7 @@
                         <td class="saas-bad">❌ $297 – $600+ / mo + per-min markup</td>
                         <td class="appliance-good">🟢 $49.99 One-Time</td>
                         <td style="background: rgba(0, 230, 118, 0.08); font-weight: bold; color: #00E676; border-left: 2px solid #00E676; border-right: 2px solid #00E676;">⚡ $99.00 / month</td>
-                        <td style="background: rgba(168, 85, 247, 0.08); font-weight: bold; color: #D8B4FE; border-left: 2px solid #A855F7;">⚡ $149.99 Perpetual</td>
+                        <td style="background: rgba(168, 85, 247, 0.08); font-weight: bold; color: #D8B4FE; border-left: 2px solid #A855F7;">⚡ $299.99 Perpetual</td>
                     </tr>
                     <tr>
                         <td class="feature-name">24/7 AI Voice Phone Receptionist</td>
@@ -2250,83 +2251,70 @@
             Prefer to test on your phone first? <a href="javascript:void(0)" onclick="initiateFreeTrialCheckout()" style="color: var(--warning); font-weight: bold; text-decoration: underline;">Start a 3-Day Risk-Free Trial ($0 today) &rarr;</a>
         </div>
 
-        <!-- Multi-Tier Credit Packs Showcase -->
-        <div id="credit-packs" style="max-width: 1100px; margin: 24px auto 0 auto; background: linear-gradient(135deg, rgba(168, 85, 247, 0.12), rgba(0, 230, 118, 0.06)); border: 1px solid rgba(168, 85, 247, 0.4); border-radius: 16px; padding: 28px; text-align: left;">
-            <div style="display: flex; justify-content: space-between; align-items: flex-start; flex-wrap: wrap; gap: 16px; margin-bottom: 20px;">
+        <!-- AI Voice Receptionist Feature Showcase (Managed 100% In-App) -->
+        <div id="ai-voice-showcase" style="max-width: 1100px; margin: 24px auto 0 auto; background: linear-gradient(135deg, rgba(168, 85, 247, 0.12), rgba(0, 230, 118, 0.06)); border: 1px solid rgba(168, 85, 247, 0.4); border-radius: 16px; padding: 32px 28px; text-align: left;">
+            <div style="display: flex; justify-content: space-between; align-items: flex-start; flex-wrap: wrap; gap: 20px; margin-bottom: 24px;">
                 <div>
-                    <div style="display: inline-flex; align-items: center; gap: 6px; background: rgba(168, 85, 247, 0.2); color: #C084FC; padding: 3px 10px; border-radius: 20px; font-size: 11px; font-weight: 800; text-transform: uppercase;">
-                        🎙️ STAGE 2 • AI VOICE USAGE CREDIT PACKS
+                    <div style="display: inline-flex; align-items: center; gap: 6px; background: rgba(168, 85, 247, 0.2); color: #C084FC; padding: 4px 12px; border-radius: 20px; font-size: 11px; font-weight: 800; text-transform: uppercase;">
+                        🎙️ OPTIONAL IN-APP ADD-ON • 24/7 AI VOICE PHONE RECEPTIONIST
                     </div>
-                    <h3 style="font-size: 22px; font-weight: 900; margin: 8px 0 4px 0; color: #FFF;">Flexible Usage Credit Packs with Bonus Minutes</h3>
-                    <p style="color: #CBD5E0; font-size: 13px; margin: 0; max-width: 700px; line-height: 1.5;">
-                        AI Voice operates as an in-app add-on. Unlocking the $9.99/mo add-on opens app settings at $0 COGS. Loading your first credit pack below is what activates your dedicated telephony number and *71 carrier code. Choose a volume pack below with discounts up to 28%:
+                    <h3 style="font-size: 24px; font-weight: 900; margin: 10px 0 6px 0; color: #FFF;">Never Miss a Job Call While Your Hands Are Full</h3>
+                    <p style="color: #CBD5E0; font-size: 13.5px; margin: 0; max-width: 780px; line-height: 1.6;">
+                        When you're under a sink, on a roof, or on a consultation call, your AI Voice Receptionist answers in human-grade natural voice, screens incoming work, and dispatches instant booking confirmations through your phone's real carrier SIM. 
+                        <strong>All AI Voice features, minute packs, and settings are managed directly inside the Android phone app with 1-tap in-app reloads.</strong>
+                    </p>
+                </div>
+                <div style="text-align: right; flex-shrink: 0;">
+                    <a href="/voice" style="background: rgba(168, 85, 247, 0.2); border: 1px solid #A855F7; color: #D8B4FE; padding: 10px 18px; border-radius: 20px; font-size: 13px; font-weight: 800; text-decoration: none; display: inline-flex; align-items: center; gap: 6px;">
+                        Explore AI Voice Intel &rarr;
+                    </a>
+                </div>
+            </div>
+
+            <!-- 4 Value Pillars -->
+            <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(230px, 1fr)); gap: 16px; margin-bottom: 24px;">
+                <div style="background: rgba(0,0,0,0.35); border: 1px solid rgba(255,255,255,0.08); border-radius: 12px; padding: 18px;">
+                    <div style="font-size: 20px; margin-bottom: 8px;">📲</div>
+                    <div style="font-weight: 800; color: #FFF; font-size: 14px; margin-bottom: 4px;">100% In-App Managed</div>
+                    <p style="font-size: 12px; color: var(--muted); margin: 0; line-height: 1.45;">
+                        Reload minutes ($10, $25, $50, $100 packs) and manage your $9.99/mo add-on directly inside the Android app with Google Pay or Stripe 1-tap checkout.
+                    </p>
+                </div>
+
+                <div style="background: rgba(0,0,0,0.35); border: 1px solid rgba(0,230,118,0.3); border-radius: 12px; padding: 18px;">
+                    <div style="font-size: 20px; margin-bottom: 8px;">🎁</div>
+                    <div style="font-weight: 800; color: #00E676; font-size: 14px; margin-bottom: 4px;">15 Free Test Minutes</div>
+                    <p style="font-size: 12px; color: #CBD5E0; margin: 0; line-height: 1.45;">
+                        Every new activation includes 15 free test minutes on your dedicated carrier line to test call flows and conversation prompts risk-free.
+                    </p>
+                </div>
+
+                <div style="background: rgba(0,0,0,0.35); border: 1px solid rgba(56,189,248,0.3); border-radius: 12px; padding: 18px;">
+                    <div style="font-size: 20px; margin-bottom: 8px;">📞</div>
+                    <div style="font-weight: 800; color: #38BDF8; font-size: 14px; margin-bottom: 4px;">1-Tap *71 Call Forwarding</div>
+                    <p style="font-size: 12px; color: #CBD5E0; margin: 0; line-height: 1.45;">
+                        Uses your carrier's native conditional forwarding (*71). Normal answered calls stay on your phone; only unanswered calls roll over to your AI.
+                    </p>
+                </div>
+
+                <div style="background: rgba(0,0,0,0.35); border: 1px solid rgba(168,85,247,0.3); border-radius: 12px; padding: 18px;">
+                    <div style="font-size: 20px; margin-bottom: 8px;">🔑</div>
+                    <div style="font-weight: 800; color: #C084FC; font-size: 14px; margin-bottom: 4px;">Free BYOK Support</div>
+                    <p style="font-size: 12px; color: #CBD5E0; margin: 0; line-height: 1.45;">
+                        Developers and power users can plug in their personal Vapi or OpenAI API keys in app settings for raw wholesale costs with zero markup.
                     </p>
                 </div>
             </div>
 
-            <!-- Voice Plans Grid -->
-            <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 16px;">
-                <!-- Pack 10 -->
-                <div style="background: rgba(0,0,0,0.35); border: 1px solid rgba(255,255,255,0.08); border-radius: 12px; padding: 20px; text-align: center; display: flex; flex-direction: column;">
-                    <div style="font-size: 11px; font-weight: 800; color: var(--muted); text-transform: uppercase;">STARTER</div>
-                    <h4 style="font-size: 18px; margin: 4px 0; color: #FFF;">Starter Pack</h4>
-                    <div style="font-size: 24px; font-weight: 900; color: #FFF; margin-bottom: 8px;">$10.00</div>
-                    <div style="font-size: 12px; color: #38BDF8; font-weight: 700; margin-bottom: 12px;">40 Minutes ($0.250/m)</div>
-                    <p style="font-size: 11.5px; color: var(--muted); margin-bottom: 16px; flex-grow: 1;">Standard starter pack for testing and light volume.</p>
-                    <a href="/api/create-credit-pack-checkout?pack=10" class="cta-btn" style="width: 100%; background: #38BDF8; color: #000; font-size: 13px; padding: 10px; font-weight: 800; text-decoration: none; display: block; text-align: center;">
-                        Buy Starter ($10)
-                    </a>
+            <!-- Explanatory Strip -->
+            <div style="background: rgba(0,0,0,0.45); border-radius: 10px; padding: 14px 18px; display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 12px; font-size: 12.5px;">
+                <div style="color: #949BAE;">
+                    🔒 <strong style="color: #FFF;">Appliance First Architecture:</strong> Purchase your Flagship Appliance or start the 3-day trial below. Your license key unlocks the Android APK, where AI Voice and Pro Automations can be activated in 1 tap.
                 </div>
-
-                <!-- Pack 25 -->
-                <div style="background: rgba(0,0,0,0.35); border: 1px solid rgba(56, 189, 248, 0.4); border-radius: 12px; padding: 20px; text-align: center; display: flex; flex-direction: column; position: relative;">
-                    <div style="position: absolute; top: -10px; left: 50%; transform: translateX(-50%); background: #0284C7; color: #FFF; font-size: 10px; font-weight: 900; padding: 2px 8px; border-radius: 10px; text-transform: uppercase;">+15 BONUS MINS</div>
-                    <div style="font-size: 11px; font-weight: 800; color: #38BDF8; text-transform: uppercase;">GROWTH</div>
-                    <h4 style="font-size: 18px; margin: 4px 0; color: #FFF;">Growth Pack</h4>
-                    <div style="font-size: 24px; font-weight: 900; color: #FFF; margin-bottom: 8px;">$25.00</div>
-                    <div style="font-size: 12px; color: #00E676; font-weight: 700; margin-bottom: 12px;">115 Minutes (~$0.217/m)</div>
-                    <p style="font-size: 11.5px; color: #CBD5E0; margin-bottom: 16px; flex-grow: 1;">Save 13% with 15 free bonus minutes for active trades.</p>
-                    <a href="/api/create-credit-pack-checkout?pack=25" class="cta-btn" style="width: 100%; background: #0284C7; color: #FFF; font-size: 13px; padding: 10px; font-weight: 800; text-decoration: none; display: block; text-align: center;">
-                        Buy Growth ($25)
-                    </a>
-                </div>
-
-                <!-- Pack 50 -->
-                <div style="background: rgba(0,0,0,0.35); border: 2px solid #00E676; border-radius: 12px; padding: 20px; text-align: center; display: flex; flex-direction: column; position: relative; box-shadow: 0 4px 20px rgba(0,230,118,0.2);">
-                    <div style="position: absolute; top: -10px; left: 50%; transform: translateX(-50%); background: #00E676; color: #000; font-size: 10px; font-weight: 900; padding: 2px 8px; border-radius: 10px; text-transform: uppercase;">+50 BONUS MINS • 20% OFF</div>
-                    <div style="font-size: 11px; font-weight: 800; color: #00E676; text-transform: uppercase;">PRO CONTRACTOR</div>
-                    <h4 style="font-size: 18px; margin: 4px 0; color: #FFF;">Pro Contractor</h4>
-                    <div style="font-size: 24px; font-weight: 900; color: #FFF; margin-bottom: 8px;">$50.00</div>
-                    <div style="font-size: 12px; color: #00E676; font-weight: 700; margin-bottom: 12px;">250 Minutes ($0.200/m)</div>
-                    <p style="font-size: 11.5px; color: #E2E8F0; margin-bottom: 16px; flex-grow: 1;">Save 20% with 50 bonus minutes. Most popular.</p>
-                    <a href="/api/create-credit-pack-checkout?pack=50" class="cta-btn" style="width: 100%; background: linear-gradient(135deg, #00E676, #00B0FF); color: #000; font-size: 13px; padding: 10px; font-weight: 900; text-decoration: none; display: block; text-align: center;">
-                        Buy Pro Pack ($50)
-                    </a>
-                </div>
-
-                <!-- Pack 100 -->
-                <div style="background: rgba(0,0,0,0.35); border: 1px solid rgba(168, 85, 247, 0.3); border-radius: 12px; padding: 20px; text-align: center; display: flex; flex-direction: column; position: relative;">
-                    <div style="position: absolute; top: -10px; left: 50%; transform: translateX(-50%); background: #9333EA; color: #FFF; font-size: 10px; font-weight: 900; padding: 2px 8px; border-radius: 10px; text-transform: uppercase;">+150 BONUS MINS • 28% OFF</div>
-                    <div style="font-size: 11px; font-weight: 800; color: #C084FC; text-transform: uppercase;">FLEET VOLUME</div>
-                    <h4 style="font-size: 18px; margin: 4px 0; color: #FFF;">Fleet Volume</h4>
-                    <div style="font-size: 24px; font-weight: 900; color: #FFF; margin-bottom: 8px;">$100.00</div>
-                    <div style="font-size: 12px; color: #D8B4FE; font-weight: 700; margin-bottom: 12px;">550 Minutes (~$0.181/m)</div>
-                    <p style="font-size: 11.5px; color: #CBD5E0; margin-bottom: 16px; flex-grow: 1;">Save 28% with 150 bonus minutes for teams & fleets.</p>
-                    <a href="/api/create-credit-pack-checkout?pack=100" class="cta-btn" style="width: 100%; background: rgba(168, 85, 247, 0.2); border: 1px solid #A855F7; color: #D8B4FE; font-size: 13px; padding: 10px; font-weight: 800; text-decoration: none; display: block; text-align: center;">
-                        Buy Fleet ($100)
-                    </a>
-                </div>
-
-                <!-- Free BYOK -->
-                <div style="background: rgba(0,0,0,0.35); border: 1px solid rgba(168, 85, 247, 0.3); border-radius: 12px; padding: 20px; text-align: center; display: flex; flex-direction: column;">
-                    <div style="font-size: 11px; font-weight: 800; color: #C084FC; text-transform: uppercase;">DEVELOPER / ENTERPRISE</div>
-                    <h4 style="font-size: 18px; margin: 4px 0; color: #FFF;">Free BYOK</h4>
-                    <div style="font-size: 24px; font-weight: 900; color: #FFF; margin-bottom: 8px;">$0.00 <span style="font-size: 12px; color: var(--muted);">/ month</span></div>
-                    <div style="font-size: 12px; color: #CBD5E0; font-weight: 700; margin-bottom: 12px;">Bring Your Own Keys</div>
-                    <p style="font-size: 11.5px; color: #CBD5E0; margin-bottom: 16px; flex-grow: 1;">Plug in personal Vapi/OpenAI keys for raw wholesale costs with zero markup.</p>
-                    <a href="/developers" class="cta-btn" style="width: 100%; background: rgba(168, 85, 247, 0.2); border: 1px solid #A855F7; color: #D8B4FE; font-size: 13px; padding: 10px; font-weight: 800; text-decoration: none; display: block; text-align: center;">
-                        View BYOK Docs
-                    </a>
+                <div style="display: flex; gap: 10px;">
+                    <button class="cta-btn" style="padding: 8px 16px; font-size: 12px;" onclick="openFlagshipCheckoutModal(true)">
+                        Get Flagship + AI Voice ($49.99) &rarr;
+                    </button>
                 </div>
             </div>
         </div>
@@ -2586,7 +2574,7 @@
         const btn = document.getElementById("btnProceedProCheckout");
 
         if (!includeVoice && plan === "pro") {
-            window.location.href = "https://buy.stripe.com/cNi5kDdJQ558c6k2yB2go0b";
+            window.location.href = "https://buy.stripe.com/6oU9ATbBIeFI8U86OR2go0g";
             return;
         }
 
@@ -2610,7 +2598,7 @@
             console.warn("Dynamic session fallback:", e.message);
         }
 
-        window.location.href = "https://buy.stripe.com/cNi5kDdJQ558c6k2yB2go0b";
+        window.location.href = "https://buy.stripe.com/6oU9ATbBIeFI8U86OR2go0g";
     }
 
     function initiateVoiceProCheckout(tier) {

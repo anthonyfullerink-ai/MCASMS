@@ -23,5 +23,5 @@
   https://buy.stripe.com/5kQ5kDbBI8hkdao8WZ2go0c (Native 3-day subscription trial, displaying $0.00 due today, converting to $49.99 lifetime after day 3).
 - **Standard Flagship Direct Buy ($49.99)**:
   https://buy.stripe.com/3cI9AT49g2X07Q41ux2go0a
-- **Pro Automation Edition Direct Buy ($149.99)**:
-  https://buy.stripe.com/cNi5kDdJQ558c6k2yB2go0b
+- **Pro Automation Edition Direct Buy ($299.99)**:
+  https://buy.stripe.com/6oU9ATbBIeFI8U86OR2go0g

@@ -70,7 +70,8 @@ exports.handler = async (event) => {
 
     // Fallback direct payment links if no dynamic session or if no order bump
     const FLAGSHIP_DIRECT_LINK = "https://buy.stripe.com/3cI9AT49g2X07Q41ux2go0a";
-    const PRO_DIRECT_LINK = "https://buy.stripe.com/cNi5kDdJQ558c6k2yB2go0b";
+    const PRO_DIRECT_LINK = "https://buy.stripe.com/6oU9ATbBIeFI8U86OR2go0g";
+    const PRO_UPGRADE_DIRECT_LINK = "https://buy.stripe.com/bJe14neNU9loc6kehj2go0h";
     const VOICE_ONLY_LINK = "https://buy.stripe.com/4gMeVdcFMaps6M0b572go0f";
 
     // If no voice bump requested and standard flagship or pro plan, return direct Stripe links immediately
@@ -219,7 +220,7 @@ exports.handler = async (event) => {
     };
   } catch (err) {
     console.error('Stripe checkout creation error:', err.message);
-    const fallbackUrl = "https://buy.stripe.com/cNi5kDdJQ558c6k2yB2go0b";
+    const fallbackUrl = "https://buy.stripe.com/6oU9ATbBIeFI8U86OR2go0g";
     return {
       statusCode: 200,
       headers,

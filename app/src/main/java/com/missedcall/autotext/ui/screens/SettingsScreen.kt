@@ -983,6 +983,40 @@ fun SettingsScreen(
 
                     Spacer(modifier = Modifier.height(16.dp))
 
+                    Text(
+                        text = "Webhook Subscriptions",
+                        fontWeight = FontWeight.Bold,
+                        style = MaterialTheme.typography.titleSmall
+                    )
+                    Spacer(modifier = Modifier.height(4.dp))
+                    
+                    Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(4.dp)) {
+                        FilterChip(
+                            selected = settings.webhookSubMissedCall,
+                            onClick = { onSettingsChanged(settings.copy(webhookSubMissedCall = !settings.webhookSubMissedCall)) },
+                            label = { Text("call.missed", fontSize = 11.sp) }
+                        )
+                        FilterChip(
+                            selected = settings.webhookSubSmsSent,
+                            onClick = { onSettingsChanged(settings.copy(webhookSubSmsSent = !settings.webhookSubSmsSent)) },
+                            label = { Text("sms.sent", fontSize = 11.sp) }
+                        )
+                        FilterChip(
+                            selected = settings.webhookSubSmsReceived,
+                            onClick = { onSettingsChanged(settings.copy(webhookSubSmsReceived = !settings.webhookSubSmsReceived)) },
+                            label = { Text("sms.received", fontSize = 11.sp) }
+                        )
+                    }
+                    Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(4.dp)) {
+                        FilterChip(
+                            selected = settings.webhookSubCallCompleted,
+                            onClick = { onSettingsChanged(settings.copy(webhookSubCallCompleted = !settings.webhookSubCallCompleted)) },
+                            label = { Text("call.completed", fontSize = 11.sp) }
+                        )
+                    }
+
+                    Spacer(modifier = Modifier.height(16.dp))
+
                     // Webhook Selector Dropdown
                     Text(
                         text = "Active n8n Webhook Target",

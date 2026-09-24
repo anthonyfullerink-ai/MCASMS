@@ -1,10 +1,10 @@
 {
-  "versionCode": 21,
-  "versionName": "1.7.4",
+  "versionCode": 23,
+  "versionName": "1.7.6",
   "downloadUrl": "https://raw.githubusercontent.com/anthonyfullerink-ai/MCASMS/main/MissedCallAutoSMS.apk",
   "proDownloadUrl": "https://raw.githubusercontent.com/anthonyfullerink-ai/MCASMS/main/MissedCallAutoSMS.apk",
-  "releaseNotes": "🚀 v1.7.4 Quick Fixes & Customization Sync:\n✅ Fixed Dashboard Cards customization & reordering sync\n✅ Fixed 1-Tap In-App Credit Pack Stripe Checkouts ($10, $25, $50, $100)\n✅ Removed redundant Voice Persona card from Account Portal\n✅ Fixed Voice Pro cancellation pricing clarity ($9.99/mo)\n✅ Owner Admin Dashboard: Fixed 2026 login lock & persistent session",
+  "releaseNotes": "🔒 v1.7.6 Strict Paywall & Security Update:\n• 🛡️ Watertight Tier Enforcement: Basic Flagship keys ($49.99) strictly limited to Appliance Auto-SMS, Dashboard & Activity Logs\n• 🎙️ AI Voice Receptionist Paywall: Inactive keys gated behind $9.99/mo subscription with 1-tap activation & minute reloads\n• ⚡ Pro Automation Gateway Lock: Presets, Webhooks, Inbound API & Dual-SIM locked behind Pro Gateway ($249.99 in-app upgrade)\n• 🎛️ Dynamic Tab Lock Badges & Server Usage Endpoint Validation",
   "mandatory": true,
-  "minSupportedVersion": 18,
-  "updatedAt": "2026-09-24T15:24:00.000Z"
+  "minSupportedVersion": 22,
+  "updatedAt": "2026-09-24T21:00:00.000Z"
 }

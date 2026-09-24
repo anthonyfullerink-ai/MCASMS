@@ -31,6 +31,7 @@ import com.missedcall.autotext.data.db.VoiceCallEvent
 import com.missedcall.autotext.ui.theme.ActiveGreenContainer
 import com.missedcall.autotext.ui.theme.ActiveGreenText
 import com.missedcall.autotext.ui.theme.AmberWarning
+import com.missedcall.autotext.ui.theme.RedError
 import com.missedcall.autotext.util.CarrierForwardingManager
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
@@ -71,7 +72,7 @@ fun VoiceHubScreen(
             settings.licenseKey.contains("MASTER", ignoreCase = true)
 
     val isVoiceActive = isDeveloperKey || settings.voiceSubscriptionActive ||
-            settings.voiceReceptionistEnabled || settings.licenseKey.contains("VOICE", ignoreCase = true)
+            settings.licenseKey.contains("VOICE", ignoreCase = true)
 
     val carrier = remember { CarrierForwardingManager.detectCarrier(context) }
     val carrierCodes = remember(carrier, settings.voiceReceptionistForwardingNumber) {
@@ -203,6 +204,94 @@ fun VoiceHubScreen(
     ) {
         item { Spacer(modifier = Modifier.height(4.dp)) }
 
+        // AI VOICE RECEPTIONIST PAYWALL HERO CARD (When Voice is not active)
+        if (!isVoiceActive) {
+            item {
+                Card(
+                    colors = CardDefaults.cardColors(containerColor = Color(0xFF1E1B4B)),
+                    border = BorderStroke(1.dp, Color(0xFF818CF8).copy(alpha = 0.6f)),
+                    shape = RoundedCornerShape(16.dp),
+                    modifier = Modifier.fillMaxWidth()
+                ) {
+                    Column(modifier = Modifier.padding(16.dp)) {
+                        Row(
+                            modifier = Modifier.fillMaxWidth(),
+                            horizontalArrangement = Arrangement.SpaceBetween,
+                            verticalAlignment = Alignment.CenterVertically
+                        ) {
+                            Row(verticalAlignment = Alignment.CenterVertically) {
+                                Icon(Icons.Default.RecordVoiceOver, contentDescription = null, tint = Color(0xFFC084FC), modifier = Modifier.size(24.dp))
+                                Spacer(modifier = Modifier.width(8.dp))
+                                Text(
+                                    text = "24/7 AI Voice Receptionist",
+                                    style = MaterialTheme.typography.titleMedium,
+                                    fontWeight = FontWeight.Bold,
+                                    color = Color.White
+                                )
+                            }
+                            Surface(
+                                shape = RoundedCornerShape(8.dp),
+                                color = RedError.copy(alpha = 0.2f)
+                            ) {
+                                Text(
+                                    text = "🔒 LOCKED",
+                                    modifier = Modifier.padding(horizontal = 8.dp, vertical = 3.dp),
+                                    style = MaterialTheme.typography.labelSmall,
+                                    fontWeight = FontWeight.ExtraBold,
+                                    color = RedError
+                                )
+                            }
+                        }
+
+                        Spacer(modifier = Modifier.height(8.dp))
+
+                        Text(
+                            text = "Turn unanswered phone calls into booked jobs. Riley AI answers in under 1 second, qualifies callers, captures job details, and sends you instant SMS summaries. Requires $9.99/mo subscription or usage minute pack.",
+                            style = MaterialTheme.typography.bodySmall,
+                            color = Color(0xFFCBD5E0)
+                        )
+
+                        Spacer(modifier = Modifier.height(14.dp))
+
+                        Row(
+                            modifier = Modifier.fillMaxWidth(),
+                            horizontalArrangement = Arrangement.spacedBy(8.dp)
+                        ) {
+                            Button(
+                                onClick = { showAccountPortal = true },
+                                colors = ButtonDefaults.buttonColors(containerColor = Color(0xFF9333EA)),
+                                modifier = Modifier.weight(1f),
+                                shape = RoundedCornerShape(10.dp)
+                            ) {
+                                Text("⭐ Subscribe ($9.99/mo)", fontWeight = FontWeight.Bold, fontSize = 12.sp)
+                            }
+
+                            Button(
+                                onClick = { showAccountPortal = true },
+                                colors = ButtonDefaults.buttonColors(containerColor = Color(0xFF00E676)),
+                                modifier = Modifier.weight(1f),
+                                shape = RoundedCornerShape(10.dp)
+                            ) {
+                                Text("💳 Add Minute Pack", fontWeight = FontWeight.Black, fontSize = 12.sp, color = Color.Black)
+                            }
+                        }
+
+                        Spacer(modifier = Modifier.height(8.dp))
+
+                        Row(
+                            modifier = Modifier.fillMaxWidth(),
+                            horizontalArrangement = Arrangement.Center,
+                            verticalAlignment = Alignment.CenterVertically
+                        ) {
+                            Icon(Icons.Default.Lock, contentDescription = null, modifier = Modifier.size(11.dp), tint = Color(0xFFCBD5E0))
+                            Spacer(modifier = Modifier.width(4.dp))
+                            Text("Dedicated Inbound AI Line • In-App Stripe Checkout", fontSize = 10.sp, color = Color(0xFFCBD5E0))
+                        }
+                    }
+                }
+            }
+        }
+
         // 1. Assigned Inbound Line & 1-Tap Carrier Forwarding (*71 / *73)
         item {
             Card(
@@ -226,14 +315,14 @@ fun VoiceHubScreen(
                         }
                         Surface(
                             shape = RoundedCornerShape(8.dp),
-                            color = Color(0xFF673AB7).copy(alpha = 0.25f)
+                            color = if (isVoiceActive) Color(0xFF673AB7).copy(alpha = 0.25f) else RedError.copy(alpha = 0.15f)
                         ) {
                             Text(
-                                text = "DEDICATED VAPI LINE",
+                                text = if (isVoiceActive) "DEDICATED VAPI LINE" else "🔒 LOCKED (SUB REQUIRED)",
                                 modifier = Modifier.padding(horizontal = 8.dp, vertical = 3.dp),
                                 style = MaterialTheme.typography.labelSmall,
                                 fontWeight = FontWeight.Bold,
-                                color = Color(0xFFCE93D8)
+                                color = if (isVoiceActive) Color(0xFFCE93D8) else RedError
                             )
                         }
                     }
@@ -241,11 +330,11 @@ fun VoiceHubScreen(
                     Spacer(modifier = Modifier.height(10.dp))
 
                     Text(
-                        text = settings.voiceReceptionistForwardingNumber.ifBlank { "+1 (732) 660-9121" },
+                        text = if (isVoiceActive) settings.voiceReceptionistForwardingNumber.ifBlank { "+1 (732) 660-9121" } else "+1 (732) •••-•••• (Locked)",
                         style = MaterialTheme.typography.titleLarge,
                         fontFamily = FontFamily.Monospace,
                         fontWeight = FontWeight.Bold,
-                        color = MaterialTheme.colorScheme.primary
+                        color = if (isVoiceActive) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.onSurfaceVariant
                     )
 
                     Spacer(modifier = Modifier.height(6.dp))
@@ -263,20 +352,29 @@ fun VoiceHubScreen(
                     ) {
                         Button(
                             onClick = {
-                                try {
-                                    val dialCode = carrierCodes.activateCode
-                                    val intent = Intent(Intent.ACTION_DIAL, Uri.parse("tel:${Uri.encode(dialCode)}"))
-                                    context.startActivity(intent)
-                                } catch (e: Exception) {
-                                    Toast.makeText(context, "Could not open dialer", Toast.LENGTH_SHORT).show()
+                                if (isVoiceActive) {
+                                    try {
+                                        val dialCode = carrierCodes.activateCode
+                                        val intent = Intent(Intent.ACTION_DIAL, Uri.parse("tel:${Uri.encode(dialCode)}"))
+                                        context.startActivity(intent)
+                                    } catch (e: Exception) {
+                                        Toast.makeText(context, "Could not open dialer", Toast.LENGTH_SHORT).show()
+                                    }
+                                } else {
+                                    Toast.makeText(context, "🔒 Voice Receptionist Subscription Required ($9.99/mo)", Toast.LENGTH_LONG).show()
+                                    showAccountPortal = true
                                 }
                             },
-                            colors = ButtonDefaults.buttonColors(containerColor = Color(0xFF673AB7)),
+                            colors = if (isVoiceActive) ButtonDefaults.buttonColors(containerColor = Color(0xFF673AB7)) else ButtonDefaults.buttonColors(containerColor = MaterialTheme.colorScheme.surfaceVariant),
                             modifier = Modifier.weight(1.2f)
                         ) {
-                            Icon(Icons.Default.Call, contentDescription = null, modifier = Modifier.size(16.dp))
+                            Icon(if (isVoiceActive) Icons.Default.Call else Icons.Default.Lock, contentDescription = null, modifier = Modifier.size(16.dp), tint = if (isVoiceActive) Color.White else MaterialTheme.colorScheme.onSurfaceVariant)
                             Spacer(modifier = Modifier.width(6.dp))
-                            Text("Dial *71 Activate", fontWeight = FontWeight.Bold)
+                            Text(
+                                text = if (isVoiceActive) "Dial *71 Activate" else "Dial *71 (Locked)",
+                                fontWeight = FontWeight.Bold,
+                                color = if (isVoiceActive) Color.White else MaterialTheme.colorScheme.onSurfaceVariant
+                            )
                         }
 
                         OutlinedButton(
@@ -714,18 +812,22 @@ fun VoiceHubScreen(
                         }
                     }
                 },
-                colors = ButtonDefaults.buttonColors(containerColor = Color(0xFF673AB7)),
+                colors = ButtonDefaults.buttonColors(containerColor = if (isVoiceActive) Color(0xFF673AB7) else MaterialTheme.colorScheme.surfaceVariant),
                 modifier = Modifier.fillMaxWidth(),
-                enabled = !isSavingToVapi
+                enabled = isVoiceActive && !isSavingToVapi
             ) {
                 if (isSavingToVapi) {
                     CircularProgressIndicator(modifier = Modifier.size(18.dp), color = Color.White)
                     Spacer(modifier = Modifier.width(8.dp))
                     Text("Saving Live to Vapi Cloud...")
                 } else {
-                    Icon(Icons.Default.CloudUpload, contentDescription = null, modifier = Modifier.size(18.dp))
+                    Icon(if (isVoiceActive) Icons.Default.CloudUpload else Icons.Default.Lock, contentDescription = null, modifier = Modifier.size(18.dp), tint = if (isVoiceActive) Color.White else MaterialTheme.colorScheme.onSurfaceVariant)
                     Spacer(modifier = Modifier.width(8.dp))
-                    Text("Save & Sync AI Voice Agent", fontWeight = FontWeight.Bold)
+                    Text(
+                        text = if (isVoiceActive) "Save & Sync AI Voice Agent" else "Save & Sync (Locked — Sub Required)",
+                        fontWeight = FontWeight.Bold,
+                        color = if (isVoiceActive) Color.White else MaterialTheme.colorScheme.onSurfaceVariant
+                    )
                 }
             }
 
@@ -744,14 +846,19 @@ fun VoiceHubScreen(
         item {
             OutlinedButton(
                 onClick = {
-                    showTestCallDialog = true
-                    testCallDialogStatus = null
+                    if (isVoiceActive) {
+                        showTestCallDialog = true
+                        testCallDialogStatus = null
+                    } else {
+                        Toast.makeText(context, "🔒 Voice Receptionist Subscription Required ($9.99/mo)", Toast.LENGTH_SHORT).show()
+                        showAccountPortal = true
+                    }
                 },
                 modifier = Modifier.fillMaxWidth()
             ) {
-                Icon(Icons.Default.PlayCircle, contentDescription = null, modifier = Modifier.size(16.dp))
+                Icon(if (isVoiceActive) Icons.Default.PlayCircle else Icons.Default.Lock, contentDescription = null, modifier = Modifier.size(16.dp))
                 Spacer(modifier = Modifier.width(6.dp))
-                Text("Test AI Voice Assistant")
+                Text(if (isVoiceActive) "Test AI Voice Assistant" else "Test AI Voice Assistant (Locked)")
             }
         }
 

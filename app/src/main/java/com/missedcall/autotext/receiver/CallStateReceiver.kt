@@ -9,6 +9,9 @@ import androidx.work.*
 import com.missedcall.autotext.App
 import com.missedcall.autotext.worker.SendAutoTextWorker
 import kotlinx.coroutines.runBlocking
+import kotlinx.coroutines.launch
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.Dispatchers
 import java.util.concurrent.TimeUnit
 import java.util.concurrent.atomic.AtomicBoolean
 
@@ -52,6 +55,21 @@ class CallStateReceiver : BroadcastReceiver() {
 
                     if (!targetNumber.isNullOrBlank()) {
                         enqueueAutoTextWorker(context, targetNumber)
+                    }
+                } else if (isRinging.get() && wasAnswered.get()) {
+                    val targetNumber = incomingNumber
+                    Log.d(TAG, "Completed call detected with: $targetNumber")
+                    if (!targetNumber.isNullOrBlank()) {
+                        CoroutineScope(Dispatchers.IO).launch {
+                            val settingsRepo = (context.applicationContext as App).settingsRepository
+                            com.missedcall.autotext.util.WebhookDispatcher.dispatchEvent(
+                                context = context,
+                                settings = settingsRepo.getSettings(),
+                                eventType = "call.completed",
+                                callerNumber = targetNumber,
+                                disposition = "answered"
+                            )
+                        }
                     }
                 }
                 // Reset state machine flags

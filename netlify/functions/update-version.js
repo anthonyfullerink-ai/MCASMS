@@ -17,13 +17,13 @@ exports.handler = async (event) => {
     }
 
     const version = {
-      versionCode: parseInt(payload.versionCode, 10) || 11,
-      versionName: payload.versionName || '1.4.1',
+      versionCode: parseInt(payload.versionCode, 10) || 22,
+      versionName: payload.versionName || '1.7.5',
       downloadUrl: payload.downloadUrl || 'https://raw.githubusercontent.com/anthonyfullerink-ai/MCASMS/main/MissedCallAutoSMS.apk',
       proDownloadUrl: payload.proDownloadUrl || 'https://raw.githubusercontent.com/anthonyfullerink-ai/MCASMS/main/MissedCallAutoSMS.apk',
-      releaseNotes: payload.releaseNotes || '• 🎙️ 24/7 AI Voice Receptionist (*71 Live Call Forwarding)\n• ⚡ Pro Automation Edition Support\n• 🛡️ Anti-Spam Financial Armor',
-      mandatory: Boolean(payload.mandatory),
-      minSupportedVersion: parseInt(payload.minSupportedVersion, 10) || 1,
+      releaseNotes: payload.releaseNotes || '• 💳 Seamless 1-Tap Credit Pack & Pro Upgrades with Instant Auto-Refresh\n• 🎛️ Dedicated Automations Tab with Full Integration Triggers\n• 🎨 Streamlined Single-Line Navigation Tabs & Responsive Badges\n• ⚡ Direct Carrier SIM Armor & 24/7 AI Voice Receptionist Ready',
+      mandatory: Boolean(payload.mandatory !== undefined ? payload.mandatory : true),
+      minSupportedVersion: parseInt(payload.minSupportedVersion, 10) || 21,
       updatedAt: new Date().toISOString()
     };
 

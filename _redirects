@@ -16,6 +16,8 @@
 /api/create-voice-pro-checkout /.netlify/functions/create-voice-pro-checkout 200
 /api/create-pro-checkout /.netlify/functions/create-pro-checkout 200
 /api/create-credit-pack-checkout /.netlify/functions/create-credit-pack-checkout 200
+/api/create-payment-intent /.netlify/functions/create-payment-intent 200
+/api/vapi/usage        /.netlify/functions/vapi-usage 200
 /api/support/*      /.netlify/functions/support-gateway 200
 /api/support        /.netlify/functions/support-gateway 200
 /api/vapi/webhook   /.netlify/functions/vapi-webhook 200
@@ -44,5 +46,9 @@
 /agency/                /agency.html                200
 /voice                  /voice.html                 200
 /voice/                 /voice.html                 200
+/pro                    /pro.html                   200
+/pro/                   /pro.html                   200
+/automations            /pro.html                   200
+/automations/           /pro.html                   200
 /owner   /owner_admin_dashboard.html   200
 

@@ -84,7 +84,7 @@ exports.handler = async (event) => {
         latencyMs: latencyMs,
         checkoutTrialUrl: 'https://buy.stripe.com/5kQ5kDbBI8hkdao8WZ2go0c',
         checkoutLifetimeUrl: 'https://buy.stripe.com/3cI9AT49g2X07Q41ux2go0a',
-        checkoutProUrl: 'https://buy.stripe.com/cNi5kDdJQ558c6k2yB2go0b',
+        checkoutProUrl: 'https://buy.stripe.com/6oU9ATbBIeFI8U86OR2go0g',
         message: 'Stripe API connection verified and active'
       })
     };

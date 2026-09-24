@@ -239,6 +239,24 @@
   to = "/MissedCallAutoSMS.apk"
   status = 301
 
+# API Route: Create Native PaymentIntent for Android PaymentSheet
+[[redirects]]
+  from = "/api/create-payment-intent"
+  to = "/.netlify/functions/create-payment-intent"
+  status = 200
+
+# Direct access to Pro Automation landing page
+[[redirects]]
+  from = "/pro"
+  to = "/pro.html"
+  status = 200
+
+# Direct access to Voice landing page
+[[redirects]]
+  from = "/voice"
+  to = "/voice.html"
+  status = 200
+
 # Direct access to success confirmation page
 [[redirects]]
   from = "/success"

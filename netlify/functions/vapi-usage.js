@@ -57,19 +57,19 @@ exports.handler = async (event) => {
     const isPro = licenseKey.startsWith('MCAS-PRO-') || licenseKey.startsWith('MCAT-PRO-') || licenseKey.includes('PRO-DEMO');
     const isDev = licenseKey.includes('DEV') || licenseKey.includes('MASTER');
 
-    const plan = subscriber?.plan || (isPro ? 'PRO_GATEWAY' : 'AUTONOMOUS_FRONT_DESK');
+    const isVoiceKey = licenseKey.includes('VOICE');
+    const plan = subscriber?.plan || (isPro ? 'PRO_GATEWAY' : 'FLAGSHIP');
     const planName = subscriber?.planName || (
       plan === 'AUTONOMOUS_FRONT_DESK' ? 'Autonomous Front Desk Bundle' :
       plan === 'VOICE_BUSINESS' ? 'Voice Business' :
       plan === 'VOICE_STARTER' ? 'Voice Starter' :
-      plan === 'PRO_GATEWAY' ? 'Pro Automation Gateway' : 'Flagship Appliance'
+      plan === 'PRO_GATEWAY' ? 'Pro Automation Gateway ($299 Perpetual)' : 'Founder\'s Flagship ($49.99 Lifetime)'
     );
 
     const quotaMinutes = Number(subscriber?.quotaMinutes ?? (
       plan === 'AUTONOMOUS_FRONT_DESK' ? 250 :
       plan === 'VOICE_BUSINESS' ? 300 :
-      plan === 'VOICE_STARTER' ? 45 :
-      plan === 'PRO_GATEWAY' ? 0 : 0
+      plan === 'VOICE_STARTER' ? 45 : (isDev ? 250 : 0)
     ));
 
     const minutesUsed = Number(subscriber?.minutesUsed ?? 0);
@@ -91,9 +91,9 @@ exports.handler = async (event) => {
     const tier = isAgency ? 'AGENCY' : (isPro ? 'PRO' : (isTrial ? 'TRIAL' : 'FLAGSHIP'));
     const tierName = isAgency ? 'Agency Fleet Edition' : (isPro ? 'Pro Automation Gateway ($299 Perpetual)' : (isTrial ? '3-Day Free Trial ($0 Today)' : 'Founder\'s Flagship ($49.99 Lifetime)'));
 
-    const voiceMinutesBalance = Number(subscriber?.voiceMinutesBalance ?? (isPro ? 50 : 40));
+    const voiceMinutesBalance = Number(subscriber?.voiceMinutesBalance ?? (isDev ? 50 : 0));
     const voiceSubWaived = !!(subscriber?.voiceSubWaived || subscriber?.type === 'FREE_VOICE_COMP');
-    const voiceSubActive = subscriber ? (subscriber.voiceSubActive !== false && subscriber.voiceActive !== false) : true;
+    const voiceSubActive = subscriber ? (subscriber.voiceSubActive !== false && subscriber.voiceActive !== false) : (isDev || isVoiceKey);
     const forwardingNumber = subscriber?.forwardingNumber || '+1 (732) 660-9121';
     const cleanDigits = forwardingNumber.replace(/\D/g, '');
     const carrierCode = subscriber?.carrierCode || `*71${cleanDigits.slice(-10)}`;
@@ -107,7 +107,7 @@ exports.handler = async (event) => {
         status: subscriber?.status || (isDev ? 'ACTIVE' : 'ACTIVE'),
         tier,
         tierName,
-        voiceActive: subscriber ? subscriber.voiceActive !== false : true,
+        voiceActive: voiceSubActive,
         voiceSubActive,
         voiceSubWaived,
         voiceMinutesBalance,
@@ -129,7 +129,7 @@ exports.handler = async (event) => {
         upgradeOptions: {
           proUpgradeAvailable: !isPro && !isAgency,
           proUpgradePrice: 249.99,
-          proUpgradeUrl: 'https://buy.stripe.com/cNi5kDdJQ558c6k2yB2go0b',
+          proUpgradeUrl: 'https://buy.stripe.com/bJe14neNU9loc6kehj2go0h',
           voiceSubscriptionPrice: 9.99,
           voiceSubscriptionUrl: 'https://buy.stripe.com/4gMeVdcFMaps6M0b572go0f',
           creditPacks: [

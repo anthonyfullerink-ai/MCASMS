@@ -44,6 +44,11 @@ class SettingsRepository(private val context: Context) {
         val PREFERRED_SIM_SUBSCRIPTION_ID = intPreferencesKey("preferred_sim_subscription_id")
 
         val OUTBOUND_WEBHOOK_ENABLED = booleanPreferencesKey("outbound_webhook_enabled")
+        val WEBHOOK_SUB_MISSED_CALL = booleanPreferencesKey("webhook_sub_missed_call")
+        val WEBHOOK_SUB_SMS_SENT = booleanPreferencesKey("webhook_sub_sms_sent")
+        val WEBHOOK_SUB_SMS_RECEIVED = booleanPreferencesKey("webhook_sub_sms_received")
+        val WEBHOOK_SUB_CALL_COMPLETED = booleanPreferencesKey("webhook_sub_call_completed")
+        val WEBHOOK_SUB_VOICEMAIL = booleanPreferencesKey("webhook_sub_voicemail")
         val MUTE_NATIVE_AUTO_REPLY = booleanPreferencesKey("mute_native_auto_reply")
         val SELECTED_OUTBOUND_WEBHOOK_URL = stringPreferencesKey("selected_outbound_webhook_url")
         val SAVED_OUTBOUND_WEBHOOKS_JSON = stringPreferencesKey("saved_outbound_webhooks_json")
@@ -127,6 +132,11 @@ class SettingsRepository(private val context: Context) {
             preferredSimSubscriptionId = preferences[PREFERRED_SIM_SUBSCRIPTION_ID] ?: -1,
 
             outboundWebhookEnabled = preferences[OUTBOUND_WEBHOOK_ENABLED] ?: false,
+            webhookSubMissedCall = preferences[WEBHOOK_SUB_MISSED_CALL] ?: true,
+            webhookSubSmsSent = preferences[WEBHOOK_SUB_SMS_SENT] ?: true,
+            webhookSubSmsReceived = preferences[WEBHOOK_SUB_SMS_RECEIVED] ?: true,
+            webhookSubCallCompleted = preferences[WEBHOOK_SUB_CALL_COMPLETED] ?: true,
+            webhookSubVoicemail = preferences[WEBHOOK_SUB_VOICEMAIL] ?: true,
             muteNativeAutoReply = preferences[MUTE_NATIVE_AUTO_REPLY] ?: false,
             selectedOutboundWebhookUrl = preferences[SELECTED_OUTBOUND_WEBHOOK_URL] ?: "",
             savedOutboundWebhooks = savedWebhooks,
@@ -226,6 +236,11 @@ class SettingsRepository(private val context: Context) {
             preferences[PREFERRED_SIM_SUBSCRIPTION_ID] = settings.preferredSimSubscriptionId
 
             preferences[OUTBOUND_WEBHOOK_ENABLED] = settings.outboundWebhookEnabled
+            preferences[WEBHOOK_SUB_MISSED_CALL] = settings.webhookSubMissedCall
+            preferences[WEBHOOK_SUB_SMS_SENT] = settings.webhookSubSmsSent
+            preferences[WEBHOOK_SUB_SMS_RECEIVED] = settings.webhookSubSmsReceived
+            preferences[WEBHOOK_SUB_CALL_COMPLETED] = settings.webhookSubCallCompleted
+            preferences[WEBHOOK_SUB_VOICEMAIL] = settings.webhookSubVoicemail
             preferences[MUTE_NATIVE_AUTO_REPLY] = settings.muteNativeAutoReply
             preferences[SELECTED_OUTBOUND_WEBHOOK_URL] = settings.selectedOutboundWebhookUrl
             preferences[SAVED_OUTBOUND_WEBHOOKS_JSON] = gson.toJson(settings.savedOutboundWebhooks)

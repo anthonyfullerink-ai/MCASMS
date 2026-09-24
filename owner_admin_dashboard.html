@@ -43,9 +43,16 @@
         }
 
         .container {
-            max-width: 1140px;
+            max-width: 96%;
             margin: 0 auto;
             width: 100%;
+            padding: 0 10px;
+        }
+
+        @media (min-width: 1800px) {
+            .container {
+                max-width: 1720px;
+            }
         }
 
         /* Header */
@@ -124,17 +131,43 @@
             gap: 8px;
             margin-bottom: 20px;
             border-bottom: 1px solid var(--card-border);
-            padding-bottom: 12px;
-            overflow-x: auto;
-            -webkit-overflow-scrolling: touch;
-            scrollbar-width: none;
-            -ms-overflow-style: none;
-            flex-wrap: nowrap;
+            padding-bottom: 14px;
+            flex-wrap: wrap;
             width: 100%;
         }
 
-        .tab-bar::-webkit-scrollbar {
-            display: none;
+        @media (max-width: 900px) {
+            .tab-bar {
+                flex-wrap: nowrap;
+                overflow-x: auto;
+                -webkit-overflow-scrolling: touch;
+                padding-bottom: 8px;
+            }
+            .tab-bar::-webkit-scrollbar {
+                height: 4px;
+                display: block;
+            }
+            .tab-bar::-webkit-scrollbar-thumb {
+                background: var(--card-border);
+                border-radius: 4px;
+            }
+        }
+
+        .action-button-grid {
+            display: grid;
+            grid-template-columns: repeat(2, minmax(95px, 1fr));
+            gap: 6px;
+            min-width: 200px;
+        }
+
+        .action-button-grid .btn-action {
+            margin: 0 !important;
+            width: 100%;
+            text-align: center;
+            justify-content: center;
+            padding: 6px 8px;
+            font-size: 11px;
+            white-space: nowrap;
         }
 
         .tab-btn {
@@ -630,6 +663,31 @@
             }
         }
 
+        @media (max-width: 1200px) {
+            .metrics-grid {
+                grid-template-columns: repeat(2, 1fr) !important;
+            }
+            .table-responsive table {
+                min-width: 950px;
+            }
+        }
+
+        .table-responsive {
+            overflow-x: auto;
+            -webkit-overflow-scrolling: touch;
+            width: 100%;
+            border-radius: 10px;
+            scrollbar-width: thin;
+        }
+        .table-responsive::-webkit-scrollbar {
+            height: 6px;
+            display: block;
+        }
+        .table-responsive::-webkit-scrollbar-thumb {
+            background: rgba(255, 255, 255, 0.2);
+            border-radius: 4px;
+        }
+
         @media (max-width: 380px) {
             .metrics-grid,
             div[style*="repeat(auto-fit, minmax"],
@@ -1039,7 +1097,7 @@
                 </div>
                 <div>
                     <label style="font-size: 13px; color: #D8B4FE; display: block; margin-bottom: 6px;">⚡ Stripe Pro Automation Direct Link ($299 Perpetual):</label>
-                    <input type="text" value="https://buy.stripe.com/cNi5kDdJQ558c6k2yB2go0b" readonly onclick="this.select()" style="width: 100%; background: #090B0E; border: 1px solid #A855F7; color: #D8B4FE; padding: 10px; border-radius: 8px; font-size: 12px; font-family: monospace;">
+                    <input type="text" value="https://buy.stripe.com/6oU9ATbBIeFI8U86OR2go0g" readonly onclick="this.select()" style="width: 100%; background: #090B0E; border: 1px solid #A855F7; color: #D8B4FE; padding: 10px; border-radius: 8px; font-size: 12px; font-family: monospace;">
                 </div>
                 <div>
                     <label style="font-size: 13px; color: #00E676; display: block; margin-bottom: 6px;">⚡ Front Desk Bundle ($99/mo):</label>
@@ -2221,24 +2279,30 @@
             let actionButtons = '';
             if (isAgencyMaster) {
                 actionButtons = `
-                    <button class="btn-action" style="color: #818CF8;" onclick="switchTab(6)">🏢 View Fleet</button>
-                    <a href="/agency_dashboard.html#key=${r.key}" target="_blank" class="btn-action" style="text-decoration:none; color: #38BDF8;">Portal ➔</a>
-                    <button class="btn-action btn-danger" onclick="toggleRevokeKey('${r.key}')">${isRevoked ? 'Reactivate' : 'Revoke'}</button>
+                    <div class="action-button-grid">
+                        <button class="btn-action" style="color: #818CF8;" onclick="switchTab(6)">🏢 View Fleet</button>
+                        <a href="/agency_dashboard.html#key=${r.key}" target="_blank" class="btn-action" style="text-decoration:none; color: #38BDF8;">Portal ➔</a>
+                        <button class="btn-action btn-danger" onclick="toggleRevokeKey('${r.key}')">${isRevoked ? 'Reactivate' : 'Revoke'}</button>
+                    </div>
                 `;
             } else if (isFleetClient) {
                 actionButtons = `
-                    <button class="btn-action" style="color: #38BDF8;" onclick="showSetupSheetForFleetKey('${r.key}', '${escapeHtml(r.name)}', '${escapeHtml(r.agencyName || 'Agency')}')">📋 Setup Sheet</button>
-                    <button class="btn-action" onclick="resetDevice('${r.key}')" ${isRevoked ? 'disabled' : ''}>Reset Lock</button>
-                    <button class="btn-action btn-danger" onclick="toggleRevokeKey('${r.key}')">${isRevoked ? 'Reactivate' : 'Revoke'}</button>
+                    <div class="action-button-grid">
+                        <button class="btn-action" style="color: #38BDF8;" onclick="showSetupSheetForFleetKey('${r.key}', '${escapeHtml(r.name)}', '${escapeHtml(r.agencyName || 'Agency')}')">📋 Setup Sheet</button>
+                        <button class="btn-action" onclick="resetDevice('${r.key}')" ${isRevoked ? 'disabled' : ''}>Reset Lock</button>
+                        <button class="btn-action btn-danger" onclick="toggleRevokeKey('${r.key}')">${isRevoked ? 'Reactivate' : 'Revoke'}</button>
+                    </div>
                 `;
             } else {
                 actionButtons = `
-                    <button class="btn-action" style="color: #00E676; font-weight: bold;" onclick="openMembershipManageModal('${r.key}')">⚙️ Manage Sub</button>
-                    <button class="btn-action" style="color: ${isPro ? '#C084FC' : 'var(--primary)'};" onclick="triggerEmailForKey('${r.key}')">📧 Email APK</button>
-                    <button class="btn-action" onclick="resetDevice('${r.key}')" ${isRevoked ? 'disabled' : ''}>Reset Lock</button>
-                    <button class="btn-action" style="color: #00E676;" onclick="promptReloadCredits('${r.key}', '${escapeHtml(r.name)}')">💳 Credit Pack</button>
-                    ${isPro ? `<button class="btn-action" style="color: #38BDF8;" onclick="toggleVoiceForKey('${r.key}')">${r.voiceActive ? 'Pause Voice' : '🎙️ Attach Voice'}</button>` : ''}
-                    <button class="btn-action btn-danger" onclick="toggleRevokeKey('${r.key}')">${isRevoked ? 'Reactivate' : 'Revoke'}</button>
+                    <div class="action-button-grid">
+                        <button class="btn-action" style="color: #00E676; font-weight: bold;" onclick="openMembershipManageModal('${r.key}')">⚙️ Manage Sub</button>
+                        <button class="btn-action" style="color: ${isPro ? '#C084FC' : 'var(--primary)'};" onclick="triggerEmailForKey('${r.key}')">📧 Email APK</button>
+                        <button class="btn-action" onclick="resetDevice('${r.key}')" ${isRevoked ? 'disabled' : ''}>Reset Lock</button>
+                        <button class="btn-action" style="color: #00E676;" onclick="promptReloadCredits('${r.key}', '${escapeHtml(r.name)}')">💳 Credit Pack</button>
+                        ${isPro ? `<button class="btn-action" style="color: #38BDF8;" onclick="toggleVoiceForKey('${r.key}')">${r.voiceActive ? 'Pause Voice' : '🎙️ Attach Voice'}</button>` : ''}
+                        <button class="btn-action btn-danger" onclick="toggleRevokeKey('${r.key}')">${isRevoked ? 'Reactivate' : 'Revoke'}</button>
+                    </div>
                 `;
             }
 
@@ -2304,10 +2368,17 @@
         const pass = document.getElementById("loginPass").value.trim();
 
         if (pass === DEV_PASS || pass === "2026") {
-            sessionStorage.setItem("owner_authenticated", "true");
-            localStorage.setItem("owner_authenticated", "true");
-            document.getElementById("loginError").style.display = "none";
-            checkAuth();
+            try {
+                sessionStorage.setItem("owner_authenticated", "true");
+                localStorage.setItem("owner_authenticated", "true");
+                document.getElementById("loginError").style.display = "none";
+                console.log("Login successful, proceeding to checkAuth()");
+                checkAuth();
+            } catch (err) {
+                alert("Login Error (Storage): " + err.message);
+                document.getElementById("loginError").innerText = "Storage Error: " + err.message;
+                document.getElementById("loginError").style.display = "block";
+            }
         } else {
             document.getElementById("loginError").style.display = "block";
         }
@@ -2785,10 +2856,14 @@
         const saved = localStorage.getItem('mcas_api_host');
         if (saved && saved !== 'AUTO') return saved.replace(/\/+$/, '');
 
-        // If accessed via file:// or non-8000 port (e.g. Live Server on 5500), default to http://localhost:8000
-        if (window.location.protocol === 'file:' || 
-           ((window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1') && window.location.port !== '8000')) {
-            return 'http://localhost:8000';
+        // If accessed via file://, default to live production cloud
+        if (window.location.protocol === 'file:') {
+            return 'https://missedcallautosms.com';
+        }
+
+        // If accessed via localhost non-8000 port (e.g. static dev server), check if local 8000 or production
+        if ((window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1') && window.location.port !== '8000') {
+            return 'https://missedcallautosms.com';
         }
 
         return window.location.origin;

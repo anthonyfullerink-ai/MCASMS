@@ -11,6 +11,33 @@
     <priority>0.9</priority>
   </url>
   <url>
+    <loc>https://missedcallautosms.com/pro</loc>
+    <changefreq>weekly</changefreq>
+    <priority>0.9</priority>
+  </url>
+  <url>
+    <loc>https://missedcallautosms.com/voice</loc>
+    <changefreq>weekly</changefreq>
+    <priority>0.9</priority>
+  </url>
+  <url>
+    <loc>https://missedcallautosms.com/agency</loc>
+    <changefreq>weekly</changefreq>
+    <priority>0.8</priority>
+  </url>
+  <url>
+    <loc>https://missedcallautosms.com/blog/the-3-500-cloud-telephony-trap-why-local-contractors-are-ditching-saas-for-dedicated-hardware</loc>
+    <lastmod>2026-09-24</lastmod>
+    <changefreq>monthly</changefreq>
+    <priority>0.8</priority>
+  </url>
+  <url>
+    <loc>https://missedcallautosms.com/blog/why-saas-monthly-phone-bills-are-eating-contractor-margins</loc>
+    <lastmod>2026-09-23</lastmod>
+    <changefreq>monthly</changefreq>
+    <priority>0.8</priority>
+  </url>
+  <url>
     <loc>https://missedcallautosms.com/blog/daily-intel-universal-service-businesses-2026-09-23</loc>
     <lastmod>2026-09-23</lastmod>
     <changefreq>monthly</changefreq>

@@ -1,5 +1,48 @@
 [
   {
+    "id": "angle-1790185169076-blog",
+    "title": "The $3,500 Cloud Telephony Trap: Why Local Contractors Are Ditching SaaS for Dedicated Hardware",
+    "slug": "the-3-500-cloud-telephony-trap-why-local-contractors-are-ditching-saas-for-dedicated-hardware",
+    "format": "blog_article",
+    "imageUrl": "https://raw.githubusercontent.com/anthonyfullerink-ai/MCASMS/main/assets/social/cloud-telephony-trap-hardware.jpg",
+    "publishedAt": "2026-09-24T20:20:30.125Z",
+    "channels": [
+      "blog",
+      "facebook"
+    ],
+    "niche": "Appliance vs. SaaS Math",
+    "socialResults": {
+      "facebook": {
+        "success": false,
+        "error": "HTTP 400: Error validating access token: Session has expired on Wednesday, 23-Sep-26 12:00:00 PDT. The current time is Thursday, 24-Sep-26 13:20:30 PDT."
+      },
+      "instagram": null
+    }
+  },
+  {
+    "id": "angle-1790185169076-feed",
+    "title": "Hands Full on the Jobsite: The 15-Second Lead Capture Rule",
+    "slug": null,
+    "format": "social_card",
+    "imageUrl": "https://raw.githubusercontent.com/anthonyfullerink-ai/MCASMS/main/assets/social/bathroom-leak-90s-rule.jpg",
+    "publishedAt": "2026-09-24T17:00:59.360Z",
+    "channels": [
+      "facebook",
+      "instagram"
+    ],
+    "niche": "Contractor Speed-to-Lead",
+    "socialResults": {
+      "facebook": {
+        "success": false,
+        "error": "HTTP 400: Error validating access token: Session has expired on Wednesday, 23-Sep-26 12:00:00 PDT. The current time is Thursday, 24-Sep-26 10:00:59 PDT."
+      },
+      "instagram": {
+        "success": false,
+        "error": "HTTP 400: Error validating access token: Session has expired on Wednesday, 23-Sep-26 12:00:00 PDT. The current time is Thursday, 24-Sep-26 10:00:59 PDT."
+      }
+    }
+  },
+  {
     "date": "2026-09-24",
     "trade": "Auto Detailing & Mobile Mechanics",
     "pillar": "Running the Buffer: How Lost Calls Bleed High-Ticket Contracts",

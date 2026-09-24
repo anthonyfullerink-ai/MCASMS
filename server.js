@@ -21,13 +21,13 @@ const MIME_TYPES = {
 };
 
 const LATEST_APP_VERSION = {
-  versionCode: 21,
-  versionName: '1.7.4',
+  versionCode: 22,
+  versionName: '1.7.5',
   downloadUrl: 'https://raw.githubusercontent.com/anthonyfullerink-ai/MCASMS/main/MissedCallAutoSMS.apk',
   proDownloadUrl: 'https://raw.githubusercontent.com/anthonyfullerink-ai/MCASMS/main/MissedCallAutoSMS.apk',
-  releaseNotes: '• 🎛️ Fixed Dashboard Cards customization & reordering sync\n• 💳 Fixed 1-Tap In-App Credit Pack Stripe Checkouts ($10, $25, $50, $100)\n• 🎙️ Removed redundant Voice Persona card from Account Portal\n• ⚡ Clarified Voice Pro cancellation pricing ($9.99/mo)\n• 🛡️ Owner Admin Dashboard: Fixed 2026 login lock & persistent session',
+  releaseNotes: '• 💳 Seamless 1-Tap Credit Pack & Pro Upgrades with Instant Auto-Refresh\n• 🎛️ Dedicated Automations Tab with Full Integration Triggers\n• 🎨 Streamlined Single-Line Navigation Tabs & Responsive Badges\n• ⚡ Direct Carrier SIM Armor & 24/7 AI Voice Receptionist Ready',
   mandatory: true,
-  minSupportedVersion: 17
+  minSupportedVersion: 21
 };
 
 
@@ -45,6 +45,16 @@ function getStripeKey() {
     if (match && match[1]) return match[1].trim();
   }
   return process.env.STRIPE_SECRET_KEY || '';
+}
+
+function getStripePublishableKey() {
+  const envPath = path.join(__dirname, '.env');
+  if (fs.existsSync(envPath)) {
+    const envContent = fs.readFileSync(envPath, 'utf8');
+    const match = envContent.match(/STRIPE_PUBLISHABLE_KEY=(.*)/);
+    if (match && match[1]) return match[1].trim();
+  }
+  return process.env.STRIPE_PUBLISHABLE_KEY || '';
 }
 
 function stripeApiRequest(endpoint, method = 'GET', postData = null) {
@@ -1575,7 +1585,7 @@ const server = http.createServer((req, res) => {
           latencyMs: latencyMs,
           checkoutTrialUrl: 'https://buy.stripe.com/5kQ5kDbBI8hkdao8WZ2go0c',
           checkoutLifetimeUrl: 'https://buy.stripe.com/3cI9AT49g2X07Q41ux2go0a',
-          checkoutProUrl: 'https://buy.stripe.com/cNi5kDdJQ558c6k2yB2go0b',
+          checkoutProUrl: 'https://buy.stripe.com/6oU9ATbBIeFI8U86OR2go0g',
           checkoutVoiceProUrl: 'https://buy.stripe.com/4gMeVdcFMaps6M0b572go0f',
           message: 'Stripe API connection verified and active'
         }));
@@ -1615,12 +1625,12 @@ const server = http.createServer((req, res) => {
         const eventObj = JSON.parse(rawBody || '{}');
         console.log(`⚡ [STRIPE WEBHOOK] Ingested event: ${eventObj.type}`);
 
-        if (eventObj.type === 'checkout.session.completed') {
+        if (eventObj.type === 'checkout.session.completed' || eventObj.type === 'payment_intent.succeeded') {
           const session = eventObj.data.object;
           const customerDetails = session.customer_details || {};
-          const customerEmail = customerDetails.email || session.customer_email || 'customer@example.com';
-          const customerName = customerDetails.name || 'Valued Customer';
-          const amountTotal = (session.amount_total !== undefined && session.amount_total !== null) ? session.amount_total : 2900;
+          const customerEmail = customerDetails.email || session.customer_email || session.receipt_email || 'customer@example.com';
+          const customerName = customerDetails.name || session.shipping?.name || 'Valued Customer';
+          const amountTotal = (session.amount_total !== undefined && session.amount_total !== null) ? session.amount_total : (session.amount !== undefined ? session.amount : 2900);
           const metadata = session.metadata || {};
 
           // AUTOMATION 1: Managed AI Voice Receptionist ($29.00 / month recurring)
@@ -3040,9 +3050,12 @@ const server = http.createServer((req, res) => {
 
         // Fallback if Stripe key is not configured: return direct Stripe payment link
         if (!activeStripeKey) {
-          const fallbackUrl = includeVoice
-            ? "https://buy.stripe.com/4gMeVdcFMaps6M0b572go0f"
-            : "https://buy.stripe.com/cNi5kDdJQ558c6k2yB2go0b";
+          let fallbackUrl = "https://buy.stripe.com/6oU9ATbBIeFI8U86OR2go0g";
+          if (payload.plan === 'pro_upgrade') {
+            fallbackUrl = "https://buy.stripe.com/bJe14neNU9loc6kehj2go0h";
+          } else if (payload.plan === 'flagship') {
+            fallbackUrl = "https://buy.stripe.com/3cI9AT49g2X07Q41ux2go0a";
+          }
           res.writeHead(200, { 'Content-Type': 'application/json; charset=utf-8', 'Access-Control-Allow-Origin': '*' });
           res.end(JSON.stringify({
             success: true,
@@ -3055,43 +3068,70 @@ const server = http.createServer((req, res) => {
 
         let postData = {};
 
+        // Determine base one-time plan pricing
+        let oneTimeAmount = 29999; // Default Pro $299.99
+        let oneTimeName = 'Missed Call Auto SMS - Pro Automation Gateway';
+        let oneTimeDesc = 'Perpetual Gateway License • 1-Year Cloud Relay API Maintenance • Dual SIM Carrier Routing • Unlimited End-to-End™ Webhook Gateway (n8n/Zapier) • 100% A2P 10DLC Exempt';
+        let tierCode = 'pro_gateway';
+
+        if (payload.plan === 'pro_upgrade') {
+          oneTimeAmount = 24999; // $249.99 Upgrade
+          oneTimeName = 'Missed Call Auto SMS - Pro Gateway Upgrade';
+          oneTimeDesc = 'Hardware Upgrade from Standard Flagship to Pro Automation Gateway • Webhooks & Dual SIM Routing • 100% A2P 10DLC Exempt';
+          tierCode = 'pro_upgrade';
+        } else if (payload.plan === 'flagship') {
+          oneTimeAmount = 4999; // $49.99 Base Flagship
+          oneTimeName = "Missed Call Auto SMS - Founder's Flagship Appliance";
+          oneTimeDesc = 'Autonomous missed call auto-reply appliance bound to 1 Android phone. 100% A2P 10DLC carrier exempt with zero monthly software fees.';
+          tierCode = 'flagship';
+        }
+
         if (includeVoice) {
-          // 24/7 AI Voice Receptionist ($9.99/mo)
+          // COMBO: One-Time Appliance License + 24/7 AI Voice Receptionist ($9.99/mo Subscription)
           postData = {
             'mode': 'subscription',
             'payment_method_types[0]': 'card',
             
+            // Item 0: One-time hardware license fee billed upfront
             'line_items[0][price_data][currency]': 'usd',
-            'line_items[0][price_data][unit_amount]': '999',
-            'line_items[0][price_data][recurring][interval]': 'month',
-            'line_items[0][price_data][product_data][name]': 'Missed Call Auto SMS - 24/7 AI Voice Receptionist ($9.99/mo)',
-            'line_items[0][price_data][product_data][description]': '24/7 Conversational AI Voice Phone Receptionist • 15 Free Test Minutes on Signup • Metered $0.25/min Usage in $10 Credit Packs • Native SIM Confirmation SMS • 1-Tap *71 Carrier Transfer',
+            'line_items[0][price_data][unit_amount]': String(oneTimeAmount),
+            'line_items[0][price_data][product_data][name]': oneTimeName,
+            'line_items[0][price_data][product_data][description]': oneTimeDesc,
             'line_items[0][quantity]': '1',
 
-            'subscription_data[metadata][tier]': 'voice_receptionist',
+            // Item 1: Recurring $9.99/mo voice platform add-on
+            'line_items[1][price_data][currency]': 'usd',
+            'line_items[1][price_data][unit_amount]': '999',
+            'line_items[1][price_data][recurring][interval]': 'month',
+            'line_items[1][price_data][product_data][name]': '24/7 AI Voice Receptionist Add-On ($9.99/mo)',
+            'line_items[1][price_data][product_data][description]': '24/7 Conversational AI Voice Phone Receptionist • 15 Free Test Minutes on Signup • Metered Usage in Credit Packs • Native SIM Confirmation SMS • 1-Tap *71 Carrier Transfer',
+            'line_items[1][quantity]': '1',
+
+            'subscription_data[metadata][tier]': tierCode,
+            'subscription_data[metadata][base_plan]': payload.plan || 'pro',
             'subscription_data[metadata][monthly_fee]': '9.99',
             'subscription_data[metadata][business_name]': businessName,
-            'metadata[tier]': 'voice_receptionist',
-            'metadata[monthly_fee]': '9.99',
+            'metadata[tier]': tierCode,
+            'metadata[base_plan]': payload.plan || 'pro',
             'metadata[include_voice]': 'true',
             'metadata[business_name]': businessName,
-            'success_url': 'https://missedcallautosms.com/success.html?session_id={CHECKOUT_SESSION_ID}&tier=voice_receptionist',
+            'success_url': 'https://missedcallautosms.com/success.html?session_id={CHECKOUT_SESSION_ID}&tier=' + tierCode,
             'cancel_url': 'https://missedcallautosms.com/#checkout'
           };
         } else {
-          // STANDALONE: Pro Automation Gateway ($299.00 Perpetual)
+          // STANDALONE ONE-TIME PURCHASE (Flagship $49.99, Pro $299.99, or Pro Upgrade $249.99)
           postData = {
             'mode': 'payment',
             'payment_method_types[0]': 'card',
             'line_items[0][price_data][currency]': 'usd',
-            'line_items[0][price_data][unit_amount]': '29900',
-            'line_items[0][price_data][product_data][name]': 'Missed Call Auto SMS - Pro Automation Gateway',
-            'line_items[0][price_data][product_data][description]': 'Perpetual Gateway License • 1-Year Cloud Relay API Maintenance • Dual SIM Carrier Routing • Unlimited End-to-End™ Webhook Gateway (n8n/Zapier) • 100% A2P 10DLC Exempt',
+            'line_items[0][price_data][unit_amount]': String(oneTimeAmount),
+            'line_items[0][price_data][product_data][name]': oneTimeName,
+            'line_items[0][price_data][product_data][description]': oneTimeDesc,
             'line_items[0][quantity]': '1',
-            'metadata[tier]': 'pro_gateway',
+            'metadata[tier]': tierCode,
             'metadata[include_voice]': 'false',
             'metadata[business_name]': businessName,
-            'success_url': 'https://missedcallautosms.com/success.html?session_id={CHECKOUT_SESSION_ID}&tier=pro',
+            'success_url': 'https://missedcallautosms.com/success.html?session_id={CHECKOUT_SESSION_ID}&tier=' + tierCode,
             'cancel_url': 'https://missedcallautosms.com/#checkout'
           };
         }
@@ -3101,7 +3141,7 @@ const server = http.createServer((req, res) => {
         }
 
         const session = await stripeApiRequest('/v1/checkout/sessions', 'POST', postData);
-        console.log(`💳 [STRIPE PRO CHECKOUT] Created session: ${session.id} (Include Voice: ${includeVoice})`);
+        console.log(`💳 [STRIPE CHECKOUT] Created session: ${session.id} (Plan: ${payload.plan || 'pro'}, Include Voice: ${includeVoice})`);
 
         res.writeHead(200, { 'Content-Type': 'application/json; charset=utf-8', 'Access-Control-Allow-Origin': '*' });
         res.end(JSON.stringify({
@@ -3111,11 +3151,14 @@ const server = http.createServer((req, res) => {
           includeVoice
         }));
       } catch (err) {
-        console.error('Stripe Pro checkout creation error:', err.message);
+        console.error('Stripe checkout creation error:', err.message);
         // Fallback to static link
-        const fallbackUrl = (typeof includeVoice !== 'undefined' && includeVoice)
-          ? "https://buy.stripe.com/4gMeVdcFMaps6M0b572go0f"
-          : "https://buy.stripe.com/cNi5kDdJQ558c6k2yB2go0b";
+        let fallbackUrl = "https://buy.stripe.com/6oU9ATbBIeFI8U86OR2go0g";
+        if (payload && payload.plan === 'pro_upgrade') {
+          fallbackUrl = "https://buy.stripe.com/bJe14neNU9loc6kehj2go0h";
+        } else if (payload && payload.plan === 'flagship') {
+          fallbackUrl = "https://buy.stripe.com/3cI9AT49g2X07Q41ux2go0a";
+        }
         res.writeHead(200, { 'Content-Type': 'application/json; charset=utf-8', 'Access-Control-Allow-Origin': '*' });
         res.end(JSON.stringify({
           success: true,
@@ -3186,6 +3229,7 @@ const server = http.createServer((req, res) => {
 
       try {
         const session = await stripeApiRequest('/v1/checkout/sessions', 'POST', postData);
+        if (res.headersSent) return;
         if (req.method === 'GET' && !req.headers['accept']?.includes('application/json')) {
           res.writeHead(302, { Location: session.url });
           res.end();
@@ -3195,6 +3239,7 @@ const server = http.createServer((req, res) => {
         res.end(JSON.stringify({ success: true, sessionId: session.id, checkoutUrl: session.url, tier: tier.id, minutes: tier.minutes, amount: tier.amount / 100 }));
       } catch (err) {
         console.error('Credit pack session creation error:', err.message);
+        if (res.headersSent) return;
         if (req.method === 'GET') {
           res.writeHead(302, { Location: tier.fallbackUrl });
           res.end();
@@ -3222,8 +3267,75 @@ const server = http.createServer((req, res) => {
       const urlObj = new URL(req.url, `http://localhost:${PORT}`);
       const params = Object.fromEntries(urlObj.searchParams.entries());
       handleCreditPackRequest(params);
-      return;
     }
+  }
+
+  // API: Create Native PaymentIntent for Android PaymentSheet
+  if (relativePath === '/api/create-payment-intent' && req.method === 'POST') {
+    let rawData = '';
+    req.on('data', chunk => rawData += chunk);
+    req.on('end', async () => {
+      try {
+        const body = JSON.parse(rawData);
+        const tierKey = (body.tier || body.packTier || '10').toString().toLowerCase();
+        const licenseKey = (body.licenseKey || '').trim().toUpperCase();
+        const customerEmail = (body.email || '').trim();
+
+        const CREDIT_TIERS = {
+          '10': { id: 'pack_10', name: 'Starter Credit Pack (40 Mins)', amount: 1000, minutes: 40 },
+          'pack_10': { id: 'pack_10', name: 'Starter Credit Pack (40 Mins)', amount: 1000, minutes: 40 },
+          '25': { id: 'pack_25', name: 'Growth Credit Pack (115 Mins)', amount: 2500, minutes: 115 },
+          'pack_25': { id: 'pack_25', name: 'Growth Credit Pack (115 Mins)', amount: 2500, minutes: 115 },
+          '50': { id: 'pack_50', name: 'Pro Contractor Pack (250 Mins)', amount: 5000, minutes: 250 },
+          'pack_50': { id: 'pack_50', name: 'Pro Contractor Pack (250 Mins)', amount: 5000, minutes: 250 },
+          '100': { id: 'pack_100', name: 'Fleet Credit Pack (550 Mins)', amount: 10000, minutes: 550 },
+          'pack_100': { id: 'pack_100', name: 'Fleet Credit Pack (550 Mins)', amount: 10000, minutes: 550 },
+          'pro_upgrade': { id: 'pro_upgrade', name: 'Perpetual Pro Automation Gateway Upgrade', amount: 24999, minutes: 0 },
+          'pro_gateway': { id: 'pro_upgrade', name: 'Perpetual Pro Automation Gateway Upgrade', amount: 24999, minutes: 0 },
+          'pro': { id: 'pro_upgrade', name: 'Perpetual Pro Automation Gateway Upgrade', amount: 24999, minutes: 0 }
+        };
+
+        const tier = CREDIT_TIERS[tierKey] || CREDIT_TIERS['10'];
+        const isProUpgrade = tier.id === 'pro_upgrade';
+        const activeStripeKey = getStripeKey();
+
+        if (!activeStripeKey) {
+          res.writeHead(500, { 'Content-Type': 'application/json' });
+          res.end(JSON.stringify({ success: false, error: 'Stripe is not configured on the server.' }));
+          return;
+        }
+
+        const postData = {
+          'amount': String(tier.amount),
+          'currency': 'usd',
+          'description': tier.name,
+          'metadata[tier]': isProUpgrade ? 'pro_upgrade' : 'credit_pack',
+          'metadata[pack_tier]': tier.id,
+          'metadata[price_dollars]': String(tier.amount / 100),
+          'metadata[license_key]': licenseKey,
+          'metadata[service]': isProUpgrade ? 'pro_gateway_upgrade' : 'voice_credit_reload',
+          'receipt_email': customerEmail
+        };
+
+        if (!isProUpgrade) {
+          postData['metadata[minutes]'] = String(tier.minutes);
+        }
+
+        const pi = await stripeApiRequest('/v1/payment_intents', 'POST', postData);
+
+        res.writeHead(200, { 'Content-Type': 'application/json' });
+        res.end(JSON.stringify({
+          success: true,
+          paymentIntent: pi.client_secret,
+          publishableKey: getStripePublishableKey()
+        }));
+      } catch (err) {
+        console.error('PaymentIntent creation error:', err.message);
+        res.writeHead(500, { 'Content-Type': 'application/json' });
+        res.end(JSON.stringify({ success: false, error: err.message }));
+      }
+    });
+    return;
   }
 
   // =====================================================================
@@ -4223,18 +4335,19 @@ const server = http.createServer((req, res) => {
         const isPro = licenseKey.startsWith('MCAS-PRO-') || licenseKey.startsWith('MCAT-PRO-') || licenseKey.includes('PRO-DEMO');
         const isDev = licenseKey.includes('DEV') || licenseKey.includes('MASTER');
 
-        const plan = subscriber?.plan || (isPro ? 'PRO_GATEWAY' : 'AUTONOMOUS_FRONT_DESK');
+        const isVoiceKey = licenseKey.includes('VOICE');
+        const plan = subscriber?.plan || (isPro ? 'PRO_GATEWAY' : 'FLAGSHIP');
         const planName = subscriber?.planName || (
           plan === 'AUTONOMOUS_FRONT_DESK' ? 'Autonomous Front Desk Bundle' :
           plan === 'VOICE_BUSINESS' ? 'Voice Business' :
           plan === 'VOICE_STARTER' ? 'Voice Starter' :
-          plan === 'PRO_GATEWAY' ? 'Pro Automation Gateway' : 'Flagship Appliance'
+          plan === 'PRO_GATEWAY' ? 'Pro Automation Gateway ($299 Perpetual)' : 'Founder\'s Flagship ($49.99 Lifetime)'
         );
 
         const quotaMinutes = Number(subscriber?.quotaMinutes ?? (
           plan === 'AUTONOMOUS_FRONT_DESK' ? 250 :
           plan === 'VOICE_BUSINESS' ? 300 :
-          plan === 'VOICE_STARTER' ? 45 : 0
+          plan === 'VOICE_STARTER' ? 45 : (isDev ? 250 : 0)
         ));
 
         const minutesUsed = Number(subscriber?.minutesUsed ?? 0);
@@ -4255,9 +4368,9 @@ const server = http.createServer((req, res) => {
         const tier = isAgency ? 'AGENCY' : (isPro ? 'PRO' : (isTrial ? 'TRIAL' : 'FLAGSHIP'));
         const tierName = isAgency ? 'Agency Fleet Edition' : (isPro ? 'Pro Automation Gateway ($299 Perpetual)' : (isTrial ? '3-Day Free Trial ($0 Today)' : 'Founder\'s Flagship ($49.99 Lifetime)'));
 
-        const voiceMinutesBalance = Number(subscriber?.voiceMinutesBalance ?? (isPro ? 50 : 40));
+        const voiceMinutesBalance = Number(subscriber?.voiceMinutesBalance ?? (isDev ? 50 : 0));
         const voiceSubWaived = !!(subscriber?.voiceSubWaived || subscriber?.type === 'FREE_VOICE_COMP');
-        const voiceSubActive = subscriber ? (subscriber.voiceSubActive !== false && subscriber.voiceActive !== false) : true;
+        const voiceSubActive = subscriber ? (subscriber.voiceSubActive !== false && subscriber.voiceActive !== false) : (isDev || isVoiceKey);
         const forwardingNumber = subscriber?.forwardingNumber || '+1 (732) 660-9121';
         const cleanDigits = forwardingNumber.replace(/\D/g, '');
         const carrierCode = subscriber?.carrierCode || `*71${cleanDigits.slice(-10)}`;
@@ -4269,7 +4382,7 @@ const server = http.createServer((req, res) => {
           status: subscriber?.status || (isDev ? 'ACTIVE' : 'ACTIVE'),
           tier,
           tierName,
-          voiceActive: subscriber ? subscriber.voiceActive !== false : true,
+          voiceActive: voiceSubActive,
           voiceSubActive,
           voiceSubWaived,
           voiceMinutesBalance,
@@ -4292,7 +4405,7 @@ const server = http.createServer((req, res) => {
           upgradeOptions: {
             proUpgradeAvailable: !isPro && !isAgency,
             proUpgradePrice: 249.99,
-            proUpgradeUrl: 'https://buy.stripe.com/cNi5kDdJQ558c6k2yB2go0b',
+            proUpgradeUrl: 'https://buy.stripe.com/bJe14neNU9loc6kehj2go0h',
             voiceSubscriptionPrice: 9.99,
             voiceSubscriptionUrl: 'https://buy.stripe.com/4gMeVdcFMaps6M0b572go0f',
             creditPacks: [
@@ -4308,6 +4421,58 @@ const server = http.createServer((req, res) => {
         res.end(JSON.stringify({ success: false, error: err.message }));
       }
     })();
+    return;
+  }
+
+  // API: Provision Device (Android App First-Launch Gating Handshake)
+  if (relativePath === '/api/provision-device' && req.method === 'GET') {
+    const parsedUrl = new URL(req.url, `http://localhost:${PORT}`);
+    const key = (parsedUrl.searchParams.get('key') || '').trim();
+
+    if (!key) {
+      res.writeHead(400, { 'Content-Type': 'application/json', 'Access-Control-Allow-Origin': '*' });
+      res.end(JSON.stringify({ success: false, error: 'License key is required.' }));
+      return;
+    }
+
+    // Hardcoded Demo/Master Keys
+    if (key.includes('DEMO') || key === 'MCAS-DEMO-TRIAL-89F2' || key === 'MCAT-DEMO-TRIAL-89F2') {
+      res.writeHead(200, { 'Content-Type': 'application/json', 'Access-Control-Allow-Origin': '*' });
+      res.end(JSON.stringify({
+        success: true,
+        businessName: "Master Demo Business",
+        customerEmail: "demo@offgridmediagroup.com",
+        trade: "General Service",
+        tier: key.includes("PRO") ? "PRO" : "STANDARD",
+        status: "ACTIVE"
+      }));
+      return;
+    }
+
+    const masterList = getMasterLicenses();
+    const found = masterList.find(l => l.key === key);
+
+    if (!found) {
+      res.writeHead(404, { 'Content-Type': 'application/json', 'Access-Control-Allow-Origin': '*' });
+      res.end(JSON.stringify({ success: false, error: 'License key not found or unrecognized.' }));
+      return;
+    }
+
+    if (found.status && found.status !== 'ACTIVE' && found.status !== 'ACTIVE_SUBSCRIPTION') {
+      res.writeHead(403, { 'Content-Type': 'application/json', 'Access-Control-Allow-Origin': '*' });
+      res.end(JSON.stringify({ success: false, error: `License is currently ${found.status}. Please contact support.` }));
+      return;
+    }
+
+    res.writeHead(200, { 'Content-Type': 'application/json', 'Access-Control-Allow-Origin': '*' });
+    res.end(JSON.stringify({
+      success: true,
+      businessName: found.customer || "Valued Customer",
+      customerEmail: found.email || "",
+      trade: found.trade || "",
+      tier: found.tier || (key.includes("PRO") ? "PRO" : "STANDARD"),
+      status: found.status || "ACTIVE"
+    }));
     return;
   }
 
@@ -5495,9 +5660,11 @@ const server = http.createServer((req, res) => {
 
   // Clean URL Routing
   if (relativePath === '/') {
-    relativePath = '/voice.html';
+    relativePath = '/index.html';
+  } else if (relativePath === '/pro' || relativePath === '/pro/' || relativePath === '/automations' || relativePath === '/automations/') {
+    relativePath = '/pro.html';
   } else if (relativePath === '/flagship' || relativePath === '/flagship/') {
-    relativePath = '/sales_landing_page.html';
+    relativePath = '/index.html';
   } else if (relativePath === '/owner' || relativePath === '/owner/') {
     relativePath = '/owner_admin_dashboard.html';
   } else if (relativePath === '/voice' || relativePath === '/voice/') {

@@ -9,9 +9,9 @@
     "cta": "Get Missed Call Auto SMS Flagship edition for a one-time $49.99 lifetime license at missedcallautosms.com",
     "promptLogic": "Cost comparison math. Contrasts expensive recurring GHL/Twilio stacks against one-time hardware ownership.",
     "imagePrompt": "Top-down flat lay comparison on a wooden workbench: on the left, a stack of recurring monthly software invoices crossed out in red marker; on the right, a sleek Android device running Missed Call Auto SMS beside brass tools, ultra-realistic, 16:9 aspect ratio.",
-    "imageUrl": "https://raw.githubusercontent.com/anthonyfullerink-ai/MCASMS/main/assets/social/saas-margins-invoice-comparison.jpg",
+    "imageUrl": "https://raw.githubusercontent.com/anthonyfullerink-ai/MCASMS/main/assets/social/cloud-telephony-trap-hardware.jpg",
     "videoPrompt": "Documentary style camera pan across a contractor office desk from an open laptop showing an expensive recurring invoice to a compact Android phone resting on a wireless charging dock.",
-    "status": "approved",
+    "status": "published",
     "createdAt": "2026-09-23T17:39:29.077Z",
     "channelTargets": [
       "blog",
@@ -19,7 +19,9 @@
     ],
     "scheduledFor": "2026-09-24T13:00:00.000Z",
     "chatCardDispatched": true,
-    "approvedAt": "2026-09-23T17:52:59.332Z"
+    "approvedAt": "2026-09-23T17:52:59.332Z",
+    "publishedAt": "2026-09-24T20:20:30.125Z",
+    "publishedVia": "auto_scheduler"
   },
   {
     "id": "angle-1790185169076-feed",
@@ -33,7 +35,7 @@
     "imagePrompt": "Split screen high-contrast square graphic: Left side shows a plumber under a sink unable to reach a ringing phone; Right side shows Missed Call Auto SMS auto-replying in 15 seconds, 1:1 aspect ratio.",
     "imageUrl": "https://raw.githubusercontent.com/anthonyfullerink-ai/MCASMS/main/assets/social/bathroom-leak-90s-rule.jpg",
     "videoPrompt": "Close-up of contractor hands holding heavy tools, phone glowing on dashboard with auto-text sent chime.",
-    "status": "approved",
+    "status": "published",
     "createdAt": "2026-09-23T17:39:29.077Z",
     "channelTargets": [
       "facebook",
@@ -41,7 +43,9 @@
     ],
     "scheduledFor": "2026-09-24T17:00:00.000Z",
     "chatCardDispatched": true,
-    "approvedAt": "2026-09-23T17:54:46.332Z"
+    "approvedAt": "2026-09-23T17:54:46.332Z",
+    "publishedAt": "2026-09-24T17:00:59.360Z",
+    "publishedVia": "auto_scheduler"
   },
   {
     "id": "angle-1790185169076-reel",
@@ -53,7 +57,7 @@
     "cta": "Tap the link in bio to try Missed Call Auto SMS free for 3 days.",
     "promptLogic": "Urgent problem demonstration for short-form video discovery. Focuses on customer behavior psychology.",
     "imagePrompt": "Macro cinematic shot of water dripping through ceiling drywall next to a glowing smartphone displaying a 15-second auto-reply text, 16:9.",
-    "imageUrl": "https://raw.githubusercontent.com/anthonyfullerink-ai/MCASMS/main/assets/social/universal-service-appliance.jpg",
+    "imageUrl": "https://raw.githubusercontent.com/anthonyfullerink-ai/MCASMS/main/assets/social/voicemail-dead-ceiling-leak.jpg",
     "videoPrompt": "Cinematic vertical 9:16 24fps. A homeowner looking stressed holding their phone as a dripping pipe sounds in the background. Split screen reveals an instant SMS notification chime landing on their screen saying 'Hey, Dave here from Apex Plumbing - what is going on with your pipes?'.",
     "videoAsset": "assets/ads/v150_ai_voice_launch_reel_9x16.mp4",
     "status": "approved",

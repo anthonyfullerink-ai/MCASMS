@@ -129,14 +129,14 @@ class SendAutoTextWorker(
         val effectiveSimSlot = if (requestedSimSlot > 0) requestedSimSlot else settings.preferredSimSlot
 
         // 5. Outbound Missed Call Forwarding (e.g. to n8n Webhook)
-        if (!isRemoteTrigger && settings.outboundWebhookEnabled && settings.selectedOutboundWebhookUrl.isNotBlank()) {
-            Log.i(TAG, "Forwarding missed call from $targetNumber to n8n webhook: ${settings.selectedOutboundWebhookUrl}")
-            sendOutboundMissedCallWebhook(
-                webhookUrl = settings.selectedOutboundWebhookUrl,
-                phoneNumber = targetNumber,
-                callerName = contactName ?: "Unknown",
+        if (!isRemoteTrigger) {
+            com.missedcall.autotext.util.WebhookDispatcher.dispatchEvent(
+                context = applicationContext,
+                settings = settings,
+                eventType = "call.missed",
+                callerNumber = targetNumber,
                 simSlot = effectiveSimSlot,
-                deviceId = LicenseManager.getDeviceId(applicationContext)
+                disposition = "no-answer"
             )
         }
 
@@ -226,6 +226,15 @@ class SendAutoTextWorker(
                 )
             )
 
+            com.missedcall.autotext.util.WebhookDispatcher.dispatchEvent(
+                context = applicationContext,
+                settings = settings,
+                eventType = "sms.sent",
+                callerNumber = targetNumber,
+                simSlot = effectiveSimSlot,
+                messageBody = messageBody
+            )
+            
             if (!callbackUrl.isNullOrBlank()) {
                 sendDeliveryCallback(callbackUrl, "SENT", targetNumber, messageBody, null, effectiveSimSlot)
             }
@@ -240,6 +249,16 @@ class SendAutoTextWorker(
                     failureReason = e.localizedMessage ?: "SIM/Telephony Error",
                     messageSent = messageBody
                 )
+            )
+
+            com.missedcall.autotext.util.WebhookDispatcher.dispatchEvent(
+                context = applicationContext,
+                settings = settings,
+                eventType = "sms.sent",
+                callerNumber = targetNumber,
+                simSlot = effectiveSimSlot,
+                messageBody = messageBody,
+                errorReason = e.localizedMessage ?: "Unknown Error"
             )
 
             if (!callbackUrl.isNullOrBlank()) {
@@ -300,35 +319,6 @@ class SendAutoTextWorker(
         }
     }
 
-    private fun sendOutboundMissedCallWebhook(webhookUrl: String, phoneNumber: String, callerName: String, simSlot: Int, deviceId: String) {
-        CoroutineScope(Dispatchers.IO).launch {
-            try {
-                val url = URL(webhookUrl)
-                val conn = url.openConnection() as HttpURLConnection
-                conn.requestMethod = "POST"
-                conn.doOutput = true
-                conn.setRequestProperty("Content-Type", "application/json; charset=utf-8")
-                conn.connectTimeout = 10000
-                conn.readTimeout = 10000
-
-                val payload = """
-                    {
-                        "phoneNumber": "$phoneNumber",
-                        "callerName": "$callerName",
-                        "simSlot": $simSlot,
-                        "deviceId": "$deviceId",
-                        "timestamp": "${System.currentTimeMillis()}"
-                    }
-                """.trimIndent()
-
-                conn.outputStream.use { it.write(payload.toByteArray(StandardCharsets.UTF_8)) }
-                val code = conn.responseCode
-                Log.i(TAG, "Outbound webhook sent for $phoneNumber. Response: $code")
-            } catch (e: Exception) {
-                Log.e(TAG, "Failed to send outbound webhook for $phoneNumber", e)
-            }
-        }
-    }
 
     private fun sendDeliveryCallback(callbackUrl: String, status: String, phoneNumber: String, message: String, error: String?, simSlot: Int) {
         CoroutineScope(Dispatchers.IO).launch {

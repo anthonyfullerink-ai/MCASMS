@@ -54,26 +54,14 @@ fun MainScreen(
     var availableUpdate by remember { mutableStateOf<UpdateInfo?>(null) }
     var isDownloadingApk by remember { mutableStateOf(false) }
     var downloadProgress by remember { mutableIntStateOf(0) }
-    var activePromo by remember { mutableStateOf<PromoType?>(null) }
 
     // Check for mandatory updates and record launch on open
     LaunchedEffect(Unit) {
-        InAppPromoController.onAppOpened(context)
         try {
             val updateUrl = settings.remoteUpdateUrl.ifBlank { RemoteUpdateManager.DEFAULT_UPDATE_URL }
             val result = updateManager.checkForUpdatesDetailed(updateUrl, forceCheck = false)
             if (result is com.missedcall.autotext.remote.UpdateCheckResult.Available) {
                 availableUpdate = result.updateInfo
-            } else {
-                // If no update pending, evaluate strategic in-app ad/promo
-                val eligible = InAppPromoController.shouldShowPromoPopup(
-                    context = context,
-                    settings = settings,
-                    isMandatoryUpdatePending = false
-                )
-                if (eligible != null) {
-                    activePromo = eligible
-                }
             }
         } catch (e: Exception) {
             // Background check failure
@@ -213,15 +201,6 @@ fun MainScreen(
         )
     }
 
-    // Strategic In-App Ad / Promotion Dialog
-    if (availableUpdate == null && activePromo != null) {
-        InAppPromoDialog(
-            promoType = activePromo!!,
-            licenseKey = settings.licenseKey,
-            onDismiss = { activePromo = null }
-        )
-    }
-
     var showProfileDialog by remember { mutableStateOf(false) }
     var showGlobalSettingsDialog by remember { mutableStateOf(false) }
 
@@ -323,37 +302,67 @@ fun MainScreen(
     ) { innerPadding ->
         val unreadVoiceCalls = remember(voiceCalls) { voiceCalls.count { !it.isRead } }
 
+        val isPro = remember(settings.licenseKey) {
+            settings.licenseKey.contains("PRO", ignoreCase = true) ||
+            settings.licenseKey.contains("DEV", ignoreCase = true) ||
+            settings.licenseKey.contains("DEMO", ignoreCase = true) ||
+            settings.licenseKey.contains("MASTER", ignoreCase = true) ||
+            com.missedcall.autotext.BuildConfig.IS_PRO_EDITION
+        }
+
+        val isVoiceActive = remember(settings.licenseKey, settings.voiceSubscriptionActive) {
+            isDeveloperKey || settings.voiceSubscriptionActive || settings.licenseKey.contains("VOICE", ignoreCase = true)
+        }
+
         Column(
             modifier = Modifier
                 .fillMaxSize()
                 .padding(innerPadding)
         ) {
-            TabRow(selectedTabIndex = selectedTab) {
+            ScrollableTabRow(
+                selectedTabIndex = selectedTab,
+                edgePadding = 8.dp,
+                modifier = Modifier.fillMaxWidth()
+            ) {
                 Tab(
                     selected = selectedTab == 0,
                     onClick = { selectedTab = 0 },
-                    text = { Text("Dashboard", fontSize = 12.sp, fontWeight = if (selectedTab == 0) FontWeight.Bold else FontWeight.Normal) },
-                    icon = { Icon(Icons.Default.Dashboard, contentDescription = null, modifier = Modifier.size(20.dp)) }
+                    text = { Text("Dashboard", fontSize = 11.sp, maxLines = 1, fontWeight = if (selectedTab == 0) FontWeight.Bold else FontWeight.Normal) },
+                    icon = { Icon(Icons.Default.Dashboard, contentDescription = null, modifier = Modifier.size(18.dp)) }
                 )
                 Tab(
                     selected = selectedTab == 1,
                     onClick = { selectedTab = 1 },
-                    text = { Text("Auto-SMS", fontSize = 12.sp, fontWeight = if (selectedTab == 1) FontWeight.Bold else FontWeight.Normal) },
-                    icon = { Icon(Icons.Default.ChatBubble, contentDescription = null, modifier = Modifier.size(20.dp)) }
+                    text = { Text("Auto-SMS", fontSize = 11.sp, maxLines = 1, fontWeight = if (selectedTab == 1) FontWeight.Bold else FontWeight.Normal) },
+                    icon = { Icon(Icons.Default.ChatBubble, contentDescription = null, modifier = Modifier.size(18.dp)) }
                 )
                 Tab(
                     selected = selectedTab == 2,
                     onClick = { selectedTab = 2 },
                     text = {
-                        Text(if (unreadVoiceCalls > 0) "Voice ($unreadVoiceCalls)" else "Voice", fontSize = 12.sp, fontWeight = if (selectedTab == 2) FontWeight.Bold else FontWeight.Normal)
+                        val label = if (isVoiceActive) {
+                            if (unreadVoiceCalls > 0) "Voice ($unreadVoiceCalls)" else "Voice"
+                        } else {
+                            "Voice 🔒"
+                        }
+                        Text(label, fontSize = 11.sp, maxLines = 1, fontWeight = if (selectedTab == 2) FontWeight.Bold else FontWeight.Normal)
                     },
-                    icon = { Icon(Icons.Default.RecordVoiceOver, contentDescription = null, modifier = Modifier.size(20.dp)) }
+                    icon = { Icon(Icons.Default.RecordVoiceOver, contentDescription = null, modifier = Modifier.size(18.dp)) }
                 )
                 Tab(
                     selected = selectedTab == 3,
                     onClick = { selectedTab = 3 },
-                    text = { Text("Logs", fontSize = 12.sp, fontWeight = if (selectedTab == 3) FontWeight.Bold else FontWeight.Normal) },
-                    icon = { Icon(Icons.Default.History, contentDescription = null, modifier = Modifier.size(20.dp)) }
+                    text = {
+                        val label = if (isPro) "Automations" else "Automations 🔒"
+                        Text(label, fontSize = 11.sp, maxLines = 1, fontWeight = if (selectedTab == 3) FontWeight.Bold else FontWeight.Normal)
+                    },
+                    icon = { Icon(Icons.Default.Hub, contentDescription = null, modifier = Modifier.size(18.dp)) }
+                )
+                Tab(
+                    selected = selectedTab == 4,
+                    onClick = { selectedTab = 4 },
+                    text = { Text("Logs", fontSize = 11.sp, maxLines = 1, fontWeight = if (selectedTab == 4) FontWeight.Bold else FontWeight.Normal) },
+                    icon = { Icon(Icons.Default.History, contentDescription = null, modifier = Modifier.size(18.dp)) }
                 )
             }
 
@@ -375,7 +384,11 @@ fun MainScreen(
                     onMarkVoiceCallRead = onMarkVoiceCallRead,
                     onClearVoiceCalls = onClearVoiceCalls
                 )
-                3 -> ActivityLogScreen(
+                3 -> AutomationsScreen(
+                    settings = settings,
+                    onSettingsChanged = onSettingsChanged
+                )
+                4 -> ActivityLogScreen(
                     logs = logs,
                     onClearLogs = onClearLogs
                 )

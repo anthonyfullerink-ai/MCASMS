@@ -892,12 +892,12 @@ exports.handler = async (event) => {
 
   console.log(`⚡ [STRIPE WEBHOOK] Received event: ${eventObj.type}`);
 
-  if (eventObj.type === 'checkout.session.completed') {
+  if (eventObj.type === 'checkout.session.completed' || eventObj.type === 'payment_intent.succeeded') {
     const session = eventObj.data.object;
     const customerDetails = session.customer_details || {};
-    const customerEmail = customerDetails.email || session.customer_email;
-    const customerName = customerDetails.name || 'Valued Customer';
-    const amountTotal = (session.amount_total !== undefined && session.amount_total !== null) ? session.amount_total : 0;
+    const customerEmail = customerDetails.email || session.customer_email || session.receipt_email || (session.metadata && (session.metadata.customer_email || session.metadata.email));
+    const customerName = customerDetails.name || session.shipping?.name || (session.metadata && session.metadata.name) || 'Valued Customer';
+    const amountTotal = (session.amount_total !== undefined && session.amount_total !== null) ? session.amount_total : (session.amount !== undefined ? session.amount : 0);
     const amountPaid = (amountTotal / 100).toFixed(2);
 
     if (!customerEmail) {

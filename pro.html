@@ -1,0 +1,623 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=5.0">
+    <title>Pro Automation Edition | Hardware Telephony Bridge for n8n, Make & Zapier</title>
+    
+    <!-- Primary Meta Tags -->
+    <meta name="title" content="Pro Automation Edition | Hardware Telephony Bridge for n8n, Make & Zapier">
+    <meta name="description" content="Turn your dedicated Android device into an enterprise telephony API gateway. Bi-directional webhooks for n8n, Make, Zapier, GoHighLevel, and custom CRMs. Native SIM carrier SMS dispatch with zero A2P 10DLC restrictions.">
+    <meta name="keywords" content="n8n telephony webhook, android sms gateway, make.com sms automation, zapier android sms, missed call webhook, gohighlevel android gateway, dual sim automation">
+    <link rel="canonical" href="https://missedcallautosms.com/pro">
+
+    <!-- Favicon & Mobile Icons -->
+    <link rel="icon" type="image/svg+xml" href="/favicon.svg?v=2">
+    <link rel="icon" type="image/png" sizes="32x32" href="/favicon-32x32.png?v=2">
+    <link rel="icon" type="image/png" sizes="16x16" href="/favicon-16x16.png?v=2">
+    <link rel="apple-touch-icon" sizes="180x180" href="/apple-touch-icon.png?v=2">
+    <meta name="theme-color" content="#090B0E">
+
+    <!-- Open Graph / Social -->
+    <meta property="og:type" content="website">
+    <meta property="og:url" content="https://missedcallautosms.com/pro">
+    <meta property="og:title" content="Pro Automation Edition | Bi-Directional Telephony Bridge">
+    <meta property="og:description" content="Bridge real carrier Android telephony directly into n8n, Make, and Zapier. Real-time missed-call webhooks and remote inbound SMS dispatch.">
+    <meta property="og:image" content="https://missedcallautosms.com/assets/social/pro-automation-hero.jpg">
+
+    <!-- Twitter -->
+    <meta property="twitter:card" content="summary_large_image">
+    <meta property="twitter:url" content="https://missedcallautosms.com/pro">
+    <meta property="twitter:title" content="Pro Automation Edition | Hardware Telephony Bridge">
+    <meta property="twitter:description" content="Connect physical Android phone hardware to n8n, Make, and Zapier. Instant webhooks & remote SIM dispatch.">
+    <meta property="twitter:image" content="https://missedcallautosms.com/assets/social/pro-automation-hero.jpg">
+
+    <style>
+        :root {
+            --bg: #090B0E;
+            --card-bg: #131720;
+            --card-border: #222836;
+            --primary: #00E676;
+            --primary-hover: #00C853;
+            --purple: #9333EA;
+            --purple-light: #C084FC;
+            --cyan: #38BDF8;
+            --text: #FFFFFF;
+            --muted: #949BAE;
+            --danger: #FF5252;
+            --warning: #FFB300;
+        }
+
+        * { box-sizing: border-box; margin: 0; padding: 0; }
+        html, body { overflow-x: hidden; width: 100%; font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif; background-color: var(--bg); color: var(--text); line-height: 1.6; }
+
+        .container {
+            width: 100%;
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 0 24px;
+        }
+
+        /* Top Announcement Bar */
+        .top-banner {
+            background: linear-gradient(90deg, #1E1B4B, #0F172A, #3B0764);
+            border-bottom: 1px solid rgba(192, 132, 252, 0.3);
+            text-align: center;
+            padding: 10px 16px;
+            font-size: 13px;
+            font-weight: 600;
+            color: #E2E8F0;
+        }
+        .top-banner strong { color: var(--purple-light); }
+
+        /* Navigation */
+        nav {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 18px 0;
+            border-bottom: 1px solid var(--card-border);
+            position: sticky;
+            top: 0;
+            background: rgba(9, 11, 14, 0.95);
+            backdrop-filter: blur(12px);
+            z-index: 1000;
+        }
+
+        .logo {
+            font-size: 20px;
+            font-weight: 900;
+            color: #FFF;
+            text-decoration: none;
+            letter-spacing: -0.5px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+        .logo .badge-pro {
+            background: rgba(168, 85, 247, 0.2);
+            color: var(--purple-light);
+            border: 1px solid var(--purple-light);
+            font-size: 10px;
+            padding: 2px 8px;
+            border-radius: 6px;
+            letter-spacing: 0.5px;
+        }
+
+        .nav-links {
+            display: flex;
+            gap: 24px;
+            align-items: center;
+        }
+        .nav-links a {
+            color: var(--muted);
+            text-decoration: none;
+            font-size: 14px;
+            font-weight: 600;
+            transition: color 0.2s;
+        }
+        .nav-links a:hover, .nav-links a.active {
+            color: var(--purple-light);
+        }
+
+        .btn-nav-cta {
+            background: linear-gradient(135deg, #9333EA, #7928CA);
+            color: #FFF;
+            border: 1px solid #C084FC;
+            padding: 10px 20px;
+            border-radius: 10px;
+            font-weight: 700;
+            font-size: 13px;
+            text-decoration: none;
+            transition: all 0.2s;
+            display: inline-block;
+        }
+        .btn-nav-cta:hover {
+            box-shadow: 0 0 16px rgba(168, 85, 247, 0.4);
+            transform: translateY(-1px);
+        }
+
+        /* Hero Section */
+        .hero {
+            padding: 64px 0 48px;
+            text-align: center;
+        }
+        .hero-badge {
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            padding: 6px 14px;
+            background: rgba(147, 51, 234, 0.15);
+            border: 1px solid rgba(192, 132, 252, 0.4);
+            border-radius: 20px;
+            color: var(--purple-light);
+            font-size: 12px;
+            font-weight: 700;
+            margin-bottom: 24px;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+        .hero h1 {
+            font-size: 48px;
+            line-height: 1.15;
+            font-weight: 900;
+            margin-bottom: 20px;
+            letter-spacing: -1px;
+        }
+        .hero h1 span {
+            background: linear-gradient(135deg, #FFFFFF 40%, var(--purple-light) 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+        .hero p {
+            font-size: 18px;
+            color: var(--muted);
+            max-width: 820px;
+            margin: 0 auto 32px;
+            line-height: 1.6;
+        }
+
+        .hero-ctas {
+            display: flex;
+            justify-content: center;
+            gap: 16px;
+            flex-wrap: wrap;
+            margin-bottom: 48px;
+        }
+        .btn-primary {
+            background: linear-gradient(135deg, #9333EA, #7928CA);
+            color: #FFF;
+            padding: 16px 36px;
+            border-radius: 12px;
+            font-weight: 800;
+            font-size: 16px;
+            text-decoration: none;
+            border: 1px solid #C084FC;
+            transition: all 0.2s;
+            box-shadow: 0 4px 20px rgba(147, 51, 234, 0.35);
+        }
+        .btn-primary:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 28px rgba(147, 51, 234, 0.5);
+        }
+        .btn-secondary {
+            background: #161B22;
+            color: #FFF;
+            padding: 16px 28px;
+            border-radius: 12px;
+            font-weight: 700;
+            font-size: 16px;
+            text-decoration: none;
+            border: 1px solid var(--card-border);
+            transition: all 0.2s;
+        }
+        .btn-secondary:hover {
+            border-color: var(--purple-light);
+        }
+
+        .trust-line {
+            display: flex;
+            justify-content: center;
+            gap: 20px;
+            font-size: 12px;
+            color: var(--muted);
+            margin-bottom: 40px;
+            flex-wrap: wrap;
+        }
+        .trust-line span {
+            display: flex;
+            align-items: center;
+            gap: 6px;
+        }
+
+        /* Hero Image Container */
+        .hero-visual {
+            position: relative;
+            border-radius: 18px;
+            overflow: hidden;
+            border: 1px solid rgba(192, 132, 252, 0.35);
+            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.8), 0 0 40px rgba(147, 51, 234, 0.2);
+            margin-bottom: 72px;
+        }
+        .hero-visual img {
+            width: 100%;
+            height: auto;
+            display: block;
+        }
+
+        /* Feature Grids */
+        .section-title {
+            text-align: center;
+            margin-bottom: 48px;
+        }
+        .section-title h2 {
+            font-size: 36px;
+            font-weight: 800;
+            margin-bottom: 12px;
+        }
+        .section-title p {
+            color: var(--muted);
+            font-size: 16px;
+            max-width: 650px;
+            margin: 0 auto;
+        }
+
+        .grid-3 {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 24px;
+            margin-bottom: 64px;
+        }
+        .feature-card {
+            background: var(--card-bg);
+            border: 1px solid var(--card-border);
+            border-radius: 16px;
+            padding: 32px 24px;
+            transition: all 0.2s;
+        }
+        .feature-card:hover {
+            border-color: rgba(192, 132, 252, 0.5);
+            transform: translateY(-4px);
+        }
+        .feature-icon {
+            font-size: 32px;
+            margin-bottom: 16px;
+            display: inline-block;
+        }
+        .feature-card h3 {
+            font-size: 19px;
+            font-weight: 700;
+            margin-bottom: 10px;
+            color: #FFF;
+        }
+        .feature-card p {
+            font-size: 14px;
+            color: var(--muted);
+            line-height: 1.6;
+        }
+
+        /* Integration Badges Row */
+        .integrations-box {
+            background: #0F131A;
+            border: 1px solid var(--card-border);
+            border-radius: 18px;
+            padding: 40px;
+            text-align: center;
+            margin-bottom: 64px;
+        }
+        .integrations-grid {
+            display: grid;
+            grid-template-columns: repeat(5, 1fr);
+            gap: 16px;
+            margin-top: 28px;
+        }
+        .integration-item {
+            background: #161B22;
+            border: 1px solid var(--card-border);
+            border-radius: 12px;
+            padding: 20px 14px;
+            text-align: center;
+        }
+        .integration-item strong {
+            display: block;
+            font-size: 15px;
+            color: #FFF;
+            margin-top: 8px;
+        }
+        .integration-item small {
+            font-size: 11px;
+            color: var(--muted);
+        }
+
+        /* Code Comparison Block */
+        .code-block {
+            background: #06080B;
+            border: 1px solid rgba(192, 132, 252, 0.2);
+            border-radius: 14px;
+            padding: 24px;
+            text-align: left;
+            font-family: monospace;
+            font-size: 13px;
+            color: var(--cyan);
+            overflow-x: auto;
+            margin: 20px 0;
+            line-height: 1.6;
+        }
+
+        /* Pricing Card */
+        .pricing-section {
+            background: linear-gradient(180deg, transparent, rgba(147, 51, 234, 0.05), transparent);
+            padding: 64px 0;
+            text-align: center;
+        }
+        .pricing-card {
+            max-width: 520px;
+            margin: 0 auto;
+            background: #121622;
+            border: 2px solid var(--purple-light);
+            border-radius: 20px;
+            padding: 40px 32px;
+            box-shadow: 0 0 40px rgba(147, 51, 234, 0.25);
+            position: relative;
+        }
+        .pricing-badge {
+            position: absolute;
+            top: -14px;
+            left: 50%;
+            transform: translateX(-50%);
+            background: linear-gradient(90deg, #9333EA, #C084FC);
+            color: #000;
+            font-weight: 800;
+            font-size: 11px;
+            padding: 4px 16px;
+            border-radius: 12px;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+        }
+        .price-tag {
+            font-size: 54px;
+            font-weight: 900;
+            color: #FFF;
+            margin: 16px 0 8px;
+        }
+        .price-tag small {
+            font-size: 16px;
+            color: var(--muted);
+            font-weight: normal;
+        }
+        .pricing-features {
+            list-style: none;
+            text-align: left;
+            margin: 28px 0;
+            display: flex;
+            flex-direction: column;
+            gap: 12px;
+            font-size: 14px;
+        }
+        .pricing-features li {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+        .pricing-features li span {
+            color: var(--primary);
+            font-weight: bold;
+        }
+
+        /* Footer */
+        footer {
+            border-top: 1px solid var(--card-border);
+            padding: 48px 0 32px;
+            margin-top: 80px;
+            color: var(--muted);
+            font-size: 13px;
+            text-align: center;
+        }
+        footer a {
+            color: var(--muted);
+            text-decoration: none;
+            margin: 0 10px;
+        }
+        footer a:hover {
+            color: #FFF;
+        }
+
+        /* Responsive Breakpoints */
+        @media (max-width: 900px) {
+            .grid-3 { grid-template-columns: 1fr; }
+            .integrations-grid { grid-template-columns: repeat(2, 1fr); }
+            .hero h1 { font-size: 34px; }
+            .nav-links { display: none; }
+        }
+        @media (max-width: 480px) {
+            .integrations-grid { grid-template-columns: 1fr; }
+            .hero-ctas { flex-direction: column; }
+            .btn-primary, .btn-secondary { width: 100%; text-align: center; }
+        }
+    </style>
+</head>
+<body>
+
+    <!-- Announcement Bar -->
+    <div class="top-banner">
+        ⚡ <strong>Pro Automation Edition Unlocked:</strong> Turn physical Android hardware into an authentic carrier telephony API gateway for <strong>n8n, Make & Zapier</strong>.
+    </div>
+
+    <!-- Navigation -->
+    <div class="container">
+        <nav>
+            <a href="/" class="logo">
+                MissedCallAutoSMS
+                <span class="badge-pro">PRO EDITION</span>
+            </a>
+            <div class="nav-links">
+                <a href="/">📱 Flagship Appliance</a>
+                <a href="/voice">🎙️ AI Voice Agent</a>
+                <a href="/pro" class="active">⚡ Pro Automations</a>
+                <a href="/agency">🏢 Agency Fleets</a>
+                <a href="/blog">📰 Blog</a>
+            </div>
+            <a href="https://buy.stripe.com/6oU9ATbBIeFI8U86OR2go0g" class="btn-nav-cta">Get Pro Gateway ($299.99)</a>
+        </nav>
+    </div>
+
+    <!-- Hero Section -->
+    <section class="hero container">
+        <div class="hero-badge">Enterprise Hardware Telephony Bridge</div>
+        <h1>Bridge Physical Android Telephony<br>Directly Into <span>n8n, Make & Zapier</span></h1>
+        <p>
+            Stop paying monthly Twilio markups and dealing with painful A2P 10DLC carrier registrations. 
+            The Pro Automation Gateway turns your dedicated Android smartphone into a bi-directional API appliance—firing instant webhooks on missed calls and dispatching authentic SIM carrier texts directly from your cloud workflows.
+        </p>
+
+        <div class="hero-ctas">
+            <a href="https://buy.stripe.com/6oU9ATbBIeFI8U86OR2go0g" class="btn-primary">⚡ Get Perpetual Pro Gateway ($299.99)</a>
+            <a href="https://buy.stripe.com/5kQ5kDbBI8hkdao8WZ2go0c" class="btn-secondary">Start 3-Day Free Trial ($0 Today)</a>
+        </div>
+
+        <div class="trust-line">
+            <span>🔒 Secured by Stripe</span>
+            <span>🛡️ 256-Bit SSL Encryption</span>
+            <span>⚡ 100% P2P Carrier Exempt</span>
+            <span>♾️ Lifetime Perpetual License</span>
+        </div>
+
+        <div class="hero-visual">
+            <img src="/assets/pro-automation-hero.jpg" alt="Missed Call Auto SMS Pro Automation Hardware Gateway connected to n8n, Zapier and CRM webhooks" width="1200" height="675">
+        </div>
+    </section>
+
+    <!-- Bi-Directional Architecture -->
+    <section class="container">
+        <div class="section-title">
+            <h2>Bi-Directional Telephony Architecture</h2>
+            <p>Full-duplex hardware integration between local carrier cellular networks and your cloud automation stack.</p>
+        </div>
+
+        <div class="grid-3">
+            <div class="feature-card">
+                <div class="feature-icon">📤</div>
+                <h3>Outbound Event Webhooks</h3>
+                <p>
+                    Every missed call, outbound auto-reply text, inbound customer SMS, and AI voice transcript is instantly packaged into a clean JSON payload and POSTed to your webhook URL in real time.
+                </p>
+            </div>
+
+            <div class="feature-card">
+                <div class="feature-icon">📥</div>
+                <h3>Inbound Remote SMS Gateway</h3>
+                <p>
+                    Trigger this phone to send authentic cellular SMS to any contact directly from your n8n workflow, Zapier trigger, or GoHighLevel pipeline via encrypted local HTTP API.
+                </p>
+            </div>
+
+            <div class="feature-card">
+                <div class="feature-icon">📱</div>
+                <h3>Dual-SIM Carrier Slot Routing</h3>
+                <p>
+                    Manage separate SIM cards on a single dual-SIM device. Designate primary lines for trade leads while keeping secondary lines reserved for internal dispatch.
+                </p>
+            </div>
+        </div>
+    </section>
+
+    <!-- Supported Platforms -->
+    <section class="container">
+        <div class="integrations-box">
+            <h2>Supported Automation Platforms</h2>
+            <p style="color: var(--muted); font-size: 15px; margin-top: 6px;">Zero custom SDKs needed. Connect with standard HTTP Webhook nodes.</p>
+
+            <div class="integrations-grid">
+                <div class="integration-item">
+                    <span style="font-size: 28px;">⚡</span>
+                    <strong>n8n Workflow</strong>
+                    <small>Self-Hosted & Cloud</small>
+                </div>
+                <div class="integration-item">
+                    <span style="font-size: 28px;">🟠</span>
+                    <strong>Zapier</strong>
+                    <small>Catch Hook & Zaps</small>
+                </div>
+                <div class="integration-item">
+                    <span style="font-size: 28px;">🟣</span>
+                    <strong>Make.com</strong>
+                    <small>Visual Scenarios</small>
+                </div>
+                <div class="integration-item">
+                    <span style="font-size: 28px;">🔷</span>
+                    <strong>GoHighLevel</strong>
+                    <small>LeadConnector Webhooks</small>
+                </div>
+                <div class="integration-item">
+                    <span style="font-size: 28px;">🟢</span>
+                    <strong>Custom CRM / API</strong>
+                    <small>REST API & Webhooks</small>
+                </div>
+            </div>
+
+            <div class="code-block">
+                // Sample Outbound JSON Payload Sent on Missed Call<br>
+                {<br>
+                &nbsp;&nbsp;"event": "mcasms.missed_call",<br>
+                &nbsp;&nbsp;"timestamp": 1727198400000,<br>
+                &nbsp;&nbsp;"callerNumber": "+15553492810",<br>
+                &nbsp;&nbsp;"contactName": "Unknown Caller",<br>
+                &nbsp;&nbsp;"simSlot": 0,<br>
+                &nbsp;&nbsp;"carrier": "Verizon Wireless",<br>
+                &nbsp;&nbsp;"applianceId": "ANDROID_DEV_89F2",<br>
+                &nbsp;&nbsp;"autoSmsSent": true<br>
+                }
+            </div>
+        </div>
+    </section>
+
+    <!-- Pricing Section -->
+    <section class="pricing-section">
+        <div class="container">
+            <div class="section-title">
+                <h2>Simple, Transparent Perpetual Pricing</h2>
+                <p>One-time purchase. No monthly SaaS fees. No recurring per-webhook charges.</p>
+            </div>
+
+            <div class="pricing-card">
+                <div class="pricing-badge">PRO AUTOMATION EDITION</div>
+                <h3 style="font-size: 22px; color: #FFF; font-weight: 800;">Perpetual Pro Gateway</h3>
+                <div class="price-tag">$299.99 <small>lifetime</small></div>
+                <p style="font-size: 13px; color: var(--muted);">Direct Flagship upgrade: $249.99 in-app</p>
+
+                <ul class="pricing-features">
+                    <li><span>✓</span> Unlimited Outbound Webhook Event Bridges</li>
+                    <li><span>✓</span> Inbound Remote SMS API Dispatch Gateway</li>
+                    <li><span>✓</span> Native Presets for n8n, Zapier, Make & GoHighLevel</li>
+                    <li><span>✓</span> Dual-SIM Hardware Slot Routing</li>
+                    <li><span>✓</span> Appliance Heartbeat & Battery Monitoring API</li>
+                    <li><span>✓</span> Mute Native SMS for Custom CRM Routing</li>
+                    <li><span>✓</span> 100% P2P Carrier Exempt (Zero A2P 10DLC Fees)</li>
+                </ul>
+
+                <a href="https://buy.stripe.com/6oU9ATbBIeFI8U86OR2go0g" class="btn-primary" style="display: block; width: 100%;">⚡ Buy Pro Gateway ($299.99)</a>
+                <div style="margin-top: 14px;">
+                    <a href="https://buy.stripe.com/5kQ5kDbBI8hkdao8WZ2go0c" style="color: var(--muted); font-size: 13px; text-decoration: none;">Or start a 3-Day Free Trial ($0.00 today) ➔</a>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Footer -->
+    <footer>
+        <div class="container">
+            <p>© 2026 Missed Call Auto SMS. All rights reserved. Enterprise Telephony Hardware Systems.</p>
+            <div style="margin-top: 12px;">
+                <a href="/">Flagship Appliance</a>
+                <a href="/voice">AI Voice Receptionist</a>
+                <a href="/pro">Pro Automation Gateway</a>
+                <a href="/agency">Agency Fleets</a>
+                <a href="/blog">Blog</a>
+                <a href="/support">Support</a>
+                <a href="/terms">Terms</a>
+            </div>
+        </div>
+    </footer>
+
+</body>
+</html>

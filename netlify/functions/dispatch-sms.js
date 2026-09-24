@@ -189,7 +189,7 @@ exports.handler = async (event) => {
             body: JSON.stringify({
               error: 'Subscription Inactive',
               message: 'Cloud Relay API access is inactive because your Front Desk subscription was cancelled. Upgrade to Perpetual Pro ($299) for lifetime unmetered API access, or reactivate your subscription at https://missedcallautosms.com/voice.',
-              upgradeUrl: 'https://buy.stripe.com/cNi5kDdJQ558c6k2yB2go0b',
+              upgradeUrl: 'https://buy.stripe.com/6oU9ATbBIeFI8U86OR2go0g',
               reactivateUrl: 'https://missedcallautosms.com/voice'
             })
           };

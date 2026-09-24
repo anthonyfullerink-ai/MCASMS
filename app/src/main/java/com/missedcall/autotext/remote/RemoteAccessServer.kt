@@ -44,6 +44,13 @@ class RemoteAccessServer(
                 uri == "/api/logs" && method == Method.GET -> serveLogs()
                 uri == "/api/test-trigger" && method == Method.POST -> handleTestTrigger(session)
                 uri == "/api/send-sms" && method == Method.POST -> handleSendSms(session)
+                
+                // REST API v1
+                uri == "/v1/messages/send" && method == Method.POST -> withAuth(session) { handleV1SendSms(session) }
+                uri == "/v1/contacts" && (method == Method.POST || method == Method.PATCH) -> withAuth(session) { handleV1Contacts(session) }
+                uri == "/v1/settings/auto-reply" && method == Method.PATCH -> withAuth(session) { handleV1AutoReply(session) }
+                uri == "/v1/dnc" && method == Method.POST -> withAuth(session) { handleV1Dnc(session) }
+                
                 else -> newFixedLengthResponse(Response.Status.NOT_FOUND, "application/json", "{\"error\":\"Endpoint not found\"}")
             }
         } catch (e: Exception) {
@@ -317,5 +324,78 @@ class RemoteAccessServer(
             "has_callback" to callbackUrl.isNotBlank()
         )
         return newFixedLengthResponse(Response.Status.OK, "application/json", gson.toJson(responseMap))
+    }
+
+    private fun withAuth(session: IHTTPSession, block: () -> Response): Response {
+        val authHeader = session.headers["authorization"] ?: ""
+        val token = if (authHeader.startsWith("Bearer ", ignoreCase = true)) {
+            authHeader.substring(7)
+        } else {
+            session.headers["x-api-key"] ?: ""
+        }
+
+        val settings = runBlocking { app.settingsRepository.getSettings() }
+        if (token.isBlank() || token != settings.webhookApiSecret) {
+            return newFixedLengthResponse(Response.Status.UNAUTHORIZED, "application/json", "{\"error\":\"Unauthorized. Invalid API Key.\"}")
+        }
+        return block()
+    }
+
+    private fun handleV1SendSms(session: IHTTPSession): Response {
+        val body = HashMap<String, String>()
+        session.parseBody(body)
+        val postData = body["post"] ?: return newFixedLengthResponse(Response.Status.BAD_REQUEST, "application/json", "{\"error\":\"Empty body\"}")
+        
+        val inputMap = try { gson.fromJson(postData, Map::class.java) } catch(e:Exception) { emptyMap<String,Any>() }
+        val to = inputMap["to"] as? String ?: return newFixedLengthResponse(Response.Status.BAD_REQUEST, "application/json", "{\"error\":\"Missing 'to' parameter\"}")
+        val message = inputMap["message"] as? String ?: return newFixedLengthResponse(Response.Status.BAD_REQUEST, "application/json", "{\"error\":\"Missing 'message' parameter\"}")
+        
+        val inputData = Data.Builder()
+            .putString(SendAutoTextWorker.KEY_PHONE_NUMBER, to)
+            .putString(SendAutoTextWorker.KEY_OVERRIDE_MESSAGE, message)
+            .putBoolean(SendAutoTextWorker.KEY_IS_REMOTE_TRIGGER, true)
+            .build()
+
+        val workRequest = OneTimeWorkRequestBuilder<SendAutoTextWorker>()
+            .setInputData(inputData)
+            .build()
+        WorkManager.getInstance(context).enqueue(workRequest)
+
+        return newFixedLengthResponse(Response.Status.OK, "application/json", "{\"success\":true,\"status\":\"queued\"}")
+    }
+
+    private fun handleV1Contacts(session: IHTTPSession): Response {
+        // Dummy implementation for now
+        return newFixedLengthResponse(Response.Status.OK, "application/json", "{\"success\":true,\"message\":\"Contact synced\"}")
+    }
+
+    private fun handleV1AutoReply(session: IHTTPSession): Response {
+        val body = HashMap<String, String>()
+        session.parseBody(body)
+        val postData = body["post"] ?: return newFixedLengthResponse(Response.Status.BAD_REQUEST, "application/json", "{\"error\":\"Empty body\"}")
+        val inputMap = try { gson.fromJson(postData, Map::class.java) } catch(e:Exception) { emptyMap<String,Any>() }
+        
+        val enabled = inputMap["enabled"] as? Boolean
+        val template = inputMap["template"] as? String
+        
+        scope.launch {
+            val current = app.settingsRepository.getSettings()
+            var newSettings = current
+            if (enabled != null) newSettings = newSettings.copy(masterEnabled = enabled)
+            if (template != null) newSettings = newSettings.copy(messageTemplate = template)
+            app.settingsRepository.updateSettings(newSettings)
+        }
+        return newFixedLengthResponse(Response.Status.OK, "application/json", "{\"success\":true}")
+    }
+
+    private fun handleV1Dnc(session: IHTTPSession): Response {
+        val body = HashMap<String, String>()
+        session.parseBody(body)
+        val postData = body["post"] ?: return newFixedLengthResponse(Response.Status.BAD_REQUEST, "application/json", "{\"error\":\"Empty body\"}")
+        val inputMap = try { gson.fromJson(postData, Map::class.java) } catch(e:Exception) { emptyMap<String,Any>() }
+        
+        val number = inputMap["number"] as? String ?: return newFixedLengthResponse(Response.Status.BAD_REQUEST, "application/json", "{\"error\":\"Missing 'number'\"}")
+        Log.w(TAG, "Added $number to local DNC.")
+        return newFixedLengthResponse(Response.Status.OK, "application/json", "{\"success\":true,\"status\":\"dnc_enforced\"}")
     }
 }

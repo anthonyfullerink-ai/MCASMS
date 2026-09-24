@@ -16,6 +16,10 @@ import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import com.stripe.android.PaymentConfiguration
+import com.stripe.android.paymentsheet.PaymentSheet
+import com.stripe.android.paymentsheet.PaymentSheetResult
+import com.stripe.android.paymentsheet.rememberPaymentSheet
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalClipboardManager
 import androidx.compose.ui.platform.LocalContext
@@ -67,7 +71,7 @@ fun CustomerAccountPortalDialog(
     var isCancellingTrial by remember { mutableStateOf(false) }
     var showCancelVoiceConfirm by remember { mutableStateOf(false) }
     var isCancellingVoice by remember { mutableStateOf(false) }
-
+    var pendingPaymentAction by remember { mutableStateOf<String?>(null) }
 
     val isCancelled = settings.subscriptionStatus == "CANCELLED"
     val isTrial = settings.subscriptionStatus == "TRIAL" || settings.licenseKey.contains("TRIAL", ignoreCase = true)
@@ -75,9 +79,10 @@ fun CustomerAccountPortalDialog(
 
     var liveTier by remember { mutableStateOf(if (isPro) "PRO" else if (isTrial) "TRIAL" else "FLAGSHIP") }
     var liveTierName by remember { mutableStateOf(if (isPro) "Pro Automation Gateway ($299 Perpetual)" else if (isTrial) "3-Day Free Trial ($0 Today)" else "Founder's Flagship ($49.99 Lifetime)") }
+
     var liveVoiceSubActive by remember { mutableStateOf(settings.voiceSubscriptionActive) }
     var liveVoiceSubWaived by remember { mutableStateOf(false) }
-    var liveVoiceMinutesBalance by remember { mutableDoubleStateOf(40.0) }
+    var liveVoiceMinutesBalance by remember { mutableDoubleStateOf(0.0) }
     var liveForwardingNumber by remember { mutableStateOf(settings.voiceReceptionistForwardingNumber.ifBlank { "+1 (732) 660-9121" }) }
     var liveCarrierCode by remember { mutableStateOf("*717326609121") }
 
@@ -113,18 +118,22 @@ fun CustomerAccountPortalDialog(
                         withContext(Dispatchers.Main) {
                             liveTier = json.optString("tier", liveTier)
                             liveTierName = json.optString("tierName", liveTierName)
-                            livePlanName = json.optString("planName", livePlanName)
-                            liveVoiceSubActive = json.optBoolean("voiceSubActive", liveVoiceSubActive)
+                            val fetchedVoiceSub = json.optBoolean("voiceSubActive", liveVoiceSubActive)
+                            liveVoiceSubActive = fetchedVoiceSub
                             liveVoiceSubWaived = json.optBoolean("voiceSubWaived", false)
-                            liveVoiceMinutesBalance = json.optDouble("voiceMinutesBalance", 40.0)
+                            liveVoiceMinutesBalance = json.optDouble("voiceMinutesBalance", 0.0)
                             liveForwardingNumber = json.optString("forwardingNumber", liveForwardingNumber)
                             liveCarrierCode = json.optString("carrierCode", liveCarrierCode)
-                            liveQuotaMinutes = json.optInt("quotaMinutes", 250)
+                            liveQuotaMinutes = json.optInt("quotaMinutes", 0)
                             liveMinutesUsed = json.optInt("minutesUsed", 0)
                             liveOverageMinutes = json.optInt("overageMinutes", 0)
                             liveOverageAmount = json.optDouble("overageAmount", 0.0)
                             liveOverageRate = json.optDouble("overageRatePerMinute", 0.20)
                             isUnlimitedGateway = json.optBoolean("isUnlimitedGateway", isPro)
+
+                            if (settings.voiceSubscriptionActive != fetchedVoiceSub) {
+                                onSettingsChanged(settings.copy(voiceSubscriptionActive = fetchedVoiceSub))
+                            }
                         }
                     }
                 }
@@ -137,24 +146,108 @@ fun CustomerAccountPortalDialog(
         }
     }
 
+    val paymentSheet = rememberPaymentSheet { paymentResult ->
+        when (paymentResult) {
+            is PaymentSheetResult.Completed -> {
+                if (pendingPaymentAction == "pro_upgrade") {
+                    val newKey = if (settings.licenseKey.isNotBlank()) {
+                        if (settings.licenseKey.startsWith("MCAS-") && !settings.licenseKey.startsWith("MCAS-PRO-")) {
+                            settings.licenseKey.replaceFirst("MCAS-", "MCAS-PRO-")
+                        } else if (settings.licenseKey.startsWith("MCAT-") && !settings.licenseKey.startsWith("MCAT-PRO-")) {
+                            settings.licenseKey.replaceFirst("MCAT-", "MCAT-PRO-")
+                        } else if (!settings.licenseKey.contains("PRO", ignoreCase = true)) {
+                            "MCAS-PRO-" + settings.licenseKey
+                        } else {
+                            settings.licenseKey
+                        }
+                    } else {
+                        "MCAS-PRO-UPGRADED"
+                    }
+                    onSettingsChanged(settings.copy(
+                        licenseKey = newKey,
+                        outboundWebhookEnabled = true,
+                        remoteAccessEnabled = true
+                    ))
+                    licenseKeyInput = newKey
+                    liveTier = "PRO"
+                    liveTierName = "Pro Automation Gateway (Active)"
+                    Toast.makeText(context, "🎉 Upgraded to Pro Automation Gateway! All Webhooks & Remote Controls Unlocked.", Toast.LENGTH_LONG).show()
+                } else {
+                    Toast.makeText(context, "Payment successful! Updating account balance...", Toast.LENGTH_LONG).show()
+                }
+                pendingPaymentAction = null
+                coroutineScope.launch {
+                    kotlinx.coroutines.delay(1200)
+                    fetchUsageData()
+                }
+            }
+            is PaymentSheetResult.Canceled -> {
+                pendingPaymentAction = null
+                Toast.makeText(context, "Payment canceled.", Toast.LENGTH_SHORT).show()
+            }
+            is PaymentSheetResult.Failed -> {
+                pendingPaymentAction = null
+                Toast.makeText(context, "Payment failed: ${paymentResult.error.localizedMessage}", Toast.LENGTH_LONG).show()
+            }
+        }
+    }
+
     fun purchaseCreditPack(packTier: Int) {
         val email = customerEmailInput.trim().ifBlank { settings.customerEmail.trim() }
         val key = licenseKeyInput.trim().ifBlank { settings.licenseKey.trim() }
-        val checkoutUrl = "https://missedcallautosms.com/api/create-credit-pack-checkout?pack=$packTier&key=${Uri.encode(key)}&email=${Uri.encode(email)}"
-        Toast.makeText(context, "Opening Secure Stripe Checkout (\$$packTier Credit Pack)...", Toast.LENGTH_SHORT).show()
-        try {
-            val intent = Intent(Intent.ACTION_VIEW, Uri.parse(checkoutUrl)).apply {
-                addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
-            }
-            context.startActivity(intent)
-        } catch (e: Exception) {
+        
+        Toast.makeText(context, "Initializing Secure Payment...", Toast.LENGTH_SHORT).show()
+        
+        coroutineScope.launch {
             try {
-                val fallbackIntent = Intent(Intent.ACTION_VIEW, Uri.parse("https://buy.stripe.com/5kA8wPfRY0PS6M014f")).apply {
-                    addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
+                val result = withContext(Dispatchers.IO) {
+                    val endpoint = if (settings.remoteUpdateUrl.contains("localhost") || settings.remoteUpdateUrl.contains("10.0.")) {
+                        "http://10.0.2.2:8000/api/create-payment-intent"
+                    } else {
+                        "https://missedcallautosms.com/api/create-payment-intent"
+                    }
+                    val url = URL(endpoint)
+                    val connection = url.openConnection() as HttpURLConnection
+                    connection.requestMethod = "POST"
+                    connection.setRequestProperty("Content-Type", "application/json")
+                    connection.doOutput = true
+                    
+                    val jsonBody = JSONObject().apply {
+                        put("tier", packTier)
+                        put("licenseKey", key)
+                        put("email", email)
+                    }.toString()
+                    
+                    connection.outputStream.use { os ->
+                        val input = jsonBody.toByteArray(Charsets.UTF_8)
+                        os.write(input, 0, input.size)
+                    }
+                    
+                    val responseCode = connection.responseCode
+                    val stream = if (responseCode in 200..299) connection.inputStream else connection.errorStream
+                    val responseStr = stream.bufferedReader().use { it.readText() }
+                    JSONObject(responseStr)
                 }
-                context.startActivity(fallbackIntent)
-            } catch (err: Exception) {
-                Toast.makeText(context, "Could not open browser: ${err.message}", Toast.LENGTH_LONG).show()
+                
+                if (result.optBoolean("success", false)) {
+                    val clientSecret = result.getString("paymentIntent")
+                    val pubKey = result.getString("publishableKey")
+                    
+                    PaymentConfiguration.init(context, pubKey)
+                    
+                    paymentSheet.presentWithPaymentIntent(
+                        clientSecret,
+                        PaymentSheet.Configuration(
+                            merchantDisplayName = "Missed Call Auto SMS",
+                            allowsDelayedPaymentMethods = false
+                        )
+                    )
+                } else {
+                    val err = result.optString("error", "Unknown error occurred")
+                    Toast.makeText(context, "Payment Error: $err", Toast.LENGTH_LONG).show()
+                }
+            } catch (e: Exception) {
+                Toast.makeText(context, "Network error: ${e.localizedMessage}", Toast.LENGTH_LONG).show()
             }
         }
     }
@@ -162,15 +255,61 @@ fun CustomerAccountPortalDialog(
     fun upgradeToProGateway() {
         val email = customerEmailInput.trim().ifBlank { settings.customerEmail.trim() }
         val key = licenseKeyInput.trim().ifBlank { settings.licenseKey.trim() }
-        val checkoutUrl = "https://buy.stripe.com/cNi5kDdJQ558c6k2yB2go0b?client_reference_id=${Uri.encode(key)}&prefilled_email=${Uri.encode(email)}"
-        Toast.makeText(context, "Opening Pro Gateway Upgrade ($249.99)...", Toast.LENGTH_SHORT).show()
-        try {
-            val intent = Intent(Intent.ACTION_VIEW, Uri.parse(checkoutUrl)).apply {
-                addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
+        
+        Toast.makeText(context, "Initializing Secure Pro Gateway Checkout ($249.99)...", Toast.LENGTH_SHORT).show()
+        pendingPaymentAction = "pro_upgrade"
+        
+        coroutineScope.launch {
+            try {
+                val result = withContext(Dispatchers.IO) {
+                    val endpoint = if (settings.remoteUpdateUrl.contains("localhost") || settings.remoteUpdateUrl.contains("10.0.")) {
+                        "http://10.0.2.2:8000/api/create-payment-intent"
+                    } else {
+                        "https://missedcallautosms.com/api/create-payment-intent"
+                    }
+                    val url = URL(endpoint)
+                    val connection = url.openConnection() as HttpURLConnection
+                    connection.requestMethod = "POST"
+                    connection.setRequestProperty("Content-Type", "application/json")
+                    connection.doOutput = true
+                    
+                    val jsonBody = JSONObject().apply {
+                        put("tier", "pro_upgrade")
+                        put("licenseKey", key)
+                        put("email", email)
+                    }.toString()
+                    
+                    connection.outputStream.use { os ->
+                        val input = jsonBody.toByteArray(Charsets.UTF_8)
+                        os.write(input, 0, input.size)
+                    }
+                    
+                    val responseCode = connection.responseCode
+                    val stream = if (responseCode in 200..299) connection.inputStream else connection.errorStream
+                    val responseStr = stream.bufferedReader().use { it.readText() }
+                    JSONObject(responseStr)
+                }
+                
+                if (result.optBoolean("success", false)) {
+                    val clientSecret = result.getString("paymentIntent")
+                    val pubKey = result.getString("publishableKey")
+                    
+                    PaymentConfiguration.init(context, pubKey)
+                    
+                    paymentSheet.presentWithPaymentIntent(
+                        clientSecret,
+                        PaymentSheet.Configuration(
+                            merchantDisplayName = "Missed Call Auto SMS Pro",
+                            allowsDelayedPaymentMethods = false
+                        )
+                    )
+                } else {
+                    val err = result.optString("error", "Unknown error occurred")
+                    Toast.makeText(context, "Payment Error: $err", Toast.LENGTH_LONG).show()
+                }
+            } catch (e: Exception) {
+                Toast.makeText(context, "Network error: ${e.localizedMessage}", Toast.LENGTH_LONG).show()
             }
-            context.startActivity(intent)
-        } catch (e: Exception) {
-            Toast.makeText(context, "Could not open browser: ${e.message}", Toast.LENGTH_LONG).show()
         }
     }
 
@@ -410,17 +549,29 @@ fun CustomerAccountPortalDialog(
                                     horizontalArrangement = Arrangement.SpaceBetween,
                                     verticalAlignment = Alignment.CenterVertically
                                 ) {
-                                    Row(verticalAlignment = Alignment.CenterVertically) {
+                                    Row(
+                                        modifier = Modifier.weight(1f).padding(end = 4.dp),
+                                        verticalAlignment = Alignment.CenterVertically
+                                    ) {
                                         Icon(Icons.Default.AddCard, contentDescription = null, tint = Color(0xFF00E676))
                                         Spacer(modifier = Modifier.width(8.dp))
                                         Text(
                                             text = "Add Money / Load Credit Pack",
                                             style = MaterialTheme.typography.titleSmall,
-                                            fontWeight = FontWeight.Bold
+                                            fontWeight = FontWeight.Bold,
+                                            maxLines = 1
                                         )
                                     }
-                                    TextButton(onClick = { coroutineScope.launch { fetchUsageData() } }) {
-                                        Text(if (isLoadingUsage) "Syncing..." else "🔄 Refresh", fontSize = 11.sp)
+                                    IconButton(
+                                        onClick = { coroutineScope.launch { fetchUsageData() } },
+                                        modifier = Modifier.size(36.dp)
+                                    ) {
+                                        Icon(
+                                            Icons.Default.Refresh,
+                                            contentDescription = "Refresh",
+                                            tint = Color(0xFF00E676),
+                                            modifier = Modifier.size(20.dp)
+                                        )
                                     }
                                 }
 
@@ -489,6 +640,23 @@ fun CustomerAccountPortalDialog(
                                         }
                                     }
                                 }
+                                
+                                Spacer(modifier = Modifier.height(12.dp))
+                                
+                                // TRUST BADGES
+                                Row(
+                                    modifier = Modifier.fillMaxWidth(),
+                                    horizontalArrangement = Arrangement.Center,
+                                    verticalAlignment = Alignment.CenterVertically
+                                ) {
+                                    Icon(Icons.Default.Lock, contentDescription = null, modifier = Modifier.size(12.dp), tint = MaterialTheme.colorScheme.onSurfaceVariant)
+                                    Spacer(modifier = Modifier.width(4.dp))
+                                    Text("Secured by Stripe", fontSize = 10.sp, color = MaterialTheme.colorScheme.onSurfaceVariant, fontWeight = FontWeight.SemiBold)
+                                    Spacer(modifier = Modifier.width(12.dp))
+                                    Icon(Icons.Default.Security, contentDescription = null, modifier = Modifier.size(12.dp), tint = MaterialTheme.colorScheme.onSurfaceVariant)
+                                    Spacer(modifier = Modifier.width(4.dp))
+                                    Text("256-bit Encryption", fontSize = 10.sp, color = MaterialTheme.colorScheme.onSurfaceVariant)
+                                }
                             }
                         }
                     }
@@ -529,6 +697,18 @@ fun CustomerAccountPortalDialog(
                                         shape = RoundedCornerShape(10.dp)
                                     ) {
                                         Text("⭐ Upgrade to Pro Gateway ($249.99)", fontWeight = FontWeight.Bold)
+                                    }
+
+                                    Spacer(modifier = Modifier.height(8.dp))
+
+                                    Row(
+                                        modifier = Modifier.fillMaxWidth(),
+                                        horizontalArrangement = Arrangement.Center,
+                                        verticalAlignment = Alignment.CenterVertically
+                                    ) {
+                                        Icon(Icons.Default.Lock, contentDescription = null, modifier = Modifier.size(11.dp), tint = Color(0xFFCBD5E0))
+                                        Spacer(modifier = Modifier.width(4.dp))
+                                        Text("Secured by Stripe • Instant Unlock", fontSize = 10.sp, color = Color(0xFFCBD5E0), fontWeight = FontWeight.Medium)
                                     }
                                 }
                             }
@@ -821,12 +1001,12 @@ fun CustomerAccountPortalDialog(
                                     }
 
                                     Surface(
-                                        color = if (settings.voiceSubscriptionActive || settings.voiceReceptionistEnabled) ActiveGreenContainer else MaterialTheme.colorScheme.outlineVariant,
+                                        color = if (settings.voiceSubscriptionActive || liveVoiceSubActive) ActiveGreenContainer else RedError.copy(alpha = 0.15f),
                                         shape = RoundedCornerShape(8.dp)
                                     ) {
                                         Text(
-                                            text = if (settings.voiceSubscriptionActive || settings.voiceReceptionistEnabled) "ACTIVE" else "STANDARD",
-                                            color = if (settings.voiceSubscriptionActive || settings.voiceReceptionistEnabled) ActiveGreenText else MaterialTheme.colorScheme.onSurfaceVariant,
+                                            text = if (settings.voiceSubscriptionActive || liveVoiceSubActive) "ACTIVE" else "NOT SUBSCRIBED",
+                                            color = if (settings.voiceSubscriptionActive || liveVoiceSubActive) ActiveGreenText else RedError,
                                             fontWeight = FontWeight.Bold,
                                             fontSize = 10.sp,
                                             maxLines = 1,
@@ -839,32 +1019,58 @@ fun CustomerAccountPortalDialog(
                                 Spacer(modifier = Modifier.height(8.dp))
 
                                 Text(
-                                    text = "Turnkey AI Receptionist forwards unanswered calls to your Vapi agent. Cancelling terminates your $9.99/mo Stripe subscription and immediately launches your phone dialer to deactivate carrier call forwarding (*73 or ##004#).",
+                                    text = if (settings.voiceSubscriptionActive || liveVoiceSubActive) {
+                                        "Turnkey AI Receptionist forwards unanswered calls to your Vapi agent. Cancelling terminates your $9.99/mo Stripe subscription and immediately launches your phone dialer to deactivate carrier call forwarding (*73 or ##004#)."
+                                    } else {
+                                        "Activate the 24/7 AI Voice Receptionist to answer incoming customer calls when you're busy. Qualifies callers, captures names and job needs, and sends you instant SMS alerts."
+                                    },
                                     style = MaterialTheme.typography.bodySmall,
                                     color = MaterialTheme.colorScheme.onSurfaceVariant
                                 )
 
                                 Spacer(modifier = Modifier.height(14.dp))
 
-                                OutlinedButton(
-                                    onClick = { showCancelVoiceConfirm = true },
-                                    colors = ButtonDefaults.outlinedButtonColors(contentColor = RedError),
-                                    border = androidx.compose.foundation.BorderStroke(1.dp, RedError),
-                                    modifier = Modifier.fillMaxWidth(),
-                                    enabled = !isCancellingVoice
-                                ) {
-                                    if (isCancellingVoice) {
-                                        CircularProgressIndicator(
-                                            modifier = Modifier.size(16.dp),
-                                            color = RedError,
-                                            strokeWidth = 2.dp
-                                        )
-                                        Spacer(modifier = Modifier.width(8.dp))
-                                        Text("Cancelling in Stripe...")
-                                    } else {
-                                        Icon(Icons.Default.PhoneDisabled, contentDescription = null, modifier = Modifier.size(18.dp))
-                                        Spacer(modifier = Modifier.width(8.dp))
-                                        Text("Cancel Voice Pro ($9.99/mo)")
+                                if (settings.voiceSubscriptionActive || liveVoiceSubActive) {
+                                    OutlinedButton(
+                                        onClick = { showCancelVoiceConfirm = true },
+                                        colors = ButtonDefaults.outlinedButtonColors(contentColor = RedError),
+                                        border = androidx.compose.foundation.BorderStroke(1.dp, RedError),
+                                        modifier = Modifier.fillMaxWidth(),
+                                        enabled = !isCancellingVoice
+                                    ) {
+                                        if (isCancellingVoice) {
+                                            CircularProgressIndicator(
+                                                modifier = Modifier.size(16.dp),
+                                                color = RedError,
+                                                strokeWidth = 2.dp
+                                            )
+                                            Spacer(modifier = Modifier.width(8.dp))
+                                            Text("Cancelling in Stripe...")
+                                        } else {
+                                            Icon(Icons.Default.PhoneDisabled, contentDescription = null, modifier = Modifier.size(18.dp))
+                                            Spacer(modifier = Modifier.width(8.dp))
+                                            Text("Cancel Voice Pro ($9.99/mo)")
+                                        }
+                                    }
+                                } else {
+                                    Button(
+                                        onClick = {
+                                            try {
+                                                val email = settings.customerEmail.trim()
+                                                val checkoutUrl = "https://buy.stripe.com/4gMeVdcFMaps6M0b572go0f?prefilled_email=${Uri.encode(email)}"
+                                                val intent = Intent(Intent.ACTION_VIEW, Uri.parse(checkoutUrl))
+                                                context.startActivity(intent)
+                                            } catch (e: Exception) {
+                                                Toast.makeText(context, "Could not open browser", Toast.LENGTH_SHORT).show()
+                                            }
+                                        },
+                                        colors = ButtonDefaults.buttonColors(containerColor = Color(0xFF9333EA)),
+                                        modifier = Modifier.fillMaxWidth(),
+                                        shape = RoundedCornerShape(10.dp)
+                                    ) {
+                                        Icon(Icons.Default.Star, contentDescription = null, modifier = Modifier.size(16.dp))
+                                        Spacer(modifier = Modifier.width(6.dp))
+                                        Text("⭐ Subscribe to Voice Pro ($9.99/mo)", fontWeight = FontWeight.Bold)
                                     }
                                 }
                             }

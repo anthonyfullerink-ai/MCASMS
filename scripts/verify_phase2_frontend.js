@@ -6,6 +6,8 @@ const rootDir = path.resolve(__dirname, '..');
 const frontendFiles = [
   'index.html',
   'sales_landing_page.html',
+  'pro.html',
+  'voice.html',
   'blog.html',
   'developers.html',
   'terms.html'
@@ -35,17 +37,15 @@ frontendFiles.forEach(file => {
   });
 });
 
-// 2. Check for key tier tokens in index.html & sales_landing_page.html
+// 2. Check for key tier tokens in index.html & sales_landing_page.html & pro.html
 const requiredTokens = [
-  { name: 'Autonomous Front Desk Bundle ($99/mo)', pattern: /99\/mo/i },
-  { name: 'Pooled minutes 250', pattern: /250 pooled minutes/i },
-  { name: 'Pro Automation Gateway ($299)', pattern: /299/ },
-  { name: 'Voice Starter $29/mo (45 mins)', pattern: /45\s+(?:monthly\s+)?pooled minutes/i },
-  { name: 'Voice Business $89/mo (300 mins)', pattern: /300\s+(?:monthly\s+)?pooled minutes/i },
-  { name: 'Flagship Appliance $49.99', pattern: /49\.99/ }
+  { name: 'Pro Automation Gateway ($299.99)', pattern: /299\.99/ },
+  { name: 'AI Voice Receptionist ($9.99/mo)', pattern: /9\.99(?:\/mo)?/i },
+  { name: 'Flagship Appliance $49.99', pattern: /49\.99/ },
+  { name: '3-Day Free Trial', pattern: /3-day.*trial/i }
 ];
 
-['index.html', 'sales_landing_page.html'].forEach(file => {
+['index.html', 'sales_landing_page.html', 'pro.html'].forEach(file => {
   const content = fs.readFileSync(path.join(rootDir, file), 'utf8');
   requiredTokens.forEach(token => {
     if (token.pattern.test(content)) {

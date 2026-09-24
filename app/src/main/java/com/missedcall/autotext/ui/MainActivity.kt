@@ -94,10 +94,19 @@ class MainActivity : ComponentActivity() {
                     val voiceCalls by voiceDao.getAllVoiceCallsFlow().collectAsState(initial = emptyList())
                     val devRecords by devRegistry.recordsFlow.collectAsState(initial = emptyList())
 
-                    MainScreen(
-                        settings = settings,
-                        onSettingsChanged = { updatedSettings ->
-                            val oldKey = settings.licenseKey
+                    if (settings.licenseKey.isBlank()) {
+                        com.missedcall.autotext.ui.screens.LicenseGateScreen(
+                            onActivationSuccess = { updater ->
+                                lifecycleScope.launch {
+                                    settingsRepo.updateSettings(settings.updater())
+                                }
+                            }
+                        )
+                    } else {
+                        MainScreen(
+                            settings = settings,
+                            onSettingsChanged = { updatedSettings ->
+                                val oldKey = settings.licenseKey
                             lifecycleScope.launch {
                                 settingsRepo.updateSettings(updatedSettings)
                                 if (updatedSettings.licenseKey.isNotBlank() && (updatedSettings.licenseKey != oldKey || updatedSettings.fcmDeviceToken.isNotBlank())) {
@@ -145,6 +154,7 @@ class MainActivity : ComponentActivity() {
                             permissionLauncher.launch(batch.toTypedArray())
                         }
                     )
+                    }
                 }
             }
         }

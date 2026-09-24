@@ -30,6 +30,7 @@ import com.missedcall.autotext.remote.UpdateInfo
 import com.missedcall.autotext.ui.theme.ActiveGreenContainer
 import com.missedcall.autotext.ui.theme.ActiveGreenText
 import com.missedcall.autotext.ui.theme.AmberWarning
+import com.missedcall.autotext.ui.theme.RedError
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
@@ -55,6 +56,14 @@ fun GlobalSettingsDialog(
     val context = LocalContext.current
     val coroutineScope = rememberCoroutineScope()
     val scrollState = rememberScrollState()
+
+    val isPro = remember(settings.licenseKey) {
+        settings.licenseKey.contains("PRO", ignoreCase = true) ||
+        settings.licenseKey.contains("DEV", ignoreCase = true) ||
+        settings.licenseKey.contains("DEMO", ignoreCase = true) ||
+        settings.licenseKey.contains("MASTER", ignoreCase = true) ||
+        com.missedcall.autotext.BuildConfig.IS_PRO_EDITION
+    }
 
     var outboundUrlInput by remember(settings.selectedOutboundWebhookUrl) {
         mutableStateOf(settings.selectedOutboundWebhookUrl)
@@ -154,139 +163,21 @@ fun GlobalSettingsDialog(
                         .verticalScroll(scrollState),
                     verticalArrangement = Arrangement.spacedBy(16.dp)
                 ) {
-                    // SECTION 1: n8n & External Webhook Integration
+                    // SECTION 1: Platform Automations Notice
                     Card(
                         colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.5f)),
                         shape = RoundedCornerShape(14.dp),
                         modifier = Modifier.fillMaxWidth()
                     ) {
-                        Column(modifier = Modifier.padding(16.dp)) {
-                            Row(verticalAlignment = Alignment.CenterVertically) {
-                                Icon(Icons.Default.Share, contentDescription = null, tint = Color(0xFFA855F7), modifier = Modifier.size(20.dp))
-                                Spacer(modifier = Modifier.width(8.dp))
-                                Text("n8n / Make / CRM Webhook Bridge", fontWeight = FontWeight.Bold, style = MaterialTheme.typography.titleSmall)
-                            }
-                            Spacer(modifier = Modifier.height(4.dp))
-                            Text(
-                                "Completely separate from your Vapi AI backend. Forwards missed calls directly into your private n8n workflows or CRM for custom lead automations.",
-                                style = MaterialTheme.typography.bodySmall,
-                                color = MaterialTheme.colorScheme.onSurfaceVariant
-                            )
-
-                            Spacer(modifier = Modifier.height(12.dp))
-
-                            // Outbound Missed Call Forwarding Toggle
-                            Row(
-                                modifier = Modifier.fillMaxWidth(),
-                                horizontalArrangement = Arrangement.SpaceBetween,
-                                verticalAlignment = Alignment.CenterVertically
-                            ) {
-                                Column(modifier = Modifier.weight(1f).padding(end = 8.dp)) {
-                                    Text("Forward Missed Calls to Webhook", fontWeight = FontWeight.SemiBold, style = MaterialTheme.typography.bodyMedium)
-                                    Text("Posts JSON payload of missed calls to your custom URL.", style = MaterialTheme.typography.labelSmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
-                                }
-                                Switch(
-                                    checked = settings.outboundWebhookEnabled,
-                                    onCheckedChange = { onSettingsChanged(settings.copy(outboundWebhookEnabled = it)) }
-                                )
-                            }
-
-                            if (settings.outboundWebhookEnabled) {
-                                Spacer(modifier = Modifier.height(10.dp))
-                                OutlinedTextField(
-                                    value = outboundUrlInput,
-                                    onValueChange = {
-                                        outboundUrlInput = it
-                                        onSettingsChanged(settings.copy(selectedOutboundWebhookUrl = it))
-                                    },
-                                    modifier = Modifier.fillMaxWidth(),
-                                    label = { Text("Your n8n / Make Webhook URL") },
-                                    placeholder = { Text("https://your-n8n.instance/webhook/missed-call") },
-                                    singleLine = true
-                                )
-
-                                Spacer(modifier = Modifier.height(8.dp))
-
-                                Button(
-                                    onClick = {
-                                        if (outboundUrlInput.isBlank()) {
-                                            Toast.makeText(context, "Please enter a valid webhook URL first", Toast.LENGTH_SHORT).show()
-                                            return@Button
-                                        }
-                                        isPingingWebhook = true
-                                        pingStatusMessage = null
-                                        coroutineScope.launch(Dispatchers.IO) {
-                                            try {
-                                                val url = URL(outboundUrlInput.trim())
-                                                val conn = (url.openConnection() as HttpURLConnection).apply {
-                                                    requestMethod = "POST"
-                                                    connectTimeout = 5000
-                                                    readTimeout = 5000
-                                                    doOutput = true
-                                                    setRequestProperty("Content-Type", "application/json")
-                                                    val testPayload = """{"event":"ping_test","timestamp":${System.currentTimeMillis()},"source":"MissedCallAutoSMS_Pro"}"""
-                                                    outputStream.use { os -> os.write(testPayload.toByteArray(StandardCharsets.UTF_8)) }
-                                                }
-                                                val code = conn.responseCode
-                                                withContext(Dispatchers.Main) {
-                                                    isPingingWebhook = false
-                                                    pingStatusMessage = if (code in 200..299) "✅ Webhook Ping Success (HTTP $code)" else "⚠️ Webhook Ping Returned HTTP $code"
-                                                }
-                                            } catch (e: Exception) {
-                                                withContext(Dispatchers.Main) {
-                                                    isPingingWebhook = false
-                                                    pingStatusMessage = "❌ Ping Failed: ${e.message}"
-                                                }
-                                            }
-                                        }
-                                    },
-                                    enabled = !isPingingWebhook,
-                                    modifier = Modifier.fillMaxWidth()
-                                ) {
-                                    if (isPingingWebhook) {
-                                        CircularProgressIndicator(modifier = Modifier.size(16.dp), color = Color.White)
-                                        Spacer(modifier = Modifier.width(8.dp))
-                                        Text("Pinging Webhook...")
-                                    } else {
-                                        Icon(Icons.Default.Send, contentDescription = null, modifier = Modifier.size(16.dp))
-                                        Spacer(modifier = Modifier.width(6.dp))
-                                        Text("Send Test Ping to n8n")
-                                    }
-                                }
-
-                                pingStatusMessage?.let { msg ->
-                                    Spacer(modifier = Modifier.height(6.dp))
-                                    Text(
-                                        text = msg,
-                                        style = MaterialTheme.typography.bodySmall,
-                                        color = if (msg.startsWith("✅")) ActiveGreenText else AmberWarning,
-                                        fontWeight = FontWeight.SemiBold
-                                    )
-                                }
-                            }
-
-                            HorizontalDivider(modifier = Modifier.padding(vertical = 12.dp))
-
-                            // Inbound SMS Dispatch API Secret
-                            Text("Inbound SMS Dispatch Secret (Optional)", fontWeight = FontWeight.SemiBold, style = MaterialTheme.typography.bodyMedium)
-                            Text("Use this API secret when triggering SMS from your n8n workflow to this phone.", style = MaterialTheme.typography.labelSmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
-                            Spacer(modifier = Modifier.height(6.dp))
-                            Surface(
-                                shape = RoundedCornerShape(8.dp),
-                                color = MaterialTheme.colorScheme.surface,
-                                border = BorderStroke(1.dp, MaterialTheme.colorScheme.outlineVariant)
-                            ) {
-                                Row(
-                                    modifier = Modifier.fillMaxWidth().padding(horizontal = 12.dp, vertical = 8.dp),
-                                    horizontalArrangement = Arrangement.SpaceBetween,
-                                    verticalAlignment = Alignment.CenterVertically
-                                ) {
-                                    Text(
-                                        text = settings.webhookApiSecret.ifBlank { "Unconfigured" },
-                                        style = MaterialTheme.typography.bodySmall,
-                                        fontFamily = androidx.compose.ui.text.font.FontFamily.Monospace
-                                    )
-                                }
+                        Row(
+                            modifier = Modifier.padding(16.dp),
+                            verticalAlignment = Alignment.CenterVertically
+                        ) {
+                            Icon(Icons.Default.Hub, contentDescription = null, tint = Color(0xFFA855F7), modifier = Modifier.size(24.dp))
+                            Spacer(modifier = Modifier.width(12.dp))
+                            Column {
+                                Text("Platform Integrations & Webhooks", fontWeight = FontWeight.Bold, style = MaterialTheme.typography.titleSmall)
+                                Text("All bi-directional n8n, Make, Zapier, GoHighLevel presets and webhook settings are now managed in the dedicated 'Automations' tab at the bottom of the screen.", style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
                             }
                         }
                     }
@@ -297,13 +188,39 @@ fun GlobalSettingsDialog(
                         modifier = Modifier.fillMaxWidth()
                     ) {
                         Column(modifier = Modifier.padding(16.dp)) {
-                            Row(verticalAlignment = Alignment.CenterVertically) {
-                                Icon(Icons.Default.SimCard, contentDescription = null, tint = MaterialTheme.colorScheme.primary, modifier = Modifier.size(20.dp))
-                                Spacer(modifier = Modifier.width(8.dp))
-                                Text("Dual SIM Slot Routing", fontWeight = FontWeight.Bold, style = MaterialTheme.typography.titleSmall)
+                            Row(
+                                modifier = Modifier.fillMaxWidth(),
+                                horizontalArrangement = Arrangement.SpaceBetween,
+                                verticalAlignment = Alignment.CenterVertically
+                            ) {
+                                Row(verticalAlignment = Alignment.CenterVertically) {
+                                    Icon(Icons.Default.SimCard, contentDescription = null, tint = MaterialTheme.colorScheme.primary, modifier = Modifier.size(20.dp))
+                                    Spacer(modifier = Modifier.width(8.dp))
+                                    Text("Dual SIM Slot Routing", fontWeight = FontWeight.Bold, style = MaterialTheme.typography.titleSmall)
+                                }
+                                if (!isPro) {
+                                    Surface(
+                                        shape = RoundedCornerShape(6.dp),
+                                        color = RedError.copy(alpha = 0.15f)
+                                    ) {
+                                        Row(
+                                            verticalAlignment = Alignment.CenterVertically,
+                                            modifier = Modifier.padding(horizontal = 6.dp, vertical = 2.dp)
+                                        ) {
+                                            Icon(Icons.Default.Lock, contentDescription = null, tint = RedError, modifier = Modifier.size(10.dp))
+                                            Spacer(modifier = Modifier.width(3.dp))
+                                            Text("PRO ONLY", fontSize = 9.sp, fontWeight = FontWeight.ExtraBold, color = RedError)
+                                        }
+                                    }
+                                }
                             }
                             Spacer(modifier = Modifier.height(4.dp))
-                            Text("Choose which physical SIM slot will dispatch outbound auto-texts.", style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
+                            Text(
+                                if (isPro) "Choose which physical SIM slot will dispatch outbound auto-texts."
+                                else "Choose which physical SIM slot will dispatch outbound auto-texts (Requires Pro Gateway License).",
+                                style = MaterialTheme.typography.bodySmall,
+                                color = MaterialTheme.colorScheme.onSurfaceVariant
+                            )
 
                             Spacer(modifier = Modifier.height(12.dp))
 
@@ -313,15 +230,39 @@ fun GlobalSettingsDialog(
                             ) {
                                 FilterChip(
                                     selected = settings.preferredSimSlot == 0,
-                                    onClick = { onSettingsChanged(settings.copy(preferredSimSlot = 0)) },
+                                    onClick = {
+                                        if (isPro) {
+                                            onSettingsChanged(settings.copy(preferredSimSlot = 0))
+                                        } else {
+                                            Toast.makeText(context, "Dual SIM routing requires Pro Gateway ($249.99 upgrade)", Toast.LENGTH_SHORT).show()
+                                        }
+                                    },
+                                    enabled = isPro,
                                     label = { Text("SIM 1 (Default)") },
                                     modifier = Modifier.weight(1f)
                                 )
                                 FilterChip(
                                     selected = settings.preferredSimSlot == 1,
-                                    onClick = { onSettingsChanged(settings.copy(preferredSimSlot = 1)) },
+                                    onClick = {
+                                        if (isPro) {
+                                            onSettingsChanged(settings.copy(preferredSimSlot = 1))
+                                        } else {
+                                            Toast.makeText(context, "Dual SIM routing requires Pro Gateway ($249.99 upgrade)", Toast.LENGTH_SHORT).show()
+                                        }
+                                    },
+                                    enabled = isPro,
                                     label = { Text("SIM 2") },
                                     modifier = Modifier.weight(1f)
+                                )
+                            }
+
+                            if (!isPro) {
+                                Spacer(modifier = Modifier.height(8.dp))
+                                Text(
+                                    "🔒 Dual SIM slot selection requires Pro Automation Gateway ($249.99).",
+                                    style = MaterialTheme.typography.labelSmall,
+                                    color = RedError,
+                                    fontWeight = FontWeight.SemiBold
                                 )
                             }
 
