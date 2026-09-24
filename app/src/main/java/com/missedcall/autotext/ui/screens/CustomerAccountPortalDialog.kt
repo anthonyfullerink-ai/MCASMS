@@ -16,10 +16,6 @@ import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import com.stripe.android.PaymentConfiguration
-import com.stripe.android.paymentsheet.PaymentSheet
-import com.stripe.android.paymentsheet.PaymentSheetResult
-import com.stripe.android.paymentsheet.rememberPaymentSheet
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalClipboardManager
 import androidx.compose.ui.platform.LocalContext
@@ -76,6 +72,10 @@ fun CustomerAccountPortalDialog(
     val isCancelled = settings.subscriptionStatus == "CANCELLED"
     val isTrial = settings.subscriptionStatus == "TRIAL" || settings.licenseKey.contains("TRIAL", ignoreCase = true)
     val isPro = settings.licenseKey.contains("PRO", ignoreCase = true)
+    val isDeveloperKey = settings.licenseKey.contains("DEV", ignoreCase = true) ||
+                         settings.licenseKey.startsWith("MCAS-DEV") ||
+                         settings.licenseKey.contains("DEMO", ignoreCase = true) ||
+                         settings.licenseKey.contains("MASTER", ignoreCase = true)
 
     var liveTier by remember { mutableStateOf(if (isPro) "PRO" else if (isTrial) "TRIAL" else "FLAGSHIP") }
     var liveTierName by remember { mutableStateOf(if (isPro) "Pro Automation Gateway ($299 Perpetual)" else if (isTrial) "3-Day Free Trial ($0 Today)" else "Founder's Flagship ($49.99 Lifetime)") }
@@ -146,170 +146,31 @@ fun CustomerAccountPortalDialog(
         }
     }
 
-    val paymentSheet = rememberPaymentSheet { paymentResult ->
-        when (paymentResult) {
-            is PaymentSheetResult.Completed -> {
-                if (pendingPaymentAction == "pro_upgrade") {
-                    val newKey = if (settings.licenseKey.isNotBlank()) {
-                        if (settings.licenseKey.startsWith("MCAS-") && !settings.licenseKey.startsWith("MCAS-PRO-")) {
-                            settings.licenseKey.replaceFirst("MCAS-", "MCAS-PRO-")
-                        } else if (settings.licenseKey.startsWith("MCAT-") && !settings.licenseKey.startsWith("MCAT-PRO-")) {
-                            settings.licenseKey.replaceFirst("MCAT-", "MCAT-PRO-")
-                        } else if (!settings.licenseKey.contains("PRO", ignoreCase = true)) {
-                            "MCAS-PRO-" + settings.licenseKey
-                        } else {
-                            settings.licenseKey
-                        }
-                    } else {
-                        "MCAS-PRO-UPGRADED"
-                    }
-                    onSettingsChanged(settings.copy(
-                        licenseKey = newKey,
-                        outboundWebhookEnabled = true,
-                        remoteAccessEnabled = true
-                    ))
-                    licenseKeyInput = newKey
-                    liveTier = "PRO"
-                    liveTierName = "Pro Automation Gateway (Active)"
-                    Toast.makeText(context, "🎉 Upgraded to Pro Automation Gateway! All Webhooks & Remote Controls Unlocked.", Toast.LENGTH_LONG).show()
-                } else {
-                    Toast.makeText(context, "Payment successful! Updating account balance...", Toast.LENGTH_LONG).show()
-                }
-                pendingPaymentAction = null
-                coroutineScope.launch {
-                    kotlinx.coroutines.delay(1200)
-                    fetchUsageData()
-                }
-            }
-            is PaymentSheetResult.Canceled -> {
-                pendingPaymentAction = null
-                Toast.makeText(context, "Payment canceled.", Toast.LENGTH_SHORT).show()
-            }
-            is PaymentSheetResult.Failed -> {
-                pendingPaymentAction = null
-                Toast.makeText(context, "Payment failed: ${paymentResult.error.localizedMessage}", Toast.LENGTH_LONG).show()
-            }
-        }
-    }
-
     fun purchaseCreditPack(packTier: Int) {
         val email = customerEmailInput.trim().ifBlank { settings.customerEmail.trim() }
         val key = licenseKeyInput.trim().ifBlank { settings.licenseKey.trim() }
-        
-        Toast.makeText(context, "Initializing Secure Payment...", Toast.LENGTH_SHORT).show()
-        
-        coroutineScope.launch {
-            try {
-                val result = withContext(Dispatchers.IO) {
-                    val endpoint = if (settings.remoteUpdateUrl.contains("localhost") || settings.remoteUpdateUrl.contains("10.0.")) {
-                        "http://10.0.2.2:8000/api/create-payment-intent"
-                    } else {
-                        "https://missedcallautosms.com/api/create-payment-intent"
-                    }
-                    val url = URL(endpoint)
-                    val connection = url.openConnection() as HttpURLConnection
-                    connection.requestMethod = "POST"
-                    connection.setRequestProperty("Content-Type", "application/json")
-                    connection.doOutput = true
-                    
-                    val jsonBody = JSONObject().apply {
-                        put("tier", packTier)
-                        put("licenseKey", key)
-                        put("email", email)
-                    }.toString()
-                    
-                    connection.outputStream.use { os ->
-                        val input = jsonBody.toByteArray(Charsets.UTF_8)
-                        os.write(input, 0, input.size)
-                    }
-                    
-                    val responseCode = connection.responseCode
-                    val stream = if (responseCode in 200..299) connection.inputStream else connection.errorStream
-                    val responseStr = stream.bufferedReader().use { it.readText() }
-                    JSONObject(responseStr)
-                }
-                
-                if (result.optBoolean("success", false)) {
-                    val clientSecret = result.getString("paymentIntent")
-                    val pubKey = result.getString("publishableKey")
-                    
-                    PaymentConfiguration.init(context, pubKey)
-                    
-                    paymentSheet.presentWithPaymentIntent(
-                        clientSecret,
-                        PaymentSheet.Configuration(
-                            merchantDisplayName = "Missed Call Auto SMS",
-                            allowsDelayedPaymentMethods = false
-                        )
-                    )
-                } else {
-                    val err = result.optString("error", "Unknown error occurred")
-                    Toast.makeText(context, "Payment Error: $err", Toast.LENGTH_LONG).show()
-                }
-            } catch (e: Exception) {
-                Toast.makeText(context, "Network error: ${e.localizedMessage}", Toast.LENGTH_LONG).show()
+        try {
+            val checkoutUrl = "https://missedcallautosms.com/api/create-credit-pack-checkout?pack=$packTier&key=${Uri.encode(key)}&email=${Uri.encode(email)}"
+            val intent = Intent(Intent.ACTION_VIEW, Uri.parse(checkoutUrl)).apply {
+                flags = Intent.FLAG_ACTIVITY_NEW_TASK
             }
+            context.startActivity(intent)
+        } catch (e: Exception) {
+            Toast.makeText(context, "Could not open browser: ${e.localizedMessage}", Toast.LENGTH_LONG).show()
         }
     }
 
     fun upgradeToProGateway() {
         val email = customerEmailInput.trim().ifBlank { settings.customerEmail.trim() }
         val key = licenseKeyInput.trim().ifBlank { settings.licenseKey.trim() }
-        
-        Toast.makeText(context, "Initializing Secure Pro Gateway Checkout ($249.99)...", Toast.LENGTH_SHORT).show()
-        pendingPaymentAction = "pro_upgrade"
-        
-        coroutineScope.launch {
-            try {
-                val result = withContext(Dispatchers.IO) {
-                    val endpoint = if (settings.remoteUpdateUrl.contains("localhost") || settings.remoteUpdateUrl.contains("10.0.")) {
-                        "http://10.0.2.2:8000/api/create-payment-intent"
-                    } else {
-                        "https://missedcallautosms.com/api/create-payment-intent"
-                    }
-                    val url = URL(endpoint)
-                    val connection = url.openConnection() as HttpURLConnection
-                    connection.requestMethod = "POST"
-                    connection.setRequestProperty("Content-Type", "application/json")
-                    connection.doOutput = true
-                    
-                    val jsonBody = JSONObject().apply {
-                        put("tier", "pro_upgrade")
-                        put("licenseKey", key)
-                        put("email", email)
-                    }.toString()
-                    
-                    connection.outputStream.use { os ->
-                        val input = jsonBody.toByteArray(Charsets.UTF_8)
-                        os.write(input, 0, input.size)
-                    }
-                    
-                    val responseCode = connection.responseCode
-                    val stream = if (responseCode in 200..299) connection.inputStream else connection.errorStream
-                    val responseStr = stream.bufferedReader().use { it.readText() }
-                    JSONObject(responseStr)
-                }
-                
-                if (result.optBoolean("success", false)) {
-                    val clientSecret = result.getString("paymentIntent")
-                    val pubKey = result.getString("publishableKey")
-                    
-                    PaymentConfiguration.init(context, pubKey)
-                    
-                    paymentSheet.presentWithPaymentIntent(
-                        clientSecret,
-                        PaymentSheet.Configuration(
-                            merchantDisplayName = "Missed Call Auto SMS Pro",
-                            allowsDelayedPaymentMethods = false
-                        )
-                    )
-                } else {
-                    val err = result.optString("error", "Unknown error occurred")
-                    Toast.makeText(context, "Payment Error: $err", Toast.LENGTH_LONG).show()
-                }
-            } catch (e: Exception) {
-                Toast.makeText(context, "Network error: ${e.localizedMessage}", Toast.LENGTH_LONG).show()
+        try {
+            val checkoutUrl = "https://buy.stripe.com/bJe14neNU9loc6kehj2go0h?prefilled_email=${Uri.encode(email)}&client_reference_id=${Uri.encode(key)}"
+            val intent = Intent(Intent.ACTION_VIEW, Uri.parse(checkoutUrl)).apply {
+                flags = Intent.FLAG_ACTIVITY_NEW_TASK
             }
+            context.startActivity(intent)
+        } catch (e: Exception) {
+            Toast.makeText(context, "Could not open browser: ${e.localizedMessage}", Toast.LENGTH_LONG).show()
         }
     }
 
@@ -536,11 +397,13 @@ fun CustomerAccountPortalDialog(
                         }
                     }
 
-                    // Card 1.6: 1-Tap Add Minutes / Credit Pack Reload (Stripe In-App)
+                    // Card 1.6: 1-Tap Add Minutes / Credit Pack Reload (Requires Active Voice Subscription)
+                    val isVoiceSubActive = settings.voiceSubscriptionActive || liveVoiceSubActive || isDeveloperKey || settings.licenseKey.contains("VOICE", ignoreCase = true)
+
                     item {
                         Card(
                             colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.7f)),
-                            border = androidx.compose.foundation.BorderStroke(1.dp, Color(0xFF00E676).copy(alpha = 0.4f)),
+                            border = androidx.compose.foundation.BorderStroke(1.dp, if (isVoiceSubActive) Color(0xFF00E676).copy(alpha = 0.4f) else RedError.copy(alpha = 0.35f)),
                             shape = RoundedCornerShape(16.dp)
                         ) {
                             Column(modifier = Modifier.padding(16.dp)) {
@@ -553,41 +416,74 @@ fun CustomerAccountPortalDialog(
                                         modifier = Modifier.weight(1f).padding(end = 4.dp),
                                         verticalAlignment = Alignment.CenterVertically
                                     ) {
-                                        Icon(Icons.Default.AddCard, contentDescription = null, tint = Color(0xFF00E676))
+                                        Icon(if (isVoiceSubActive) Icons.Default.AddCard else Icons.Default.Lock, contentDescription = null, tint = if (isVoiceSubActive) Color(0xFF00E676) else RedError)
                                         Spacer(modifier = Modifier.width(8.dp))
                                         Text(
-                                            text = "Add Money / Load Credit Pack",
+                                            text = if (isVoiceSubActive) "Add Money / Load Credit Pack" else "Add Money / Load Credit Pack 🔒",
                                             style = MaterialTheme.typography.titleSmall,
                                             fontWeight = FontWeight.Bold,
                                             maxLines = 1
                                         )
                                     }
-                                    IconButton(
-                                        onClick = { coroutineScope.launch { fetchUsageData() } },
-                                        modifier = Modifier.size(36.dp)
-                                    ) {
-                                        Icon(
-                                            Icons.Default.Refresh,
-                                            contentDescription = "Refresh",
-                                            tint = Color(0xFF00E676),
-                                            modifier = Modifier.size(20.dp)
-                                        )
+                                    if (isVoiceSubActive) {
+                                        IconButton(
+                                            onClick = { coroutineScope.launch { fetchUsageData() } },
+                                            modifier = Modifier.size(36.dp)
+                                        ) {
+                                            Icon(
+                                                Icons.Default.Refresh,
+                                                contentDescription = "Refresh",
+                                                tint = Color(0xFF00E676),
+                                                modifier = Modifier.size(20.dp)
+                                            )
+                                        }
                                     }
                                 }
 
-                                Text(
-                                    text = "Top up your dedicated AI telephone line with instant Stripe Checkout. Credits never expire and roll over automatically.",
-                                    style = MaterialTheme.typography.bodySmall,
-                                    color = MaterialTheme.colorScheme.onSurfaceVariant
-                                )
+                                if (!isVoiceSubActive) {
+                                    Spacer(modifier = Modifier.height(8.dp))
+                                    Text(
+                                        text = "🔒 AI Voice Subscription Required ($9.99/mo). You must subscribe to the 24/7 AI Voice Receptionist first to unlock the paywall before you can load minute packs to trigger the agent.",
+                                        style = MaterialTheme.typography.bodySmall,
+                                        color = RedError
+                                    )
+                                    Spacer(modifier = Modifier.height(14.dp))
+                                    Button(
+                                        onClick = {
+                                            try {
+                                                val email = settings.customerEmail.trim()
+                                                val key = settings.licenseKey.trim()
+                                                val checkoutUrl = "https://buy.stripe.com/4gMeVdcFMaps6M0b572go0f?prefilled_email=${Uri.encode(email)}&client_reference_id=${Uri.encode(key)}"
+                                                val intent = Intent(Intent.ACTION_VIEW, Uri.parse(checkoutUrl)).apply {
+                                                    flags = Intent.FLAG_ACTIVITY_NEW_TASK
+                                                }
+                                                context.startActivity(intent)
+                                            } catch (e: Exception) {
+                                                Toast.makeText(context, "Could not open browser", Toast.LENGTH_SHORT).show()
+                                            }
+                                        },
+                                        colors = ButtonDefaults.buttonColors(containerColor = Color(0xFF9333EA)),
+                                        modifier = Modifier.fillMaxWidth(),
+                                        shape = RoundedCornerShape(10.dp)
+                                    ) {
+                                        Icon(Icons.Default.Star, contentDescription = null, modifier = Modifier.size(16.dp))
+                                        Spacer(modifier = Modifier.width(6.dp))
+                                        Text("⭐ Subscribe to Voice Pro ($9.99/mo) First", fontWeight = FontWeight.Bold)
+                                    }
+                                } else {
+                                    Text(
+                                        text = "Top up your dedicated AI telephone line with instant Stripe Checkout. Credits never expire and roll over automatically.",
+                                        style = MaterialTheme.typography.bodySmall,
+                                        color = MaterialTheme.colorScheme.onSurfaceVariant
+                                    )
 
-                                Spacer(modifier = Modifier.height(12.dp))
+                                    Spacer(modifier = Modifier.height(12.dp))
 
-                                // 2x2 Grid of 1-Tap Stripe Reload Buttons
-                                Row(
-                                    modifier = Modifier.fillMaxWidth(),
-                                    horizontalArrangement = Arrangement.spacedBy(8.dp)
-                                ) {
+                                    // 2x2 Grid of 1-Tap Stripe Reload Buttons
+                                    Row(
+                                        modifier = Modifier.fillMaxWidth(),
+                                        horizontalArrangement = Arrangement.spacedBy(8.dp)
+                                    ) {
                                     OutlinedButton(
                                         onClick = { purchaseCreditPack(10) },
                                         modifier = Modifier.weight(1f),
@@ -656,6 +552,7 @@ fun CustomerAccountPortalDialog(
                                     Icon(Icons.Default.Security, contentDescription = null, modifier = Modifier.size(12.dp), tint = MaterialTheme.colorScheme.onSurfaceVariant)
                                     Spacer(modifier = Modifier.width(4.dp))
                                     Text("256-bit Encryption", fontSize = 10.sp, color = MaterialTheme.colorScheme.onSurfaceVariant)
+                                }
                                 }
                             }
                         }

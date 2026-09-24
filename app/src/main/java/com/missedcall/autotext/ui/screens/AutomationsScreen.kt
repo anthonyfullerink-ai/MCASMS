@@ -1,5 +1,7 @@
 package com.missedcall.autotext.ui.screens
 
+import android.content.Intent
+import android.net.Uri
 import android.widget.Toast
 import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.background
@@ -28,10 +30,6 @@ import com.missedcall.autotext.ui.theme.ActiveGreenContainer
 import com.missedcall.autotext.ui.theme.ActiveGreenText
 import com.missedcall.autotext.ui.theme.AmberWarning
 import com.missedcall.autotext.ui.theme.RedError
-import com.stripe.android.PaymentConfiguration
-import com.stripe.android.paymentsheet.PaymentSheet
-import com.stripe.android.paymentsheet.PaymentSheetResult
-import com.stripe.android.paymentsheet.rememberPaymentSheet
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
@@ -72,98 +70,17 @@ fun AutomationsScreen(
     var pingStatusMessage by remember { mutableStateOf<String?>(null) }
     var showCurlSnippet by remember { mutableStateOf(false) }
 
-    // Native PaymentSheet for In-App Pro Upgrade
-    val paymentSheet = rememberPaymentSheet { paymentResult ->
-        when (paymentResult) {
-            is PaymentSheetResult.Completed -> {
-                val newKey = if (settings.licenseKey.isNotBlank()) {
-                    if (settings.licenseKey.startsWith("MCAS-") && !settings.licenseKey.startsWith("MCAS-PRO-")) {
-                        settings.licenseKey.replaceFirst("MCAS-", "MCAS-PRO-")
-                    } else if (settings.licenseKey.startsWith("MCAT-") && !settings.licenseKey.startsWith("MCAT-PRO-")) {
-                        settings.licenseKey.replaceFirst("MCAT-", "MCAT-PRO-")
-                    } else if (!settings.licenseKey.contains("PRO", ignoreCase = true)) {
-                        "MCAS-PRO-" + settings.licenseKey
-                    } else {
-                        settings.licenseKey
-                    }
-                } else {
-                    "MCAS-PRO-UPGRADED"
-                }
-
-                onSettingsChanged(
-                    settings.copy(
-                        licenseKey = newKey,
-                        outboundWebhookEnabled = true,
-                        remoteAccessEnabled = true
-                    )
-                )
-                Toast.makeText(context, "🎉 Pro Automation Gateway Unlocked! All features are now active.", Toast.LENGTH_LONG).show()
-            }
-            is PaymentSheetResult.Canceled -> {
-                Toast.makeText(context, "Upgrade canceled.", Toast.LENGTH_SHORT).show()
-            }
-            is PaymentSheetResult.Failed -> {
-                Toast.makeText(context, "Payment error: ${paymentResult.error.localizedMessage}", Toast.LENGTH_LONG).show()
-            }
-        }
-    }
-
     fun launchProUpgrade() {
-        Toast.makeText(context, "Initializing Secure Pro Gateway Checkout ($249.99)...", Toast.LENGTH_SHORT).show()
         val email = settings.customerEmail.trim()
         val key = settings.licenseKey.trim()
-
-        coroutineScope.launch {
-            try {
-                val result = withContext(Dispatchers.IO) {
-                    val endpoint = if (settings.remoteUpdateUrl.contains("localhost") || settings.remoteUpdateUrl.contains("10.0.")) {
-                        "http://10.0.2.2:8000/api/create-payment-intent"
-                    } else {
-                        "https://missedcallautosms.com/api/create-payment-intent"
-                    }
-                    val url = URL(endpoint)
-                    val connection = url.openConnection() as HttpURLConnection
-                    connection.requestMethod = "POST"
-                    connection.setRequestProperty("Content-Type", "application/json")
-                    connection.doOutput = true
-
-                    val jsonBody = JSONObject().apply {
-                        put("tier", "pro_upgrade")
-                        put("licenseKey", key)
-                        put("email", email)
-                    }.toString()
-
-                    connection.outputStream.use { os ->
-                        val input = jsonBody.toByteArray(Charsets.UTF_8)
-                        os.write(input, 0, input.size)
-                    }
-
-                    val responseCode = connection.responseCode
-                    val stream = if (responseCode in 200..299) connection.inputStream else connection.errorStream
-                    val responseStr = stream.bufferedReader().use { it.readText() }
-                    JSONObject(responseStr)
-                }
-
-                if (result.optBoolean("success", false)) {
-                    val clientSecret = result.getString("paymentIntent")
-                    val pubKey = result.getString("publishableKey")
-
-                    PaymentConfiguration.init(context, pubKey)
-
-                    paymentSheet.presentWithPaymentIntent(
-                        clientSecret,
-                        PaymentSheet.Configuration(
-                            merchantDisplayName = "Missed Call Auto SMS Pro",
-                            allowsDelayedPaymentMethods = false
-                        )
-                    )
-                } else {
-                    val err = result.optString("error", "Unknown error occurred")
-                    Toast.makeText(context, "Payment Error: $err", Toast.LENGTH_LONG).show()
-                }
-            } catch (e: Exception) {
-                Toast.makeText(context, "Network error: ${e.localizedMessage}", Toast.LENGTH_LONG).show()
+        try {
+            val checkoutUrl = "https://buy.stripe.com/bJe14neNU9loc6kehj2go0h?prefilled_email=${Uri.encode(email)}&client_reference_id=${Uri.encode(key)}"
+            val intent = Intent(Intent.ACTION_VIEW, Uri.parse(checkoutUrl)).apply {
+                flags = Intent.FLAG_ACTIVITY_NEW_TASK
             }
+            context.startActivity(intent)
+        } catch (e: Exception) {
+            Toast.makeText(context, "Could not open browser: ${e.localizedMessage}", Toast.LENGTH_LONG).show()
         }
     }
 

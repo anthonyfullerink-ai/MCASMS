@@ -1,10 +1,10 @@
 {
-  "versionCode": 23,
-  "versionName": "1.7.6",
+  "versionCode": 24,
+  "versionName": "1.7.7",
   "downloadUrl": "https://raw.githubusercontent.com/anthonyfullerink-ai/MCASMS/main/MissedCallAutoSMS.apk",
   "proDownloadUrl": "https://raw.githubusercontent.com/anthonyfullerink-ai/MCASMS/main/MissedCallAutoSMS.apk",
-  "releaseNotes": "🔒 v1.7.6 Strict Paywall & Security Update:\n• 🛡️ Watertight Tier Enforcement: Basic Flagship keys ($49.99) strictly limited to Appliance Auto-SMS, Dashboard & Activity Logs\n• 🎙️ AI Voice Receptionist Paywall: Inactive keys gated behind $9.99/mo subscription with 1-tap activation & minute reloads\n• ⚡ Pro Automation Gateway Lock: Presets, Webhooks, Inbound API & Dual-SIM locked behind Pro Gateway ($249.99 in-app upgrade)\n• 🎛️ Dynamic Tab Lock Badges & Server Usage Endpoint Validation",
+  "releaseNotes": "🔒 v1.7.7 Subscription & Credit Pack Fix:\n• 🛡️ Crash Fix: Resolved lifecycle registration crash when tapping Subscribe or Add Minute Pack\n• 🎙️ Proper Voice Workflow Gate: Non-subscribers must subscribe ($9.99/mo) to unlock the paywall before purchasing minute packs\n• ⚡ 1-Tap Crash-Free Stripe Billing for Subscriptions, Reloads ($10, $25, $50, $100), and Pro Upgrades ($249.99)\n• 🌐 Fixed Website CTA modals and direct checkout buttons across all devices",
   "mandatory": true,
   "minSupportedVersion": 22,
-  "updatedAt": "2026-09-24T21:00:00.000Z"
+  "updatedAt": "2026-09-24T21:18:00.000Z"
 }

@@ -14,8 +14,8 @@ android {
         applicationId = "com.missedcall.autotext"
         minSdk = 26
         targetSdk = 35
-        versionCode = 23
-        versionName = "1.7.6"
+        versionCode = 24
+        versionName = "1.7.7"
 
 
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
@@ -98,7 +98,6 @@ dependencies {
     ksp(libs.androidx.room.compiler)
 
     implementation(libs.androidx.datastore.preferences)
-    implementation("com.stripe:stripe-android:20.35.0")
     implementation(libs.androidx.work.runtime.ktx)
     implementation(libs.gson)
     implementation("org.nanohttpd:nanohttpd:2.3.1")

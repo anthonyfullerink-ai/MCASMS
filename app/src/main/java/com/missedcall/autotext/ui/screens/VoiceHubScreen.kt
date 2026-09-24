@@ -253,27 +253,27 @@ fun VoiceHubScreen(
 
                         Spacer(modifier = Modifier.height(14.dp))
 
-                        Row(
+                        Button(
+                            onClick = {
+                                try {
+                                    val email = settings.customerEmail.trim()
+                                    val key = settings.licenseKey.trim()
+                                    val checkoutUrl = "https://buy.stripe.com/4gMeVdcFMaps6M0b572go0f?prefilled_email=${Uri.encode(email)}&client_reference_id=${Uri.encode(key)}"
+                                    val intent = Intent(Intent.ACTION_VIEW, Uri.parse(checkoutUrl)).apply {
+                                        flags = Intent.FLAG_ACTIVITY_NEW_TASK
+                                    }
+                                    context.startActivity(intent)
+                                } catch (e: Exception) {
+                                    Toast.makeText(context, "Could not open browser: ${e.localizedMessage}", Toast.LENGTH_SHORT).show()
+                                }
+                            },
+                            colors = ButtonDefaults.buttonColors(containerColor = Color(0xFF9333EA)),
                             modifier = Modifier.fillMaxWidth(),
-                            horizontalArrangement = Arrangement.spacedBy(8.dp)
+                            shape = RoundedCornerShape(10.dp)
                         ) {
-                            Button(
-                                onClick = { showAccountPortal = true },
-                                colors = ButtonDefaults.buttonColors(containerColor = Color(0xFF9333EA)),
-                                modifier = Modifier.weight(1f),
-                                shape = RoundedCornerShape(10.dp)
-                            ) {
-                                Text("⭐ Subscribe ($9.99/mo)", fontWeight = FontWeight.Bold, fontSize = 12.sp)
-                            }
-
-                            Button(
-                                onClick = { showAccountPortal = true },
-                                colors = ButtonDefaults.buttonColors(containerColor = Color(0xFF00E676)),
-                                modifier = Modifier.weight(1f),
-                                shape = RoundedCornerShape(10.dp)
-                            ) {
-                                Text("💳 Add Minute Pack", fontWeight = FontWeight.Black, fontSize = 12.sp, color = Color.Black)
-                            }
+                            Icon(Icons.Default.Star, contentDescription = null, modifier = Modifier.size(16.dp))
+                            Spacer(modifier = Modifier.width(6.dp))
+                            Text("⭐ Subscribe to Unlock AI Voice ($9.99/mo)", fontWeight = FontWeight.Bold, fontSize = 13.sp)
                         }
 
                         Spacer(modifier = Modifier.height(8.dp))
