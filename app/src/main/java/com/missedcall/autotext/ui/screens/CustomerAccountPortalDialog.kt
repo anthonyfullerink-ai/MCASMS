@@ -60,6 +60,7 @@ fun CustomerAccountPortalDialog(
 
     var businessNameInput by remember { mutableStateOf(settings.businessName) }
     var customerEmailInput by remember { mutableStateOf(settings.customerEmail) }
+    var tradeInput by remember { mutableStateOf(settings.voiceIndustryTrade) }
     var licenseKeyInput by remember { mutableStateOf(settings.licenseKey) }
     var isEditingKey by remember { mutableStateOf(false) }
     var showCancelTrialConfirm by remember { mutableStateOf(false) }
@@ -561,6 +562,20 @@ fun CustomerAccountPortalDialog(
                                     supportingText = {
                                         Text("Used to verify Stripe billing and trial records.")
                                     }
+                                )
+
+                                Spacer(modifier = Modifier.height(10.dp))
+
+                                OutlinedTextField(
+                                    value = tradeInput,
+                                    onValueChange = {
+                                        tradeInput = it
+                                        onSettingsChanged(settings.copy(voiceIndustryTrade = it))
+                                    },
+                                    label = { Text("Industry / Service Trade (e.g. Plumbing, HVAC)") },
+                                    singleLine = true,
+                                    modifier = Modifier.fillMaxWidth(),
+                                    leadingIcon = { Icon(Icons.Default.Build, contentDescription = null) }
                                 )
                             }
                         }

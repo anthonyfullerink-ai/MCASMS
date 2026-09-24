@@ -126,7 +126,16 @@ fun VoiceHubScreen(
     var testPhoneNumberInput by remember { mutableStateOf("") }
     var isPlacingOutboundCall by remember { mutableStateOf(false) }
     var testCallDialogStatus by remember { mutableStateOf<String?>(null) }
+    var showAccountPortal by remember { mutableStateOf(false) }
     var tts by remember { mutableStateOf<TextToSpeech?>(null) }
+
+    if (showAccountPortal) {
+        CustomerAccountPortalDialog(
+            settings = settings,
+            onSettingsChanged = onSettingsChanged,
+            onDismiss = { showAccountPortal = false }
+        )
+    }
 
     DisposableEffect(context) {
         var localTts: TextToSpeech? = null
@@ -284,6 +293,17 @@ fun VoiceHubScreen(
                         ) {
                             Text("Revert (*73)")
                         }
+                    }
+
+                    Spacer(modifier = Modifier.height(10.dp))
+
+                    OutlinedButton(
+                        onClick = { showAccountPortal = true },
+                        modifier = Modifier.fillMaxWidth()
+                    ) {
+                        Icon(Icons.Default.CreditCard, contentDescription = null, modifier = Modifier.size(16.dp))
+                        Spacer(modifier = Modifier.width(6.dp))
+                        Text("Manage Plan, Quotas & Add Minutes", fontWeight = FontWeight.SemiBold)
                     }
                 }
             }

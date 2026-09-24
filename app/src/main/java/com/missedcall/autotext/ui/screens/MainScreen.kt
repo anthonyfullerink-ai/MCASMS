@@ -226,7 +226,7 @@ fun MainScreen(
     var showGlobalSettingsDialog by remember { mutableStateOf(false) }
 
     if (showProfileDialog) {
-        ProfileDialog(
+        CustomerAccountPortalDialog(
             settings = settings,
             onSettingsChanged = onSettingsChanged,
             onDismiss = { showProfileDialog = false }

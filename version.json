@@ -1,10 +1,10 @@
 {
-  "versionCode": 19,
-  "versionName": "1.7.2",
+  "versionCode": 20,
+  "versionName": "1.7.3",
   "downloadUrl": "https://raw.githubusercontent.com/anthonyfullerink-ai/MCASMS/main/MissedCallAutoSMS.apk",
   "proDownloadUrl": "https://raw.githubusercontent.com/anthonyfullerink-ai/MCASMS/main/MissedCallAutoSMS.apk",
-  "releaseNotes": "🚀 v1.7.2 In-App Membership & Billing Center:\n✅ In-App Membership & Credit Reload Portal (Live Tier Badge, Features & Forwarding Status)\n✅ Telephony Credit Pack Balance & Live Meter with Remaining Minutes Tracker\n✅ 1-Tap Stripe Add Minutes ($10, $25, $50, $100) with Pre-filled Checkout\n✅ Self-Service Pro Gateway Tier Upgrade ($249.99)\n✅ Owner Dashboard Tab 9: Complete Memberships & Subscriptions Hub with Minute Reserves & Waivers",
-  "mandatory": false,
-  "minSupportedVersion": 16,
-  "updatedAt": "2026-09-24T14:36:00.000Z"
+  "releaseNotes": "🚀 v1.7.3 In-App Membership & Billing Center Active:\n✅ Directly integrated into Account/Profile Dialog (top bar icon & title tap)\n✅ Voice Hub Studio: 1-Tap 'Manage Plan, Quotas & Add Minutes' button\n✅ Real-time Package & Tier Badge, Minutes Meter, and Forwarding routing\n✅ 1-Tap Stripe Reload Credit Packs ($10, $25, $50, $100)\n✅ Pro Gateway Tier Upgrade ($249.99)\n✅ Owner Dashboard Tab 9: Full Subscriptions, Minutes & Waivers Hub",
+  "mandatory": true,
+  "minSupportedVersion": 17,
+  "updatedAt": "2026-09-24T14:58:00.000Z"
 }

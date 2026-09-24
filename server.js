@@ -21,13 +21,13 @@ const MIME_TYPES = {
 };
 
 const LATEST_APP_VERSION = {
-  versionCode: 19,
-  versionName: '1.7.2',
+  versionCode: 20,
+  versionName: '1.7.3',
   downloadUrl: 'https://raw.githubusercontent.com/anthonyfullerink-ai/MCASMS/main/MissedCallAutoSMS.apk',
   proDownloadUrl: 'https://raw.githubusercontent.com/anthonyfullerink-ai/MCASMS/main/MissedCallAutoSMS.apk',
-  releaseNotes: '• 💳 In-App Membership & Credit Reload Portal\n• ⚡ 1-Tap Stripe Add Minutes ($10, $25, $50, $100)\n• 💎 Self-Service Pro Gateway Tier Upgrade\n• 🎛️ Owner Admin Subscriptions & Minutes Management Hub',
-  mandatory: false,
-  minSupportedVersion: 16
+  releaseNotes: '• 💳 Account Profile: Full In-App Membership & Credit Reload Portal\n• 🎙️ Voice Hub: Direct 1-Tap Manage Plan & Minutes button\n• ⚡ 1-Tap Stripe Add Minutes ($10, $25, $50, $100)\n• 💎 Self-Service Pro Gateway Tier Upgrade ($249.99)\n• 🎛️ Owner Admin Subscriptions & Minutes Hub with Waiver Controls',
+  mandatory: true,
+  minSupportedVersion: 17
 };
 
 
