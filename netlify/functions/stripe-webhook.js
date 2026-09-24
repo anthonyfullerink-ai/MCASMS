@@ -888,7 +888,7 @@ exports.handler = async (event) => {
     );
 
     const host = (event.headers && event.headers.host) || 'missedcallautosms.com';
-    const apkFileName = (isPro || isBundle) ? 'MissedCallAutoSMS-Pro.apk' : 'MissedCallAutoSMS.apk';
+    const apkFileName = 'MissedCallAutoSMS.apk';
     const apkDownloadUrl = `https://${host}/${apkFileName}`;
 
     // === REFERRAL & NET-PROFIT REV-SHARE INGESTION ===

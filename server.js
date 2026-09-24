@@ -156,9 +156,7 @@ function generateLicenseEmailHtml(data) {
   const { customerName, customerEmail, licenseKey, licenseType, price } = data;
   const isPro = (licenseKey && (licenseKey.startsWith('MCAS-PRO-') || licenseKey.startsWith('MCAT-PRO-') || licenseKey.includes('PRO-DEMO'))) ||
                 licenseType === 'PRO' || price === 299.00 || price === 149.99 || data.isPro;
-  const apkDownloadUrl = isPro 
-    ? `https://missedcallautosms.com/MissedCallAutoSMS-Pro.apk` 
-    : `https://missedcallautosms.com/MissedCallAutoSMS.apk`;
+  const apkDownloadUrl = `https://missedcallautosms.com/MissedCallAutoSMS.apk`;
   const isFree = (price === 0 || licenseType === 'FREE');
 
   const brandTitle = isPro ? "Missed Call Auto SMS • Pro Automation Gateway" : "Missed Call Auto SMS";
@@ -2160,7 +2158,7 @@ const server = http.createServer((req, res) => {
         console.log(`📧 [EMAIL SENT] License key ${licenseKey} & APK link dispatched to ${customerEmail}. Saved to: sent_emails/${fileName}`);
 
         const isPro = (payload.tier === 'PRO' || payload.licenseType === 'PRO' || (licenseKey && licenseKey.includes('PRO')));
-        const apkDownloadUrl = isPro ? `https://missedcallautosms.com/MissedCallAutoSMS-Pro.apk` : `https://missedcallautosms.com/MissedCallAutoSMS.apk`;
+        const apkDownloadUrl = `https://missedcallautosms.com/MissedCallAutoSMS.apk`;
 
         res.writeHead(200, {
           'Content-Type': 'application/json; charset=utf-8',

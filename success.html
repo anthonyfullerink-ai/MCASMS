@@ -206,14 +206,12 @@
                 </a>
             </div>
 
-            <!-- APK Download Links -->
-            <a id="btnPrimaryDownload" href="/MissedCallAutoSMS-Pro.apk" class="btn-app" style="background: linear-gradient(135deg, #00E676, #00C853); color: #000; font-weight: 900; border: none; box-shadow: 0 4px 16px rgba(0,230,118,0.25);">
-                📥 Download MissedCallAutoSMS-Pro.apk
+            <!-- Single Unified APK Download Button -->
+            <a id="btnPrimaryDownload" href="/MissedCallAutoSMS.apk" class="btn-app" style="background: linear-gradient(135deg, #00E676, #00C853); color: #000; font-weight: 900; border: none; box-shadow: 0 4px 16px rgba(0,230,118,0.25);">
+                📥 Download Missed Call Auto SMS App (v1.7.0)
             </a>
-            <div id="standardApkDownloadNotice" style="margin-top: 10px; font-size: 12px;">
-                <a id="subDownloadLink" href="/MissedCallAutoSMS.apk" style="color: var(--muted); text-decoration: underline;">
-                    Looking for Standard Edition APK instead? Download here &rarr;
-                </a>
+            <div id="standardApkDownloadNotice" style="margin-top: 10px; font-size: 12px; color: var(--muted);">
+                Single Unified Android Appliance • Enter your license key in the app to activate your features.
             </div>
 
             <!-- Simple Steps Box -->
@@ -265,26 +263,26 @@
             document.getElementById('voiceProvisionBox').style.display = 'none';
             document.getElementById('postPurchaseVoiceCard').style.display = 'block';
 
-            document.getElementById('btnPrimaryDownload').href = '/MissedCallAutoSMS-Pro.apk';
-            document.getElementById('btnPrimaryDownload').innerText = '📥 Download MissedCallAutoSMS-Pro.apk';
+            document.getElementById('btnPrimaryDownload').href = '/MissedCallAutoSMS.apk';
+            document.getElementById('btnPrimaryDownload').innerText = '📥 Download Missed Call Auto SMS App (v1.7.0)';
 
-            document.getElementById('step1Text').innerHTML = '<strong>Download MissedCallAutoSMS-Pro.apk</strong> on your dedicated Android phone.';
+            document.getElementById('step1Text').innerHTML = '<strong>Download MissedCallAutoSMS.apk</strong> on your dedicated Android phone.';
             document.getElementById('step2Text').innerHTML = '<strong>Enter Your Pro License Key</strong> sent to your SMS and email to unlock all features.';
             document.getElementById('step3Text').innerHTML = '<strong>Configure Webhooks & Dual SIM:</strong> Connect your CRM or Zapier pipelines and set custom auto-reply rules.';
-        } else if (tier === 'pro_bundle') {
-            // Pro + Voice Add-on Bundle
-            document.getElementById('successBadge').innerHTML = '🎉 Pro Automation + 24/7 AI Voice Active';
+        } else if (tier === 'pro_bundle' || tier === 'voice_receptionist') {
+            // Pro + Voice Add-on Bundle or Voice Receptionist
+            document.getElementById('successBadge').innerHTML = '🎉 24/7 AI Voice Receptionist Active';
             document.getElementById('successBadge').style.borderColor = '#00E676';
             document.getElementById('successBadge').style.color = '#00E676';
             
-            document.getElementById('successTitle').innerText = 'Your Full Pro + AI Voice Suite is Ready!';
-            document.getElementById('successSubtitle').innerText = 'Your lifetime Pro software license is issued and your dedicated AI Voice forwarding line is provisioned.';
+            document.getElementById('successTitle').innerText = 'Your AI Voice Receptionist is Ready!';
+            document.getElementById('successSubtitle').innerText = 'Your software license is issued and your dedicated AI Voice forwarding line is provisioned.';
 
             document.getElementById('voiceProvisionBox').style.display = 'block';
             document.getElementById('postPurchaseVoiceCard').style.display = 'none';
 
-            document.getElementById('btnPrimaryDownload').href = '/MissedCallAutoSMS-Pro.apk';
-            document.getElementById('btnPrimaryDownload').innerText = '📥 Download MissedCallAutoSMS-Pro.apk';
+            document.getElementById('btnPrimaryDownload').href = '/MissedCallAutoSMS.apk';
+            document.getElementById('btnPrimaryDownload').innerText = '📥 Download Missed Call Auto SMS App (v1.7.0)';
         } else if (tier === 'standard') {
             // Standard $49.99 purchase
             document.getElementById('successBadge').innerHTML = '✅ Standard Edition Activated';
@@ -295,16 +293,15 @@
             document.getElementById('postPurchaseVoiceCard').style.display = 'none';
 
             document.getElementById('btnPrimaryDownload').href = '/MissedCallAutoSMS.apk';
-            document.getElementById('btnPrimaryDownload').innerText = '📥 Download MissedCallAutoSMS.apk';
-            document.getElementById('subDownloadLink').style.display = 'none';
+            document.getElementById('btnPrimaryDownload').innerText = '📥 Download Missed Call Auto SMS App (v1.7.0)';
 
             document.getElementById('step1Text').innerHTML = '<strong>Download MissedCallAutoSMS.apk</strong> on your Android phone.';
             document.getElementById('step2Text').innerHTML = '<strong>Enter Your License Key</strong> to activate the appliance.';
             document.getElementById('step3Text').innerHTML = '<strong>Set Your Auto-Reply Message</strong> and never miss another customer inquiry.';
         } else {
-            // Default (Voice Receptionist trial direct or unspecified)
-            document.getElementById('btnPrimaryDownload').href = '/MissedCallAutoSMS-Pro.apk';
-            document.getElementById('btnPrimaryDownload').innerText = '📱 Download MissedCallAutoSMS-Pro.apk';
+            // Default
+            document.getElementById('btnPrimaryDownload').href = '/MissedCallAutoSMS.apk';
+            document.getElementById('btnPrimaryDownload').innerText = '📱 Download Missed Call Auto SMS App (v1.7.0)';
         }
     </script>
 </body>
