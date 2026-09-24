@@ -187,7 +187,69 @@ async function runTests() {
 
   console.log('✅ Test 6 (Email HTML Generation) Passed!\n');
 
-  console.log('🎉 ALL 6 STRIPE WEBHOOK TIER & EMAIL TESTS PASSED WITH 100% ACCURACY!');
+  // Test 7: Flagship + AI Voice Combo ($59.98)
+  console.log('--- Test 7: Flagship + AI Voice Combo ($59.98 Today, then $9.99/mo) ---');
+  const payloadFlagshipCombo = {
+    type: 'checkout.session.completed',
+    data: {
+      object: {
+        id: 'cs_test_flagship_combo_59',
+        customer_email: 'flagship_combo@example.com',
+        customer_details: { name: 'Bob Painter', email: 'flagship_combo@example.com' },
+        amount_total: 5998,
+        metadata: { tier: 'flagship_plus_voice', plan: 'flagship', include_voice: 'true' },
+        subscription: 'sub_test_fc59'
+      }
+    }
+  };
+
+  const res7 = await handler({
+    httpMethod: 'POST',
+    headers: { host: 'missedcallautosms.com' },
+    body: JSON.stringify(payloadFlagshipCombo)
+  });
+
+  assert.strictEqual(res7.statusCode, 200);
+  const body7 = JSON.parse(res7.body);
+  console.log('Response 7:', body7);
+  assert.strictEqual(body7.tier, 'flagship_plus_voice');
+  assert.strictEqual(body7.isPro, false);
+  assert.strictEqual(body7.voiceUnlocked, true);
+  assert(body7.licenseKey.startsWith('MCAS-') && !body7.licenseKey.startsWith('MCAS-PRO-'), 'Must be standard license key');
+  console.log('✅ Test 7 Passed!\n');
+
+  // Test 8: Pro Gateway + AI Voice Combo ($309.98)
+  console.log('--- Test 8: Pro Gateway + AI Voice Combo ($309.98 Today, then $9.99/mo) ---');
+  const payloadProCombo = {
+    type: 'checkout.session.completed',
+    data: {
+      object: {
+        id: 'cs_test_pro_combo_309',
+        customer_email: 'pro_combo@example.com',
+        customer_details: { name: 'Alice Systems', email: 'pro_combo@example.com' },
+        amount_total: 30998,
+        metadata: { tier: 'pro_plus_voice', plan: 'pro', include_voice: 'true' },
+        subscription: 'sub_test_pc309'
+      }
+    }
+  };
+
+  const res8 = await handler({
+    httpMethod: 'POST',
+    headers: { host: 'missedcallautosms.com' },
+    body: JSON.stringify(payloadProCombo)
+  });
+
+  assert.strictEqual(res8.statusCode, 200);
+  const body8 = JSON.parse(res8.body);
+  console.log('Response 8:', body8);
+  assert.strictEqual(body8.tier, 'pro_plus_voice');
+  assert.strictEqual(body8.isPro, true);
+  assert.strictEqual(body8.voiceUnlocked, true);
+  assert(body8.licenseKey.startsWith('MCAS-PRO-'), 'Must be Pro license key');
+  console.log('✅ Test 8 Passed!\n');
+
+  console.log('🎉 ALL 8 STRIPE WEBHOOK TIER & EMAIL TESTS PASSED WITH 100% ACCURACY!');
 }
 
 runTests().catch(err => {

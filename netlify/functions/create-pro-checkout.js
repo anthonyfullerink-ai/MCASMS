@@ -63,18 +63,51 @@ exports.handler = async (event) => {
   try {
     const payload = JSON.parse(event.body || '{}');
     const includeVoice = Boolean(payload.includeVoice);
+    const plan = (payload.plan || 'pro').toLowerCase().trim(); // 'flagship', 'pro', or 'pro_upgrade'
     const customerEmail = (payload.email || '').trim();
-    const businessName = (payload.businessName || 'Pro Business').trim();
+    const businessName = (payload.businessName || 'Apex Business').trim();
+    const licenseKey = (payload.licenseKey || '').trim().toUpperCase();
+
+    // Fallback direct payment links if no dynamic session or if no order bump
+    const FLAGSHIP_DIRECT_LINK = "https://buy.stripe.com/3cI9AT49g2X07Q41ux2go0a";
+    const PRO_DIRECT_LINK = "https://buy.stripe.com/cNi5kDdJQ558c6k2yB2go0b";
+    const VOICE_ONLY_LINK = "https://buy.stripe.com/4gMeVdcFMaps6M0b572go0f";
+
+    // If no voice bump requested and standard flagship or pro plan, return direct Stripe links immediately
+    if (!includeVoice && plan === 'flagship') {
+      return {
+        statusCode: 200,
+        headers,
+        body: JSON.stringify({
+          success: true,
+          checkoutUrl: FLAGSHIP_DIRECT_LINK,
+          plan,
+          includeVoice: false
+        })
+      };
+    }
+
+    if (!includeVoice && plan === 'pro') {
+      return {
+        statusCode: 200,
+        headers,
+        body: JSON.stringify({
+          success: true,
+          checkoutUrl: PRO_DIRECT_LINK,
+          plan,
+          includeVoice: false
+        })
+      };
+    }
 
     // Custom stripe key header fallback (e.g. from local owner testing)
     const customKey = event.headers['x-stripe-key'];
     const activeStripeKey = customKey || STRIPE_SECRET_KEY;
 
-    // Fallback if Stripe key is not set in environment: return direct Stripe payment links
+    // Fallback if Stripe key is not configured in environment
     if (!activeStripeKey) {
-      const fallbackUrl = includeVoice
-        ? "https://buy.stripe.com/4gMeVdcFMaps6M0b572go0f" // Direct voice link fallback
-        : "https://buy.stripe.com/cNi5kDdJQ558c6k2yB2go0b"; // Direct Pro link fallback
+      let fallbackUrl = plan === 'flagship' ? FLAGSHIP_DIRECT_LINK : PRO_DIRECT_LINK;
+      if (includeVoice && plan === 'voice_only') fallbackUrl = VOICE_ONLY_LINK;
       return {
         statusCode: 200,
         headers,
@@ -82,6 +115,7 @@ exports.handler = async (event) => {
           success: true,
           checkoutUrl: fallbackUrl,
           fallback: true,
+          plan,
           includeVoice
         })
       };
@@ -90,40 +124,74 @@ exports.handler = async (event) => {
     let postData = {};
 
     if (includeVoice) {
-      // 24/7 AI VOICE RECEPTIONIST: $9.99/mo (15 Free Test Minutes + Metered $0.25/min Usage)
+      // APPLIANCE + 24/7 AI VOICE RECEPTIONIST COMBO ($9.99/mo)
+      // Combines one-time appliance license fee with recurring $9.99/mo voice subscription
+      let applianceAmount = '29900';
+      let applianceName = 'Missed Call Auto SMS - Pro Automation Gateway (Perpetual)';
+      let applianceDesc = 'Lifetime Pro License • 1-Year Cloud Relay API Included • Unlimited n8n/Make Webhooks • Dual SIM Routing • 100% A2P 10DLC Carrier Exempt';
+      let tierCode = 'pro_plus_voice';
+
+      if (plan === 'flagship') {
+        applianceAmount = '4999';
+        applianceName = "Missed Call Auto SMS - Founder's Flagship Appliance (Lifetime)";
+        applianceDesc = "Founder's Lifetime Appliance License • 1 Android Phone Bound • 100% A2P 10DLC Carrier Exempt";
+        tierCode = 'flagship_plus_voice';
+      } else if (plan === 'pro_upgrade') {
+        applianceAmount = '24999';
+        applianceName = 'Missed Call Auto SMS - Pro Gateway License Upgrade';
+        applianceDesc = 'Existing Owner Upgrade to Lifetime Pro Gateway • 1-Year Cloud Relay API Included • Dual SIM Routing';
+        tierCode = 'pro_upgrade_plus_voice';
+      }
+
       postData = {
         'mode': 'subscription',
         'payment_method_types[0]': 'card',
+        // Line Item 0: One-time Appliance License
         'line_items[0][price_data][currency]': 'usd',
-        'line_items[0][price_data][unit_amount]': '999',
-        'line_items[0][price_data][recurring][interval]': 'month',
-        'line_items[0][price_data][product_data][name]': 'Missed Call Auto SMS - 24/7 AI Voice Receptionist ($9.99/mo)',
-        'line_items[0][price_data][product_data][description]': '24/7 Conversational AI Voice Phone Receptionist • 15 Free Test Minutes on Signup • Metered $0.25/min Usage in $10 Credit Packs • Native SIM Confirmation SMS • 1-Tap *71 Carrier Transfer',
+        'line_items[0][price_data][unit_amount]': applianceAmount,
+        'line_items[0][price_data][product_data][name]': applianceName,
+        'line_items[0][price_data][product_data][description]': applianceDesc,
         'line_items[0][quantity]': '1',
-        'subscription_data[metadata][tier]': 'voice_receptionist',
+        // Line Item 1: Recurring $9.99/mo AI Voice Receptionist Add-On
+        'line_items[1][price_data][currency]': 'usd',
+        'line_items[1][price_data][unit_amount]': '999',
+        'line_items[1][price_data][recurring][interval]': 'month',
+        'line_items[1][price_data][product_data][name]': 'Missed Call Auto SMS - 24/7 AI Voice Receptionist Add-On ($9.99/mo)',
+        'line_items[1][price_data][product_data][description]': '24/7 Conversational AI Voice Phone Receptionist • 15 Free Test Minutes on Activation • Metered Usage in Credit Packs • Instant Carrier SIM Confirmation SMS',
+        'line_items[1][quantity]': '1',
+        // Subscription Metadata
+        'subscription_data[metadata][tier]': tierCode,
+        'subscription_data[metadata][plan]': plan,
+        'subscription_data[metadata][include_voice]': 'true',
         'subscription_data[metadata][monthly_fee]': '9.99',
         'subscription_data[metadata][business_name]': businessName,
-        'metadata[tier]': 'voice_receptionist',
-        'metadata[monthly_fee]': '9.99',
+        'subscription_data[metadata][license_key]': licenseKey,
+        // Session Metadata
+        'metadata[tier]': tierCode,
+        'metadata[plan]': plan,
         'metadata[include_voice]': 'true',
+        'metadata[monthly_fee]': '9.99',
         'metadata[business_name]': businessName,
-        'success_url': 'https://missedcallautosms.com/success.html?session_id={CHECKOUT_SESSION_ID}&tier=voice_receptionist',
+        'metadata[license_key]': licenseKey,
+        'success_url': `https://missedcallautosms.com/success.html?session_id={CHECKOUT_SESSION_ID}&tier=${tierCode}`,
         'cancel_url': 'https://missedcallautosms.com/#checkout'
       };
     } else {
-      // PRO AUTOMATION GATEWAY: $299.00 Perpetual (A2P 10DLC Bypass Gateway + 1-Year Cloud Relay API)
+      // Standalone Pro Upgrade ($249.99 One-Time)
       postData = {
         'mode': 'payment',
         'payment_method_types[0]': 'card',
         'line_items[0][price_data][currency]': 'usd',
-        'line_items[0][price_data][unit_amount]': '29900',
-        'line_items[0][price_data][product_data][name]': 'Missed Call Auto SMS - Pro Automation Gateway (Perpetual)',
-        'line_items[0][price_data][product_data][description]': 'Lifetime Pro License • 1-Year Cloud Relay API Included • Unlimited n8n/Make Webhooks • Dual SIM Routing • 100% A2P 10DLC Carrier Exempt',
+        'line_items[0][price_data][unit_amount]': '24999',
+        'line_items[0][price_data][product_data][name]': 'Missed Call Auto SMS - Pro Gateway License Upgrade',
+        'line_items[0][price_data][product_data][description]': 'Existing Owner Upgrade to Lifetime Pro Gateway • 1-Year Cloud Relay API Included • Dual SIM Routing',
         'line_items[0][quantity]': '1',
-        'metadata[tier]': 'pro_gateway',
+        'metadata[tier]': 'pro_upgrade',
+        'metadata[plan]': 'pro_upgrade',
         'metadata[include_voice]': 'false',
         'metadata[business_name]': businessName,
-        'success_url': 'https://missedcallautosms.com/success.html?session_id={CHECKOUT_SESSION_ID}&tier=pro_gateway',
+        'metadata[license_key]': licenseKey,
+        'success_url': 'https://missedcallautosms.com/success.html?session_id={CHECKOUT_SESSION_ID}&tier=pro_upgrade',
         'cancel_url': 'https://missedcallautosms.com/#checkout'
       };
     }
@@ -131,9 +199,12 @@ exports.handler = async (event) => {
     if (customerEmail) {
       postData['customer_email'] = customerEmail;
     }
+    if (licenseKey) {
+      postData['client_reference_id'] = licenseKey;
+    }
 
     const session = await stripeApiRequest('/v1/checkout/sessions', 'POST', postData);
-    console.log(`💳 [STRIPE PRO CHECKOUT] Created session: ${session.id} (Include Voice: ${includeVoice})`);
+    console.log(`💳 [STRIPE CHECKOUT CREATED] Session: ${session.id} (Plan: ${plan}, Include Voice: ${includeVoice})`);
 
     return {
       statusCode: 200,
@@ -142,12 +213,12 @@ exports.handler = async (event) => {
         success: true,
         checkoutUrl: session.url,
         sessionId: session.id,
+        plan,
         includeVoice
       })
     };
   } catch (err) {
-    console.error('Stripe Pro checkout creation error:', err.message);
-    // Graceful fallback to static link so user is never blocked from buying
+    console.error('Stripe checkout creation error:', err.message);
     const fallbackUrl = "https://buy.stripe.com/cNi5kDdJQ558c6k2yB2go0b";
     return {
       statusCode: 200,

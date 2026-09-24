@@ -140,6 +140,84 @@ function generateEmailHtml(customerName, licenseKey, apkDownloadUrl, amountPaid,
 </html>`;
 }
 
+function generateComboEmailHtml(customerName, licenseKey, apkDownloadUrl, amountPaid, isPro = false) {
+  const brandTitle = isPro ? "Missed Call Auto SMS • Pro Gateway + AI Voice" : "Missed Call Auto SMS • Flagship + AI Voice";
+  const badgeText = isPro ? "PRO AUTOMATION GATEWAY + 24/7 AI VOICE RECEPTIONIST" : "FOUNDER'S FLAGSHIP + 24/7 AI VOICE RECEPTIONIST";
+  const themeBorderColor = "#00E676";
+  const themeTextColor = "#00E676";
+  const editionSummary = isPro
+    ? "Lifetime Pro Gateway • 1-Year Cloud Relay API Included • 24/7 AI Voice Add-On Active • Dual SIM • 100% A2P Exempt"
+    : "Founder's Lifetime License • 1 Android Phone Bound • 24/7 AI Voice Add-On Active • 100% A2P Exempt";
+
+  return `<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="utf-8">
+    <title>Your ${brandTitle} Setup Guide</title>
+</head>
+<body style="font-family: -apple-system, BlinkMacSystemFont, Arial, sans-serif; background-color: #090B0E; color: #FFFFFF; margin: 0; padding: 24px;">
+    <div style="max-width: 600px; margin: 0 auto; background: #131720; border: 1px solid #222836; border-radius: 16px; padding: 32px;">
+        <div style="text-align: center; margin-bottom: 24px;">
+            <div style="font-size: 44px; margin-bottom: 8px;">${isPro ? '⚡🎙️' : '📱🎙️'}</div>
+            <h1 style="color: ${themeTextColor}; margin: 0; font-size: 24px; font-weight: 900;">${brandTitle}</h1>
+            <div style="display: inline-block; margin-top: 6px; padding: 4px 12px; border-radius: 20px; font-size: 11px; font-weight: 800; background: ${themeBorderColor}22; color: ${themeTextColor}; border: 1px solid ${themeBorderColor}44;">
+                ${badgeText}
+            </div>
+        </div>
+
+        <div style="background: #1A202C; border-left: 4px solid ${themeBorderColor}; padding: 16px; border-radius: 8px; margin-bottom: 24px;">
+            <h2 style="margin: 0 0 6px 0; font-size: 18px; color: #FFF;">Thank you, ${customerName}!</h2>
+            <p style="margin: 0; color: #CBD5E0; font-size: 14px; line-height: 1.5;">
+                Your payment of <strong>$${amountPaid}</strong> was successful. Your ${isPro ? 'Pro Gateway' : "Founder's Flagship"} license key and 24/7 AI Voice Receptionist add-on are ready.
+            </p>
+        </div>
+
+        <!-- License Key Box -->
+        <div style="background: #090B0E; border: 1px dashed ${themeBorderColor}; border-radius: 12px; padding: 20px; text-align: center; margin-bottom: 24px;">
+            <div style="font-size: 12px; color: #949BAE; text-transform: uppercase; font-weight: bold; margin-bottom: 8px;">Your Hardware License Key</div>
+            <div style="font-family: monospace; font-size: 22px; color: ${themeTextColor}; font-weight: bold; word-break: break-all; letter-spacing: 1px; margin-bottom: 8px;">
+                ${licenseKey}
+            </div>
+            <div style="font-size: 12px; color: #A0AEC0;">${editionSummary}</div>
+        </div>
+
+        <!-- AI Voice Receptionist Add-On Highlight -->
+        <div style="background: linear-gradient(180deg, rgba(0,230,118,0.12) 0%, rgba(9,11,14,0.9) 100%); border: 1px solid #00E676; border-radius: 12px; padding: 20px; margin-bottom: 24px;">
+            <div style="font-size: 14px; font-weight: 800; color: #00E676; margin-bottom: 6px;">🎙️ 24/7 AI Voice Receptionist Engine Active</div>
+            <p style="margin: 0 0 10px 0; color: #CBD5E0; font-size: 13px; line-height: 1.5;">
+                Your recurring $9.99/mo add-on is active and permanently bound to your hardware license key.
+            </p>
+            <div style="background: #090B0E; border: 1px dashed #00E676; border-radius: 8px; padding: 12px; font-size: 12px; color: #A7F3D0;">
+                🎁 <strong>15 Free Test Minutes on Activation:</strong> Test your voice receptionist directly in the app. When you're ready to start receiving forwarded phone calls, choose a flexible usage credit pack ($10, $25, $50, or $100) to activate your dedicated carrier forwarding line (*71).
+            </div>
+        </div>
+
+        <!-- APK Download Button -->
+        <div style="text-align: center; margin-bottom: 24px;">
+            <a href="${apkDownloadUrl}" style="display: inline-block; background: ${themeBorderColor}; color: #000000; font-weight: 800; font-size: 16px; padding: 14px 36px; border-radius: 30px; text-decoration: none; box-shadow: 0 6px 20px rgba(0,230,118,0.3);">
+                📥 Download Android App (.APK)
+            </a>
+            <div style="font-size: 12px; color: #949BAE; margin-top: 8px;">Direct Link: <a href="${apkDownloadUrl}" style="color:${themeTextColor};">${apkDownloadUrl}</a></div>
+        </div>
+
+        <!-- 3-Step Quick Start -->
+        <div style="border-top: 1px solid #222836; padding-top: 20px; margin-bottom: 24px;">
+            <h3 style="color: #FFF; font-size: 16px; margin: 0 0 12px 0;">🚀 3-Step Instant Activation</h3>
+            <ol style="color: #CBD5E0; font-size: 14px; padding-left: 20px; line-height: 1.8;">
+                <li><strong>Download and install</strong> the APK on your Android business phone.</li>
+                <li>Open the app and <strong>paste your License Key</strong> above.</li>
+                <li>Grant standard SMS and Call Log permissions, then <strong>Toggle Master Appliance ON</strong>. Tap AI Voice Receptionist in Settings to customize your greeting.</li>
+            </ol>
+        </div>
+
+        <div style="border-top: 1px solid #222836; padding-top: 18px; text-align: center; font-size: 12px; color: #718096;">
+            Need help or device transfer? Visit <a href="https://missedcallautosms.com/license_dashboard.html" style="color: ${themeTextColor};">Customer License Portal</a> or reply directly to this email.
+        </div>
+    </div>
+</body>
+</html>`;
+}
+
 function generateProPlusVoiceEmailHtml(customerName, licenseKey, apkDownloadUrl, forwardingNumber, carrierCode, carrierDeactivateCode, quotaMinutes = 250, tierTitle = "AUTONOMOUS FRONT DESK BUNDLE ($99/MO)", overageRate = "0.20") {
   return `<!DOCTYPE html>
 <html>
@@ -848,23 +926,34 @@ exports.handler = async (event) => {
       ))
     );
 
+    // 1B. Appliance + AI Voice Combo (Flagship + $9.99/mo Voice Bump or Pro + $9.99/mo Voice Bump)
+    const isFlagshipVoiceCombo = !isCreditPack && !isVoiceAddon && (
+      (amountTotal === 5998) ||
+      (session.metadata && (session.metadata.tier === 'flagship_plus_voice' || (session.metadata.include_voice === 'true' && session.metadata.plan === 'flagship')))
+    );
+
+    const isProVoiceCombo = !isCreditPack && !isVoiceAddon && !isFlagshipVoiceCombo && (
+      (amountTotal === 30899) || (amountTotal === 30998) || (amountTotal === 25998) ||
+      (session.metadata && (session.metadata.tier === 'pro_plus_voice' || session.metadata.tier === 'pro_upgrade_plus_voice' || (session.metadata.include_voice === 'true' && (session.metadata.plan === 'pro' || session.metadata.plan === 'pro_upgrade'))))
+    );
+
+    const isApplianceVoiceCombo = isFlagshipVoiceCombo || isProVoiceCombo;
+
     // 2. Autonomous Front Desk Bundle ($99/mo, or legacy $178.99 bundle)
-    const isBundle = !isCreditPack && !isVoiceAddon && (
+    const isBundle = !isCreditPack && !isVoiceAddon && !isApplianceVoiceCombo && (
       (session.metadata && (
         session.metadata.tier === 'autonomous_front_desk' ||
-        session.metadata.tier === 'front_desk_bundle' ||
-        session.metadata.tier === 'pro_plus_voice' ||
-        session.metadata.include_voice === 'true'
+        session.metadata.tier === 'front_desk_bundle'
       )) || (amountTotal === 9900) || (amountTotal === 17899)
     );
 
     // 3. Standalone Managed AI Voice: Business ($89/mo) or Starter ($29/mo)
-    const isVoiceBusiness = !isCreditPack && !isVoiceAddon && !isBundle && (
+    const isVoiceBusiness = !isCreditPack && !isVoiceAddon && !isApplianceVoiceCombo && !isBundle && (
       (session.metadata && (session.metadata.tier === 'voice_business' || session.metadata.tier === 'voice_pro_business')) ||
       (amountTotal === 8900)
     );
 
-    const isVoiceStarter = !isCreditPack && !isVoiceAddon && !isBundle && !isVoiceBusiness && (
+    const isVoiceStarter = !isCreditPack && !isVoiceAddon && !isApplianceVoiceCombo && !isBundle && !isVoiceBusiness && (
       (session.metadata && (session.metadata.tier === 'voice_starter' || session.metadata.tier === 'managed_voice_pro' || session.metadata.service === 'voice_receptionist')) ||
       (amountTotal === 2900 && (!session.metadata || !session.metadata.tier || !session.metadata.tier.includes('pro')))
     );
@@ -872,23 +961,23 @@ exports.handler = async (event) => {
     const isVoiceStandalone = isVoiceBusiness || isVoiceStarter;
 
     // 4. 3-Day Free Trial ($0.00)
-    const isTrial = !isCreditPack && !isVoiceAddon && !isVoiceStandalone && !isBundle && (
+    const isTrial = !isCreditPack && !isVoiceAddon && !isApplianceVoiceCombo && !isVoiceStandalone && !isBundle && (
       (amountTotal === 0 && (!session.metadata || (session.metadata.tier !== 'pro_automation' && session.metadata.tier !== 'pro_gateway'))) ||
       (session.metadata && session.metadata.tier === 'standard_trial')
     );
 
     // 5. Agency Fleet Bundles ($229 for 3-Pack, $349 for 5-Pack, $649 for 10-Pack, $1,249 for 25-Pack)
     const isAgencyMeta = session.metadata && session.metadata.tier && session.metadata.tier.startsWith('agency');
-    const isAgency25 = !isCreditPack && !isVoiceAddon && !isTrial && !isVoiceStandalone && !isBundle && ((amountTotal === 124900) || (session.metadata && (session.metadata.tier === 'agency_25' || session.metadata.tier === 'agency_enterprise')));
-    const isAgency10 = !isCreditPack && !isVoiceAddon && !isTrial && !isVoiceStandalone && !isBundle && !isAgency25 && ((amountTotal === 64900) || (session.metadata && session.metadata.tier === 'agency_10'));
-    const isAgency5 = !isCreditPack && !isVoiceAddon && !isTrial && !isVoiceStandalone && !isBundle && !isAgency25 && !isAgency10 && ((amountTotal === 34900) || (session.metadata && session.metadata.tier === 'agency_5'));
-    const isAgency3 = !isCreditPack && !isVoiceAddon && !isTrial && !isVoiceStandalone && !isBundle && !isAgency25 && !isAgency10 && !isAgency5 && ((amountTotal === 22900) || (session.metadata && session.metadata.tier === 'agency_3'));
+    const isAgency25 = !isCreditPack && !isVoiceAddon && !isApplianceVoiceCombo && !isTrial && !isVoiceStandalone && !isBundle && ((amountTotal === 124900) || (session.metadata && (session.metadata.tier === 'agency_25' || session.metadata.tier === 'agency_enterprise')));
+    const isAgency10 = !isCreditPack && !isVoiceAddon && !isApplianceVoiceCombo && !isTrial && !isVoiceStandalone && !isBundle && !isAgency25 && ((amountTotal === 64900) || (session.metadata && session.metadata.tier === 'agency_10'));
+    const isAgency5 = !isCreditPack && !isVoiceAddon && !isApplianceVoiceCombo && !isTrial && !isVoiceStandalone && !isBundle && !isAgency25 && !isAgency10 && ((amountTotal === 34900) || (session.metadata && session.metadata.tier === 'agency_5'));
+    const isAgency3 = !isCreditPack && !isVoiceAddon && !isApplianceVoiceCombo && !isTrial && !isVoiceStandalone && !isBundle && !isAgency25 && !isAgency10 && !isAgency5 && ((amountTotal === 22900) || (session.metadata && session.metadata.tier === 'agency_3'));
     const isAgency = isAgency3 || isAgency5 || isAgency10 || isAgency25 || (isAgencyMeta && (!session.metadata.tier.startsWith('pro')));
 
     // 6. Pro Automation Gateway / Pro Upgrade ($249.99 Upgrade, $299.99 Perpetual, or $149.99)
     const isProUpgrade = (amountTotal === 24999) || (session.metadata && (session.metadata.tier === 'pro_upgrade' || session.metadata.tier === 'pro_upgrade_249'));
     const isProGateway = (amountTotal === 29999) || (amountTotal === 29900) || (session.metadata && (session.metadata.tier === 'pro_gateway' || session.metadata.tier === 'pro_automation'));
-    const isPro = !isCreditPack && !isVoiceAddon && !isTrial && !isVoiceStandalone && !isBundle && !isAgency && (
+    const isPro = !isCreditPack && !isVoiceAddon && !isApplianceVoiceCombo && !isTrial && !isVoiceStandalone && !isBundle && !isAgency && (
       isProUpgrade ||
       isProGateway ||
       (amountTotal >= 14900) ||
@@ -1158,6 +1247,90 @@ exports.handler = async (event) => {
           customerEmail,
           subscriptionId: session.subscription || session.id,
           checkoutCreditPackUrl: 'https://buy.stripe.com/5kA8wPfRY0PS6M014f'
+        })
+      };
+    }
+
+    // === BRANCH 0C: APPLIANCE + AI VOICE COMBO ($49.99 / $299.99 + $9.99/mo) ===
+    if (isApplianceVoiceCombo) {
+      const isProCombo = isProVoiceCombo;
+      const licenseKey = generateKey(customerName, 0, isProCombo);
+      console.log(`⚡🎙️ [APPLIANCE + VOICE COMBO ACTIVATED] ${isProCombo ? 'PRO' : 'FLAGSHIP'} Key: ${licenseKey} for ${customerEmail} ($${amountPaid})`);
+
+      const db = getFirestore();
+      if (db) {
+        try {
+          // 1. Save master appliance license
+          await db.saveMasterLicense({
+            key: licenseKey,
+            customer: customerName,
+            email: customerEmail,
+            tier: isProCombo ? 'PRO' : 'STANDARD',
+            type: 'COMBO_SUBSCRIPTION',
+            price: amountPaid,
+            voiceEntitlement: true,
+            voiceSubActive: true,
+            voiceSubWaived: false,
+            vapiProvisioned: false,
+            voiceActive: false,
+            status: 'ACTIVE',
+            subscriptionId: session.subscription || session.id,
+            date: new Date().toISOString()
+          });
+
+          // 2. Unlock AI Voice Add-on soft gate (zero COGS until first credit pack loaded)
+          await db.saveVoiceBinding(licenseKey, {
+            subscriptionId: session.subscription || session.id,
+            customerId: session.customer || null,
+            stripeCustomerId: session.customer || null,
+            customerEmail,
+            customerName,
+            status: 'UNLOCKED_PENDING_PACK',
+            tier: 'VOICE_ADDON',
+            voiceEntitlement: true,
+            voiceSubActive: true,
+            voiceSubWaived: false,
+            vapiProvisioned: false,
+            forwardingNumber: null,
+            carrierCode: null,
+            carrierDeactivateCode: '*73',
+            voiceMinutesBalance: 0.0,
+            ratePerMinute: 0.25,
+            autoRebillEnabled: true,
+            isVoicePaused: false,
+            boundAt: new Date().toISOString()
+          });
+        } catch (dbErr) {
+          console.error('[stripe-webhook] Firestore combo save error:', dbErr.message);
+        }
+      }
+
+      if (RESEND_API_KEY && customerEmail) {
+        const emailSubject = isProCombo
+          ? `⚡🎙️ Your Missed Call Auto SMS Pro Gateway License Key & AI Voice Setup Guide`
+          : `📱🎙️ Your Missed Call Auto SMS Flagship License Key & AI Voice Setup Guide`;
+        const emailHtml = generateComboEmailHtml(customerName, licenseKey, apkDownloadUrl, amountPaid, isProCombo);
+
+        try {
+          await sendEmail(RESEND_API_KEY, customerEmail, emailSubject, emailHtml);
+          console.log(`📧 [COMBO EMAIL DELIVERED] Dispatched to ${customerEmail}`);
+        } catch (emailErr) {
+          console.error(`❌ [COMBO EMAIL FAILED] for ${customerEmail}:`, emailErr.message);
+        }
+      }
+
+      return {
+        statusCode: 200,
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          received: true,
+          tier: isProCombo ? 'pro_plus_voice' : 'flagship_plus_voice',
+          isPro: isProCombo,
+          licenseKey: licenseKey,
+          voiceUnlocked: true,
+          amountPaid: amountPaid,
+          customerEmail: customerEmail,
+          subscriptionId: session.subscription || session.id
         })
       };
     }
@@ -1767,5 +1940,6 @@ exports.handler = async (event) => {
 };
 
 module.exports.generateEmailHtml = generateEmailHtml;
+module.exports.generateComboEmailHtml = generateComboEmailHtml;
 module.exports.generateProPlusVoiceEmailHtml = generateProPlusVoiceEmailHtml;
 module.exports.generateVoiceProEmailHtml = generateVoiceProEmailHtml;

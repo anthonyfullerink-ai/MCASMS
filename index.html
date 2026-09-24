@@ -1419,8 +1419,8 @@
 <!-- Top Launch Banner for 24/7 AI Voice Receptionist -->
 <div style="background: linear-gradient(90deg, #090B0E, #151D24, #090B0E); border-bottom: 1px solid rgba(0, 230, 118, 0.35); padding: 9px 16px; text-align: center; font-size: 13px; color: #CBD5E0; z-index: 1000; position: relative;">
     <span style="background: rgba(0, 230, 118, 0.2); color: var(--primary); padding: 3px 8px; border-radius: 6px; font-weight: 800; font-size: 11px; margin-right: 8px; border: 1px solid var(--primary); letter-spacing: 0.5px;">NEW LAUNCH</span>
-    <strong>AI Voice Receptionist ($9.99/mo) is Live!</strong> 24/7 AI Voice Receptionist + Native SIM Auto-Text + 250 Pooled Monthly Minutes.
-    <a href="#voice-edition" style="color: var(--primary); font-weight: 800; margin-left: 8px; text-decoration: underline;">Explore & Activate &rarr;</a>
+    <strong>AI Voice Receptionist ($9.99/mo) is Live!</strong> 24/7 AI Voice Answering + Native SIM Auto-Text • 15 Free Test Minutes on Activation.
+    <a href="/voice" style="color: var(--primary); font-weight: 800; margin-left: 8px; text-decoration: underline;">Explore &amp; Activate &rarr;</a>
 </div>
 
 <div class="container">
@@ -1434,12 +1434,11 @@
             <div class="nav-dropdown">
                 <button class="nav-dropdown-btn">Plans &amp; Pricing ▾</button>
                 <div class="nav-dropdown-menu">
-                    <a href="/voice" style="color:#00E676;font-weight:800;">⚡ AI Voice Receptionist <span class="nav-dd-price">$9.99/mo</span></a>
                     <a href="#checkout" style="color:#38BDF8;font-weight:800;">📱 Flagship Appliance <span class="nav-dd-price">$49.99</span></a>
-                    <a href="#pro-edition" style="color:#C084FC;font-weight:800;">🛠️ Pro Automation Gateway <span class="nav-dd-price">$149.99</span></a>
-                    <a href="/voice" style="color:var(--primary);font-weight:700;">🎙️ AI Voice Receptionist <span class="nav-dd-price">$9.99/mo</span></a>
+                    <a href="#pro-edition" style="color:#C084FC;font-weight:800;">🛠️ Pro Automation Gateway <span class="nav-dd-price">$299.99</span></a>
+                    <a href="/voice" style="color:#00E676;font-weight:800;">🎙️ AI Voice Add-On <span class="nav-dd-price">$9.99/mo</span></a>
                     <div class="nav-dd-divider"></div>
-                    <a href="#checkout" style="color:var(--primary);font-weight:700;">🎁 Start 3-Day Free Trial</a>
+                    <a href="javascript:initiateFreeTrialCheckout()" style="color:var(--primary);font-weight:700;">🎁 Start 3-Day Free Trial ($0 Today)</a>
                 </div>
             </div>
             <!-- DROPDOWN: For Business -->
@@ -1474,24 +1473,22 @@
     </nav>
     <!-- Mobile Navigation Drawer -->
     <div id="mobileNavDrawer" class="mobile-nav-drawer">
-        <a href="/voice" class="mobile-nav-link" onclick="closeMobileMenu()" style="color: #00E676; font-weight: bold;">⚡ AI Voice Receptionist ($9.99/mo) <span>&rsaquo;</span></a>
         <a href="#checkout" class="mobile-nav-link" onclick="closeMobileMenu()" style="color: #38BDF8; font-weight: bold;">📱 Founder's Flagship Appliance ($49.99) <span>&rsaquo;</span></a>
         <a href="#pro-edition" class="mobile-nav-link" onclick="closeMobileMenu()" style="color: #D8B4FE; font-weight: bold;">🛠️ Pro Automation Gateway ($299.99) <span>&rsaquo;</span></a>
-        <a href="/voice" class="mobile-nav-link" onclick="closeMobileMenu()" style="color: var(--primary); font-weight: bold;">🎙️ 24/7 AI Voice Receptionist ($9.99/mo) <span>&rsaquo;</span></a>
-        <a href="/agency" class="mobile-nav-link" onclick="closeMobileMenu()" style="color: #38BDF8; font-weight: bold;">🏢 Agency & Reseller Fleet Pack ($399+) <span>&rsaquo;</span></a>
-        <a href="/developers" class="mobile-nav-link" onclick="closeMobileMenu()" style="color: #38BDF8; font-weight: bold;">⚡ Developer API & Webhook Docs <span>&rsaquo;</span></a>
-        <a href="/support" class="mobile-nav-link" onclick="closeMobileMenu()" style="color: var(--primary); font-weight: bold;">🎫 Customer Support & Helpdesk <span>&rsaquo;</span></a>
+        <a href="/voice" class="mobile-nav-link" onclick="closeMobileMenu()" style="color: #00E676; font-weight: bold;">🎙️ 24/7 AI Voice Receptionist Add-On ($9.99/mo) <span>&rsaquo;</span></a>
+        <a href="/agency" class="mobile-nav-link" onclick="closeMobileMenu()" style="color: #38BDF8; font-weight: bold;">🏢 Agency &amp; Reseller Fleet Pack <span>&rsaquo;</span></a>
+        <a href="/developers" class="mobile-nav-link" onclick="closeMobileMenu()" style="color: #38BDF8; font-weight: bold;">⚡ Developer API &amp; Webhook Docs <span>&rsaquo;</span></a>
+        <a href="/support" class="mobile-nav-link" onclick="closeMobileMenu()" style="color: var(--primary); font-weight: bold;">🎫 Customer Support &amp; Helpdesk <span>&rsaquo;</span></a>
         <a href="#comparison" class="mobile-nav-link" onclick="closeMobileMenu()">🆚 Appliance vs. Cloud SaaS <span>&rsaquo;</span></a>
         <a href="#calculator" class="mobile-nav-link" onclick="closeMobileMenu()">💰 Missed Call ROI Calculator <span>&rsaquo;</span></a>
-        <a href="#reviews" class="mobile-nav-link" onclick="closeMobileMenu()">⭐ Customer Reviews & Field Proof <span>&rsaquo;</span></a>
+        <a href="#reviews" class="mobile-nav-link" onclick="closeMobileMenu()">⭐ Customer Reviews &amp; Field Proof <span>&rsaquo;</span></a>
         <a href="#faq" class="mobile-nav-link" onclick="closeMobileMenu()">❓ Frequently Asked Questions <span>&rsaquo;</span></a>
-        <a href="/blog" class="mobile-nav-link" onclick="closeMobileMenu()" style="color: var(--primary);">📚 Blog & Conversion Playbooks <span>&rsaquo;</span></a>
+        <a href="/blog" class="mobile-nav-link" onclick="closeMobileMenu()" style="color: var(--primary);">📚 Blog &amp; Conversion Playbooks <span>&rsaquo;</span></a>
         <a href="/license_dashboard.html" class="mobile-nav-link" onclick="closeMobileMenu()" style="color: #949BAE;">🔑 Customer License Portal <span>&rsaquo;</span></a>
         <div class="mobile-nav-actions">
-            <button class="cta-btn" style="background: linear-gradient(135deg, #00E676, #00B0FF); color: #000; padding: 13px; font-size: 15px; font-weight: 900;" onclick="closeMobileMenu(); openProCheckoutModal(true);">⚡ AI Voice Receptionist ($9.99/mo)</button>
             <button class="cta-btn" style="padding: 13px; font-size: 15px;" onclick="closeMobileMenu(); initiateStripeCheckout();">📱 Founder's Flagship ($49.99)</button>
             <button class="cta-btn" style="background: linear-gradient(135deg, #7E22CE, #9333EA); color: #FFF; padding: 13px; font-size: 15px;" onclick="closeMobileMenu(); initiateProStripeCheckout();">🛠️ Pro Gateway ($299.99)</button>
-            <button class="cta-btn" style="background: var(--warning); color: #000; padding: 13px; font-size: 15px;" onclick="closeMobileMenu(); initiateFreeTrialCheckout();">🎁 3-Day Free Trial ($0)</button>
+            <button class="cta-btn" style="background: var(--warning); color: #000; padding: 13px; font-size: 15px;" onclick="closeMobileMenu(); initiateFreeTrialCheckout();">🎁 3-Day Free Trial ($0 Today)</button>
         </div>
     </div>
 
@@ -2276,7 +2273,7 @@
                     <div style="font-size: 24px; font-weight: 900; color: #FFF; margin-bottom: 8px;">$10.00</div>
                     <div style="font-size: 12px; color: #38BDF8; font-weight: 700; margin-bottom: 12px;">40 Minutes ($0.250/m)</div>
                     <p style="font-size: 11.5px; color: var(--muted); margin-bottom: 16px; flex-grow: 1;">Standard starter pack for testing and light volume.</p>
-                    <a href="https://buy.stripe.com/5kA8wPfRY0PS6M014f" class="cta-btn" style="width: 100%; background: #38BDF8; color: #000; font-size: 13px; padding: 10px; font-weight: 800; text-decoration: none; display: block; text-align: center;">
+                    <a href="/api/create-credit-pack-checkout?pack=10" class="cta-btn" style="width: 100%; background: #38BDF8; color: #000; font-size: 13px; padding: 10px; font-weight: 800; text-decoration: none; display: block; text-align: center;">
                         Buy Starter ($10)
                     </a>
                 </div>
@@ -2401,34 +2398,109 @@
     }
 
     function initiateStripeCheckout() {
-        openStandardUpgradeModal();
+        openFlagshipCheckoutModal();
     }
 
-    function openStandardUpgradeModal() {
-        const m = document.getElementById('standardUpgradeModal');
-        if (m) m.style.display = 'flex';
+    function openFlagshipCheckoutModal(withVoice = false) {
+        const m = document.getElementById("flagshipCheckoutModal");
+        if (m) {
+            m.style.display = "flex";
+            const chk = document.getElementById("checkFlagshipVoiceOrderBump");
+            if (chk) chk.checked = Boolean(withVoice);
+            onFlagshipOrderBumpToggle();
+        }
     }
 
-    function closeStandardUpgradeModal() {
-        const m = document.getElementById('standardUpgradeModal');
-        if (m) m.style.display = 'none';
+    function closeFlagshipCheckoutModal() {
+        const m = document.getElementById("flagshipCheckoutModal");
+        if (m) m.style.display = "none";
     }
 
+    // Backwards compatibility aliases
+    function openStandardUpgradeModal() { openFlagshipCheckoutModal(); }
+    function closeStandardUpgradeModal() { closeFlagshipCheckoutModal(); }
     function upgradeFromStandardToProModal() {
-        closeStandardUpgradeModal();
-        openProCheckoutModal();
+        closeFlagshipCheckoutModal();
+        openProCheckoutModal(false);
     }
-
     function proceedToFlagshipDirectCheckout() {
         window.location.href = "https://buy.stripe.com/3cI9AT49g2X07Q41ux2go0a";
     }
 
+    function onFlagshipOrderBumpToggle() {
+        const chk = document.getElementById("checkFlagshipVoiceOrderBump");
+        const isChecked = chk && chk.checked;
+        const totalDueEl = document.getElementById("summaryFlagshipTotalDue");
+        const renewsEl = document.getElementById("summaryFlagshipRenews");
+        const bumpPriceEl = document.getElementById("summaryFlagshipVoicePrice");
+        const btn = document.getElementById("btnProceedFlagshipCheckout");
+        const card = document.getElementById("flagshipOrderBumpCard");
+
+        if (isChecked) {
+            if (bumpPriceEl) bumpPriceEl.innerHTML = '<strong style="color: #00E676;">+$9.99 / mo</strong>';
+            if (totalDueEl) totalDueEl.innerText = "$59.98";
+            if (renewsEl) {
+                renewsEl.style.display = "block";
+                renewsEl.innerText = "Includes $49.99 one-time appliance license + $9.99/mo voice add-on (15 free test minutes on activation). Renews at $9.99/mo. Cancel anytime.";
+            }
+            if (btn) btn.innerHTML = "Proceed to Secure Checkout ($59.98 Today, then $9.99/mo) ➔";
+            if (card) {
+                card.style.borderColor = "#00E676";
+                card.style.background = "linear-gradient(180deg, rgba(0,230,118,0.14) 0%, rgba(9,11,14,0.9) 100%)";
+            }
+        } else {
+            if (bumpPriceEl) bumpPriceEl.innerHTML = '<span style="color: #64748B;">Not Selected</span>';
+            if (totalDueEl) totalDueEl.innerText = "$49.99";
+            if (renewsEl) renewsEl.style.display = "none";
+            if (btn) btn.innerHTML = "Proceed to Checkout with Flagship ($49.99) ➔";
+            if (card) {
+                card.style.borderColor = "#222836";
+                card.style.background = "rgba(255,255,255,0.02)";
+            }
+        }
+    }
+
+    async function proceedToFlagshipCheckout() {
+        const chk = document.getElementById("checkFlagshipVoiceOrderBump");
+        const includeVoice = chk && chk.checked;
+        const btn = document.getElementById("btnProceedFlagshipCheckout");
+
+        if (!includeVoice) {
+            window.location.href = "https://buy.stripe.com/3cI9AT49g2X07Q41ux2go0a";
+            return;
+        }
+
+        if (btn) {
+            btn.disabled = true;
+            btn.innerText = "⏳ Connecting to Secure Stripe Checkout...";
+        }
+
+        try {
+            const res = await fetch("/api/create-pro-checkout", {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({ plan: "flagship", includeVoice: true })
+            });
+            const data = await res.json();
+            if (data.success && data.checkoutUrl) {
+                window.location.href = data.checkoutUrl;
+                return;
+            }
+        } catch (e) {
+            console.warn("Flagship combo checkout error:", e.message);
+        }
+
+        window.location.href = "https://buy.stripe.com/3cI9AT49g2X07Q41ux2go0a";
+    }
+
     function initiateFreeTrialCheckout() {
-        document.getElementById('trialModal').classList.add('active');
+        const m = document.getElementById("trialModal");
+        if (m) m.classList.add("active");
     }
 
     function closeTrialModal() {
-        document.getElementById('trialModal').classList.remove('active');
+        const m = document.getElementById("trialModal");
+        if (m) m.classList.remove("active");
     }
 
     function proceedToStripeTrial() {
@@ -2439,71 +2511,95 @@
         openProCheckoutModal(false);
     }
 
-    function openProCheckoutModal(isFrontDesk = false) {
-        const m = document.getElementById('proCheckoutModal');
+    let selectedProEdition = "pro"; // "pro" ($299.99) or "pro_upgrade" ($249.99)
+
+    function selectProEdition(edition) {
+        selectedProEdition = edition;
+        const radPro = document.getElementById("radEditionNewPro");
+        const radUp = document.getElementById("radEditionUpgrade");
+        if (radPro) radPro.checked = (edition === "pro");
+        if (radUp) radUp.checked = (edition === "pro_upgrade");
+        onProOrderBumpToggle();
+    }
+
+    function openProCheckoutModal(withVoice = false) {
+        const m = document.getElementById("proCheckoutModal");
         if (m) {
-            m.style.display = 'flex';
-            const chk = document.getElementById('checkProVoiceOrderBump');
-            if (chk) chk.checked = Boolean(isFrontDesk);
+            m.style.display = "flex";
+            const chk = document.getElementById("checkProVoiceOrderBump");
+            if (chk) chk.checked = Boolean(withVoice);
             onProOrderBumpToggle();
         }
     }
 
     function closeProCheckoutModal() {
-        const m = document.getElementById('proCheckoutModal');
-        if (m) m.style.display = 'none';
+        const m = document.getElementById("proCheckoutModal");
+        if (m) m.style.display = "none";
     }
 
     function onProOrderBumpToggle() {
-        const chk = document.getElementById('checkProVoiceOrderBump');
-        const isChecked = chk && chk.checked;
-        const modalTitle = document.getElementById('proModalHeading');
-        const priceEl = document.getElementById('summaryVoiceAddonPrice');
-        const totalDueEl = document.getElementById('summaryTotalDue');
-        const renewsEl = document.getElementById('summaryTotalRenews');
-        const btn = document.getElementById('btnProceedProCheckout');
-        const card = document.getElementById('orderBumpCard');
+        const chk = document.getElementById("checkProVoiceOrderBump");
+        const isVoiceChecked = chk && chk.checked;
+        const isUpgrade = (selectedProEdition === "pro_upgrade");
 
-        if (isChecked) {
-            if (modalTitle) modalTitle.innerText = 'AI Voice Receptionist ($9.99/mo)';
-            if (priceEl) priceEl.innerHTML = '<strong style="color: #00E676;">15 Free Test Minutes Included</strong>';
-            if (totalDueEl) totalDueEl.innerText = '$9.99 / mo';
+        const basePrice = isUpgrade ? 249.99 : 299.99;
+        const baseName = isUpgrade ? "Pro Gateway Upgrade ($249.99)" : "Pro Automation Gateway ($299.99)";
+        const totalDue = isVoiceChecked ? (basePrice + 9.99).toFixed(2) : basePrice.toFixed(2);
+
+        const summaryPlanEl = document.getElementById("summaryProPlanName");
+        const voicePriceEl = document.getElementById("summaryVoiceAddonPrice");
+        const totalDueEl = document.getElementById("summaryTotalDue");
+        const renewsEl = document.getElementById("summaryTotalRenews");
+        const btn = document.getElementById("btnProceedProCheckout");
+        const card = document.getElementById("orderBumpCard");
+
+        if (summaryPlanEl) summaryPlanEl.innerText = baseName;
+
+        if (isVoiceChecked) {
+            if (voicePriceEl) voicePriceEl.innerHTML = '<strong style="color: #00E676;">+$9.99 / mo</strong>';
+            if (totalDueEl) totalDueEl.innerText = "$" + totalDue;
             if (renewsEl) {
-                renewsEl.style.display = 'block';
-                renewsEl.innerText = 'Renews at $9.99/mo. Includes 15 free test minutes ($0.25/min usage in $10 credit packs). Cancel anytime.';
+                renewsEl.style.display = "block";
+                renewsEl.innerText = "Includes $" + basePrice.toFixed(2) + " one-time license + $9.99/mo voice add-on (15 free test minutes on activation). Renews at $9.99/mo. Cancel anytime.";
             }
-            if (btn) btn.innerHTML = 'Proceed to Checkout with AI Voice Receptionist ($9.99/mo) ➔';
+            if (btn) btn.innerHTML = "Proceed to Secure Checkout ($" + totalDue + " Today, then $9.99/mo) ➔";
             if (card) {
-                card.style.borderColor = '#00E676';
-                card.style.background = 'linear-gradient(180deg, rgba(0,230,118,0.14) 0%, rgba(9,11,14,0.9) 100%)';
+                card.style.borderColor = "#00E676";
+                card.style.background = "linear-gradient(180deg, rgba(0,230,118,0.14) 0%, rgba(9,11,14,0.9) 100%)";
             }
         } else {
-            if (modalTitle) modalTitle.innerText = 'Pro Automation Gateway ($299.99 Perpetual)';
-            if (priceEl) { priceEl.innerText = 'Not Selected (Add Below)'; priceEl.style.color = '#64748B'; }
-            if (totalDueEl) totalDueEl.innerText = '$299.99';
-            if (renewsEl) renewsEl.style.display = 'none';
-            if (btn) btn.innerHTML = 'Proceed to Checkout with Pro Gateway ($299.99) ➔';
+            if (voicePriceEl) voicePriceEl.innerHTML = '<span style="color: #64748B;">Not Selected</span>';
+            if (totalDueEl) totalDueEl.innerText = "$" + totalDue;
+            if (renewsEl) renewsEl.style.display = "none";
+            if (btn) btn.innerHTML = "Proceed to Checkout with " + (isUpgrade ? "Pro Upgrade ($249.99)" : "Pro Gateway ($299.99)") + " ➔";
             if (card) {
-                card.style.borderColor = '#A855F7';
-                card.style.background = 'linear-gradient(180deg, rgba(168,85,247,0.12) 0%, rgba(9,11,14,0.85) 100%)';
+                card.style.borderColor = "#A855F7";
+                card.style.background = "linear-gradient(180deg, rgba(168,85,247,0.12) 0%, rgba(9,11,14,0.85) 100%)";
             }
         }
     }
 
     async function proceedToProDynamicCheckout() {
-        const chk = document.getElementById('checkProVoiceOrderBump');
+        const chk = document.getElementById("checkProVoiceOrderBump");
         const includeVoice = chk && chk.checked;
-        const btn = document.getElementById('btnProceedProCheckout');
+        const plan = selectedProEdition;
+        const btn = document.getElementById("btnProceedProCheckout");
+
+        if (!includeVoice && plan === "pro") {
+            window.location.href = "https://buy.stripe.com/cNi5kDdJQ558c6k2yB2go0b";
+            return;
+        }
+
         if (btn) {
             btn.disabled = true;
-            btn.innerText = '⏳ Connecting to Secure Stripe Checkout...';
+            btn.innerText = "⏳ Connecting to Secure Stripe Checkout...";
         }
 
         try {
-            const res = await fetch('/api/create-pro-checkout', {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ includeVoice })
+            const res = await fetch("/api/create-pro-checkout", {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({ plan, includeVoice })
             });
             const data = await res.json();
             if (data.success && data.checkoutUrl) {
@@ -2511,15 +2607,14 @@
                 return;
             }
         } catch (e) {
-            console.warn('Dynamic session fallback:', e.message);
+            console.warn("Dynamic session fallback:", e.message);
         }
 
-        // Static fallback
-        if (includeVoice) {
-            window.location.href = "https://buy.stripe.com/4gMeVdcFMaps6M0b572go0f";
-        } else {
-            window.location.href = "https://buy.stripe.com/cNi5kDdJQ558c6k2yB2go0b";
-        }
+        window.location.href = "https://buy.stripe.com/cNi5kDdJQ558c6k2yB2go0b";
+    }
+
+    function initiateVoiceProCheckout(tier) {
+        openVoiceAddonModal();
     }
 
     // AI Support & Voice Assistant Logic
@@ -2954,8 +3049,8 @@
                    `• <strong>Carrier Activation Codes</strong>:<br>` +
                    `&nbsp;&nbsp;▸ <em>Verizon & AT&T</em>: Dial <code>*71[Your_AI_Number]</code> to activate, <code>*73</code> to cancel.<br>` +
                    `&nbsp;&nbsp;▸ <em>T-Mobile / GSM</em>: Dial <code>**61*[Your_AI_Number]**15#</code> to activate, <code>##004#</code> to cancel.<br>` +
-                    `• <strong>AI Voice Receptionist ($9.99/mo) — RECOMMENDED</strong>: All-in-one SIM Auto-Text + 24/7 AI Voice + 15 free test minutes ($0.20/min overage), Dual SIM confirmation text.<br>` +
-                    `• <strong>Standalone Voice Receptionist</strong>: Starter ($29/mo, 45 pooled minutes, $0.25/min overage) or Business ($89/mo, 300 pooled minutes, $0.20/min overage). Dedicated local forwarding line and phonetic address capture.<br>` +
+                    `• <strong>AI Voice Receptionist ($9.99/mo) — RECOMMENDED</strong>: In-app add-on with 24/7 voice answering, 15 free test minutes on activation, and authentic carrier SIM confirmations.<br>` +
+                    `• <strong>Flexible Usage Credit Packs</strong>: Volume discounts with bonus minutes: $10 (40 mins), $25 (115 mins), $50 (250 mins), $100 (550 mins).<br>` +
                     `• <strong>Free BYOK Option ($0/mo)</strong>: Bring your own Vapi/Twilio API keys to run 100% free with $0 platform markup!<br>` +
                     `• <strong>Instant Fallback</strong>: Dial <code>*73</code> or <code>##004#</code> anytime from your phone dialer to instantly restore regular voicemail.<br><br>` +
                     `<button onclick="openVoiceAddonModal()" class="pill" style="background:linear-gradient(135deg,#A855F7,#00E676); color:#000; font-weight:800;">🎙️ Explore AI Voice Plans</button>`;
@@ -3022,19 +3117,17 @@
         // 9. PRICING & EDITIONS BREAKDOWN
         if (q.includes('price') || q.includes('pricing') || q.includes('cost') || q.includes('how much') || q.includes('plan') || q.includes('edition')) {
             aiPendingAction = null;
-            return `💰 <strong>Missed Call Auto SMS Editions & Pricing</strong>:<br><br>` +
-                   `• <strong>AI Voice Receptionist ($9.99/mo) — BEST VALUE</strong>:<br>` +
-                   `&nbsp;&nbsp;All-in-one SIM Auto-Text + 24/7 AI Voice Receptionist + 15 free test minutes ($0.20/min overage), Dual SIM confirmation text.<br>` +
-                   `• <strong>Flagship Appliance Edition ($49.99 One-Time)</strong>:<br>` +
-                   `&nbsp;&nbsp;Zero monthly fees. Authentic SIM text auto-replies, contact exclusions, operating hours filter, and battery safeguard. 1 Android phone bound.<br>` +
-                   `• <strong>Pro Automation Gateway ($299.99 Perpetual or $249.99 Upgrade)</strong>:<br>` +
-                   `&nbsp;&nbsp;1-Year Cloud Relay API maintenance included. Full webhook engine, n8n/Make/Zapier bridge, and A2P 10DLC carrier bypass.<br>` +
-                   `• <strong>Standalone AI Voice Receptionist</strong>:<br>` +
-                   `&nbsp;&nbsp;Starter ($29/mo, 45 mins), Business ($89/mo, 300 mins), or Free BYOK ($0 markup with your Vapi/Twilio keys).<br>` +
-                   `• <strong>Agency Fleets ($399 for 5-Pack / $799 for 10-Pack)</strong>:<br>` +
-                   `&nbsp;&nbsp;Deploy multiple appliances for clients with unified Fleet Portal.<br><br>` +
-                   `<button onclick="initiateVoiceProCheckout('bundle')" class="pill" style="background:#7928CA; color:#FFF; font-weight:800;">⚡ AI Voice Receptionist ($9.99/mo)</button> ` +
-                   `<button onclick="initiateFreeTrialCheckout()" class="pill" style="background:#00E676; color:#000; font-weight:800;">🎁 Start 3-Day SMS Trial ($0)</button>`;
+            return `💰 <strong>Missed Call Auto SMS Editions &amp; Pricing</strong>:<br><br>` +
+                   `• <strong>Founder's Flagship Appliance ($49.99 One-Time)</strong>:<br>` +
+                   `&nbsp;&nbsp;Pure Android hardware appliance. 100% A2P-exempt missed-call SMS from your existing SIM. Zero monthly fees forever.<br>` +
+                   `• <strong>Pro Automation Gateway ($299.99 Perpetual / $249.99 Upgrade)</strong>:<br>` +
+                   `&nbsp;&nbsp;Dedicated webhook engine (n8n/Make/Zapier), Dual SIM outbound routing, and 1-Year Cloud Relay API included.<br>` +
+                   `• <strong>24/7 AI Voice Receptionist ($9.99/mo Add-On)</strong>:<br>` +
+                   `&nbsp;&nbsp;In-app add-on with 15 free test minutes on activation, metered usage in credit packs ($10, $25, $50, $100), and instant carrier SIM SMS.<br>` +
+                   `• <strong>3-Day Risk-Free Trial ($0 Today)</strong>:<br>` +
+                   `&nbsp;&nbsp;Test the Flagship Appliance on your phone for 3 days with $0 due today.<br><br>` +
+                   `<button onclick="openFlagshipCheckoutModal(true)" class="pill" style="background:#7928CA; color:#FFF; font-weight:800;">⚡ Get Flagship + AI Voice ($9.99/mo)</button> ` +
+                   `<button onclick="initiateFreeTrialCheckout()" class="pill" style="background:#00E676; color:#000; font-weight:800;">🎁 Start 3-Day Trial ($0 Today)</button>`;
         }
 
         // 10. LICENSE & ACCOUNT DETAILS
@@ -3052,199 +3145,210 @@
                `Thanks for asking! Here is how <strong>Missed Call Auto SMS</strong> works for local service businesses and contractors:<br><br>` +
                `• <strong>Zero Monthly Fees</strong>: Unlike GoHighLevel ($297/mo) or Twilio, your core appliance runs directly on your Android business phone with $0 ongoing software or per-text fees.<br>` +
                `• <strong>100% Carrier Compliant (A2P 10DLC Exempt)</strong>: Because messages originate from your genuine carrier SIM card, they are treated as P2P personal mobile texts with 99.8% open rates.<br>` +
-               `• <strong>24/7 AI Voice Receptionist (*71)</strong>: Add our $29/mo turnkey voice assistant (14-day free trial, requires Pro) to answer calls when your hands are full (e.g. cutting hair, plumbing, consulting).<br>` +
+               `• <strong>24/7 AI Voice Receptionist (*71)</strong>: Add our $9.99/mo voice assistant (15 free test minutes on activation) to answer calls when your hands are full (e.g. cutting hair, plumbing, consulting).<br>` +
                `• <strong>Instant Setup</strong>: Download the APK, paste your key, grant permissions, and you are live in under 3 minutes.<br><br>` +
-               `Would you like to <strong>walk through Android setup</strong>, <strong>try the 14-day voice trial</strong>, <strong>compare with GoHighLevel</strong>, or <strong>have Anthony contact you directly</strong>?`;
+               `Would you like to <strong>walk through Android setup</strong>, <strong>try the 3-day free trial</strong>, <strong>compare with GoHighLevel</strong>, or <strong>have Anthony contact you directly</strong>?`;
     }
 
     calculateROI();
 
-    let selectedVoiceTier = 'starter';
-    function openVoiceAddonModal(tier = 'starter') {
-        selectedVoiceTier = tier;
-        const modal = document.getElementById('voiceAddonModal');
-        const badge = document.getElementById('voiceModalBadge');
-        const desc = document.getElementById('voiceModalDesc');
-        if (modal) {
-            modal.style.display = 'flex';
-            if (tier === 'business') {
-                if (badge) badge.innerText = '⭐ BUSINESS VOICE PLAN ($89/MO - 300 MINS)';
-                if (desc) desc.innerHTML = '300 Monthly Pooled Minutes included ($0.20/min overage). Dedicated inbound line + *71 conditional forwarding.';
-            } else {
-                if (badge) badge.innerText = '⭐ STARTER VOICE PLAN ($29/MO - 45 MINS)';
-                if (desc) desc.innerHTML = '45 Monthly Pooled Minutes included ($0.25/min overage). Dedicated inbound line + *71 conditional forwarding.';
-            }
-        }
+    function openVoiceAddonModal() {
+        const modal = document.getElementById("voiceAddonModal");
+        if (modal) modal.style.display = "flex";
     }
     function closeVoiceAddonModal() {
-        const modal = document.getElementById('voiceAddonModal');
-        if (modal) modal.style.display = 'none';
+        const modal = document.getElementById("voiceAddonModal");
+        if (modal) modal.style.display = "none";
     }
     async function submitVoiceModalProKey() {
-        const input = document.getElementById('voiceModalProKey');
-        const err = document.getElementById('voiceModalProKeyErr');
-        const val = (input ? input.value : '').trim().toUpperCase();
+        const input = document.getElementById("voiceModalProKey");
+        const err = document.getElementById("voiceModalProKeyErr");
+        const val = (input ? input.value : "").trim().toUpperCase();
         if (!val) {
-            if (err) { err.textContent = 'Please enter your Pro License Key (e.g. MCAS-PRO-XXXX-XXXX).'; err.style.display = 'block'; }
+            if (err) { err.textContent = "Please enter your Appliance License Key (e.g. MCAS-XXXX or MCAS-PRO-XXXX)."; err.style.display = "block"; }
             return;
         }
-        const isPro = val.startsWith('MCAS-PRO-') || val.startsWith('MCAT-PRO-') || val.includes('PRO-DEMO');
-        if (!isPro) {
+        const isValidKey = val.startsWith("MCAS-") || val.startsWith("MCAT-");
+        if (!isValidKey) {
             if (err) {
-                err.textContent = 'Standard Edition keys (MCAS-...) cannot activate standalone voice telephony. A Pro license is required, or you can get the AI Voice Receptionist ($9.99/mo).';
-                err.style.display = 'block';
+                err.textContent = "Please enter a valid Missed Call Auto SMS License Key (MCAS-... or MCAS-PRO-...).";
+                err.style.display = "block";
             }
             return;
         }
-        if (err) err.style.display = 'none';
+        if (err) err.style.display = "none";
 
-        try {
-            const res = await fetch('/api/create-voice-pro-checkout', {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ licenseKey: val, tier: selectedVoiceTier })
-            });
-            const data = await res.json();
-            if (data.success && data.checkoutUrl) {
-                window.location.href = data.checkoutUrl;
-                return;
-            }
-        } catch (e) {
-            console.warn('Voice checkout error:', e.message);
-        }
-
-        window.location.href = `https://buy.stripe.com/4gMeVdcFMaps6M0b572go0f?client_reference_id=${encodeURIComponent(val)}`;
+        window.location.href = "https://buy.stripe.com/4gMeVdcFMaps6M0b572go0f?client_reference_id=" + encodeURIComponent(val);
     }
 </script>
 
+
 <!-- Managed Voice Pro Add-On Modal (Enforces Pro License Binding) -->
+<!-- Managed Voice Add-On Modal -->
 <div id="voiceAddonModal" style="display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.85); backdrop-filter: blur(8px); z-index: 10000; align-items: center; justify-content: center; padding: 20px;">
-    <div style="background: #131720; border: 1px solid #7928CA; border-radius: 16px; max-width: 520px; width: 100%; padding: 28px; box-shadow: 0 20px 50px rgba(0,0,0,0.6); position: relative; text-align: left;">
+    <div style="background: #131720; border: 1px solid #00E676; border-radius: 16px; max-width: 520px; width: 100%; padding: 28px; box-shadow: 0 20px 50px rgba(0,0,0,0.7); position: relative; text-align: left; max-height: 90vh; overflow-y: auto;">
         <button onclick="closeVoiceAddonModal()" style="position: absolute; top: 16px; right: 16px; background: none; border: none; color: #949BAE; font-size: 24px; cursor: pointer; line-height: 1;">&times;</button>
         
         <div style="text-align: center; margin-bottom: 20px;">
             <div style="font-size: 42px; margin-bottom: 8px;">🎙️</div>
             <h2 style="color: #FFF; margin: 0 0 6px 0; font-size: 22px; font-weight: 900;">24/7 AI Voice Receptionist Add-On</h2>
-            <div id="voiceModalBadge" style="display: inline-block; background: rgba(168,85,247,0.15); border: 1px solid rgba(168,85,247,0.4); color: #C084FC; font-size: 11px; font-weight: 800; padding: 4px 12px; border-radius: 20px;">
-                ⭐ REQUIRES PRO HARDWARE LICENSE
+            <div style="display: inline-block; background: rgba(0,230,118,0.15); border: 1px solid rgba(0,230,118,0.4); color: #00E676; font-size: 11px; font-weight: 800; padding: 4px 12px; border-radius: 20px;">
+                ⭐ IN-APP ADD-ON • 15 FREE TEST MINUTES
             </div>
-            <p id="voiceModalDesc" style="color: #CBD5E0; font-size: 13px; margin: 12px 0 0 0; line-height: 1.5;">
-                The Turnkey Voice Receptionist is provisioned with pooled minutes and bound permanently to your Pro hardware appliance key.
+            <p style="color: #CBD5E0; font-size: 13px; margin: 12px 0 0 0; line-height: 1.5;">
+                Requires Missed Call Auto SMS Android Appliance. Unlocks 24/7 conversational voice answering and in-app Pro features.
             </p>
         </div>
 
         <div style="display: flex; flex-direction: column; gap: 16px;">
-            <!-- Option A: Existing Pro User -->
+            <!-- Option A: Existing Appliance Owner -->
             <div style="background: #090B0E; border: 1px solid #222836; border-radius: 12px; padding: 18px;">
-                <div style="font-size: 13px; font-weight: 800; color: #00E676; margin-bottom: 4px;">Option A: Already Own Pro Edition?</div>
-                <div style="font-size: 12px; color: #949BAE; margin-bottom: 12px;">Enter your Pro License Key to bind your monthly voice line subscription:</div>
+                <div style="font-size: 13px; font-weight: 800; color: #00E676; margin-bottom: 4px;">Option A: Already Own an Appliance?</div>
+                <div style="font-size: 12px; color: #949BAE; margin-bottom: 12px;">Enter your License Key to bind your $9.99/mo Voice Receptionist subscription:</div>
                 <div style="display: flex; gap: 8px; flex-wrap: wrap;">
-                    <input type="text" id="voiceModalProKey" placeholder="MCAS-PRO-XXXX-XXXX" style="flex: 1; min-width: 180px; background: #161B22; border: 1px solid #30363D; border-radius: 8px; color: #FFF; padding: 10px 12px; font-family: monospace; font-size: 13px; text-transform: uppercase;">
-                    <button onclick="submitVoiceModalProKey()" style="background: linear-gradient(135deg, #A855F7, #00E676); color: #000; font-weight: 800; padding: 10px 16px; border: none; border-radius: 8px; cursor: pointer; font-size: 12px; white-space: nowrap;">
-                        Bind &amp; Activate ➔
+                    <input type="text" id="voiceModalProKey" placeholder="MCAS-XXXX-XXXX" style="flex: 1; min-width: 180px; background: #161B22; border: 1px solid #30363D; border-radius: 8px; color: #FFF; padding: 10px 12px; font-family: monospace; font-size: 13px; text-transform: uppercase;">
+                    <button onclick="submitVoiceModalProKey()" style="background: linear-gradient(135deg, #00E676, #00B0FF); color: #000; font-weight: 900; padding: 10px 16px; border: none; border-radius: 8px; cursor: pointer; font-size: 12px; white-space: nowrap;">
+                        Bind &amp; Activate ($9.99/mo) ➔
                     </button>
                 </div>
                 <div id="voiceModalProKeyErr" style="display: none; color: #EF4444; font-size: 11px; margin-top: 6px; font-weight: 600;"></div>
             </div>
 
-            <!-- Option B: New Customer Bundle -->
+            <!-- Option B: New Customer -->
             <div style="background: linear-gradient(180deg, rgba(0,230,118,0.12) 0%, rgba(9,11,14,0.6) 100%); border: 1px solid #00E676; border-radius: 12px; padding: 18px; text-align: center;">
-                <div style="font-size: 13px; font-weight: 800; color: #00E676; margin-bottom: 4px;">Option B: New Customer? Get All-in-One Front Desk</div>
+                <div style="font-size: 13px; font-weight: 800; color: #00E676; margin-bottom: 4px;">Option B: Don't Own an Appliance Yet?</div>
                 <div style="font-size: 12px; color: #CBD5E0; margin-bottom: 14px; line-height: 1.4;">
-                    Get the <strong>AI Voice Receptionist ($9.99/mo)</strong> with 24/7 AI Voice Receptionist + 15 Free Test Minutes + Metered Usage + Pro Android App + Carrier SIM Auto-Text.
+                    Get the <strong>Flagship Appliance ($49.99)</strong> with the optional $9.99/mo AI Voice add-on:
                 </div>
-                <button onclick="closeVoiceAddonModal(); openProCheckoutModal(true);" style="background: linear-gradient(135deg, #00E676, #00B0FF); color: #000; font-weight: 900; padding: 12px 24px; border: none; border-radius: 25px; cursor: pointer; font-size: 13px; box-shadow: 0 4px 14px rgba(0,230,118,0.4);">
-                    ⚡ Get AI Voice Receptionist ($9.99/mo) ➔
+                <button onclick="closeVoiceAddonModal(); openFlagshipCheckoutModal(true);" style="width: 100%; background: linear-gradient(135deg, #00E676, #00B0FF); color: #000; font-weight: 900; padding: 12px 24px; border: none; border-radius: 25px; cursor: pointer; font-size: 13px; box-shadow: 0 4px 14px rgba(0,230,118,0.4);">
+                    📱 Get Flagship Appliance + AI Voice Bump ➔
                 </button>
+                <div style="margin-top: 10px;">
+                    <a href="javascript:void(0)" onclick="closeVoiceAddonModal(); initiateFreeTrialCheckout();" style="color: var(--warning); font-size: 12px; font-weight: bold; text-decoration: underline;">
+                        Or start a 3-Day Risk-Free Trial ($0 today) &rarr;
+                    </a>
+                </div>
             </div>
         </div>
 
         <div style="margin-top: 18px; text-align: center;">
             <button onclick="closeVoiceAddonModal()" style="background: none; border: none; color: #64748B; font-size: 12px; cursor: pointer; text-decoration: underline;">
-                Cancel / Return to Features
-            </button>
+                Cancel / Return to Page
+            </button
         </div>
     </div>
 </div>
 
-<!-- Standard to Front Desk / Pro Upsell Modal -->
-<div id="standardUpgradeModal" style="display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.85); backdrop-filter: blur(8px); z-index: 10000; align-items: center; justify-content: center; padding: 20px;">
-    <div style="background: #131720; border: 1px solid #38BDF8; border-radius: 16px; max-width: 580px; width: 100%; padding: 28px; box-shadow: 0 20px 50px rgba(0,0,0,0.7); position: relative; text-align: left; max-height: 90vh; overflow-y: auto;">
-        <button onclick="closeStandardUpgradeModal()" style="position: absolute; top: 16px; right: 16px; background: none; border: none; color: #949BAE; font-size: 24px; cursor: pointer; line-height: 1;">&times;</button>
+<!-- Flagship Checkout Modal with Order Bump -->
+<div id="flagshipCheckoutModal" style="display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.85); backdrop-filter: blur(8px); z-index: 10000; align-items: center; justify-content: center; padding: 20px;">
+    <div style="background: #131720; border: 1px solid #38BDF8; border-radius: 16px; max-width: 560px; width: 100%; padding: 28px; box-shadow: 0 20px 50px rgba(0,0,0,0.8); position: relative; text-align: left; max-height: 90vh; overflow-y: auto;">
+        <button onclick="closeFlagshipCheckoutModal()" style="position: absolute; top: 16px; right: 16px; background: none; border: none; color: #949BAE; font-size: 24px; cursor: pointer; line-height: 1;">&times;</button>
         
-        <div style="text-align: center; margin-bottom: 20px;">
-            <div style="display: inline-block; background: rgba(0,230,118,0.15); border: 1px solid rgba(0,230,118,0.4); color: #00E676; font-size: 11px; font-weight: 800; padding: 4px 12px; border-radius: 20px; margin-bottom: 8px; text-transform: uppercase;">
-                ⭐ Smart Contractor Recommendation
+        <div style="margin-bottom: 20px;">
+            <div style="display: inline-block; background: rgba(56,189,248,0.15); border: 1px solid rgba(56,189,248,0.4); color: #38BDF8; font-size: 11px; font-weight: 800; padding: 4px 12px; border-radius: 20px; margin-bottom: 6px; text-transform: uppercase;">
+                📱 FOUNDER'S APPLIANCE CHECKOUT
             </div>
-            <h2 style="color: #FFF; margin: 0 0 8px 0; font-size: 22px; font-weight: 900;">Need Calls Answered While You Work?</h2>
-            <p style="color: #949BAE; font-size: 13px; margin: 0; line-height: 1.5;">
-                Before you check out with Founder's Flagship ($49.99), check out our all-in-one <strong>AI Voice Receptionist ($9.99/mo)</strong>:
+            <h2 style="color: #FFF; margin: 0 0 6px 0; font-size: 22px; font-weight: 900;">Founder's Flagship Appliance ($49.99 Lifetime)</h2>
+            <p style="color: #949BAE; font-size: 13px; margin: 0; line-height: 1.4;">
+                Autonomous missed call auto-reply appliance bound to 1 Android phone. 100% A2P 10DLC carrier exempt with zero monthly software fees.
             </p>
         </div>
 
-        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin-bottom: 20px;">
-            <!-- Flagship Column -->
-            <div style="background: #090B0E; border: 1px solid #222836; border-radius: 12px; padding: 14px;">
-                <div style="font-size: 12px; font-weight: 800; color: #949BAE; text-transform: uppercase; margin-bottom: 6px;">Flagship ($49.99)</div>
-                <ul style="margin: 0; padding-left: 16px; font-size: 12px; color: #CBD5E0; line-height: 1.6;">
-                    <li>Instant Missed Call SMS</li>
-                    <li>Pure SIM hardware appliance</li>
-                    <li>1 Android phone activation</li>
-                    <li style="color: #64748B; text-decoration: line-through;">No voice phone answering</li>
-                    <li style="color: #64748B; text-decoration: line-through;">No webhook / CRM sync</li>
-                </ul>
-            </div>
+        <!-- Optional Voice Order Bump Card -->
+        <div id="flagshipOrderBumpCard" style="background: rgba(255,255,255,0.02); border: 2px dashed #222836; border-radius: 12px; padding: 16px; margin-bottom: 20px; transition: all 0.2s ease;">
+            <label style="display: flex; align-items: flex-start; gap: 12px; cursor: pointer;">
+                <input type="checkbox" id="checkFlagshipVoiceOrderBump" onchange="onFlagshipOrderBumpToggle()" style="margin-top: 3px; width: 20px; height: 20px; cursor: pointer; accent-color: #00E676; flex-shrink: 0;">
+                <div>
+                    <div style="display: flex; align-items: center; gap: 8px; flex-wrap: wrap;">
+                        <span style="background: #00E676; color: #000; font-size: 10px; font-weight: 900; padding: 2px 6px; border-radius: 4px; text-transform: uppercase;">POPULAR ADD-ON</span>
+                        <span style="color: #FFF; font-weight: 800; font-size: 14px;">Add 24/7 AI Voice Receptionist ($9.99/mo)</span>
+                    </div>
+                    <div style="font-size: 12px; color: #00E676; font-weight: 800; margin: 4px 0;">
+                        ⚡ Includes 15 Free Test Minutes on Activation • Metered Usage in Credit Packs
+                    </div>
+                    <p style="margin: 0; font-size: 12px; color: #CBD5E0; line-height: 1.45;">
+                        Never lose a high-value customer when your hands are full. Our AI voice receptionist answers in natural voice, captures customer details, and sends instant confirmation SMS. Also unlocks all in-app Pro features while subscription is active!
+                    </p>
+                </div>
+            </label>
+        </div>
 
-            <!-- Front Desk Column -->
-            <div style="background: linear-gradient(180deg, rgba(0,230,118,0.15) 0%, rgba(9,11,14,0.9) 100%); border: 1px solid #00E676; border-radius: 12px; padding: 14px;">
-                <div style="font-size: 12px; font-weight: 800; color: #00E676; text-transform: uppercase; margin-bottom: 6px;">AI Voice ($9.99/mo) 🎙️</div>
-                <ul style="margin: 0; padding-left: 16px; font-size: 12px; color: #FFF; line-height: 1.6;">
-                    <li>24/7 AI Voice Phone Receptionist</li>
-                    <li>250 Monthly Pooled Minutes</li>
-                    <li>Instant Dual SIM Confirmation SMS</li>
-                    <li>Full Pro Automation APK</li>
-                    <li><strong style="color: #00E676;">Replaces $600/mo services</strong></li>
-                </ul>
+        <!-- Order Summary Box -->
+        <div style="background: #090B0E; border: 1px solid #222836; border-radius: 12px; padding: 14px; margin-bottom: 20px; font-size: 13px;">
+            <div style="display: flex; justify-content: space-between; margin-bottom: 8px; color: #CBD5E0;">
+                <span>Flagship Appliance (Lifetime):</span>
+                <span style="color: #38BDF8; font-weight: bold;">$49.99</span>
+            </div>
+            <div style="display: flex; justify-content: space-between; margin-bottom: 8px; color: #CBD5E0;">
+                <span>AI Voice Receptionist Add-On:</span>
+                <span id="summaryFlagshipVoicePrice" style="color: #64748B;">Not Selected</span>
+            </div>
+            <div style="border-top: 1px solid #222836; padding-top: 8px; display: flex; justify-content: space-between; align-items: baseline;">
+                <span style="font-weight: 800; color: #FFF; font-size: 15px;">Due Today:</span>
+                <span id="summaryFlagshipTotalDue" style="font-weight: 900; color: #00E676; font-size: 20px;">$49.99</span>
+            </div>
+            <div id="summaryFlagshipRenews" style="display: none; font-size: 11px; color: #94A3B8; text-align: right; margin-top: 4px;">
+                Renews at $9.99/mo. Cancel anytime.
             </div>
         </div>
 
-        <div style="display: flex; flex-direction: column; gap: 10px; text-align: center;">
-            <button onclick="closeStandardUpgradeModal(); openProCheckoutModal(true);" style="background: linear-gradient(135deg, #00E676, #00B0FF); color: #000; font-weight: 900; font-size: 15px; padding: 14px 20px; border: none; border-radius: 10px; cursor: pointer; box-shadow: 0 4px 15px rgba(0,230,118,0.5); transition: transform 0.15s ease;">
-                ⚡ Choose AI Voice Receptionist ($9.99/mo) ➔
-            </button>
-            <button onclick="proceedToFlagshipDirectCheckout()" style="background: none; border: none; color: #949BAE; font-size: 12px; cursor: pointer; text-decoration: underline; padding: 6px;">
-                No thanks, continue with Founder's Flagship Appliance ($49.99)
-            </button>
+        <button id="btnProceedFlagshipCheckout" onclick="proceedToFlagshipCheckout()" style="width: 100%; background: linear-gradient(135deg, #00E676, #00C853); color: #000; font-weight: 900; font-size: 15px; padding: 16px; border: none; border-radius: 12px; cursor: pointer; box-shadow: 0 4px 18px rgba(0,230,118,0.35); transition: transform 0.15s ease;">
+            Proceed to Checkout with Flagship ($49.99) ➔
+        </button>
+
+        <div style="text-align: center; margin-top: 14px; font-size: 11px; color: #64748B;">
+            🔒 256-Bit Stripe Checkout • Instant License Key Delivery via SMS &amp; Email
         </div>
     </div>
 </div>
 
-<!-- Pro Automation Gateway / Front Desk Checkout Modal -->
+<!-- Backwards Compatibility ID alias -->
+<div id="standardUpgradeModal" style="display: none;"></div>
+
+<!-- Pro Automation Gateway Checkout Modal -->
 <div id="proCheckoutModal" style="display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.85); backdrop-filter: blur(8px); z-index: 10000; align-items: center; justify-content: center; padding: 20px;">
     <div style="background: #131720; border: 1px solid #7928CA; border-radius: 16px; max-width: 560px; width: 100%; padding: 28px; box-shadow: 0 20px 50px rgba(0,0,0,0.8); position: relative; text-align: left; max-height: 90vh; overflow-y: auto;">
         <button onclick="closeProCheckoutModal()" style="position: absolute; top: 16px; right: 16px; background: none; border: none; color: #949BAE; font-size: 24px; cursor: pointer; line-height: 1;">&times;</button>
         
-        <div style="margin-bottom: 20px;">
+        <div style="margin-bottom: 16px;">
             <div style="display: inline-block; background: rgba(121,40,202,0.2); border: 1px solid #7928CA; color: #D8B4FE; font-size: 11px; font-weight: 800; padding: 4px 12px; border-radius: 20px; margin-bottom: 6px; text-transform: uppercase;">
-                ⚡ SECURE APPLIANCE CHECKOUT
+                ⚡ SECURE PRO APPLIANCE CHECKOUT
             </div>
-            <h2 id="proModalHeading" style="color: #FFF; margin: 0 0 6px 0; font-size: 22px; font-weight: 900;">Pro Automation Gateway ($299 Perpetual)</h2>
+            <h2 id="proModalHeading" style="color: #FFF; margin: 0 0 6px 0; font-size: 22px; font-weight: 900;">Pro Automation Gateway Appliance</h2>
             <p style="color: #949BAE; font-size: 13px; margin: 0; line-height: 1.4;">
-                Hardware-bound gateway with dedicated webhook pipelines, dual SIM support, and unlimited missed call auto-replies.
+                Hardware-bound gateway with webhook pipelines (n8n/Make), Dual SIM routing, and 1-Year Cloud Relay API Included.
             </p>
         </div>
 
-        <!-- Optional Voice / Front Desk Order Bump Card -->
-        <div id="orderBumpCard" style="background: linear-gradient(180deg, rgba(168,85,247,0.12) 0%, rgba(9,11,14,0.85) 100%); border: 2px dashed #A855F7; border-radius: 12px; padding: 16px; margin-bottom: 20px; transition: all 0.2s ease;">
+        <!-- Edition Selector: New Pro License vs Owner Upgrade -->
+        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-bottom: 16px;">
+            <label style="background: #090B0E; border: 1px solid #7928CA; border-radius: 10px; padding: 12px; cursor: pointer; display: flex; align-items: center; gap: 8px;">
+                <input type="radio" id="radEditionNewPro" name="proEditionRadio" checked onchange="selectProEdition('pro')" style="accent-color: #A855F7;">
+                <div>
+                    <div style="color: #FFF; font-weight: 800; font-size: 13px;">New Pro Appliance</div>
+                    <div style="color: #C084FC; font-size: 12px; font-weight: bold;">$299.99 Perpetual</div>
+                </div>
+            </label>
+            <label style="background: #090B0E; border: 1px solid #222836; border-radius: 10px; padding: 12px; cursor: pointer; display: flex; align-items: center; gap: 8px;">
+                <input type="radio" id="radEditionUpgrade" name="proEditionRadio" onchange="selectProEdition('pro_upgrade')" style="accent-color: #A855F7;">
+                <div>
+                    <div style="color: #FFF; font-weight: 800; font-size: 13px;">Existing Owner Upgrade</div>
+                    <div style="color: #38BDF8; font-size: 12px; font-weight: bold;">$249.99 One-Time</div>
+                </div>
+            </label>
+        </div>
+
+        <!-- Optional Voice Order Bump Card -->
+        <div id="orderBumpCard" style="background: linear-gradient(180deg, rgba(168,85,247,0.12) 0%, rgba(9,11,14,0.85) 100%); border: 2px dashed #A855F7; border-radius: 12px; padding: 16px; margin-bottom: 16px; transition: all 0.2s ease;">
             <label style="display: flex; align-items: flex-start; gap: 12px; cursor: pointer;">
                 <input type="checkbox" id="checkProVoiceOrderBump" onchange="onProOrderBumpToggle()" style="margin-top: 3px; width: 20px; height: 20px; cursor: pointer; accent-color: #00E676; flex-shrink: 0;">
                 <div>
                     <div style="display: flex; align-items: center; gap: 8px; flex-wrap: wrap;">
-                        <span style="background: #00E676; color: #000; font-size: 10px; font-weight: 900; padding: 2px 6px; border-radius: 4px; text-transform: uppercase;">POPULAR COMBO</span>
-                        <span style="color: #FFF; font-weight: 800; font-size: 14px;">AI Voice Receptionist ($9.99/mo)</span>
+                        <span style="background: #00E676; color: #000; font-size: 10px; font-weight: 900; padding: 2px 6px; border-radius: 4px; text-transform: uppercase;">RECOMMENDED</span>
+                        <span style="color: #FFF; font-weight: 800; font-size: 14px;">Add 24/7 AI Voice Receptionist ($9.99/mo)</span>
                     </div>
                     <div style="font-size: 12px; color: #00E676; font-weight: 800; margin: 4px 0;">
-                        ⚡ Includes 15 Free Test Minutes on Signup ($0.25/min usage in $10 credit packs)
+                        ⚡ Includes 15 Free Test Minutes on Activation • Metered Usage in Credit Packs
                     </div>
                     <p style="margin: 0; font-size: 12px; color: #CBD5E0; line-height: 1.45;">
                         Never lose a customer when your hands are full. Our conversational AI receptionist answers in natural voice, screens incoming jobs, and triggers instant confirmation SMS from your real SIM.
@@ -3254,10 +3358,14 @@
         </div>
 
         <!-- Order Summary Box -->
-        <div style="background: #090B0E; border: 1px solid #222836; border-radius: 12px; padding: 14px; margin-bottom: 20px; font-size: 13px;">
+        <div style="background: #090B0E; border: 1px solid #222836; border-radius: 12px; padding: 14px; margin-bottom: 16px; font-size: 13px;">
             <div style="display: flex; justify-content: space-between; margin-bottom: 8px; color: #CBD5E0;">
-                <span>Selected Appliance Plan:</span>
-                <span id="summaryVoiceAddonPrice" style="color: #64748B;">Pro Gateway ($299.99)</span>
+                <span id="summaryProPlanName">Pro Automation Gateway ($299.99)</span>
+                <span style="color: #C084FC; font-weight: bold;">One-Time</span>
+            </div>
+            <div style="display: flex; justify-content: space-between; margin-bottom: 8px; color: #CBD5E0;">
+                <span>AI Voice Receptionist Add-On:</span>
+                <span id="summaryVoiceAddonPrice" style="color: #64748B;">Not Selected</span>
             </div>
             <div style="border-top: 1px solid #222836; padding-top: 8px; display: flex; justify-content: space-between; align-items: baseline;">
                 <span style="font-weight: 800; color: #FFF; font-size: 15px;">Due Today:</span>
@@ -3288,9 +3396,9 @@
         <span class="btn-sub">Founder SIM</span>
         <span class="btn-main">⚡ $49.99</span>
     </button>
-    <button class="mobile-sticky-btn btn-pro" style="background: linear-gradient(135deg, #00E676, #00B0FF); color: #000; border: 1px solid #00E676; font-weight: 900;" onclick="openProCheckoutModal(true)">
-        <span class="btn-sub" style="color: #064E3B; font-size: 10px; font-weight: 900;">AI Voice</span>
-        <span class="btn-main" style="font-size: 13px;">🎙️ $9.99/mo</span>
+    <button class="mobile-sticky-btn btn-pro" style="background: linear-gradient(135deg, #7E22CE, #9333EA); color: #FFF; border: 1px solid #A855F7; font-weight: 900;" onclick="initiateProStripeCheckout()">
+        <span class="btn-sub" style="color: #E9D5FF; font-size: 10px; font-weight: 800;">Pro Gateway</span>
+        <span class="btn-main" style="font-size: 13px;">🛠️ $299.99</span>
     </button>
 </div>
 
