@@ -80,8 +80,12 @@ function getReferralPartners() {
 }
 
 function saveReferralPartners(partners) {
-  fs.mkdirSync(path.dirname(REFERRAL_PARTNERS_FILE), { recursive: true });
-  fs.writeFileSync(REFERRAL_PARTNERS_FILE, JSON.stringify(partners, null, 2), 'utf8');
+  try {
+    fs.mkdirSync(path.dirname(REFERRAL_PARTNERS_FILE), { recursive: true });
+    fs.writeFileSync(REFERRAL_PARTNERS_FILE, JSON.stringify(partners, null, 2), 'utf8');
+  } catch (e) {
+    console.warn('[Referrals] Non-fatal write warning in serverless:', e.message);
+  }
 }
 
 function getReferralLedger() {
@@ -108,8 +112,12 @@ function getReferralLedger() {
 }
 
 function saveReferralLedger(ledger) {
-  fs.mkdirSync(path.dirname(REFERRAL_LEDGER_FILE), { recursive: true });
-  fs.writeFileSync(REFERRAL_LEDGER_FILE, JSON.stringify(ledger, null, 2), 'utf8');
+  try {
+    fs.mkdirSync(path.dirname(REFERRAL_LEDGER_FILE), { recursive: true });
+    fs.writeFileSync(REFERRAL_LEDGER_FILE, JSON.stringify(ledger, null, 2), 'utf8');
+  } catch (e) {
+    console.warn('[Referrals] Non-fatal write warning in serverless:', e.message);
+  }
 }
 
 function getReferralPayouts() {
@@ -124,8 +132,12 @@ function getReferralPayouts() {
 }
 
 function saveReferralPayouts(payouts) {
-  fs.mkdirSync(path.dirname(REFERRAL_PAYOUTS_FILE), { recursive: true });
-  fs.writeFileSync(REFERRAL_PAYOUTS_FILE, JSON.stringify(payouts, null, 2), 'utf8');
+  try {
+    fs.mkdirSync(path.dirname(REFERRAL_PAYOUTS_FILE), { recursive: true });
+    fs.writeFileSync(REFERRAL_PAYOUTS_FILE, JSON.stringify(payouts, null, 2), 'utf8');
+  } catch (e) {
+    console.warn('[Referrals] Non-fatal write warning in serverless:', e.message);
+  }
 }
 
 function syncPartnerMetrics() {
