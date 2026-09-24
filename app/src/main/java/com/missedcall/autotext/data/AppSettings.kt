@@ -59,7 +59,7 @@ data class AppSettings(
     val vapiModel: String = "gpt-4o-mini",
     val vapiVoiceId: String = "",
     val vapiVoiceProvider: String = "cartesia",
-    val dashboardCardOrder: String = "HERO,SMS_METRICS,VOICE_METRICS,REVENUE,QUOTA,HARDWARE",
+    val dashboardCardOrder: String = "HERO,SMS_METRICS,VOICE_METRICS,COST_QUOTA,REVENUE,FOLLOW_UPS,HARDWARE",
     val dashboardHiddenCards: String = "",
     val permissionsOnboardingCompleted: Boolean = false
 )

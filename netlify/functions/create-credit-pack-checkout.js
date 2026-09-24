@@ -117,6 +117,7 @@ exports.handler = async (event) => {
       'line_items[0][price_data][unit_amount]': String(tier.amount),
       'line_items[0][price_data][product_data][name]': tier.name,
       'line_items[0][price_data][product_data][description]': `Instant addition of +${tier.minutes} minutes to dedicated AI voice line. 100% P2P carrier exempt.`,
+      'line_items[0][quantity]': '1',
       'metadata[tier]': 'credit_pack',
       'metadata[pack_tier]': tier.id,
       'metadata[minutes]': String(tier.minutes),

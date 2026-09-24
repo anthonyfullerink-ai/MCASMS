@@ -1,10 +1,10 @@
 {
-  "versionCode": 20,
-  "versionName": "1.7.3",
+  "versionCode": 21,
+  "versionName": "1.7.4",
   "downloadUrl": "https://raw.githubusercontent.com/anthonyfullerink-ai/MCASMS/main/MissedCallAutoSMS.apk",
   "proDownloadUrl": "https://raw.githubusercontent.com/anthonyfullerink-ai/MCASMS/main/MissedCallAutoSMS.apk",
-  "releaseNotes": "🚀 v1.7.3 In-App Membership & Billing Center Active:\n✅ Directly integrated into Account/Profile Dialog (top bar icon & title tap)\n✅ Voice Hub Studio: 1-Tap 'Manage Plan, Quotas & Add Minutes' button\n✅ Real-time Package & Tier Badge, Minutes Meter, and Forwarding routing\n✅ 1-Tap Stripe Reload Credit Packs ($10, $25, $50, $100)\n✅ Pro Gateway Tier Upgrade ($249.99)\n✅ Owner Dashboard Tab 9: Full Subscriptions, Minutes & Waivers Hub",
+  "releaseNotes": "🚀 v1.7.4 Quick Fixes & Customization Sync:\n✅ Fixed Dashboard Cards customization & reordering sync\n✅ Fixed 1-Tap In-App Credit Pack Stripe Checkouts ($10, $25, $50, $100)\n✅ Removed redundant Voice Persona card from Account Portal\n✅ Fixed Voice Pro cancellation pricing clarity ($9.99/mo)\n✅ Owner Admin Dashboard: Fixed 2026 login lock & persistent session",
   "mandatory": true,
-  "minSupportedVersion": 17,
-  "updatedAt": "2026-09-24T14:58:00.000Z"
+  "minSupportedVersion": 18,
+  "updatedAt": "2026-09-24T15:24:00.000Z"
 }

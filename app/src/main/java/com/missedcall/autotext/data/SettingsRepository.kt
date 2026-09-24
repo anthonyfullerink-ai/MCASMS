@@ -155,7 +155,7 @@ class SettingsRepository(private val context: Context) {
             vapiModel = preferences[VAPI_MODEL] ?: "gpt-4o-mini",
             vapiVoiceId = preferences[VAPI_VOICE_ID] ?: "",
             vapiVoiceProvider = preferences[VAPI_VOICE_PROVIDER] ?: "cartesia",
-            dashboardCardOrder = preferences[DASHBOARD_CARD_ORDER] ?: "HERO,SMS_METRICS,VOICE_METRICS,REVENUE,QUOTA,HARDWARE",
+            dashboardCardOrder = preferences[DASHBOARD_CARD_ORDER] ?: "HERO,SMS_METRICS,VOICE_METRICS,COST_QUOTA,REVENUE,FOLLOW_UPS,HARDWARE",
             dashboardHiddenCards = preferences[DASHBOARD_HIDDEN_CARDS] ?: "",
             permissionsOnboardingCompleted = preferences[PERMISSIONS_ONBOARDING_COMPLETED] ?: false
         )

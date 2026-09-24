@@ -137,6 +137,43 @@ fun CustomerAccountPortalDialog(
         }
     }
 
+    fun purchaseCreditPack(packTier: Int) {
+        val email = customerEmailInput.trim().ifBlank { settings.customerEmail.trim() }
+        val key = licenseKeyInput.trim().ifBlank { settings.licenseKey.trim() }
+        val checkoutUrl = "https://missedcallautosms.com/api/create-credit-pack-checkout?pack=$packTier&key=${Uri.encode(key)}&email=${Uri.encode(email)}"
+        Toast.makeText(context, "Opening Secure Stripe Checkout (\$$packTier Credit Pack)...", Toast.LENGTH_SHORT).show()
+        try {
+            val intent = Intent(Intent.ACTION_VIEW, Uri.parse(checkoutUrl)).apply {
+                addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
+            }
+            context.startActivity(intent)
+        } catch (e: Exception) {
+            try {
+                val fallbackIntent = Intent(Intent.ACTION_VIEW, Uri.parse("https://buy.stripe.com/5kA8wPfRY0PS6M014f")).apply {
+                    addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
+                }
+                context.startActivity(fallbackIntent)
+            } catch (err: Exception) {
+                Toast.makeText(context, "Could not open browser: ${err.message}", Toast.LENGTH_LONG).show()
+            }
+        }
+    }
+
+    fun upgradeToProGateway() {
+        val email = customerEmailInput.trim().ifBlank { settings.customerEmail.trim() }
+        val key = licenseKeyInput.trim().ifBlank { settings.licenseKey.trim() }
+        val checkoutUrl = "https://buy.stripe.com/cNi5kDdJQ558c6k2yB2go0b?client_reference_id=${Uri.encode(key)}&prefilled_email=${Uri.encode(email)}"
+        Toast.makeText(context, "Opening Pro Gateway Upgrade ($249.99)...", Toast.LENGTH_SHORT).show()
+        try {
+            val intent = Intent(Intent.ACTION_VIEW, Uri.parse(checkoutUrl)).apply {
+                addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
+            }
+            context.startActivity(intent)
+        } catch (e: Exception) {
+            Toast.makeText(context, "Could not open browser: ${e.message}", Toast.LENGTH_LONG).show()
+        }
+    }
+
     LaunchedEffect(settings.licenseKey) {
         fetchUsageData()
     }
@@ -395,19 +432,13 @@ fun CustomerAccountPortalDialog(
 
                                 Spacer(modifier = Modifier.height(12.dp))
 
-                                val emailParam = Uri.encode(settings.customerEmail.trim())
-                                val keyParam = Uri.encode(settings.licenseKey.trim())
-
                                 // 2x2 Grid of 1-Tap Stripe Reload Buttons
                                 Row(
                                     modifier = Modifier.fillMaxWidth(),
                                     horizontalArrangement = Arrangement.spacedBy(8.dp)
                                 ) {
                                     OutlinedButton(
-                                        onClick = {
-                                            val checkoutUrl = "https://missedcallautosms.com/api/create-credit-pack-checkout?pack=10&key=$keyParam&email=$emailParam"
-                                            context.startActivity(Intent(Intent.ACTION_VIEW, Uri.parse(checkoutUrl)))
-                                        },
+                                        onClick = { purchaseCreditPack(10) },
                                         modifier = Modifier.weight(1f),
                                         shape = RoundedCornerShape(10.dp)
                                     ) {
@@ -418,10 +449,7 @@ fun CustomerAccountPortalDialog(
                                     }
 
                                     Button(
-                                        onClick = {
-                                            val checkoutUrl = "https://missedcallautosms.com/api/create-credit-pack-checkout?pack=25&key=$keyParam&email=$emailParam"
-                                            context.startActivity(Intent(Intent.ACTION_VIEW, Uri.parse(checkoutUrl)))
-                                        },
+                                        onClick = { purchaseCreditPack(25) },
                                         modifier = Modifier.weight(1f),
                                         colors = ButtonDefaults.buttonColors(containerColor = Color(0xFF00E676)),
                                         shape = RoundedCornerShape(10.dp)
@@ -440,10 +468,7 @@ fun CustomerAccountPortalDialog(
                                     horizontalArrangement = Arrangement.spacedBy(8.dp)
                                 ) {
                                     OutlinedButton(
-                                        onClick = {
-                                            val checkoutUrl = "https://missedcallautosms.com/api/create-credit-pack-checkout?pack=50&key=$keyParam&email=$emailParam"
-                                            context.startActivity(Intent(Intent.ACTION_VIEW, Uri.parse(checkoutUrl)))
-                                        },
+                                        onClick = { purchaseCreditPack(50) },
                                         modifier = Modifier.weight(1f),
                                         shape = RoundedCornerShape(10.dp)
                                     ) {
@@ -454,10 +479,7 @@ fun CustomerAccountPortalDialog(
                                     }
 
                                     OutlinedButton(
-                                        onClick = {
-                                            val checkoutUrl = "https://missedcallautosms.com/api/create-credit-pack-checkout?pack=100&key=$keyParam&email=$emailParam"
-                                            context.startActivity(Intent(Intent.ACTION_VIEW, Uri.parse(checkoutUrl)))
-                                        },
+                                        onClick = { purchaseCreditPack(100) },
                                         modifier = Modifier.weight(1f),
                                         shape = RoundedCornerShape(10.dp)
                                     ) {
@@ -501,10 +523,7 @@ fun CustomerAccountPortalDialog(
                                     Spacer(modifier = Modifier.height(12.dp))
 
                                     Button(
-                                        onClick = {
-                                            val checkoutUrl = "https://buy.stripe.com/cNi5kDdJQ558c6k2yB2go0b"
-                                            context.startActivity(Intent(Intent.ACTION_VIEW, Uri.parse(checkoutUrl)))
-                                        },
+                                        onClick = { upgradeToProGateway() },
                                         colors = ButtonDefaults.buttonColors(containerColor = Color(0xFF9333EA)),
                                         modifier = Modifier.fillMaxWidth(),
                                         shape = RoundedCornerShape(10.dp)
@@ -774,50 +793,7 @@ fun CustomerAccountPortalDialog(
                         }
                     }
 
-                    // Card 5: AI Voice Greeting — managed in Prompt Studio (no duplicate here)
-                    item {
-                        Card(
-                            colors = CardDefaults.cardColors(containerColor = Color(0xFF1E1B4B).copy(alpha = 0.5f)),
-                            border = androidx.compose.foundation.BorderStroke(1.dp, Color(0xFF6366F1).copy(alpha = 0.4f)),
-                            shape = RoundedCornerShape(16.dp)
-                        ) {
-                            Row(
-                                modifier = Modifier
-                                    .fillMaxWidth()
-                                    .padding(16.dp),
-                                verticalAlignment = Alignment.CenterVertically,
-                                horizontalArrangement = Arrangement.spacedBy(12.dp)
-                            ) {
-                                Icon(
-                                    Icons.Default.RecordVoiceOver,
-                                    contentDescription = null,
-                                    tint = Color(0xFFA5B4FC),
-                                    modifier = Modifier.size(28.dp)
-                                )
-                                Column(modifier = Modifier.weight(1f)) {
-                                    Text(
-                                        text = "AI Voice Greeting & Persona",
-                                        style = MaterialTheme.typography.titleSmall,
-                                        fontWeight = FontWeight.Bold,
-                                        color = Color(0xFFE0E7FF)
-                                    )
-                                    Text(
-                                        text = "Edit your AI receptionist's greeting, name, and busy status in the Prompts tab → AI Voice Persona.",
-                                        style = MaterialTheme.typography.bodySmall,
-                                        color = Color(0xFFA5B4FC)
-                                    )
-                                }
-                                Icon(
-                                    Icons.Default.ChevronRight,
-                                    contentDescription = null,
-                                    tint = Color(0xFF6366F1)
-                                )
-                            }
-                        }
-                    }
-
-
-                    // Card 6: Voice Pro ($29/mo) Subscription & Automatic Carrier Rollback
+                    // Card 6: Voice Pro ($9.99/mo) Subscription & Automatic Carrier Rollback
                     item {
                         Card(
                             colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.5f)),
@@ -863,7 +839,7 @@ fun CustomerAccountPortalDialog(
                                 Spacer(modifier = Modifier.height(8.dp))
 
                                 Text(
-                                    text = "Turnkey AI Receptionist forwards unanswered calls to your Vapi agent. Cancelling terminates your $29/mo Stripe subscription and immediately launches your phone dialer to deactivate carrier call forwarding (*73 or ##004#).",
+                                    text = "Turnkey AI Receptionist forwards unanswered calls to your Vapi agent. Cancelling terminates your $9.99/mo Stripe subscription and immediately launches your phone dialer to deactivate carrier call forwarding (*73 or ##004#).",
                                     style = MaterialTheme.typography.bodySmall,
                                     color = MaterialTheme.colorScheme.onSurfaceVariant
                                 )
@@ -888,7 +864,7 @@ fun CustomerAccountPortalDialog(
                                     } else {
                                         Icon(Icons.Default.PhoneDisabled, contentDescription = null, modifier = Modifier.size(18.dp))
                                         Spacer(modifier = Modifier.width(8.dp))
-                                        Text("Cancel Voice Pro ($29/mo)")
+                                        Text("Cancel Voice Pro ($9.99/mo)")
                                     }
                                 }
                             }
@@ -992,7 +968,7 @@ fun CustomerAccountPortalDialog(
                 val carrier = CarrierForwardingManager.detectCarrier(context)
                 val codes = CarrierForwardingManager.computeCodes(carrier, "")
                 Text(
-                    text = "Are you sure you want to cancel your Voice Pro ($29/mo) subscription?\n\n" +
+                    text = "Are you sure you want to cancel your Voice Pro ($9.99/mo) subscription?\n\n" +
                             "1. Your Stripe billing will immediately be cancelled ($0 renewal).\n" +
                             "2. The app will automatically launch your phone dialer with your carrier deactivation code (${codes.deactivateCode}). Simply tap Call to stop forwarding calls to AI."
                 )

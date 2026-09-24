@@ -21,11 +21,11 @@ const MIME_TYPES = {
 };
 
 const LATEST_APP_VERSION = {
-  versionCode: 20,
-  versionName: '1.7.3',
+  versionCode: 21,
+  versionName: '1.7.4',
   downloadUrl: 'https://raw.githubusercontent.com/anthonyfullerink-ai/MCASMS/main/MissedCallAutoSMS.apk',
   proDownloadUrl: 'https://raw.githubusercontent.com/anthonyfullerink-ai/MCASMS/main/MissedCallAutoSMS.apk',
-  releaseNotes: '• 💳 Account Profile: Full In-App Membership & Credit Reload Portal\n• 🎙️ Voice Hub: Direct 1-Tap Manage Plan & Minutes button\n• ⚡ 1-Tap Stripe Add Minutes ($10, $25, $50, $100)\n• 💎 Self-Service Pro Gateway Tier Upgrade ($249.99)\n• 🎛️ Owner Admin Subscriptions & Minutes Hub with Waiver Controls',
+  releaseNotes: '• 🎛️ Fixed Dashboard Cards customization & reordering sync\n• 💳 Fixed 1-Tap In-App Credit Pack Stripe Checkouts ($10, $25, $50, $100)\n• 🎙️ Removed redundant Voice Persona card from Account Portal\n• ⚡ Clarified Voice Pro cancellation pricing ($9.99/mo)\n• 🛡️ Owner Admin Dashboard: Fixed 2026 login lock & persistent session',
   mandatory: true,
   minSupportedVersion: 17
 };
@@ -3169,6 +3169,7 @@ const server = http.createServer((req, res) => {
         'line_items[0][price_data][unit_amount]': String(tier.amount),
         'line_items[0][price_data][product_data][name]': tier.name,
         'line_items[0][price_data][product_data][description]': `Instant addition of +${tier.minutes} minutes to dedicated AI voice line. 100% P2P carrier exempt.`,
+        'line_items[0][quantity]': '1',
         'metadata[tier]': 'credit_pack',
         'metadata[pack_tier]': tier.id,
         'metadata[minutes]': String(tier.minutes),

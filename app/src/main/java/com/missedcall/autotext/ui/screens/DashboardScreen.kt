@@ -118,11 +118,18 @@ fun DashboardScreen(
 
     val defaultCardOrder = listOf("HERO", "SMS_METRICS", "VOICE_METRICS", "COST_QUOTA", "REVENUE", "FOLLOW_UPS", "HARDWARE")
     val cardOrder = remember(settings.dashboardCardOrder) {
-        val split = settings.dashboardCardOrder.split(",").map { it.trim() }.filter { it.isNotBlank() }
-        if (split.isEmpty()) defaultCardOrder else split
+        val raw = settings.dashboardCardOrder.split(",").map { it.trim() }.filter { it.isNotBlank() }
+        val mapped = raw.map { if (it == "QUOTA") "COST_QUOTA" else it }
+        val filtered = mapped.filter { defaultCardOrder.contains(it) }.distinct()
+        val missing = defaultCardOrder.filter { !filtered.contains(it) }
+        val result = filtered + missing
+        if (result.isEmpty()) defaultCardOrder else result
     }
     val hiddenCards = remember(settings.dashboardHiddenCards) {
-        settings.dashboardHiddenCards.split(",").map { it.trim() }.toSet()
+        settings.dashboardHiddenCards.split(",").map { it.trim() }
+            .map { if (it == "QUOTA") "COST_QUOTA" else it }
+            .filter { it.isNotBlank() }
+            .toSet()
     }
 
     if (showCustomizeCardsDialog) {
@@ -130,10 +137,12 @@ fun DashboardScreen(
             currentOrder = cardOrder,
             hiddenCards = hiddenCards,
             onSaveOrder = { newOrder, newHidden ->
+                val cleanOrder = newOrder.map { if (it == "QUOTA") "COST_QUOTA" else it }.distinct()
+                val cleanHidden = newHidden.map { if (it == "QUOTA") "COST_QUOTA" else it }.toSet()
                 onSettingsChanged(
                     settings.copy(
-                        dashboardCardOrder = newOrder.joinToString(","),
-                        dashboardHiddenCards = newHidden.joinToString(",")
+                        dashboardCardOrder = cleanOrder.joinToString(","),
+                        dashboardHiddenCards = cleanHidden.joinToString(",")
                     )
                 )
                 showCustomizeCardsDialog = false
@@ -194,7 +203,7 @@ fun DashboardScreen(
                             settings = settings,
                             onNavigateToVoice = { onNavigateToTab(2) }
                         )
-                        "COST_QUOTA" -> CostAndQuotaCard(
+                        "COST_QUOTA", "QUOTA" -> CostAndQuotaCard(
                             minutesUsed = liveMinutesUsed,
                             quotaMinutes = liveQuotaMinutes,
                             overageAmount = liveOverageAmount,
@@ -616,13 +625,18 @@ fun CustomizeCardsDialog(
         "SMS_METRICS" to "Missed Calls Rescued by SMS",
         "VOICE_METRICS" to "AI Virtual Agent Calls",
         "COST_QUOTA" to "AI VA Minute Quota & Costs",
+        "QUOTA" to "AI VA Minute Quota & Costs",
         "REVENUE" to "Estimated Rescued Revenue",
         "FOLLOW_UPS" to "Total Automated Touchpoints",
         "HARDWARE" to "Hardware Appliance Details"
     )
 
-    var orderList by remember { mutableStateOf(currentOrder.toMutableList()) }
-    var hiddenSet by remember { mutableStateOf(hiddenCards.toMutableSet()) }
+    var orderList by remember(currentOrder) { 
+        mutableStateOf(currentOrder.map { if (it == "QUOTA") "COST_QUOTA" else it }.distinct().toMutableList()) 
+    }
+    var hiddenSet by remember(hiddenCards) { 
+        mutableStateOf(hiddenCards.map { if (it == "QUOTA") "COST_QUOTA" else it }.toMutableSet()) 
+    }
 
     Dialog(
         onDismissRequest = onDismiss,
