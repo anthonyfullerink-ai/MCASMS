@@ -95,6 +95,10 @@ fun CustomerAccountPortalDialog(
     var isUnlimitedGateway by remember { mutableStateOf(false) }
     var isLoadingUsage by remember { mutableStateOf(false) }
 
+    var showInAppPayment by remember { mutableStateOf(false) }
+    var inAppPaymentUrl by remember { mutableStateOf("") }
+    var inAppPaymentTitle by remember { mutableStateOf("Secure Checkout") }
+
     suspend fun fetchUsageData() {
         val key = settings.licenseKey.trim()
         if (key.isBlank()) return
@@ -149,29 +153,25 @@ fun CustomerAccountPortalDialog(
     fun purchaseCreditPack(packTier: Int) {
         val email = customerEmailInput.trim().ifBlank { settings.customerEmail.trim() }
         val key = licenseKeyInput.trim().ifBlank { settings.licenseKey.trim() }
-        try {
-            val checkoutUrl = "https://missedcallautosms.com/api/create-credit-pack-checkout?pack=$packTier&key=${Uri.encode(key)}&email=${Uri.encode(email)}"
-            val intent = Intent(Intent.ACTION_VIEW, Uri.parse(checkoutUrl)).apply {
-                flags = Intent.FLAG_ACTIVITY_NEW_TASK
-            }
-            context.startActivity(intent)
-        } catch (e: Exception) {
-            Toast.makeText(context, "Could not open browser: ${e.localizedMessage}", Toast.LENGTH_LONG).show()
-        }
+        inAppPaymentTitle = "Add Minute Pack ($packTier)"
+        inAppPaymentUrl = "https://missedcallautosms.com/api/create-credit-pack-checkout?pack=$packTier&key=${Uri.encode(key)}&email=${Uri.encode(email)}"
+        showInAppPayment = true
     }
 
     fun upgradeToProGateway() {
         val email = customerEmailInput.trim().ifBlank { settings.customerEmail.trim() }
         val key = licenseKeyInput.trim().ifBlank { settings.licenseKey.trim() }
-        try {
-            val checkoutUrl = "https://buy.stripe.com/bJe14neNU9loc6kehj2go0h?prefilled_email=${Uri.encode(email)}&client_reference_id=${Uri.encode(key)}"
-            val intent = Intent(Intent.ACTION_VIEW, Uri.parse(checkoutUrl)).apply {
-                flags = Intent.FLAG_ACTIVITY_NEW_TASK
-            }
-            context.startActivity(intent)
-        } catch (e: Exception) {
-            Toast.makeText(context, "Could not open browser: ${e.localizedMessage}", Toast.LENGTH_LONG).show()
-        }
+        inAppPaymentTitle = "Upgrade to Pro Gateway ($249.99)"
+        inAppPaymentUrl = "https://buy.stripe.com/bJe14neNU9loc6kehj2go0h?prefilled_email=${Uri.encode(email)}&client_reference_id=${Uri.encode(key)}"
+        showInAppPayment = true
+    }
+
+    fun subscribeToVoicePro() {
+        val email = customerEmailInput.trim().ifBlank { settings.customerEmail.trim() }
+        val key = licenseKeyInput.trim().ifBlank { settings.licenseKey.trim() }
+        inAppPaymentTitle = "Subscribe to AI Voice ($9.99/mo)"
+        inAppPaymentUrl = "https://missedcallautosms.com/api/create-voice-pro-checkout?key=${Uri.encode(key)}&email=${Uri.encode(email)}"
+        showInAppPayment = true
     }
 
     LaunchedEffect(settings.licenseKey) {
@@ -449,19 +449,7 @@ fun CustomerAccountPortalDialog(
                                     )
                                     Spacer(modifier = Modifier.height(14.dp))
                                     Button(
-                                        onClick = {
-                                            try {
-                                                val email = settings.customerEmail.trim()
-                                                val key = settings.licenseKey.trim()
-                                                val checkoutUrl = "https://buy.stripe.com/4gMeVdcFMaps6M0b572go0f?prefilled_email=${Uri.encode(email)}&client_reference_id=${Uri.encode(key)}"
-                                                val intent = Intent(Intent.ACTION_VIEW, Uri.parse(checkoutUrl)).apply {
-                                                    flags = Intent.FLAG_ACTIVITY_NEW_TASK
-                                                }
-                                                context.startActivity(intent)
-                                            } catch (e: Exception) {
-                                                Toast.makeText(context, "Could not open browser", Toast.LENGTH_SHORT).show()
-                                            }
-                                        },
+                                        onClick = { subscribeToVoicePro() },
                                         colors = ButtonDefaults.buttonColors(containerColor = Color(0xFF9333EA)),
                                         modifier = Modifier.fillMaxWidth(),
                                         shape = RoundedCornerShape(10.dp)
@@ -951,16 +939,7 @@ fun CustomerAccountPortalDialog(
                                     }
                                 } else {
                                     Button(
-                                        onClick = {
-                                            try {
-                                                val email = settings.customerEmail.trim()
-                                                val checkoutUrl = "https://buy.stripe.com/4gMeVdcFMaps6M0b572go0f?prefilled_email=${Uri.encode(email)}"
-                                                val intent = Intent(Intent.ACTION_VIEW, Uri.parse(checkoutUrl))
-                                                context.startActivity(intent)
-                                            } catch (e: Exception) {
-                                                Toast.makeText(context, "Could not open browser", Toast.LENGTH_SHORT).show()
-                                            }
-                                        },
+                                        onClick = { subscribeToVoicePro() },
                                         colors = ButtonDefaults.buttonColors(containerColor = Color(0xFF9333EA)),
                                         modifier = Modifier.fillMaxWidth(),
                                         shape = RoundedCornerShape(10.dp)
@@ -1126,6 +1105,20 @@ fun CustomerAccountPortalDialog(
             dismissButton = {
                 TextButton(onClick = { showCancelVoiceConfirm = false }) {
                     Text("Keep Subscription")
+                }
+            }
+        )
+    }
+
+    if (showInAppPayment && inAppPaymentUrl.isNotBlank()) {
+        InAppPaymentDialog(
+            url = inAppPaymentUrl,
+            title = inAppPaymentTitle,
+            onDismiss = { showInAppPayment = false },
+            onPaymentSuccess = {
+                Toast.makeText(context, "Payment successful! Refreshing account...", Toast.LENGTH_LONG).show()
+                coroutineScope.launch {
+                    fetchUsageData()
                 }
             }
         )

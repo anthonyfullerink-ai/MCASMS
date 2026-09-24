@@ -21,13 +21,13 @@ const MIME_TYPES = {
 };
 
 const LATEST_APP_VERSION = {
-  versionCode: 22,
-  versionName: '1.7.5',
+  versionCode: 25,
+  versionName: '1.7.8',
   downloadUrl: 'https://raw.githubusercontent.com/anthonyfullerink-ai/MCASMS/main/MissedCallAutoSMS.apk',
   proDownloadUrl: 'https://raw.githubusercontent.com/anthonyfullerink-ai/MCASMS/main/MissedCallAutoSMS.apk',
-  releaseNotes: '• 💳 Seamless 1-Tap Credit Pack & Pro Upgrades with Instant Auto-Refresh\n• 🎛️ Dedicated Automations Tab with Full Integration Triggers\n• 🎨 Streamlined Single-Line Navigation Tabs & Responsive Badges\n• ⚡ Direct Carrier SIM Armor & 24/7 AI Voice Receptionist Ready',
+  releaseNotes: '• 💳 100% In-App Stripe Checkout (Zero Browser Redirects)\n• 🎁 10 FREE Test Minutes on $9.99/mo Voice Activation\n• 🛡️ Auto-Pause at 0.0 Mins & Auto-Resume on Reload\n• 🔒 Full Screen Paywall Gates for Voice & Automations',
   mandatory: true,
-  minSupportedVersion: 21
+  minSupportedVersion: 23
 };
 
 
@@ -1909,6 +1909,20 @@ const server = http.createServer((req, res) => {
           // === STAGE 1: $9.99/mo AI Voice Add-On (Soft Gate — $0 Out-of-Pocket Telephony COGS) ===
           if (isVoiceAddon) {
             const licenseKey = metadata.license_key || metadata.key || generateKey(customerName, 0, true);
+            const forwardingNumber = process.env.VAPI_PRIMARY_PHONE_NUMBER || '+1 (732) 660-9121';
+            const cleanDigits = forwardingNumber.replace(/\D/g, '');
+            const carrierCode = `*71${cleanDigits.slice(-10)}`;
+            const carrierDeactivateCode = '*73';
+
+            const settings = getVoiceSettings();
+            settings.voiceMinutesBalance = 10.0;
+            settings.isVoicePaused = false;
+            settings.vapiProvisioned = true;
+            settings.forwardingNumber = forwardingNumber;
+            settings.carrierCode = carrierCode;
+            settings.carrierDeactivateCode = carrierDeactivateCode;
+            settings.status = 'ACTIVE';
+            saveVoiceSettings(settings);
 
             saveVoiceSubscriber(licenseKey, {
               active: true,
@@ -1917,17 +1931,18 @@ const server = http.createServer((req, res) => {
               voiceEntitlement: true,
               voiceSubActive: true,
               voiceSubWaived: false,
-              vapiProvisioned: false,
-              forwardingNumber: null,
-              carrierCode: null,
-              carrierDeactivateCode: '*73',
-              voiceMinutesBalance: 0.0,
+              vapiProvisioned: true,
+              forwardingNumber: forwardingNumber,
+              carrierCode: carrierCode,
+              carrierDeactivateCode: carrierDeactivateCode,
+              voiceMinutesBalance: 10.0,
               ratePerMinute: 0.25,
               autoRebillEnabled: true,
+              isVoicePaused: false,
               subscriptionId: session.subscription || session.id,
               customerId: session.customer || null,
               stripeCustomerId: session.customer || null,
-              status: 'UNLOCKED_PENDING_PACK',
+              status: 'ACTIVE',
               boundAt: new Date().toISOString()
             });
 
@@ -1941,11 +1956,13 @@ const server = http.createServer((req, res) => {
               voiceEntitlement: true,
               voiceSubActive: true,
               voiceSubWaived: false,
-              vapiProvisioned: false,
-              voiceActive: false,
-              voiceNumber: null,
-              carrierCode: null,
-              voiceMinutesBalance: 0.0,
+              vapiProvisioned: true,
+              voiceActive: true,
+              voiceNumber: forwardingNumber,
+              carrierCode: carrierCode,
+              carrierDeactivateCode: carrierDeactivateCode,
+              voiceMinutesBalance: 10.0,
+              isVoicePaused: false,
               status: 'ACTIVE',
               date: new Date().toISOString()
             });
@@ -2963,50 +2980,42 @@ const server = http.createServer((req, res) => {
     return;
   }
 
-  // API: Create Turnkey Voice Pro 14-Day Free Trial Checkout Session
-  if ((relativePath === '/api/create-voice-pro-checkout' || relativePath === '/api/create-voice-pro-checkout/') && req.method === 'POST') {
-    let body = '';
-    req.on('data', chunk => body += chunk);
-    req.on('end', async () => {
+  // API: Create Turnkey Voice Pro Checkout Session ($9.99/mo with 10 Included Minutes)
+  if (relativePath === '/api/create-voice-pro-checkout' || relativePath === '/api/create-voice-pro-checkout/') {
+    const handleVoiceProCheckout = async (payload, isGet = false) => {
       try {
-        const payload = JSON.parse(body || '{}');
         const customerEmail = (payload.email || '').trim();
         const businessName = (payload.businessName || 'Apex Trade Services').trim();
-        const licenseKey = (payload.licenseKey || '').trim().toUpperCase();
+        const licenseKey = (payload.licenseKey || payload.key || '').trim().toUpperCase();
+        const tier = (payload.tier || 'voice_starter').toLowerCase();
 
-        // Enforce Pro License Requirement: Voice Receptionist is strictly an add-on for Pro ($149)
-        const isProKey = licenseKey && (
-          licenseKey.startsWith('MCAS-PRO-') ||
-          licenseKey.startsWith('MCAT-PRO-') ||
-          licenseKey.includes('PRO-DEMO')
-        );
-
-        if (!isProKey) {
-          res.writeHead(400, { 'Content-Type': 'application/json; charset=utf-8', 'Access-Control-Allow-Origin': '*' });
-          res.end(JSON.stringify({
-            success: false,
-            error: 'The $29/mo AI Voice Receptionist is an exclusive add-on requiring MissedCallAutoSMS Pro ($149). Please provide your active Pro License Key (e.g. MCAS-PRO-...) or purchase the Pro Edition first.'
-          }));
-          return;
-        }
+        const isBusiness = tier.includes('biz') || tier.includes('business') || tier.includes('300') || tier.includes('89');
+        const unitAmount = isBusiness ? '8900' : '999';
+        const quotaMinutes = isBusiness ? 300 : 10;
+        const overageRate = isBusiness ? '0.20' : '0.25';
+        const tierName = isBusiness ? 'voice_business' : 'voice_addon';
+        const planTitle = isBusiness ? 'Business AI Voice Receptionist ($89/mo)' : '24/7 AI Voice Receptionist ($9.99/mo)';
 
         const postData = {
           'mode': 'subscription',
           'payment_method_types[0]': 'card',
           'line_items[0][price_data][currency]': 'usd',
-          'line_items[0][price_data][product_data][name]': '24/7 AI Voice Receptionist (Turnkey Managed)',
-          'line_items[0][price_data][product_data][description]': '14-Day Free Trial ($0 today) • Auto-renews at $29/mo for 200 included minutes & carrier forwarding (Bound to Pro Key ' + licenseKey + ')',
-          'line_items[0][price_data][unit_amount]': '2900',
+          'line_items[0][price_data][product_data][name]': planTitle,
+          'line_items[0][price_data][product_data][description]': `Includes ${quotaMinutes} FREE Minutes on activation • *71 Carrier Conditional Forwarding (Bound to License ${licenseKey || 'Account'})`,
+          'line_items[0][price_data][unit_amount]': unitAmount,
           'line_items[0][price_data][recurring][interval]': 'month',
           'line_items[0][quantity]': '1',
-          'subscription_data[trial_period_days]': '14',
-          'subscription_data[metadata][tier]': 'managed_voice_pro',
+          'subscription_data[metadata][tier]': tierName,
+          'subscription_data[metadata][quotaMinutes]': String(quotaMinutes),
+          'subscription_data[metadata][overageRate]': overageRate,
           'subscription_data[metadata][business_name]': businessName,
           'subscription_data[metadata][license_key]': licenseKey,
           'client_reference_id': licenseKey,
           'metadata[license_key]': licenseKey,
-          'metadata[tier]': 'managed_voice_pro',
-          'success_url': 'https://missedcallautosms.com/success.html?session_id={CHECKOUT_SESSION_ID}&tier=managed_voice_pro',
+          'metadata[tier]': tierName,
+          'metadata[quotaMinutes]': String(quotaMinutes),
+          'metadata[overageRate]': overageRate,
+          'success_url': `https://missedcallautosms.com/success.html?session_id={CHECKOUT_SESSION_ID}&tier=${tierName}`,
           'cancel_url': 'https://missedcallautosms.com/#pricing'
         };
 
@@ -3015,22 +3024,54 @@ const server = http.createServer((req, res) => {
         }
 
         const session = await stripeApiRequest('/v1/checkout/sessions', 'POST', postData);
-        console.log(`💳 [STRIPE TRIAL CHECKOUT] Created 14-day trial checkout session: ${session.id} for ${customerEmail || 'prospective user'} (Pro Key: ${licenseKey})`);
+        console.log(`💳 [STRIPE VOICE PRO CHECKOUT] Created $9.99/mo checkout session: ${session.id} for ${customerEmail || 'prospective user'} (Key: ${licenseKey})`);
+
+        if (isGet) {
+          res.writeHead(302, { Location: session.url });
+          res.end();
+          return;
+        }
+
         res.writeHead(200, { 'Content-Type': 'application/json; charset=utf-8', 'Access-Control-Allow-Origin': '*' });
         res.end(JSON.stringify({
           success: true,
           checkoutUrl: session.url,
           sessionId: session.id,
           licenseKey: licenseKey,
-          trialPeriodDays: 14
+          minutes: quotaMinutes
         }));
       } catch (err) {
-        console.error('Stripe trial checkout creation error:', err.message);
+        console.error('Stripe voice checkout creation error:', err.message);
+        if (isGet) {
+          res.writeHead(302, { Location: 'https://buy.stripe.com/5kQ5kDbBI8hkdao8WZ2go0c' });
+          res.end();
+          return;
+        }
         res.writeHead(500, { 'Content-Type': 'application/json; charset=utf-8', 'Access-Control-Allow-Origin': '*' });
         res.end(JSON.stringify({ success: false, error: err.message }));
       }
-    });
-    return;
+    };
+
+    if (req.method === 'GET') {
+      const urlParts = require('url').parse(req.url, true);
+      handleVoiceProCheckout(urlParts.query, true);
+      return;
+    }
+
+    if (req.method === 'POST') {
+      let body = '';
+      req.on('data', chunk => body += chunk);
+      req.on('end', async () => {
+        try {
+          const payload = JSON.parse(body || '{}');
+          handleVoiceProCheckout(payload, false);
+        } catch (e) {
+          res.writeHead(400, { 'Content-Type': 'application/json; charset=utf-8', 'Access-Control-Allow-Origin': '*' });
+          res.end(JSON.stringify({ success: false, error: e.message }));
+        }
+      });
+      return;
+    }
   }
 
   // API: Create Pro Automation Checkout Session (with optional 14-day Voice Pro Order Bump)

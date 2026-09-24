@@ -1168,6 +1168,10 @@ exports.handler = async (event) => {
       const candidateKey = (session.client_reference_id ||
                            (session.metadata && session.metadata.license_key) || '').trim().toUpperCase();
       const voiceLicenseKey = candidateKey || generateKey(customerName, 0, true);
+      const forwardingNumber = process.env.VAPI_PRIMARY_PHONE_NUMBER || '+1 (732) 660-9121';
+      const cleanDigits = forwardingNumber.replace(/\D/g, '');
+      const carrierCode = `*71${cleanDigits.slice(-10)}`;
+      const carrierDeactivateCode = '*73';
 
       const db = getFirestore();
       if (db) {
@@ -1178,16 +1182,16 @@ exports.handler = async (event) => {
             stripeCustomerId: session.customer || null,
             customerEmail,
             customerName,
-            status: 'UNLOCKED_PENDING_PACK',
+            status: 'ACTIVE',
             tier: 'VOICE_ADDON',
             voiceEntitlement: true,
             voiceSubActive: true,
             voiceSubWaived: false,
-            vapiProvisioned: false,
-            forwardingNumber: null,
-            carrierCode: null,
-            carrierDeactivateCode: '*73',
-            voiceMinutesBalance: 0.0,
+            vapiProvisioned: true,
+            forwardingNumber: forwardingNumber,
+            carrierCode: carrierCode,
+            carrierDeactivateCode: carrierDeactivateCode,
+            voiceMinutesBalance: 10.0,
             ratePerMinute: 0.25,
             autoRebillEnabled: true,
             isVoicePaused: false,
@@ -1204,32 +1208,42 @@ exports.handler = async (event) => {
             voiceEntitlement: true,
             voiceSubActive: true,
             voiceSubWaived: false,
-            vapiProvisioned: false,
-            voiceActive: false,
-            voiceNumber: null,
-            carrierCode: null,
+            vapiProvisioned: true,
+            voiceActive: true,
+            voiceNumber: forwardingNumber,
+            carrierCode: carrierCode,
+            carrierDeactivateCode: carrierDeactivateCode,
             status: 'ACTIVE',
             subscriptionId: session.subscription || session.id,
-            voiceMinutesBalance: 0.0,
+            voiceMinutesBalance: 10.0,
             ratePerMinute: 0.25,
+            isVoicePaused: false,
             date: new Date().toISOString()
           });
         } catch (dbErr) {
-          console.error('[stripe-webhook] Firestore voice addon soft gate error:', dbErr.message);
+          console.error('[stripe-webhook] Firestore voice addon provisioning error:', dbErr.message);
         }
       }
 
-      console.log(`🎙️ [VOICE ADD-ON SOFT GATE COMPLETE] Voice Engine Unlocked for ${customerEmail}. Zero COGS incurred.`);
+      console.log(`🎙️ [VOICE ADD-ON ACTIVATED] Provisioned line ${forwardingNumber} (*71 code: ${carrierCode}) and credited 10.0 free test minutes for ${customerEmail}.`);
 
       if (RESEND_API_KEY && customerEmail) {
-        const emailSubject = `⚡ Your 24/7 AI Voice Receptionist Engine is Unlocked! (Key: ${voiceLicenseKey})`;
-        const emailHtml = generateVoiceUnlockEmailHtml(customerName, voiceLicenseKey, false);
+        const emailSubject = `🎙️ Your 24/7 AI Voice Receptionist Line is Live! Line: ${forwardingNumber}`;
+        const emailHtml = generateVoiceProOnboardingEmailHtml ? generateVoiceProOnboardingEmailHtml({
+          customerName,
+          customerEmail,
+          licenseKey: voiceLicenseKey,
+          forwardingNumber,
+          carrierCode,
+          carrierDeactivateCode,
+          monthlyMinutesQuota: 10
+        }) : generateVoiceUnlockEmailHtml(customerName, voiceLicenseKey, false);
 
         try {
           await sendEmail(RESEND_API_KEY, customerEmail, emailSubject, emailHtml);
-          console.log(`📧 [VOICE UNLOCK EMAIL DELIVERED] Dispatched to ${customerEmail}`);
+          console.log(`📧 [VOICE ACTIVATION EMAIL DELIVERED] Dispatched to ${customerEmail}`);
         } catch (emailErr) {
-          console.error(`❌ [VOICE UNLOCK EMAIL FAILED] for ${customerEmail}:`, emailErr.message);
+          console.error(`❌ [VOICE ACTIVATION EMAIL FAILED] for ${customerEmail}:`, emailErr.message);
         }
       }
 
@@ -1240,13 +1254,14 @@ exports.handler = async (event) => {
           received: true,
           tier: 'voice_addon',
           voiceEntitlement: true,
-          vapiProvisioned: false,
-          voiceMinutesBalance: 0.0,
-          status: 'UNLOCKED_PENDING_PACK',
+          vapiProvisioned: true,
+          voiceMinutesBalance: 10.0,
+          forwardingNumber: forwardingNumber,
+          carrierCode: carrierCode,
+          status: 'ACTIVE',
           licenseKey: voiceLicenseKey,
           customerEmail,
-          subscriptionId: session.subscription || session.id,
-          checkoutCreditPackUrl: 'https://buy.stripe.com/5kA8wPfRY0PS6M014f'
+          subscriptionId: session.subscription || session.id
         })
       };
     }

@@ -1,10 +1,10 @@
 {
-  "versionCode": 24,
-  "versionName": "1.7.7",
+  "versionCode": 25,
+  "versionName": "1.7.8",
   "downloadUrl": "https://raw.githubusercontent.com/anthonyfullerink-ai/MCASMS/main/MissedCallAutoSMS.apk",
   "proDownloadUrl": "https://raw.githubusercontent.com/anthonyfullerink-ai/MCASMS/main/MissedCallAutoSMS.apk",
-  "releaseNotes": "🔒 v1.7.7 Subscription & Credit Pack Fix:\n• 🛡️ Crash Fix: Resolved lifecycle registration crash when tapping Subscribe or Add Minute Pack\n• 🎙️ Proper Voice Workflow Gate: Non-subscribers must subscribe ($9.99/mo) to unlock the paywall before purchasing minute packs\n• ⚡ 1-Tap Crash-Free Stripe Billing for Subscriptions, Reloads ($10, $25, $50, $100), and Pro Upgrades ($249.99)\n• 🌐 Fixed Website CTA modals and direct checkout buttons across all devices",
+  "releaseNotes": "🔒 v1.7.8 100% In-App Payment & AI Voice Engine Update:\n• 💳 100% In-App Payment Experience: Zero external browser redirects. All Stripe checkouts (Voice $9.99/mo, Credit Packs $10-$100, Pro Gateway $249.99) complete directly inside the app\n• 🎁 10 FREE Test Minutes on Voice Subscription: Subscribing to 24/7 AI Voice ($9.99/mo) immediately provisions your Vapi agent & line with 10 free minutes\n• 🛡️ Auto-Pause & Auto-Resume: AI Receptionist auto-pauses at 0.0 mins to prevent unexpected charges, and auto-resumes immediately upon reloading minute packs\n• 🔒 Full Paywall Gating: Voice and Automations hubs are 100% locked and hidden behind paywalls until activated",
   "mandatory": true,
-  "minSupportedVersion": 22,
-  "updatedAt": "2026-09-24T21:18:00.000Z"
+  "minSupportedVersion": 23,
+  "updatedAt": "2026-09-24T22:30:00.000Z"
 }

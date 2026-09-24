@@ -56,7 +56,7 @@ exports.handler = async (event) => {
     return { statusCode: 204, headers, body: '' };
   }
 
-  if (event.httpMethod !== 'POST') {
+  if (event.httpMethod !== 'POST' && event.httpMethod !== 'GET') {
     return { statusCode: 405, headers, body: JSON.stringify({ success: false, error: 'Method Not Allowed' }) };
   }
 
@@ -72,43 +72,38 @@ exports.handler = async (event) => {
   }
 
   try {
-    const payload = JSON.parse(event.body || '{}');
-    const customerEmail = (payload.email || '').trim();
-    const businessName = (payload.businessName || 'Apex Trade Services').trim();
-    const licenseKey = (payload.licenseKey || '').trim().toUpperCase();
+    let customerEmail = '';
+    let businessName = 'Apex Trade Services';
+    let licenseKey = '';
+    let tier = 'voice_starter';
 
-    // Enforce Pro License Requirement: Voice Receptionist is strictly an add-on for Pro ($149)
-    const isProKey = licenseKey && (
-      licenseKey.startsWith('MCAS-PRO-') ||
-      licenseKey.startsWith('MCAT-PRO-') ||
-      licenseKey.includes('PRO-DEMO')
-    );
-
-    if (!isProKey) {
-      return {
-        statusCode: 400,
-        headers,
-        body: JSON.stringify({
-          success: false,
-          error: 'The AI Voice Receptionist is an exclusive add-on requiring MissedCallAutoSMS Pro. Please provide your active Pro License Key (e.g. MCAS-PRO-...) or choose our Autonomous Front Desk Bundle.'
-        })
-      };
+    if (event.httpMethod === 'POST') {
+      const payload = JSON.parse(event.body || '{}');
+      customerEmail = (payload.email || '').trim();
+      businessName = (payload.businessName || 'Apex Trade Services').trim();
+      licenseKey = (payload.licenseKey || payload.key || '').trim().toUpperCase();
+      tier = (payload.tier || 'voice_starter').toLowerCase();
+    } else {
+      const q = event.queryStringParameters || {};
+      customerEmail = (q.email || '').trim();
+      businessName = (q.businessName || 'Apex Trade Services').trim();
+      licenseKey = (q.key || q.licenseKey || '').trim().toUpperCase();
+      tier = (q.tier || 'voice_starter').toLowerCase();
     }
 
-    const tier = (payload.tier || 'starter').toLowerCase();
-    const isBusiness = tier.includes('biz') || tier.includes('business') || tier.includes('300');
-    const unitAmount = isBusiness ? '8900' : '2900';
-    const quotaMinutes = isBusiness ? 300 : 45;
+    const isBusiness = tier.includes('biz') || tier.includes('business') || tier.includes('300') || tier.includes('89');
+    const unitAmount = isBusiness ? '8900' : '999';
+    const quotaMinutes = isBusiness ? 300 : 10;
     const overageRate = isBusiness ? '0.20' : '0.25';
-    const tierName = isBusiness ? 'voice_business' : 'voice_starter';
-    const planTitle = isBusiness ? 'Business AI Voice Receptionist ($89/mo)' : 'Starter AI Voice Receptionist ($29/mo)';
+    const tierName = isBusiness ? 'voice_business' : 'voice_addon';
+    const planTitle = isBusiness ? 'Business AI Voice Receptionist ($89/mo)' : '24/7 AI Voice Receptionist ($9.99/mo)';
 
     const postData = {
       'mode': 'subscription',
       'payment_method_types[0]': 'card',
       'line_items[0][price_data][currency]': 'usd',
-      'line_items[0][price_data][product_data][name]': `24/7 ${planTitle}`,
-      'line_items[0][price_data][product_data][description]': `${quotaMinutes} Included Monthly Pooled Minutes ($${overageRate}/min overage) • *71 Carrier Conditional Forwarding (Bound to Pro Key ${licenseKey})`,
+      'line_items[0][price_data][product_data][name]': planTitle,
+      'line_items[0][price_data][product_data][description]': `Includes ${quotaMinutes} FREE Minutes on activation • *71 Carrier Conditional Forwarding (Bound to License ${licenseKey || 'Account'})`,
       'line_items[0][price_data][unit_amount]': unitAmount,
       'line_items[0][price_data][recurring][interval]': 'month',
       'line_items[0][quantity]': '1',
@@ -132,6 +127,13 @@ exports.handler = async (event) => {
 
     const session = await stripeApiRequest('/v1/checkout/sessions', 'POST', postData);
 
+    if (event.httpMethod === 'GET') {
+      return {
+        statusCode: 302,
+        headers: { Location: session.url }
+      };
+    }
+
     return {
       statusCode: 200,
       headers,
@@ -140,10 +142,16 @@ exports.handler = async (event) => {
         checkoutUrl: session.url,
         sessionId: session.id,
         licenseKey: licenseKey,
-        trialPeriodDays: 14
+        minutes: quotaMinutes
       })
     };
   } catch (err) {
+    if (event.httpMethod === 'GET') {
+      return {
+        statusCode: 302,
+        headers: { Location: 'https://buy.stripe.com/5kQ5kDbBI8hkdao8WZ2go0c' }
+      };
+    }
     return {
       statusCode: 500,
       headers,

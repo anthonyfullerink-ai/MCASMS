@@ -65,6 +65,51 @@ fun AutomationsScreen(
         com.missedcall.autotext.BuildConfig.IS_PRO_EDITION
     }
 
+    var liveIsPro by remember { mutableStateOf(isPro) }
+    var showInAppPayment by remember { mutableStateOf(false) }
+    var inAppPaymentUrl by remember { mutableStateOf("") }
+    var inAppPaymentTitle by remember { mutableStateOf("Secure Checkout") }
+
+    val effectiveIsPro = isPro || liveIsPro
+
+    fun refreshLicense() {
+        coroutineScope.launch(Dispatchers.IO) {
+            try {
+                val candidateKey = settings.licenseKey.trim()
+                if (candidateKey.isBlank()) return@launch
+
+                val endpoint = if (settings.remoteUpdateUrl.contains("localhost") || settings.remoteUpdateUrl.contains("10.0.")) {
+                    "http://10.0.2.2:8000/api/verify-license"
+                } else {
+                    "https://missedcallautosms.com/api/verify-license"
+                }
+
+                val url = URL(endpoint)
+                val conn = (url.openConnection() as HttpURLConnection).apply {
+                    requestMethod = "POST"
+                    connectTimeout = 5000
+                    readTimeout = 5000
+                    doOutput = true
+                    setRequestProperty("Content-Type", "application/json")
+                    val payload = JSONObject().apply { put("licenseKey", candidateKey) }
+                    outputStream.use { it.write(payload.toString().toByteArray(StandardCharsets.UTF_8)) }
+                }
+
+                if (conn.responseCode == 200) {
+                    val resp = conn.inputStream.bufferedReader().use { it.readText() }
+                    val json = JSONObject(resp)
+                    if (json.optBoolean("valid", false)) {
+                        val proStatus = json.optBoolean("isPro", false) || json.optString("tier", "") == "PRO"
+                        withContext(Dispatchers.Main) {
+                            liveIsPro = proStatus
+                        }
+                    }
+                }
+            } catch (e: Exception) {
+            }
+        }
+    }
+
     var outboundUrlInput by remember { mutableStateOf(settings.selectedOutboundWebhookUrl) }
     var isPingingWebhook by remember { mutableStateOf(false) }
     var pingStatusMessage by remember { mutableStateOf<String?>(null) }
@@ -73,15 +118,9 @@ fun AutomationsScreen(
     fun launchProUpgrade() {
         val email = settings.customerEmail.trim()
         val key = settings.licenseKey.trim()
-        try {
-            val checkoutUrl = "https://buy.stripe.com/bJe14neNU9loc6kehj2go0h?prefilled_email=${Uri.encode(email)}&client_reference_id=${Uri.encode(key)}"
-            val intent = Intent(Intent.ACTION_VIEW, Uri.parse(checkoutUrl)).apply {
-                flags = Intent.FLAG_ACTIVITY_NEW_TASK
-            }
-            context.startActivity(intent)
-        } catch (e: Exception) {
-            Toast.makeText(context, "Could not open browser: ${e.localizedMessage}", Toast.LENGTH_LONG).show()
-        }
+        inAppPaymentTitle = "Upgrade to Pro Gateway ($249.99)"
+        inAppPaymentUrl = "https://buy.stripe.com/bJe14neNU9loc6kehj2go0h?prefilled_email=${Uri.encode(email)}&client_reference_id=${Uri.encode(key)}"
+        showInAppPayment = true
     }
 
     val presets = remember {
@@ -150,55 +189,166 @@ fun AutomationsScreen(
             }
         }
 
-        // PRO UPGRADE CARD (If not already unlocked)
-        if (!isPro) {
+        // PRO UPGRADE PAYWALL GATE (If not already unlocked)
+        if (!effectiveIsPro) {
             item {
                 Card(
-                    colors = CardDefaults.cardColors(containerColor = Color(0xFF1E1B4B)),
-                    border = BorderStroke(1.dp, Color(0xFF818CF8).copy(alpha = 0.6f)),
-                    shape = RoundedCornerShape(16.dp),
+                    colors = CardDefaults.cardColors(containerColor = Color(0xFF131722)),
+                    border = BorderStroke(1.5.dp, Color(0xFF818CF8).copy(alpha = 0.6f)),
+                    shape = RoundedCornerShape(20.dp),
                     modifier = Modifier.fillMaxWidth()
                 ) {
-                    Column(modifier = Modifier.padding(16.dp)) {
-                        Row(verticalAlignment = Alignment.CenterVertically) {
-                            Icon(Icons.Default.Bolt, contentDescription = null, tint = Color(0xFFC084FC))
-                            Spacer(modifier = Modifier.width(8.dp))
-                            Text(
-                                text = "Unlock Pro Automation Edition",
-                                style = MaterialTheme.typography.titleMedium,
-                                fontWeight = FontWeight.Bold,
-                                color = Color.White
-                            )
+                    Column(modifier = Modifier.padding(20.dp)) {
+                        Row(
+                            modifier = Modifier.fillMaxWidth(),
+                            horizontalArrangement = Arrangement.SpaceBetween,
+                            verticalAlignment = Alignment.CenterVertically
+                        ) {
+                            Row(verticalAlignment = Alignment.CenterVertically) {
+                                Surface(
+                                    shape = RoundedCornerShape(12.dp),
+                                    color = Color(0xFF7C3AED).copy(alpha = 0.25f),
+                                    modifier = Modifier.size(44.dp)
+                                ) {
+                                    Box(contentAlignment = Alignment.Center) {
+                                        Icon(Icons.Default.Bolt, contentDescription = null, tint = Color(0xFFC084FC), modifier = Modifier.size(26.dp))
+                                    }
+                                }
+                                Spacer(modifier = Modifier.width(12.dp))
+                                Column {
+                                    Text(
+                                        text = "Pro Automation Gateway",
+                                        style = MaterialTheme.typography.titleMedium,
+                                        fontWeight = FontWeight.ExtraBold,
+                                        color = Color.White
+                                    )
+                                    Text(
+                                        text = "A2P 10DLC Bypass & Central Telephony Bridge",
+                                        style = MaterialTheme.typography.labelSmall,
+                                        color = Color(0xFF94A3B8)
+                                    )
+                                }
+                            }
+                            Surface(
+                                shape = RoundedCornerShape(8.dp),
+                                color = RedError.copy(alpha = 0.2f)
+                            ) {
+                                Text(
+                                    text = "🔒 PRO REQUIRED",
+                                    modifier = Modifier.padding(horizontal = 8.dp, vertical = 4.dp),
+                                    style = MaterialTheme.typography.labelSmall,
+                                    fontWeight = FontWeight.ExtraBold,
+                                    color = RedError
+                                )
+                            }
                         }
-                        Spacer(modifier = Modifier.height(6.dp))
+
+                        Spacer(modifier = Modifier.height(16.dp))
+
                         Text(
-                            text = "Upgrade for \$249.99 lifetime. Unlocks bi-directional n8n/Zapier/Make webhooks, remote SMS API dispatch, and automated multi-SIM routing.",
-                            style = MaterialTheme.typography.bodySmall,
-                            color = Color(0xFFCBD5E0)
+                            text = "Connect your Android carrier SIM directly into n8n, Make, Zapier, and custom CRMs. Stream inbound leads in real time, trigger two-way automated SMS, and bypass A2P 10DLC bans completely.",
+                            style = MaterialTheme.typography.bodyMedium,
+                            color = Color(0xFFE2E8F0),
+                            lineHeight = 20.sp
                         )
-                        Spacer(modifier = Modifier.height(12.dp))
+
+                        Spacer(modifier = Modifier.height(16.dp))
+
+                        val proFeatures = listOf(
+                            "⚡ Central Webhook Bridge" to "Stream every incoming SMS and missed call directly to your webhook URL in real time.",
+                            "🔄 Bi-Directional HTTP REST API" to "Send carrier SMS and fetch phone status via local or cloud API endpoints.",
+                            "📱 Dual SIM Business Slotting" to "Route business missed calls to SIM 2 while preserving your personal SIM 1.",
+                            "🛡️ 100% P2P Carrier Exemption" to "Operates from genuine Android hardware. Zero 10DLC registration, zero per-SMS carrier markups.",
+                            "🚀 One-Time Lifetime License" to "Perpetual hardware unlock. No monthly software subscriptions."
+                        )
+
+                        proFeatures.forEach { (title, desc) ->
+                            Row(
+                                modifier = Modifier
+                                    .fillMaxWidth()
+                                    .padding(vertical = 4.dp),
+                                verticalAlignment = Alignment.Top
+                            ) {
+                                Icon(
+                                    Icons.Default.CheckCircle,
+                                    contentDescription = null,
+                                    tint = Color(0xFF00E676),
+                                    modifier = Modifier.size(18.dp).padding(top = 2.dp)
+                                )
+                                Spacer(modifier = Modifier.width(10.dp))
+                                Column {
+                                    Text(title, fontWeight = FontWeight.Bold, style = MaterialTheme.typography.bodySmall, color = Color.White)
+                                    Text(desc, style = MaterialTheme.typography.labelSmall, color = Color(0xFF94A3B8))
+                                }
+                            }
+                        }
+
+                        Spacer(modifier = Modifier.height(20.dp))
+
+                        Card(
+                            colors = CardDefaults.cardColors(containerColor = Color(0xFF1E293B)),
+                            shape = RoundedCornerShape(12.dp),
+                            modifier = Modifier.fillMaxWidth()
+                        ) {
+                            Row(
+                                modifier = Modifier.fillMaxWidth().padding(14.dp),
+                                horizontalArrangement = Arrangement.SpaceBetween,
+                                verticalAlignment = Alignment.CenterVertically
+                            ) {
+                                Column {
+                                    Text("Lifetime Hardware License", style = MaterialTheme.typography.labelMedium, color = Color(0xFF94A3B8))
+                                    Text("$249.99 One-Time", style = MaterialTheme.typography.titleLarge, fontWeight = FontWeight.ExtraBold, color = Color(0xFF00E676))
+                                }
+                                Surface(
+                                    shape = RoundedCornerShape(6.dp),
+                                    color = Color(0xFF00E676).copy(alpha = 0.15f)
+                                ) {
+                                    Text("Zero Monthly Fees", color = Color(0xFF00E676), fontWeight = FontWeight.Bold, fontSize = 11.sp, modifier = Modifier.padding(horizontal = 8.dp, vertical = 4.dp))
+                                }
+                            }
+                        }
+
+                        Spacer(modifier = Modifier.height(16.dp))
+
                         Button(
                             onClick = { launchProUpgrade() },
                             colors = ButtonDefaults.buttonColors(containerColor = Color(0xFF9333EA)),
-                            modifier = Modifier.fillMaxWidth(),
-                            shape = RoundedCornerShape(10.dp)
+                            modifier = Modifier.fillMaxWidth().height(50.dp),
+                            shape = RoundedCornerShape(12.dp)
                         ) {
-                            Text("⭐ Upgrade to Pro Gateway in App ($249.99)", fontWeight = FontWeight.Bold)
+                            Icon(Icons.Default.Bolt, contentDescription = null, modifier = Modifier.size(18.dp))
+                            Spacer(modifier = Modifier.width(8.dp))
+                            Text("⭐ Upgrade to Pro Gateway ($249.99)", fontWeight = FontWeight.ExtraBold, fontSize = 14.sp)
                         }
-                        Spacer(modifier = Modifier.height(6.dp))
+
+                        Spacer(modifier = Modifier.height(10.dp))
+
                         Row(
                             modifier = Modifier.fillMaxWidth(),
                             horizontalArrangement = Arrangement.Center,
                             verticalAlignment = Alignment.CenterVertically
                         ) {
-                            Icon(Icons.Default.Lock, contentDescription = null, modifier = Modifier.size(11.dp), tint = Color(0xFFCBD5E0))
+                            Icon(Icons.Default.Lock, contentDescription = null, modifier = Modifier.size(12.dp), tint = Color(0xFF94A3B8))
                             Spacer(modifier = Modifier.width(4.dp))
-                            Text("Secured by Stripe • Instant In-App Activation", fontSize = 10.sp, color = Color(0xFFCBD5E0))
+                            Text("100% In-App Checkout • Instant Hardware Unlock", fontSize = 11.sp, color = Color(0xFF94A3B8))
+                        }
+
+                        Spacer(modifier = Modifier.height(12.dp))
+
+                        OutlinedButton(
+                            onClick = { refreshLicense() },
+                            modifier = Modifier.fillMaxWidth(),
+                            shape = RoundedCornerShape(10.dp),
+                            border = BorderStroke(1.dp, Color(0xFF475569))
+                        ) {
+                            Icon(Icons.Default.Refresh, contentDescription = null, modifier = Modifier.size(14.dp), tint = Color(0xFFCBD5E0))
+                            Spacer(modifier = Modifier.width(6.dp))
+                            Text("Already Upgraded? Refresh Status", fontSize = 12.sp, color = Color(0xFFCBD5E0))
                         }
                     }
                 }
             }
-        }
+        } else {
 
         // SECTION 1: PLATFORM PRESETS
         item {
@@ -834,5 +984,18 @@ fun AutomationsScreen(
         item {
             Spacer(modifier = Modifier.height(30.dp))
         }
+        }
+    }
+
+    if (showInAppPayment && inAppPaymentUrl.isNotBlank()) {
+        InAppPaymentDialog(
+            url = inAppPaymentUrl,
+            title = inAppPaymentTitle,
+            onDismiss = { showInAppPayment = false },
+            onPaymentSuccess = {
+                Toast.makeText(context, "Payment successful! Pro Automation Gateway unlocked.", Toast.LENGTH_LONG).show()
+                refreshLicense()
+            }
+        )
     }
 }

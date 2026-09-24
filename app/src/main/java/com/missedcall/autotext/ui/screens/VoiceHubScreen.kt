@@ -71,8 +71,59 @@ fun VoiceHubScreen(
             settings.licenseKey.contains("DEMO", ignoreCase = true) ||
             settings.licenseKey.contains("MASTER", ignoreCase = true)
 
-    val isVoiceActive = isDeveloperKey || settings.voiceSubscriptionActive ||
+    var liveVoiceSubActive by remember { mutableStateOf(settings.voiceSubscriptionActive) }
+    var liveVoiceMinutesBalance by remember { mutableDoubleStateOf(0.0) }
+    var showInAppPayment by remember { mutableStateOf(false) }
+    var inAppPaymentUrl by remember { mutableStateOf("") }
+    var inAppPaymentTitle by remember { mutableStateOf("Secure Checkout") }
+
+    val effectiveVoiceActive = isDeveloperKey || settings.voiceSubscriptionActive || liveVoiceSubActive ||
             settings.licenseKey.contains("VOICE", ignoreCase = true)
+    val isVoiceActive = effectiveVoiceActive
+
+    fun refreshLicenseAndVoiceStatus() {
+        coroutineScope.launch(Dispatchers.IO) {
+            try {
+                val key = settings.licenseKey.trim()
+                if (key.isBlank()) return@launch
+                val endpoint = if (settings.remoteUpdateUrl.contains("localhost") || settings.remoteUpdateUrl.contains("10.0.")) {
+                    "http://10.0.2.2:8000/api/verify-license"
+                } else {
+                    "https://missedcallautosms.com/api/verify-license"
+                }
+                val url = URL(endpoint)
+                val conn = (url.openConnection() as HttpURLConnection).apply {
+                    requestMethod = "POST"
+                    connectTimeout = 5000
+                    readTimeout = 5000
+                    doOutput = true
+                    setRequestProperty("Content-Type", "application/json")
+                    val body = JSONObject().apply { put("licenseKey", key) }.toString()
+                    outputStream.use { it.write(body.toByteArray(StandardCharsets.UTF_8)) }
+                }
+                if (conn.responseCode == 200) {
+                    val resp = conn.inputStream.bufferedReader().use { it.readText() }
+                    val json = JSONObject(resp)
+                    val voiceSubActive = json.optBoolean("voiceSubActive", false) || json.optBoolean("voiceEntitlement", false)
+                    val minsBal = json.optDouble("voiceMinutesBalance", 0.0)
+                    val fwdNum = json.optString("voiceForwardingNumber", "")
+                    withContext(Dispatchers.Main) {
+                        liveVoiceSubActive = voiceSubActive
+                        liveVoiceMinutesBalance = minsBal
+                        if (fwdNum.isNotBlank() && fwdNum != settings.voiceReceptionistForwardingNumber) {
+                            onSettingsChanged(settings.copy(
+                                voiceSubscriptionActive = voiceSubActive,
+                                voiceReceptionistForwardingNumber = fwdNum
+                            ))
+                        } else if (voiceSubActive != settings.voiceSubscriptionActive) {
+                            onSettingsChanged(settings.copy(voiceSubscriptionActive = voiceSubActive))
+                        }
+                    }
+                }
+            } catch (e: Exception) {
+            }
+        }
+    }
 
     val carrier = remember { CarrierForwardingManager.detectCarrier(context) }
     val carrierCodes = remember(carrier, settings.voiceReceptionistForwardingNumber) {
@@ -194,6 +245,7 @@ fun VoiceHubScreen(
                 // Background fetch note
             }
         }
+        refreshLicenseAndVoiceStatus()
     }
 
     LazyColumn(
@@ -205,29 +257,44 @@ fun VoiceHubScreen(
         item { Spacer(modifier = Modifier.height(4.dp)) }
 
         // AI VOICE RECEPTIONIST PAYWALL HERO CARD (When Voice is not active)
-        if (!isVoiceActive) {
+        if (!effectiveVoiceActive) {
             item {
                 Card(
-                    colors = CardDefaults.cardColors(containerColor = Color(0xFF1E1B4B)),
-                    border = BorderStroke(1.dp, Color(0xFF818CF8).copy(alpha = 0.6f)),
-                    shape = RoundedCornerShape(16.dp),
+                    colors = CardDefaults.cardColors(containerColor = Color(0xFF131722)),
+                    border = BorderStroke(1.5.dp, Color(0xFF818CF8).copy(alpha = 0.6f)),
+                    shape = RoundedCornerShape(20.dp),
                     modifier = Modifier.fillMaxWidth()
                 ) {
-                    Column(modifier = Modifier.padding(16.dp)) {
+                    Column(modifier = Modifier.padding(20.dp)) {
                         Row(
                             modifier = Modifier.fillMaxWidth(),
                             horizontalArrangement = Arrangement.SpaceBetween,
                             verticalAlignment = Alignment.CenterVertically
                         ) {
                             Row(verticalAlignment = Alignment.CenterVertically) {
-                                Icon(Icons.Default.RecordVoiceOver, contentDescription = null, tint = Color(0xFFC084FC), modifier = Modifier.size(24.dp))
-                                Spacer(modifier = Modifier.width(8.dp))
-                                Text(
-                                    text = "24/7 AI Voice Receptionist",
-                                    style = MaterialTheme.typography.titleMedium,
-                                    fontWeight = FontWeight.Bold,
-                                    color = Color.White
-                                )
+                                Surface(
+                                    shape = RoundedCornerShape(12.dp),
+                                    color = Color(0xFF673AB7).copy(alpha = 0.25f),
+                                    modifier = Modifier.size(44.dp)
+                                ) {
+                                    Box(contentAlignment = Alignment.Center) {
+                                        Icon(Icons.Default.RecordVoiceOver, contentDescription = null, tint = Color(0xFFC084FC), modifier = Modifier.size(26.dp))
+                                    }
+                                }
+                                Spacer(modifier = Modifier.width(12.dp))
+                                Column {
+                                    Text(
+                                        text = "24/7 AI Voice Receptionist",
+                                        style = MaterialTheme.typography.titleMedium,
+                                        fontWeight = FontWeight.ExtraBold,
+                                        color = Color.White
+                                    )
+                                    Text(
+                                        text = "Autonomous Call Answering & Booking",
+                                        style = MaterialTheme.typography.labelSmall,
+                                        color = Color(0xFF94A3B8)
+                                    )
+                                }
                             }
                             Surface(
                                 shape = RoundedCornerShape(8.dp),
@@ -235,7 +302,7 @@ fun VoiceHubScreen(
                             ) {
                                 Text(
                                     text = "🔒 LOCKED",
-                                    modifier = Modifier.padding(horizontal = 8.dp, vertical = 3.dp),
+                                    modifier = Modifier.padding(horizontal = 8.dp, vertical = 4.dp),
                                     style = MaterialTheme.typography.labelSmall,
                                     fontWeight = FontWeight.ExtraBold,
                                     color = RedError
@@ -243,54 +310,288 @@ fun VoiceHubScreen(
                             }
                         }
 
-                        Spacer(modifier = Modifier.height(8.dp))
+                        Spacer(modifier = Modifier.height(16.dp))
 
                         Text(
-                            text = "Turn unanswered phone calls into booked jobs. Riley AI answers in under 1 second, qualifies callers, captures job details, and sends you instant SMS summaries. Requires $9.99/mo subscription or usage minute pack.",
-                            style = MaterialTheme.typography.bodySmall,
-                            color = Color(0xFFCBD5E0)
+                            text = "Never let an inbound lead slip away to voicemail. Riley AI answers calls in < 1 second, qualifies prospects, books appointments, and sends you instant SMS summaries directly to your phone.",
+                            style = MaterialTheme.typography.bodyMedium,
+                            color = Color(0xFFE2E8F0),
+                            lineHeight = 20.sp
                         )
 
-                        Spacer(modifier = Modifier.height(14.dp))
+                        Spacer(modifier = Modifier.height(16.dp))
+
+                        val features = listOf(
+                            "⚡ Instant Call Answering" to "Picks up in < 1s with ultra-realistic human AI voice.",
+                            "🎁 10 FREE Test Minutes Included" to "Test real calls on your dedicated carrier line immediately upon activation.",
+                            "📲 Instant SMS Lead Summaries" to "Receives caller name, phone number, and service need via SMS.",
+                            "🛡️ Auto-Pause Safeguard" to "Pauses automatically at 0.0 balance so you're never surprise-billed.",
+                            "📶 Carrier Conditional Forwarding" to "Works with your existing SIM (*71) on Verizon, AT&T, & T-Mobile."
+                        )
+
+                        features.forEach { (title, desc) ->
+                            Row(
+                                modifier = Modifier
+                                    .fillMaxWidth()
+                                    .padding(vertical = 4.dp),
+                                verticalAlignment = Alignment.Top
+                            ) {
+                                Icon(
+                                    Icons.Default.CheckCircle,
+                                    contentDescription = null,
+                                    tint = Color(0xFF00E676),
+                                    modifier = Modifier.size(18.dp).padding(top = 2.dp)
+                                )
+                                Spacer(modifier = Modifier.width(10.dp))
+                                Column {
+                                    Text(title, fontWeight = FontWeight.Bold, style = MaterialTheme.typography.bodySmall, color = Color.White)
+                                    Text(desc, style = MaterialTheme.typography.labelSmall, color = Color(0xFF94A3B8))
+                                }
+                            }
+                        }
+
+                        Spacer(modifier = Modifier.height(20.dp))
+
+                        Card(
+                            colors = CardDefaults.cardColors(containerColor = Color(0xFF1E293B)),
+                            shape = RoundedCornerShape(12.dp),
+                            modifier = Modifier.fillMaxWidth()
+                        ) {
+                            Row(
+                                modifier = Modifier.fillMaxWidth().padding(14.dp),
+                                horizontalArrangement = Arrangement.SpaceBetween,
+                                verticalAlignment = Alignment.CenterVertically
+                            ) {
+                                Column {
+                                    Text("Monthly Subscription", style = MaterialTheme.typography.labelMedium, color = Color(0xFF94A3B8))
+                                    Text("$9.99 / mo", style = MaterialTheme.typography.titleLarge, fontWeight = FontWeight.ExtraBold, color = Color(0xFF00E676))
+                                }
+                                Surface(
+                                    shape = RoundedCornerShape(6.dp),
+                                    color = Color(0xFF00E676).copy(alpha = 0.15f)
+                                ) {
+                                    Text("Includes 10 Free Mins", color = Color(0xFF00E676), fontWeight = FontWeight.Bold, fontSize = 11.sp, modifier = Modifier.padding(horizontal = 8.dp, vertical = 4.dp))
+                                }
+                            }
+                        }
+
+                        Spacer(modifier = Modifier.height(16.dp))
 
                         Button(
                             onClick = {
-                                try {
-                                    val email = settings.customerEmail.trim()
-                                    val key = settings.licenseKey.trim()
-                                    val checkoutUrl = "https://buy.stripe.com/4gMeVdcFMaps6M0b572go0f?prefilled_email=${Uri.encode(email)}&client_reference_id=${Uri.encode(key)}"
-                                    val intent = Intent(Intent.ACTION_VIEW, Uri.parse(checkoutUrl)).apply {
-                                        flags = Intent.FLAG_ACTIVITY_NEW_TASK
-                                    }
-                                    context.startActivity(intent)
-                                } catch (e: Exception) {
-                                    Toast.makeText(context, "Could not open browser: ${e.localizedMessage}", Toast.LENGTH_SHORT).show()
-                                }
+                                val email = settings.customerEmail.trim()
+                                val key = settings.licenseKey.trim()
+                                inAppPaymentTitle = "Subscribe to AI Voice ($9.99/mo)"
+                                inAppPaymentUrl = "https://missedcallautosms.com/api/create-voice-pro-checkout?key=${Uri.encode(key)}&email=${Uri.encode(email)}"
+                                showInAppPayment = true
                             },
                             colors = ButtonDefaults.buttonColors(containerColor = Color(0xFF9333EA)),
-                            modifier = Modifier.fillMaxWidth(),
-                            shape = RoundedCornerShape(10.dp)
+                            modifier = Modifier.fillMaxWidth().height(50.dp),
+                            shape = RoundedCornerShape(12.dp)
                         ) {
-                            Icon(Icons.Default.Star, contentDescription = null, modifier = Modifier.size(16.dp))
-                            Spacer(modifier = Modifier.width(6.dp))
-                            Text("⭐ Subscribe to Unlock AI Voice ($9.99/mo)", fontWeight = FontWeight.Bold, fontSize = 13.sp)
+                            Icon(Icons.Default.Star, contentDescription = null, modifier = Modifier.size(18.dp))
+                            Spacer(modifier = Modifier.width(8.dp))
+                            Text("⭐ Subscribe to Unlock AI Voice ($9.99/mo)", fontWeight = FontWeight.ExtraBold, fontSize = 14.sp)
                         }
 
-                        Spacer(modifier = Modifier.height(8.dp))
+                        Spacer(modifier = Modifier.height(10.dp))
 
                         Row(
                             modifier = Modifier.fillMaxWidth(),
                             horizontalArrangement = Arrangement.Center,
                             verticalAlignment = Alignment.CenterVertically
                         ) {
-                            Icon(Icons.Default.Lock, contentDescription = null, modifier = Modifier.size(11.dp), tint = Color(0xFFCBD5E0))
+                            Icon(Icons.Default.Lock, contentDescription = null, modifier = Modifier.size(12.dp), tint = Color(0xFF94A3B8))
                             Spacer(modifier = Modifier.width(4.dp))
-                            Text("Dedicated Inbound AI Line • In-App Stripe Checkout", fontSize = 10.sp, color = Color(0xFFCBD5E0))
+                            Text("100% In-App Checkout • Instant Activation • Cancel Anytime", fontSize = 11.sp, color = Color(0xFF94A3B8))
+                        }
+
+                        Spacer(modifier = Modifier.height(12.dp))
+
+                        OutlinedButton(
+                            onClick = { refreshLicenseAndVoiceStatus() },
+                            modifier = Modifier.fillMaxWidth(),
+                            shape = RoundedCornerShape(10.dp),
+                            border = BorderStroke(1.dp, Color(0xFF475569))
+                        ) {
+                            Icon(Icons.Default.Refresh, contentDescription = null, modifier = Modifier.size(14.dp), tint = Color(0xFFCBD5E0))
+                            Spacer(modifier = Modifier.width(6.dp))
+                            Text("Already Subscribed? Refresh Status", fontSize = 12.sp, color = Color(0xFFCBD5E0))
                         }
                     }
                 }
             }
-        }
+        } else {
+            // 0. Live Minutes Balance & Auto-Pause Safeguard Banner
+            item {
+                if (liveVoiceMinutesBalance <= 0.0) {
+                    Card(
+                        colors = CardDefaults.cardColors(containerColor = Color(0xFF450A0A)),
+                        border = BorderStroke(1.5.dp, RedError.copy(alpha = 0.8f)),
+                        shape = RoundedCornerShape(16.dp),
+                        modifier = Modifier.fillMaxWidth()
+                    ) {
+                        Column(modifier = Modifier.padding(16.dp)) {
+                            Row(
+                                modifier = Modifier.fillMaxWidth(),
+                                horizontalArrangement = Arrangement.SpaceBetween,
+                                verticalAlignment = Alignment.CenterVertically
+                            ) {
+                                Row(verticalAlignment = Alignment.CenterVertically) {
+                                    Icon(Icons.Default.Warning, contentDescription = null, tint = RedError, modifier = Modifier.size(24.dp))
+                                    Spacer(modifier = Modifier.width(8.dp))
+                                    Text(
+                                        text = "⚠️ AI Receptionist Paused (0.0 Mins)",
+                                        style = MaterialTheme.typography.titleSmall,
+                                        fontWeight = FontWeight.Bold,
+                                        color = RedError
+                                    )
+                                }
+                                Surface(
+                                    shape = RoundedCornerShape(6.dp),
+                                    color = RedError.copy(alpha = 0.2f)
+                                ) {
+                                    Text(
+                                        text = "PAUSED",
+                                        modifier = Modifier.padding(horizontal = 6.dp, vertical = 2.dp),
+                                        style = MaterialTheme.typography.labelSmall,
+                                        fontWeight = FontWeight.Bold,
+                                        color = RedError
+                                    )
+                                }
+                            }
+
+                            Spacer(modifier = Modifier.height(8.dp))
+
+                            Text(
+                                text = "Your AI Receptionist has auto-paused because your minute balance reached 0.0. To protect your line and prevent unexpected charges, calls will ring your carrier voicemail until minutes are reloaded. Choose a reload pack below to resume instantly:",
+                                style = MaterialTheme.typography.bodySmall,
+                                color = Color(0xFFFCA5A5)
+                            )
+
+                            Spacer(modifier = Modifier.height(14.dp))
+
+                            val reloadPacks = listOf(
+                                Triple("10", "$10 (40 Mins)", "$0.25/m"),
+                                Triple("25", "$25 (115 Mins)", "+15 Bonus"),
+                                Triple("50", "$50 (250 Mins)", "+50 Bonus"),
+                                Triple("100", "$100 (550 Mins)", "+150 Bonus")
+                            )
+
+                            Row(
+                                modifier = Modifier.fillMaxWidth(),
+                                horizontalArrangement = Arrangement.spacedBy(8.dp)
+                            ) {
+                                reloadPacks.take(2).forEach { (packTier, label, sub) ->
+                                    Button(
+                                        onClick = {
+                                            val email = settings.customerEmail.trim()
+                                            val key = settings.licenseKey.trim()
+                                            inAppPaymentTitle = "Add Minutes • $label"
+                                            inAppPaymentUrl = "https://missedcallautosms.com/api/create-credit-pack-checkout?pack=$packTier&key=${Uri.encode(key)}&email=${Uri.encode(email)}"
+                                            showInAppPayment = true
+                                        },
+                                        colors = ButtonDefaults.buttonColors(containerColor = Color(0xFFDC2626)),
+                                        shape = RoundedCornerShape(10.dp),
+                                        modifier = Modifier.weight(1f).height(46.dp),
+                                        contentPadding = PaddingValues(horizontal = 4.dp, vertical = 2.dp)
+                                    ) {
+                                        Column(horizontalAlignment = Alignment.CenterHorizontally) {
+                                            Text(label, fontWeight = FontWeight.Bold, fontSize = 11.sp, color = Color.White)
+                                            Text(sub, fontSize = 9.sp, color = Color(0xFFFECACA))
+                                        }
+                                    }
+                                }
+                            }
+
+                            Spacer(modifier = Modifier.height(8.dp))
+
+                            Row(
+                                modifier = Modifier.fillMaxWidth(),
+                                horizontalArrangement = Arrangement.spacedBy(8.dp)
+                            ) {
+                                reloadPacks.drop(2).forEach { (packTier, label, sub) ->
+                                    Button(
+                                        onClick = {
+                                            val email = settings.customerEmail.trim()
+                                            val key = settings.licenseKey.trim()
+                                            inAppPaymentTitle = "Add Minutes • $label"
+                                            inAppPaymentUrl = "https://missedcallautosms.com/api/create-credit-pack-checkout?pack=$packTier&key=${Uri.encode(key)}&email=${Uri.encode(email)}"
+                                            showInAppPayment = true
+                                        },
+                                        colors = ButtonDefaults.buttonColors(containerColor = Color(0xFFB91C1C)),
+                                        shape = RoundedCornerShape(10.dp),
+                                        modifier = Modifier.weight(1f).height(46.dp),
+                                        contentPadding = PaddingValues(horizontal = 4.dp, vertical = 2.dp)
+                                    ) {
+                                        Column(horizontalAlignment = Alignment.CenterHorizontally) {
+                                            Text(label, fontWeight = FontWeight.Bold, fontSize = 11.sp, color = Color.White)
+                                            Text(sub, fontSize = 9.sp, color = Color(0xFFFECACA))
+                                        }
+                                    }
+                                }
+                            }
+
+                            Spacer(modifier = Modifier.height(10.dp))
+
+                            Text(
+                                text = "🔒 Instant In-App Stripe Reload • Auto-Resumes Immediately • Credits Never Expire",
+                                style = MaterialTheme.typography.labelSmall,
+                                color = Color(0xFFF87171),
+                                fontSize = 10.sp
+                            )
+                        }
+                    }
+                } else {
+                    Card(
+                        colors = CardDefaults.cardColors(containerColor = Color(0xFF064E3B).copy(alpha = 0.35f)),
+                        border = BorderStroke(1.dp, Color(0xFF00E676).copy(alpha = 0.5f)),
+                        shape = RoundedCornerShape(16.dp),
+                        modifier = Modifier.fillMaxWidth()
+                    ) {
+                        Row(
+                            modifier = Modifier.fillMaxWidth().padding(14.dp),
+                            horizontalArrangement = Arrangement.SpaceBetween,
+                            verticalAlignment = Alignment.CenterVertically
+                        ) {
+                            Row(verticalAlignment = Alignment.CenterVertically) {
+                                Icon(Icons.Default.CheckCircle, contentDescription = null, tint = Color(0xFF00E676), modifier = Modifier.size(22.dp))
+                                Spacer(modifier = Modifier.width(10.dp))
+                                Column {
+                                    Row(verticalAlignment = Alignment.CenterVertically) {
+                                        Text("Riley AI Active", fontWeight = FontWeight.Bold, color = Color.White, style = MaterialTheme.typography.bodyMedium)
+                                        Spacer(modifier = Modifier.width(6.dp))
+                                        Surface(
+                                            shape = RoundedCornerShape(4.dp),
+                                            color = Color(0xFF00E676).copy(alpha = 0.2f)
+                                        ) {
+                                            Text("ONLINE", color = Color(0xFF00E676), fontSize = 9.sp, fontWeight = FontWeight.ExtraBold, modifier = Modifier.padding(horizontal = 6.dp, vertical = 2.dp))
+                                        }
+                                    }
+                                    Text("${"%.1f".format(liveVoiceMinutesBalance)} Mins Remaining", style = MaterialTheme.typography.labelSmall, color = Color(0xFFA7F3D0))
+                                }
+                            }
+
+                            Button(
+                                onClick = {
+                                    val email = settings.customerEmail.trim()
+                                    val key = settings.licenseKey.trim()
+                                    inAppPaymentTitle = "Add Minute Pack"
+                                    inAppPaymentUrl = "https://missedcallautosms.com/api/create-credit-pack-checkout?pack=25&key=${Uri.encode(key)}&email=${Uri.encode(email)}"
+                                    showInAppPayment = true
+                                },
+                                colors = ButtonDefaults.buttonColors(containerColor = Color(0xFF00E676)),
+                                shape = RoundedCornerShape(8.dp),
+                                contentPadding = PaddingValues(horizontal = 12.dp, vertical = 6.dp)
+                            ) {
+                                Icon(Icons.Default.Add, contentDescription = null, tint = Color.Black, modifier = Modifier.size(14.dp))
+                                Spacer(modifier = Modifier.width(4.dp))
+                                Text("Top Up", fontWeight = FontWeight.Bold, fontSize = 11.sp, color = Color.Black)
+                            }
+                        }
+                    }
+                }
+            }
 
         // 1. Assigned Inbound Line & 1-Tap Carrier Forwarding (*71 / *73)
         item {
@@ -863,6 +1164,7 @@ fun VoiceHubScreen(
         }
 
         item { Spacer(modifier = Modifier.height(16.dp)) }
+        }
     }
 
     // Dual-Mode Test Call Dialog
@@ -1093,6 +1395,18 @@ fun VoiceHubScreen(
                 ) {
                     Text("Close")
                 }
+            }
+        )
+    }
+
+    if (showInAppPayment && inAppPaymentUrl.isNotBlank()) {
+        InAppPaymentDialog(
+            url = inAppPaymentUrl,
+            title = inAppPaymentTitle,
+            onDismiss = { showInAppPayment = false },
+            onPaymentSuccess = {
+                Toast.makeText(context, "Payment successful! 24/7 AI Voice is active.", Toast.LENGTH_LONG).show()
+                refreshLicenseAndVoiceStatus()
             }
         )
     }
