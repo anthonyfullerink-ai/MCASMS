@@ -176,7 +176,7 @@ exports.handler = async (event) => {
   }
 
   // Cloud Relay API subscription enforcement for recurring monthly bundles
-  const { db } = initFirebase();
+  const { db, msg } = initFirebase();
   if (db) {
     try {
       const bindingDoc = await db.collection('voice_pro_bindings').doc(licenseKey).get();
@@ -225,7 +225,6 @@ exports.handler = async (event) => {
 
   // Lookup Device Token
   let deviceRecord = null;
-  const { db, msg } = initFirebase();
   if (db && process.env.FIREBASE_SERVICE_ACCOUNT) {
     try {
       const doc = await db.collection('device_tokens').doc(licenseKey).get();
