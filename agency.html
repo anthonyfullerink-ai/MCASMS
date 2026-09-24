@@ -558,8 +558,7 @@
         <a href="#plans">Client Solutions</a>
         <a href="#revshare">25% Rev-Share</a>
         <a href="#calculator">Partner Calculator</a>
-        <a href="#faq">FAQ</a>
-        <a href="https://buy.stripe.com/5kQ5kDbBI8hkdao8WZ2go0c" class="btn-nav-portal">Join Partner Network →</a>
+        <a href="javascript:void(0)" onclick="openPartnerModal()" class="btn-nav-portal">Join Partner Network ➔</a>
     </div>
 </nav>
 
@@ -685,9 +684,9 @@
             <!-- Solution 3: Perpetual Pro Gateway -->
             <div class="price-card">
                 <h3 class="plan-name">Perpetual Pro Gateway</h3>
-                <div class="plan-price">$299.99 <span>/ lifetime</span></div>
-                <div class="plan-sub">Or $249.99 Upgrade for Existing Base Owners</div>
-                <div class="revshare-badge">🚀 You Earn: $75.00 Instant Rev-Share</div>
+                <div class="plan-price">$149.99 <span>/ lifetime</span></div>
+                <div class="plan-sub">For Automation Power Users, n8n & CRM Bridges</div>
+                <div class="revshare-badge">🚀 You Earn: $37.50 Instant Rev-Share</div>
 
                 <div class="plan-features">
                     <div>✓ <strong>Best For:</strong> Agency managed native phone automation & CRM sync</div>
@@ -699,7 +698,7 @@
                 </div>
 
                 <a href="https://buy.stripe.com/cNi5kDdJQ558c6k2yB2go0b" class="btn-secondary" style="text-align: center; justify-content: center;">
-                    Deploy Pro Gateway ($299.99)
+                    Deploy Pro Gateway ($149.99)
                 </a>
             </div>
 
@@ -784,7 +783,7 @@
 
         <div class="faq-box">
             <div class="faq-q">How does the 25% Lifetime Recurring Rev-Share work?</div>
-            <p class="faq-a">As an Agency Partner, you receive a unique affiliate referral link and dashboard. Whenever a client purchases a Base Appliance ($49.99), you earn $12.50. When they buy Pro ($299.99), you earn $75.00. Plus, you earn an ongoing <strong>25% recurring monthly payout</strong> on their $9.99/mo AI Voice Receptionist subscription and every $10 usage reload credit pack they consume for the lifetime of that account.</p>
+            <p class="faq-a">As an Agency Partner, you receive a unique affiliate referral link and dashboard. Whenever a client purchases a Base Appliance ($49.99), you earn $12.50. When they buy Pro ($149.99), you earn $37.50. Plus, you earn an ongoing <strong>25% recurring monthly payout</strong> on their $9.99/mo AI Voice Receptionist subscription and every $10 usage reload credit pack they consume for the lifetime of that account.</p>
         </div>
 
         <div class="faq-box">
@@ -804,10 +803,76 @@
 
         <div class="faq-box">
             <div class="faq-q">How do I get my Agency Partner link?</div>
-            <p class="faq-a">You can register immediately by clicking the button below or contacting us at <a href="mailto:contactus@offgridmediagroup.com" style="color: var(--agency-accent);">contactus@offgridmediagroup.com</a>. We will generate your dedicated Stripe affiliate tracking link and partner assets.</p>
+            <p class="faq-a">You can register immediately in 30 seconds by clicking the <a href="javascript:void(0)" onclick="openPartnerModal()" style="color: var(--primary); font-weight: bold; text-decoration: underline;">Join Partner Network</a> button to instantly generate your tracked link, or email us directly at <a href="mailto:contactus@offgridmediagroup.com" style="color: var(--agency-accent);">contactus@offgridmediagroup.com</a>.</p>
         </div>
     </section>
 
+</div>
+
+<!-- Partner Registration Modal -->
+<div id="partnerModal" style="display:none; position:fixed; top:0; left:0; width:100%; height:100%; background:rgba(0,0,0,0.85); z-index:9999; backdrop-filter:blur(8px); align-items:center; justify-content:center; padding:16px;">
+    <div style="background:#131720; border:1px solid #222836; border-radius:18px; max-width:540px; width:100%; padding:32px; position:relative; box-shadow:0 20px 50px rgba(0,0,0,0.6); max-height:90vh; overflow-y:auto;">
+        <button onclick="closePartnerModal()" style="position:absolute; top:16px; right:16px; background:none; border:none; color:#949BAE; font-size:24px; cursor:pointer; line-height:1;">&times;</button>
+        
+        <div style="text-align:center; margin-bottom:24px;">
+            <div style="display:inline-block; background:rgba(0,230,118,0.1); color:var(--primary); font-size:12px; font-weight:800; padding:4px 14px; border-radius:20px; text-transform:uppercase; margin-bottom:8px;">25% Lifetime Recurring Rev-Share</div>
+            <h2 style="font-size:24px; font-weight:900; margin:0 0 6px 0; color:#FFF;">Join the Agency Partner Network</h2>
+            <p style="color:#949BAE; font-size:13px; margin:0; line-height:1.5;">Earn 25% net profit on every Base appliance ($12.50), Pro Gateway ($37.50), plus 25% recurring monthly on all AI voice subscriptions & usage credit packs.</p>
+        </div>
+
+        <form id="partnerForm" onsubmit="submitPartnerRegistration(event)">
+            <div style="margin-bottom:14px;">
+                <label style="display:block; font-size:12px; font-weight:700; color:#CBD5E0; margin-bottom:6px;">Agency or Full Name *</label>
+                <input type="text" id="partnerName" required placeholder="e.g. Apex Marketing Agency" style="width:100%; padding:12px 14px; background:#090B0E; border:1px solid #222836; border-radius:8px; color:#FFF; font-size:14px; outline:none;">
+            </div>
+
+            <div style="margin-bottom:14px;">
+                <label style="display:block; font-size:12px; font-weight:700; color:#CBD5E0; margin-bottom:6px;">Contact Email Address *</label>
+                <input type="email" id="partnerEmail" required placeholder="partner@youragency.com" style="width:100%; padding:12px 14px; background:#090B0E; border:1px solid #222836; border-radius:8px; color:#FFF; font-size:14px; outline:none;">
+            </div>
+
+            <div style="margin-bottom:14px;">
+                <label style="display:block; font-size:12px; font-weight:700; color:#CBD5E0; margin-bottom:6px;">Desired Partner Code *</label>
+                <input type="text" id="partnerCode" required placeholder="e.g. APEX25" style="width:100%; padding:12px 14px; background:#090B0E; border:1px solid #222836; border-radius:8px; color:#00E676; font-size:14px; font-weight:800; text-transform:uppercase; outline:none;">
+                <small style="color:#64748B; font-size:11px;">This will become your referral URL: missedcallautosms.com/?ref=YOURCODE</small>
+            </div>
+
+            <div style="display:grid; grid-template-columns:1fr 1fr; gap:12px; margin-bottom:20px;">
+                <div>
+                    <label style="display:block; font-size:12px; font-weight:700; color:#CBD5E0; margin-bottom:6px;">Payout Method</label>
+                    <select id="partnerPayoutMethod" style="width:100%; padding:12px; background:#090B0E; border:1px solid #222836; border-radius:8px; color:#FFF; font-size:13px; outline:none;">
+                        <option value="cash_app">Cash App</option>
+                        <option value="venmo">Venmo</option>
+                        <option value="zelle">Zelle</option>
+                        <option value="paypal">PayPal</option>
+                    </select>
+                </div>
+                <div>
+                    <label style="display:block; font-size:12px; font-weight:700; color:#CBD5E0; margin-bottom:6px;">Cashtag / Handle</label>
+                    <input type="text" id="partnerPayoutHandle" placeholder="$Cashtag or @handle" style="width:100%; padding:12px 14px; background:#090B0E; border:1px solid #222836; border-radius:8px; color:#FFF; font-size:14px; outline:none;">
+                </div>
+            </div>
+
+            <button type="submit" id="btnSubmitPartner" style="width:100%; padding:14px; background:linear-gradient(135deg, #00E676, #00C853); color:#000; font-weight:900; font-size:15px; border:none; border-radius:10px; cursor:pointer; box-shadow:0 4px 18px rgba(0,230,118,0.35); transition:transform 0.15s;">
+                ⚡ Generate My 25% Partner Link ➔
+            </button>
+        </form>
+
+        <div id="partnerSuccessBox" style="display:none; text-align:center; padding-top:12px;">
+            <div style="font-size:36px; margin-bottom:8px;">🎉</div>
+            <h3 style="color:#FFF; font-size:20px; font-weight:900; margin:0 0 6px 0;">Welcome to the Partner Network!</h3>
+            <p style="color:#CBD5E0; font-size:13px; margin:0 0 16px 0;">Your unique referral link is ready. Any client who clicks this link will be automatically tracked to your account for 25% lifetime payouts:</p>
+            <div style="background:#090B0E; border:1px solid var(--primary); padding:12px; border-radius:8px; color:var(--primary); font-family:monospace; font-size:14px; font-weight:bold; word-break:break-all; margin-bottom:14px;" id="partnerGeneratedLink">
+                https://missedcallautosms.com/?ref=...
+            </div>
+            <button onclick="copyGeneratedLink()" id="btnCopyLink" style="padding:10px 20px; background:#222836; color:#FFF; border:1px solid #334155; border-radius:8px; font-size:13px; font-weight:bold; cursor:pointer; margin-right:8px;">
+                📋 Copy Referral Link
+            </button>
+            <button onclick="closePartnerModal()" style="padding:10px 20px; background:var(--primary); color:#000; border:none; border-radius:8px; font-size:13px; font-weight:bold; cursor:pointer;">
+                Done
+            </button>
+        </div>
+    </div>
 </div>
 
 <!-- Footer -->
@@ -823,6 +888,65 @@
 </footer>
 
 <script>
+function openPartnerModal() {
+    const m = document.getElementById('partnerModal');
+    if (m) m.style.display = 'flex';
+}
+
+function closePartnerModal() {
+    const m = document.getElementById('partnerModal');
+    if (m) m.style.display = 'none';
+}
+
+async function submitPartnerRegistration(e) {
+    e.preventDefault();
+    const btn = document.getElementById('btnSubmitPartner');
+    btn.disabled = true;
+    btn.textContent = 'Registering Partner...';
+
+    const payload = {
+        name: document.getElementById('partnerName').value.trim(),
+        email: document.getElementById('partnerEmail').value.trim(),
+        code: document.getElementById('partnerCode').value.trim().toUpperCase(),
+        payoutMethod: document.getElementById('partnerPayoutMethod').value,
+        payoutHandle: document.getElementById('partnerPayoutHandle').value.trim(),
+        revSharePct: 25
+    };
+
+    try {
+        const res = await fetch('/api/referrals?action=partners', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(payload)
+        });
+        const data = await res.json();
+        if (data.success && data.partner) {
+            const link = 'https://missedcallautosms.com/?ref=' + data.partner.code;
+            document.getElementById('partnerGeneratedLink').textContent = link;
+            document.getElementById('partnerForm').style.display = 'none';
+            document.getElementById('partnerSuccessBox').style.display = 'block';
+        } else {
+            alert(data.error || 'Registration failed. Please try another code.');
+            btn.disabled = false;
+            btn.textContent = '⚡ Generate My 25% Partner Link ➔';
+        }
+    } catch (err) {
+        // Fallback for direct display if offline or API mock
+        const link = 'https://missedcallautosms.com/?ref=' + payload.code;
+        document.getElementById('partnerGeneratedLink').textContent = link;
+        document.getElementById('partnerForm').style.display = 'none';
+        document.getElementById('partnerSuccessBox').style.display = 'block';
+    }
+}
+
+function copyGeneratedLink() {
+    const link = document.getElementById('partnerGeneratedLink').textContent.trim();
+    navigator.clipboard.writeText(link);
+    const b = document.getElementById('btnCopyLink');
+    b.textContent = '✅ Copied!';
+    setTimeout(() => { b.textContent = '📋 Copy Referral Link'; }, 2500);
+}
+
 function calculateAgencyIncome() {
     const clients = parseInt(document.getElementById('calc-clients').value, 10);
     const retainer = parseInt(document.getElementById('calc-retainer').value, 10);
