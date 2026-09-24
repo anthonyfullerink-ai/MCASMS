@@ -71,6 +71,30 @@ exports.handler = async (event) => {
         console.warn('Non-fatal write warning in serverless:', writeErr.message);
       }
 
+      // Persist to Cloud Firestore if available
+      try {
+        let _fsModule = null;
+        try { _fsModule = require('../../lib/firestore'); } catch (e) {}
+        if (_fsModule && process.env.FIREBASE_SERVICE_ACCOUNT_KEY) {
+          await _fsModule.saveMasterLicense(rec);
+          if (rec.voiceEntitlement || rec.voiceSubWaived || rec.voiceActive) {
+            await _fsModule.saveVoiceBinding(rec.key, {
+              name: rec.customer,
+              email: rec.email,
+              voiceEntitlement: rec.voiceEntitlement,
+              voiceSubWaived: rec.voiceSubWaived,
+              voiceActive: rec.voiceActive,
+              voiceMinutesBalance: rec.voiceMinutesBalance,
+              forwardingNumber: rec.voiceNumber,
+              carrierCode: rec.carrierCode,
+              status: rec.status
+            });
+          }
+        }
+      } catch (fsErr) {
+        console.warn('[licenses.js] Firestore save notice:', fsErr.message);
+      }
+
       return {
         statusCode: 200,
         headers,

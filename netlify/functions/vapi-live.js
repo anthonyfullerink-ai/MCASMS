@@ -80,6 +80,12 @@ exports.handler = async (event) => {
   const reqPath = event.path || '';
 
   try {
+    // 0. Usage & Balance Delegation
+    if (reqPath.includes('usage') || reqPath.endsWith('/usage')) {
+      const usageHandler = require('./vapi-usage').handler;
+      return await usageHandler(event);
+    }
+
     // 1. POST /api/vapi/set-webhook
     if (reqPath.includes('set-webhook') && event.httpMethod === 'POST') {
       const payload = JSON.parse(event.body || '{}');

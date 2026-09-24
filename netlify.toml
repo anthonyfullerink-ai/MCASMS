@@ -138,6 +138,12 @@
   to = "/.netlify/functions/vapi-webhook"
   status = 200
 
+# API Route: Vapi Usage & Quota Balance
+[[redirects]]
+  from = "/api/vapi/usage"
+  to = "/.netlify/functions/vapi-usage"
+  status = 200
+
 # API Route: Vapi Live Operations
 [[redirects]]
   from = "/api/vapi/*"

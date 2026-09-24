@@ -753,6 +753,7 @@
             <option value="6">📢 Omnichannel Content Engine</option>
             <option value="7">🏢 Agency Fleet Operations</option>
             <option value="8">🤝 Referral Partners & Rev-Share</option>
+            <option value="9">💳 Memberships & Subscriptions</option>
         </select>
     </div>
 
@@ -767,6 +768,7 @@
         <button id="tabBtn6" class="tab-btn" onclick="switchTab(6)">📢 Omnichannel Content Engine (<span id="countTabContent">0</span>)</button>
         <button id="tabBtn7" class="tab-btn" onclick="switchTab(7)" style="border-color: #6366F1; color: #818CF8;">🏢 Agency Fleet Operations (<span id="countTabFleet">0</span>)</button>
         <button id="tabBtn8" class="tab-btn" onclick="switchTab(8)" style="border-color: #10B981; color: #34D399;">🤝 Referral Partners & Rev-Share (<span id="countTabReferrals">0</span>)</button>
+        <button id="tabBtn9" class="tab-btn" onclick="switchTab(9)" style="border-color: #00E676; color: #00E676; font-weight: 800;">💳 Memberships & Subscriptions (<span id="countTabSubs">0</span>)</button>
     </div>
 
     <!-- TAB 0: Sales & License Directory -->
@@ -1871,6 +1873,81 @@
             </table>
         </div>
     </div>
+
+    <!-- TAB 9: Memberships & Subscription Management -->
+    <div id="tab9" class="tab-content card" style="display: none;">
+        <div class="card-header">
+            <div>
+                <h2 style="color: var(--primary); display: flex; align-items: center; gap: 8px;">
+                    <span>💳</span> Master Membership & Subscription Control Center
+                </h2>
+                <div style="font-size: 12px; color: var(--muted); margin-top: 4px;">
+                    Oversee recurring $9.99/mo AI Voice memberships, complimentary VIP waivers, telephonic minute balances, plan upgrades, and carrier forwarding status.
+                </div>
+            </div>
+            <div style="display: flex; gap: 10px; flex-wrap: wrap;">
+                <button class="btn-action" style="border-color: #38BDF8; color: #38BDF8;" onclick="loadMembershipDashboard()">🔄 Refresh Memberships</button>
+                <button class="btn-action btn-free-action" onclick="promptIssueWaiver()">🎁 + Issue Complimentary Voice Waiver ($0.00)</button>
+            </div>
+        </div>
+
+        <!-- Membership Metrics Grid -->
+        <div class="metrics-grid" style="grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); margin-bottom: 20px;">
+            <div class="metric-card">
+                <div class="metric-title">Active Voice Memberships</div>
+                <div class="metric-val" id="subMetricActive" style="color: var(--primary);">0</div>
+                <div style="font-size: 11px; color: var(--muted); margin-top: 4px;" id="subMetricActiveBreakdown">0 Paid • 0 Waived (Comp)</div>
+            </div>
+            <div class="metric-card">
+                <div class="metric-title">Monthly Voice MRR</div>
+                <div class="metric-val" id="subMetricMrr" style="color: #38BDF8;">$0.00</div>
+                <div style="font-size: 11px; color: var(--muted); margin-top: 4px;">$9.99/mo Active Base</div>
+            </div>
+            <div class="metric-card">
+                <div class="metric-title">Telephony Credit Pool</div>
+                <div class="metric-val" id="subMetricMinutes" style="color: #C084FC;">0 Mins</div>
+                <div style="font-size: 11px; color: var(--muted); margin-top: 4px;" id="subMetricDollars">$0.00 Total Dollar Reserve</div>
+            </div>
+            <div class="metric-card">
+                <div class="metric-title">Pending Credit Packs</div>
+                <div class="metric-val" id="subMetricPending" style="color: var(--warning);">0</div>
+                <div style="font-size: 11px; color: var(--muted); margin-top: 4px;">Awaiting 1st $10 Reload</div>
+            </div>
+        </div>
+
+        <!-- Search and Filter Bar -->
+        <div style="display: flex; gap: 8px; margin-bottom: 16px; flex-wrap: wrap; align-items: center; justify-content: space-between; background: #0D1017; padding: 12px 16px; border-radius: 12px; border: 1px solid var(--card-border);">
+            <div style="display: flex; gap: 8px; flex-wrap: wrap; align-items: center;">
+                <span style="font-size: 11px; color: var(--muted); font-weight: 800; letter-spacing: 0.5px;">FILTER:</span>
+                <button class="filter-pill active" id="subFilterAll" onclick="setSubFilter('ALL', this)">All Accounts (<span id="subCountAll">0</span>)</button>
+                <button class="filter-pill" id="subFilterPaid" onclick="setSubFilter('PAID', this)">Paid ($9.99/mo)</button>
+                <button class="filter-pill" id="subFilterWaived" onclick="setSubFilter('WAIVED', this)">🎁 Waived (Comp)</button>
+                <button class="filter-pill" id="subFilterPro" onclick="setSubFilter('PRO', this)">⚡ Pro Gateway</button>
+                <button class="filter-pill" id="subFilterFlagship" onclick="setSubFilter('FLAGSHIP', this)">📱 Flagship</button>
+            </div>
+            <input type="text" id="subSearchInput" placeholder="🔍 Search name, email, key, phone..." oninput="renderMembershipTable()" style="width: 260px; padding: 7px 12px; font-size: 12px; background: #161B22; border: 1px solid var(--card-border); border-radius: 8px; color: #FFF; outline: none;">
+        </div>
+
+        <!-- Memberships Table -->
+        <div class="table-responsive">
+            <table>
+                <thead>
+                    <tr>
+                        <th>Customer / Email</th>
+                        <th>License Key & Tier</th>
+                        <th>Voice Membership</th>
+                        <th>Minutes Balance</th>
+                        <th>Dedicated AI Line</th>
+                        <th>Device Status</th>
+                        <th>Actions</th>
+                    </tr>
+                </thead>
+                <tbody id="membershipTableBody">
+                    <tr><td colspan="7" style="text-align: center; color: var(--muted); padding: 24px;">Loading membership records...</td></tr>
+                </tbody>
+            </table>
+        </div>
+    </div>
 </div>
 
 <script>
@@ -2156,6 +2233,7 @@
                 `;
             } else {
                 actionButtons = `
+                    <button class="btn-action" style="color: #00E676; font-weight: bold;" onclick="openMembershipManageModal('${r.key}')">⚙️ Manage Sub</button>
                     <button class="btn-action" style="color: ${isPro ? '#C084FC' : 'var(--primary)'};" onclick="triggerEmailForKey('${r.key}')">📧 Email APK</button>
                     <button class="btn-action" onclick="resetDevice('${r.key}')" ${isRevoked ? 'disabled' : ''}>Reset Lock</button>
                     <button class="btn-action" style="color: #00E676;" onclick="promptReloadCredits('${r.key}', '${escapeHtml(r.name)}')">💳 Credit Pack</button>
@@ -2207,6 +2285,7 @@
                     else if (norm.includes('ota') || norm.includes('system') || norm.includes('dev')) targetIdx = 2;
                     else if (norm.includes('key') || norm.includes('issue')) targetIdx = 1;
                     else if (norm.includes('fleet') || norm.includes('agency')) targetIdx = 7;
+                    else if (norm.includes('sub') || norm.includes('member') || norm.includes('plan')) targetIdx = 9;
                     else targetIdx = 0;
                 }
                 switchTab(targetIdx);
@@ -2281,6 +2360,8 @@
             loadAgencyFleetTab();
         } else if (index === 8) {
             loadReferralDashboard();
+        } else if (index === 9) {
+            loadMembershipDashboard();
         }
     }
 
@@ -5866,8 +5947,312 @@ To transfer to a new device at any time, contact your agency administrator.
         }
     }
 
-    function exportPayoutsCsv() {
-        window.location.href = '/api/referrals/export-payouts';
+    // ─── TAB 9: MEMBERSHIPS & SUBSCRIPTIONS CONTROLLER ───
+    let allMemberships = [];
+    let currentSubFilter = 'ALL';
+    let currentEditingSubKey = null;
+
+    async function loadMembershipDashboard() {
+        const tbody = document.getElementById('membershipTableBody');
+        if (tbody) tbody.innerHTML = '<tr><td colspan="7" style="text-align:center; color:var(--muted); padding:24px;">Syncing memberships from server & registry...</td></tr>';
+
+        try {
+            await syncMasterLicensesFromServer(true);
+            const records = getStore();
+
+            allMemberships = records.map(r => {
+                const isPro = (r.tier === 'PRO' || (r.key && r.key.includes('PRO')) || r.type === 'PRO');
+                const isAgency = (r.tier === 'AGENCY' || (r.key && r.key.startsWith('MCAS-AGENCY-')));
+                const isTrial = (r.type === 'TRIAL' || (r.key && r.key.includes('TRIAL')));
+                const isWaived = !!(r.voiceSubWaived || r.type === 'FREE_VOICE_COMP');
+                const hasVoice = !!(r.voiceEntitlement || r.voiceActive || isWaived);
+                const isPaidVoice = hasVoice && !isWaived;
+
+                return {
+                    key: r.key,
+                    name: r.name || r.customer || 'Valued Customer',
+                    email: r.email || '',
+                    tier: isAgency ? 'AGENCY' : (isPro ? 'PRO' : (isTrial ? 'TRIAL' : 'FLAGSHIP')),
+                    status: r.status || 'ACTIVE',
+                    voiceEntitlement: hasVoice,
+                    voiceActive: !!(r.voiceActive),
+                    voiceSubWaived: isWaived,
+                    isPaidVoice: isPaidVoice,
+                    vapiProvisioned: !!r.vapiProvisioned,
+                    voiceMinutesBalance: Number(r.voiceMinutesBalance || 0),
+                    voiceNumber: r.voiceNumber || r.forwardingNumber || '+1 (732) 660-9121',
+                    carrierCode: r.carrierCode || '*717326609121',
+                    deviceId: r.deviceId || null,
+                    date: r.date || new Date().toISOString()
+                };
+            });
+
+            // Update Metrics
+            let activeVoiceCount = 0;
+            let paidVoiceCount = 0;
+            let waivedVoiceCount = 0;
+            let totalMins = 0;
+            let pendingCount = 0;
+
+            allMemberships.forEach(m => {
+                if (m.voiceEntitlement && m.status === 'ACTIVE') {
+                    activeVoiceCount++;
+                    if (m.voiceSubWaived) waivedVoiceCount++;
+                    else paidVoiceCount++;
+                }
+                totalMins += (m.voiceMinutesBalance || 0);
+                if (m.voiceEntitlement && !m.vapiProvisioned) {
+                    pendingCount++;
+                }
+            });
+
+            const mrr = paidVoiceCount * 9.99;
+            const dollars = (totalMins * 0.25).toFixed(2);
+
+            const elActive = document.getElementById('subMetricActive');
+            if (elActive) elActive.innerText = activeVoiceCount;
+            const elActiveBreakdown = document.getElementById('subMetricActiveBreakdown');
+            if (elActiveBreakdown) elActiveBreakdown.innerText = `${paidVoiceCount} Paid ($9.99/mo) • ${waivedVoiceCount} Waived (Comp)`;
+            const elMrr = document.getElementById('subMetricMrr');
+            if (elMrr) elMrr.innerText = `$${mrr.toFixed(2)}`;
+            const elMins = document.getElementById('subMetricMinutes');
+            if (elMins) elMins.innerText = `${Math.round(totalMins)} Mins`;
+            const elDollars = document.getElementById('subMetricDollars');
+            if (elDollars) elDollars.innerText = `$${dollars} Total Dollar Reserve`;
+            const elPending = document.getElementById('subMetricPending');
+            if (elPending) elPending.innerText = `${pendingCount} Accounts`;
+
+            const tabCount = document.getElementById('countTabSubs');
+            if (tabCount) tabCount.innerText = activeVoiceCount;
+            const countAll = document.getElementById('subCountAll');
+            if (countAll) countAll.innerText = allMemberships.length;
+
+            renderMembershipTable();
+        } catch (e) {
+            console.error('Membership load error:', e);
+            if (tbody) tbody.innerHTML = `<tr><td colspan="7" style="color:var(--danger); text-align:center; padding:20px;">Failed to load memberships: ${e.message}</td></tr>`;
+        }
+    }
+
+    function setSubFilter(filterType, btnEl) {
+        currentSubFilter = filterType;
+        document.querySelectorAll('#tab9 .filter-pill').forEach(b => b.classList.remove('active'));
+        if (btnEl) btnEl.classList.add('active');
+        renderMembershipTable();
+    }
+
+    function renderMembershipTable() {
+        const tbody = document.getElementById('membershipTableBody');
+        if (!tbody) return;
+
+        const query = (document.getElementById('subSearchInput')?.value || '').trim().toLowerCase();
+
+        let filtered = allMemberships.filter(m => {
+            if (currentSubFilter === 'PAID' && !m.isPaidVoice) return false;
+            if (currentSubFilter === 'WAIVED' && !m.voiceSubWaived) return false;
+            if (currentSubFilter === 'PRO' && m.tier !== 'PRO') return false;
+            if (currentSubFilter === 'FLAGSHIP' && m.tier !== 'FLAGSHIP') return false;
+
+            if (query) {
+                const corpus = `${m.name} ${m.email} ${m.key} ${m.voiceNumber} ${m.tier}`.toLowerCase();
+                if (!corpus.includes(query)) return false;
+            }
+            return true;
+        });
+
+        if (filtered.length === 0) {
+            tbody.innerHTML = '<tr><td colspan="7" style="color:var(--muted); text-align:center; padding:24px;">No membership records match this filter.</td></tr>';
+            return;
+        }
+
+        tbody.innerHTML = filtered.map(m => {
+            let tierBadge = `<span class="badge badge-active">FLAGSHIP</span>`;
+            if (m.tier === 'PRO') tierBadge = `<span class="badge badge-pro">⚡ PRO GATEWAY</span>`;
+            else if (m.tier === 'AGENCY') tierBadge = `<span class="badge badge-agency">🏢 AGENCY</span>`;
+            else if (m.tier === 'TRIAL') tierBadge = `<span class="badge badge-trial">TRIAL</span>`;
+
+            let voiceBadge = `<span style="color:var(--muted); font-size:12px;">Not Active</span>`;
+            if (m.voiceEntitlement) {
+                if (m.voiceSubWaived) {
+                    voiceBadge = `<span class="badge" style="background:rgba(168,85,247,0.2); color:#C084FC; border:1px solid #A855F7;">🎁 COMP WAIVED</span>`;
+                } else if (m.status === 'ACTIVE') {
+                    voiceBadge = `<span class="badge badge-voice">🟢 ACTIVE ($9.99/mo)</span>`;
+                } else {
+                    voiceBadge = `<span class="badge badge-revoked">CANCELLED</span>`;
+                }
+            }
+
+            const minsDisplay = `<strong style="color:${m.voiceMinutesBalance > 10 ? 'var(--primary)' : 'var(--warning)'}; font-size:14px;">${m.voiceMinutesBalance.toFixed(0)} mins</strong><br><small style="color:var(--muted);">$${(m.voiceMinutesBalance * 0.25).toFixed(2)} bal</small>`;
+            const lineDisplay = m.vapiProvisioned 
+                ? `<span style="font-family:monospace; font-weight:bold; color:#38BDF8;">${escapeHtml(m.voiceNumber)}</span><br><small style="color:var(--primary); font-family:monospace;">${escapeHtml(m.carrierCode)}</small>`
+                : `<span class="badge badge-trial">⏳ PENDING 1ST PACK ($10)</span>`;
+
+            const deviceDisplay = m.deviceId
+                ? `<span style="font-family:monospace; color:var(--accent);">🔒 ${escapeHtml(m.deviceId.substring(0, 10))}</span>`
+                : `<span style="color:var(--muted); font-size:12px;">Unbound (Ready)</span>`;
+
+            return `
+                <tr>
+                    <td><strong>${escapeHtml(m.name)}</strong><br><small style="color:var(--muted);">${escapeHtml(m.email || 'No email')}</small></td>
+                    <td>${tierBadge}<br><code style="color:var(--primary); font-size:12px;">${escapeHtml(m.key)}</code></td>
+                    <td>${voiceBadge}</td>
+                    <td>${minsDisplay}</td>
+                    <td>${lineDisplay}</td>
+                    <td>${deviceDisplay}</td>
+                    <td>
+                        <button class="btn-action" style="color:#00E676; font-weight:bold;" onclick="openMembershipManageModal('${m.key}')">⚙️ Manage</button>
+                        <button class="btn-action" style="color:#38BDF8;" onclick="promptReloadCredits('${m.key}', '${escapeHtml(m.name)}')">💳 Credit Pack</button>
+                    </td>
+                </tr>
+            `;
+        }).join('');
+    }
+
+    function openMembershipManageModal(key) {
+        currentEditingSubKey = key;
+        const records = getStore();
+        const rec = records.find(r => r.key === key);
+        if (!rec) return alert(`License key ${key} not found.`);
+
+        const modal = document.getElementById('membershipManageModal');
+        if (!modal) return;
+
+        document.getElementById('modalSubKey').innerText = rec.key;
+        document.getElementById('modalSubCustomer').innerText = rec.name || rec.customer || 'Valued Customer';
+        document.getElementById('modalSubEmail').innerText = rec.email || 'N/A';
+        document.getElementById('modalSubTierSelect').value = (rec.tier === 'PRO' || (rec.key && rec.key.includes('PRO'))) ? 'PRO' : ((rec.tier === 'AGENCY') ? 'AGENCY' : 'STANDARD');
+        document.getElementById('modalSubStatusSelect').value = rec.status || 'ACTIVE';
+        document.getElementById('modalSubVoiceToggle').checked = !!(rec.voiceEntitlement || rec.voiceActive);
+        document.getElementById('modalSubWaivedToggle').checked = !!(rec.voiceSubWaived || rec.type === 'FREE_VOICE_COMP');
+        document.getElementById('modalSubMinutesInput').value = rec.voiceMinutesBalance || 0;
+        document.getElementById('modalSubForwardingNumber').value = rec.voiceNumber || '+1 (732) 660-9121';
+        document.getElementById('modalSubDeviceId').innerText = rec.deviceId ? `🔒 Bound: ${rec.deviceId}` : '📱 Unbound (Ready to pair)';
+
+        modal.style.display = 'flex';
+    }
+
+    async function saveMembershipChangesFromModal() {
+        if (!currentEditingSubKey) return;
+        const records = getStore();
+        const rec = records.find(r => r.key === currentEditingSubKey);
+        if (!rec) return;
+
+        const newTier = document.getElementById('modalSubTierSelect').value;
+        const newStatus = document.getElementById('modalSubStatusSelect').value;
+        const voiceEntitled = document.getElementById('modalSubVoiceToggle').checked;
+        const voiceWaived = document.getElementById('modalSubWaivedToggle').checked;
+        const newMins = parseFloat(document.getElementById('modalSubMinutesInput').value) || 0;
+        const fwdNum = document.getElementById('modalSubForwardingNumber').value.trim();
+
+        rec.tier = newTier;
+        rec.status = newStatus;
+        rec.voiceEntitlement = voiceEntitled;
+        rec.voiceSubWaived = voiceWaived;
+        rec.voiceMinutesBalance = newMins;
+        rec.voiceNumber = fwdNum;
+        const cleanDigits = fwdNum.replace(/\D/g, '');
+        rec.carrierCode = `*71${cleanDigits.slice(-10)}`;
+        rec.voiceActive = voiceEntitled && (newMins > 0);
+        if (voiceEntitled && newMins > 0) rec.vapiProvisioned = true;
+
+        saveStore(records);
+
+        // Sync with backend API
+        try {
+            await safeFetchJson('/api/licenses', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                    key: rec.key,
+                    customer: rec.name || rec.customer,
+                    email: rec.email,
+                    tier: newTier,
+                    status: newStatus,
+                    voiceEntitlement: voiceEntitled,
+                    voiceSubWaived: voiceWaived,
+                    voiceActive: rec.voiceActive,
+                    vapiProvisioned: rec.vapiProvisioned,
+                    voiceMinutesBalance: newMins,
+                    voiceNumber: rec.voiceNumber,
+                    carrierCode: rec.carrierCode
+                })
+            });
+        } catch (apiErr) {
+            console.warn('Backend membership sync note:', apiErr.message);
+        }
+
+        document.getElementById('membershipManageModal').style.display = 'none';
+        alert(`✅ Membership updated for ${rec.key}!\n\nTier: ${newTier}\nVoice Status: ${voiceEntitled ? (voiceWaived ? 'Waived (Comp)' : 'Active') : 'Inactive'}\nBalance: ${newMins} mins`);
+        loadMembershipDashboard();
+        renderDashboard();
+    }
+
+    function unbindDeviceFromModal() {
+        if (!currentEditingSubKey) return;
+        if (!confirm(`Unbind hardware device from license ${currentEditingSubKey}? This lets customer bind a new phone.`)) return;
+
+        const records = getStore();
+        const rec = records.find(r => r.key === currentEditingSubKey);
+        if (rec) {
+            rec.deviceId = null;
+            saveStore(records);
+            document.getElementById('modalSubDeviceId').innerText = '📱 Unbound (Ready to pair)';
+            alert('✅ Hardware lock cleared! Customer can now log in on a new device.');
+            loadMembershipDashboard();
+            renderDashboard();
+        }
+    }
+
+    async function promptIssueWaiver() {
+        const key = prompt('Enter customer license key to grant Complimentary $0.00 AI Voice Waiver:');
+        if (!key) return;
+        const cleanKey = key.trim().toUpperCase();
+
+        const records = getStore();
+        let rec = records.find(r => r.key === cleanKey);
+        if (!rec) {
+            rec = {
+                id: `mcas_comp_${Date.now()}`,
+                date: new Date().toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' }),
+                name: 'VIP Complimentary Partner',
+                email: 'partner@example.com',
+                key: cleanKey,
+                tier: cleanKey.includes('PRO') ? 'PRO' : 'STANDARD',
+                status: 'ACTIVE',
+                price: '$0.00',
+                type: 'FREE_VOICE_COMP',
+                voiceEntitlement: true,
+                voiceSubWaived: true,
+                vapiProvisioned: true,
+                voiceMinutesBalance: 50.0,
+                voiceActive: true,
+                voiceNumber: '+1 (732) 660-9121',
+                carrierCode: '*717326609121'
+            };
+            records.unshift(rec);
+        } else {
+            rec.voiceEntitlement = true;
+            rec.voiceSubWaived = true;
+            rec.voiceActive = true;
+            rec.vapiProvisioned = true;
+            rec.voiceMinutesBalance = Math.max(rec.voiceMinutesBalance || 0, 50.0);
+            rec.voiceNumber = rec.voiceNumber || '+1 (732) 660-9121';
+            rec.carrierCode = rec.carrierCode || '*717326609121';
+        }
+
+        saveStore(records);
+
+        try {
+            await safeFetchJson('/api/licenses', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(rec)
+            });
+        } catch (e) {}
+
+        alert(`🎉 Complimentary Voice Membership Waiver issued to ${cleanKey}!\n\n$9.99/mo fee waived forever. +50 courtesy minutes loaded.`);
+        loadMembershipDashboard();
+        renderDashboard();
     }
 
     ensureResponsiveTables();
@@ -6023,6 +6408,92 @@ To transfer to a new device at any time, contact your agency administrator.
         <div style="display: flex; justify-content: flex-end; gap: 10px; margin-top: 20px;">
             <button onclick="document.getElementById('referralPayoutModal').style.display='none'" class="btn-action" style="background: #21262D; color: var(--muted); border: none;">Cancel</button>
             <button onclick="executePayoutBatch()" class="btn-action" style="background: #10B981; color: #000; font-weight: 800; border: none; padding: 10px 20px; border-radius: 20px;">⚡ Confirm & Mark Paid</button>
+        </div>
+    </div>
+</div>
+
+<!-- Membership Management Modal -->
+<div id="membershipManageModal" style="display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.85); backdrop-filter: blur(6px); z-index: 99999; justify-content: center; align-items: center; padding: 20px;">
+    <div style="background: #131720; border: 1px solid var(--card-border); border-radius: 16px; max-width: 580px; width: 100%; padding: 26px; box-shadow: 0 16px 50px rgba(0,0,0,0.8); max-height: 90vh; overflow-y: auto;">
+        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 16px; border-bottom: 1px solid var(--card-border); padding-bottom: 12px;">
+            <h3 style="margin: 0; color: #FFF; font-size: 18px; display: flex; align-items: center; gap: 8px;">
+                <span>⚙️</span> Manage Membership & Subscription
+            </h3>
+            <button onclick="document.getElementById('membershipManageModal').style.display='none'" style="background: none; border: none; color: var(--muted); font-size: 24px; cursor: pointer; padding: 4px;">✕</button>
+        </div>
+
+        <!-- Customer Summary Header -->
+        <div style="background: #090B0E; border: 1px solid var(--card-border); border-radius: 10px; padding: 14px; margin-bottom: 16px;">
+            <div style="display: flex; justify-content: space-between; align-items: flex-start; gap: 10px;">
+                <div>
+                    <div style="font-size: 16px; font-weight: 800; color: #FFF;" id="modalSubCustomer">Valued Customer</div>
+                    <div style="font-size: 12px; color: var(--muted); margin-top: 2px;" id="modalSubEmail">customer@example.com</div>
+                </div>
+                <div style="text-align: right;">
+                    <div style="font-family: monospace; font-size: 13px; font-weight: bold; color: var(--primary);" id="modalSubKey">MCAS-XXXX-XXXX</div>
+                    <div style="font-size: 11px; color: var(--accent); margin-top: 2px;" id="modalSubDeviceId">🔒 Bound: Device</div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Tier & Account Status Grid -->
+        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 14px; margin-bottom: 14px;">
+            <div>
+                <label style="margin-top: 0;">Plan Tier</label>
+                <select id="modalSubTierSelect" style="width: 100%;">
+                    <option value="STANDARD">Founder's Flagship ($49.99 Lifetime)</option>
+                    <option value="PRO">Pro Automation Gateway ($299.99 Perpetual)</option>
+                    <option value="AGENCY">Agency Fleet Partner</option>
+                    <option value="TRIAL">3-Day Free Trial</option>
+                </select>
+            </div>
+            <div>
+                <label style="margin-top: 0;">Subscription Status</label>
+                <select id="modalSubStatusSelect" style="width: 100%;">
+                    <option value="ACTIVE">🟢 Active</option>
+                    <option value="PAUSED">⏸️ Paused (Telephony Suspended)</option>
+                    <option value="CANCELLED">🔴 Cancelled ($0.00 Future Charges)</option>
+                    <option value="REVOKED">⛔ Revoked (Key Disabled)</option>
+                </select>
+            </div>
+        </div>
+
+        <!-- Voice Entitlement & Waiver Toggles -->
+        <div style="background: #161B22; border: 1px solid var(--card-border); border-radius: 10px; padding: 14px; margin-bottom: 14px;">
+            <div style="font-size: 13px; font-weight: 700; color: #FFF; margin-bottom: 10px;">🎙️ AI Voice Receptionist Platform Controls</div>
+            <div style="display: flex; flex-direction: column; gap: 10px;">
+                <label style="display: flex; align-items: center; gap: 8px; font-size: 13px; cursor: pointer; color: #FFF;">
+                    <input type="checkbox" id="modalSubVoiceToggle">
+                    <span><strong>Enable 24/7 AI Voice Feature in App</strong> (Unlocks Vapi Persona Studio & Telephony Hub)</span>
+                </label>
+                <label style="display: flex; align-items: center; gap: 8px; font-size: 13px; cursor: pointer; color: #C084FC;">
+                    <input type="checkbox" id="modalSubWaivedToggle">
+                    <span><strong>Waive $9.99/mo Monthly Fee (Complimentary Waiver)</strong> — Client never billed monthly subscription.</span>
+                </label>
+            </div>
+        </div>
+
+        <!-- Telephony Minutes Balance & Forwarding Number -->
+        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 14px; margin-bottom: 16px;">
+            <div>
+                <label>Minutes Balance</label>
+                <input type="number" id="modalSubMinutesInput" step="1" style="width: 100%;">
+                <small style="color: var(--muted); font-size: 11px;">$0.25/min carrier burn rate</small>
+            </div>
+            <div>
+                <label>Forwarding Phone Number</label>
+                <input type="text" id="modalSubForwardingNumber" placeholder="+1 (732) 660-9121" style="width: 100%; font-family: monospace;">
+                <small style="color: var(--muted); font-size: 11px;">Assigned Vapi Inbound Line (*71)</small>
+            </div>
+        </div>
+
+        <!-- Actions Footer -->
+        <div style="display: flex; justify-content: space-between; align-items: center; border-top: 1px solid var(--card-border); padding-top: 16px; margin-top: 10px;">
+            <button class="btn-action" style="color: var(--warning); border-color: var(--warning);" onclick="unbindDeviceFromModal()">🔓 Reset Hardware Binding</button>
+            <div style="display: flex; gap: 10px;">
+                <button onclick="document.getElementById('membershipManageModal').style.display='none'" class="btn-action" style="background: #21262D; color: var(--muted); border: none;">Cancel</button>
+                <button onclick="saveMembershipChangesFromModal()" class="btn-action btn-primary-action">💾 Save Changes</button>
+            </div>
         </div>
     </div>
 </div>

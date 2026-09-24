@@ -1,6 +1,8 @@
 package com.missedcall.autotext.ui.screens
 
 import android.content.Context
+import android.content.Intent
+import android.net.Uri
 import android.provider.Settings
 import android.widget.Toast
 import androidx.compose.foundation.background
@@ -8,6 +10,7 @@ import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.automirrored.filled.*
 import androidx.compose.material.icons.filled.*
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
@@ -69,6 +72,14 @@ fun CustomerAccountPortalDialog(
     val isTrial = settings.subscriptionStatus == "TRIAL" || settings.licenseKey.contains("TRIAL", ignoreCase = true)
     val isPro = settings.licenseKey.contains("PRO", ignoreCase = true)
 
+    var liveTier by remember { mutableStateOf(if (isPro) "PRO" else if (isTrial) "TRIAL" else "FLAGSHIP") }
+    var liveTierName by remember { mutableStateOf(if (isPro) "Pro Automation Gateway ($299 Perpetual)" else if (isTrial) "3-Day Free Trial ($0 Today)" else "Founder's Flagship ($49.99 Lifetime)") }
+    var liveVoiceSubActive by remember { mutableStateOf(settings.voiceSubscriptionActive) }
+    var liveVoiceSubWaived by remember { mutableStateOf(false) }
+    var liveVoiceMinutesBalance by remember { mutableDoubleStateOf(40.0) }
+    var liveForwardingNumber by remember { mutableStateOf(settings.voiceReceptionistForwardingNumber.ifBlank { "+1 (732) 660-9121" }) }
+    var liveCarrierCode by remember { mutableStateOf("*717326609121") }
+
     var livePlanName by remember { mutableStateOf("Autonomous Front Desk Bundle") }
     var liveQuotaMinutes by remember { mutableIntStateOf(250) }
     var liveMinutesUsed by remember { mutableIntStateOf(0) }
@@ -76,10 +87,12 @@ fun CustomerAccountPortalDialog(
     var liveOverageAmount by remember { mutableDoubleStateOf(0.0) }
     var liveOverageRate by remember { mutableDoubleStateOf(0.20) }
     var isUnlimitedGateway by remember { mutableStateOf(false) }
+    var isLoadingUsage by remember { mutableStateOf(false) }
 
-    LaunchedEffect(settings.licenseKey) {
+    suspend fun fetchUsageData() {
         val key = settings.licenseKey.trim()
-        if (key.isBlank()) return@LaunchedEffect
+        if (key.isBlank()) return
+        isLoadingUsage = true
         withContext(Dispatchers.IO) {
             try {
                 val endpoint = if (settings.remoteUpdateUrl.contains("localhost") || settings.remoteUpdateUrl.contains("10.0.")) {
@@ -97,18 +110,34 @@ fun CustomerAccountPortalDialog(
                     val json = JSONObject(body)
                     if (json.optBoolean("success", false)) {
                         withContext(Dispatchers.Main) {
+                            liveTier = json.optString("tier", liveTier)
+                            liveTierName = json.optString("tierName", liveTierName)
                             livePlanName = json.optString("planName", livePlanName)
+                            liveVoiceSubActive = json.optBoolean("voiceSubActive", liveVoiceSubActive)
+                            liveVoiceSubWaived = json.optBoolean("voiceSubWaived", false)
+                            liveVoiceMinutesBalance = json.optDouble("voiceMinutesBalance", 40.0)
+                            liveForwardingNumber = json.optString("forwardingNumber", liveForwardingNumber)
+                            liveCarrierCode = json.optString("carrierCode", liveCarrierCode)
                             liveQuotaMinutes = json.optInt("quotaMinutes", 250)
                             liveMinutesUsed = json.optInt("minutesUsed", 0)
                             liveOverageMinutes = json.optInt("overageMinutes", 0)
                             liveOverageAmount = json.optDouble("overageAmount", 0.0)
                             liveOverageRate = json.optDouble("overageRatePerMinute", 0.20)
-                            isUnlimitedGateway = json.optBoolean("isUnlimitedGateway", false)
+                            isUnlimitedGateway = json.optBoolean("isUnlimitedGateway", isPro)
                         }
                     }
                 }
-            } catch (e: Exception) {}
+            } catch (e: Exception) {
+            } finally {
+                withContext(Dispatchers.Main) {
+                    isLoadingUsage = false
+                }
+            }
         }
+    }
+
+    LaunchedEffect(settings.licenseKey) {
+        fetchUsageData()
     }
 
     Dialog(
@@ -175,15 +204,15 @@ fun CustomerAccountPortalDialog(
                     modifier = Modifier.fillMaxSize(),
                     verticalArrangement = Arrangement.spacedBy(16.dp)
                 ) {
-                    // Card 1: Subscription Status Banner
+                    // Card 1: Subscription Status & Plan Details
                     item {
                         Card(
                             colors = CardDefaults.cardColors(
                                 containerColor = if (isCancelled) {
                                     MaterialTheme.colorScheme.surfaceVariant
-                                } else if (isTrial) {
+                                } else if (liveTier == "TRIAL" || isTrial) {
                                     Color(0xFFFFB300).copy(alpha = 0.15f)
-                                } else if (isPro) {
+                                } else if (liveTier == "PRO" || isPro) {
                                     Color(0xFF9333EA).copy(alpha = 0.18f)
                                 } else {
                                     ActiveGreenContainer
@@ -204,33 +233,25 @@ fun CustomerAccountPortalDialog(
                                         .padding(end = 12.dp)
                                 ) {
                                     Text(
-                                        text = "SUBSCRIPTION & LICENSE",
+                                        text = "CURRENT PACKAGE & TIER",
                                         style = MaterialTheme.typography.labelSmall,
                                         fontWeight = FontWeight.Bold,
-                                        color = if (isCancelled) MaterialTheme.colorScheme.onSurfaceVariant else if (isTrial) Color(0xFFFFB300) else if (isPro) Color(0xFFC084FC) else ActiveGreenText
+                                        color = if (isCancelled) MaterialTheme.colorScheme.onSurfaceVariant else if (liveTier == "TRIAL" || isTrial) Color(0xFFFFB300) else if (liveTier == "PRO" || isPro) Color(0xFFC084FC) else ActiveGreenText
                                     )
                                     Text(
-                                        text = if (isCancelled) {
-                                            "Cancelled ($0.00 Charged)"
-                                        } else if (isTrial) {
-                                            "3-Day Free Trial ($0 Today)"
-                                        } else if (isPro) {
-                                            "Active Pro Automation License"
-                                        } else {
-                                            "Active Lifetime License"
-                                        },
+                                        text = liveTierName,
                                         style = MaterialTheme.typography.titleMedium,
                                         fontWeight = FontWeight.ExtraBold
                                     )
                                     Text(
                                         text = if (isCancelled) {
                                             "No future charges will occur."
-                                        } else if (isTrial) {
+                                        } else if (liveTier == "TRIAL" || isTrial) {
                                             "Auto-charges $49.99 on Day 4 if not cancelled."
-                                        } else if (isPro) {
-                                            "$299.00 Perpetual — Unlimited Automations, Dual SIM & Cloud Relay"
+                                        } else if (liveTier == "PRO" || isPro) {
+                                            "Perpetual License • Unlimited Dual SIM SMS & Cloud Relay Webhooks"
                                         } else {
-                                            "Paid One-Time — 0 Monthly Fees Forever"
+                                            "Founder's Flagship Appliance • 0 Monthly Fees Forever"
                                         },
                                         style = MaterialTheme.typography.bodySmall,
                                         color = MaterialTheme.colorScheme.onSurfaceVariant
@@ -238,12 +259,12 @@ fun CustomerAccountPortalDialog(
                                 }
 
                                 Surface(
-                                    color = if (isCancelled) MaterialTheme.colorScheme.outlineVariant else if (isTrial) Color(0xFFFFB300) else if (isPro) Color(0xFF9333EA) else ActiveGreenText,
+                                    color = if (isCancelled) MaterialTheme.colorScheme.outlineVariant else if (liveTier == "TRIAL" || isTrial) Color(0xFFFFB300) else if (liveTier == "PRO" || isPro) Color(0xFF9333EA) else ActiveGreenText,
                                     shape = RoundedCornerShape(8.dp)
                                 ) {
                                     Text(
-                                        text = if (isCancelled) "CANCELLED" else if (isTrial) "TRIAL" else if (isPro) "PRO ACTIVE" else "ACTIVE",
-                                        color = if (isTrial) Color.Black else Color.White,
+                                        text = if (isCancelled) "CANCELLED" else if (liveTier == "TRIAL" || isTrial) "TRIAL" else if (liveTier == "PRO" || isPro) "PRO ACTIVE" else "ACTIVE",
+                                        color = if (liveTier == "TRIAL" || isTrial) Color.Black else Color.White,
                                         fontWeight = FontWeight.Black,
                                         fontSize = 11.sp,
                                         maxLines = 1,
@@ -255,11 +276,11 @@ fun CustomerAccountPortalDialog(
                         }
                     }
 
-                    // Card 1.5: Voice Quota & Overage Meter
+                    // Card 1.5: Telephony Credit Pack Balance & Live Meter
                     item {
                         Card(
                             colors = CardDefaults.cardColors(
-                                containerColor = if (liveOverageMinutes > 0) RedError.copy(alpha = 0.12f) else MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.5f)
+                                containerColor = if (liveVoiceMinutesBalance <= 5.0) RedError.copy(alpha = 0.12f) else MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.5f)
                             ),
                             shape = RoundedCornerShape(16.dp)
                         ) {
@@ -273,79 +294,222 @@ fun CustomerAccountPortalDialog(
                                         verticalAlignment = Alignment.CenterVertically,
                                         modifier = Modifier.weight(1f, fill = false)
                                     ) {
-                                        Icon(Icons.Default.Timer, contentDescription = null, tint = Color(0xFF9333EA))
+                                        Icon(Icons.Default.Timer, contentDescription = null, tint = Color(0xFF00E676))
                                         Spacer(modifier = Modifier.width(8.dp))
                                         Text(
-                                            text = "Voice Quota & Metering",
+                                            text = "Voice Minutes & Credit Pack Balance",
                                             style = MaterialTheme.typography.titleSmall,
                                             fontWeight = FontWeight.Bold
                                         )
                                     }
                                     Spacer(modifier = Modifier.width(8.dp))
                                     Surface(
-                                        color = if (liveOverageMinutes > 0) RedError else Color(0xFF9333EA),
+                                        color = if (liveVoiceMinutesBalance <= 5.0) RedError else Color(0xFF00E676),
                                         shape = RoundedCornerShape(6.dp)
                                     ) {
                                         Text(
-                                            text = livePlanName,
-                                            color = Color.White,
-                                            fontSize = 10.sp,
-                                            fontWeight = FontWeight.Bold,
+                                            text = "${liveVoiceMinutesBalance.toInt()} Mins Left",
+                                            color = Color.Black,
+                                            fontSize = 11.sp,
+                                            fontWeight = FontWeight.ExtraBold,
                                             maxLines = 1,
-                                            modifier = Modifier.padding(horizontal = 6.dp, vertical = 2.dp)
+                                            modifier = Modifier.padding(horizontal = 8.dp, vertical = 3.dp)
                                         )
                                     }
                                 }
 
                                 Spacer(modifier = Modifier.height(10.dp))
 
-                                if (isUnlimitedGateway) {
+                                val maxGauge = 250f
+                                val progressFraction = (liveVoiceMinutesBalance.toFloat() / maxGauge).coerceIn(0f, 1f)
+
+                                LinearProgressIndicator(
+                                    progress = { progressFraction },
+                                    modifier = Modifier.fillMaxWidth().height(8.dp),
+                                    color = if (liveVoiceMinutesBalance <= 5.0) RedError else ActiveGreenText,
+                                    trackColor = MaterialTheme.colorScheme.surfaceVariant
+                                )
+
+                                Spacer(modifier = Modifier.height(8.dp))
+
+                                Row(
+                                    modifier = Modifier.fillMaxWidth(),
+                                    horizontalArrangement = Arrangement.SpaceBetween
+                                ) {
                                     Text(
-                                        text = "⚡ Perpetual Pro Automation Gateway: Unlimited SIM SMS text-backs & Webhook Bridge active. Included voice minutes: 0 (BYOK / Managed Add-On available).",
+                                        text = "Remaining Value: $${"%.2f".format(liveVoiceMinutesBalance * 0.25)}",
+                                        fontWeight = FontWeight.Bold,
+                                        style = MaterialTheme.typography.bodySmall
+                                    )
+                                    Text(
+                                        text = "Burn Rate: $0.25/min",
+                                        fontWeight = FontWeight.SemiBold,
                                         style = MaterialTheme.typography.bodySmall,
                                         color = MaterialTheme.colorScheme.onSurfaceVariant
                                     )
-                                } else {
-                                    val progressFraction = if (liveQuotaMinutes > 0) {
-                                        (liveMinutesUsed.toFloat() / liveQuotaMinutes.toFloat()).coerceIn(0f, 1f)
-                                    } else 0f
+                                }
 
-                                    LinearProgressIndicator(
-                                        progress = { progressFraction },
-                                        modifier = Modifier.fillMaxWidth().height(8.dp),
-                                        color = if (liveOverageMinutes > 0) RedError else ActiveGreenText,
-                                        trackColor = MaterialTheme.colorScheme.surfaceVariant
-                                    )
+                                Spacer(modifier = Modifier.height(4.dp))
+                                Text(
+                                    text = "Carrier forwarding: ${liveForwardingNumber} (${liveCarrierCode} active). Unanswered calls route directly to Riley AI.",
+                                    fontSize = 11.sp,
+                                    color = MaterialTheme.colorScheme.onSurfaceVariant
+                                )
+                            }
+                        }
+                    }
 
-                                    Spacer(modifier = Modifier.height(8.dp))
-
-                                    Row(
-                                        modifier = Modifier.fillMaxWidth(),
-                                        horizontalArrangement = Arrangement.SpaceBetween
-                                    ) {
+                    // Card 1.6: 1-Tap Add Minutes / Credit Pack Reload (Stripe In-App)
+                    item {
+                        Card(
+                            colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.7f)),
+                            border = androidx.compose.foundation.BorderStroke(1.dp, Color(0xFF00E676).copy(alpha = 0.4f)),
+                            shape = RoundedCornerShape(16.dp)
+                        ) {
+                            Column(modifier = Modifier.padding(16.dp)) {
+                                Row(
+                                    modifier = Modifier.fillMaxWidth(),
+                                    horizontalArrangement = Arrangement.SpaceBetween,
+                                    verticalAlignment = Alignment.CenterVertically
+                                ) {
+                                    Row(verticalAlignment = Alignment.CenterVertically) {
+                                        Icon(Icons.Default.AddCard, contentDescription = null, tint = Color(0xFF00E676))
+                                        Spacer(modifier = Modifier.width(8.dp))
                                         Text(
-                                            text = "$liveMinutesUsed / $liveQuotaMinutes Mins Used",
-                                            fontWeight = FontWeight.Bold,
-                                            style = MaterialTheme.typography.bodySmall
+                                            text = "Add Money / Load Credit Pack",
+                                            style = MaterialTheme.typography.titleSmall,
+                                            fontWeight = FontWeight.Bold
                                         )
+                                    }
+                                    TextButton(onClick = { coroutineScope.launch { fetchUsageData() } }) {
+                                        Text(if (isLoadingUsage) "Syncing..." else "🔄 Refresh", fontSize = 11.sp)
+                                    }
+                                }
+
+                                Text(
+                                    text = "Top up your dedicated AI telephone line with instant Stripe Checkout. Credits never expire and roll over automatically.",
+                                    style = MaterialTheme.typography.bodySmall,
+                                    color = MaterialTheme.colorScheme.onSurfaceVariant
+                                )
+
+                                Spacer(modifier = Modifier.height(12.dp))
+
+                                val emailParam = Uri.encode(settings.customerEmail.trim())
+                                val keyParam = Uri.encode(settings.licenseKey.trim())
+
+                                // 2x2 Grid of 1-Tap Stripe Reload Buttons
+                                Row(
+                                    modifier = Modifier.fillMaxWidth(),
+                                    horizontalArrangement = Arrangement.spacedBy(8.dp)
+                                ) {
+                                    OutlinedButton(
+                                        onClick = {
+                                            val checkoutUrl = "https://missedcallautosms.com/api/create-credit-pack-checkout?pack=10&key=$keyParam&email=$emailParam"
+                                            context.startActivity(Intent(Intent.ACTION_VIEW, Uri.parse(checkoutUrl)))
+                                        },
+                                        modifier = Modifier.weight(1f),
+                                        shape = RoundedCornerShape(10.dp)
+                                    ) {
+                                        Column(horizontalAlignment = Alignment.CenterHorizontally) {
+                                            Text("$10 Starter", fontWeight = FontWeight.Bold, fontSize = 12.sp)
+                                            Text("40 mins ($0.25/m)", fontSize = 10.sp, color = MaterialTheme.colorScheme.onSurfaceVariant)
+                                        }
+                                    }
+
+                                    Button(
+                                        onClick = {
+                                            val checkoutUrl = "https://missedcallautosms.com/api/create-credit-pack-checkout?pack=25&key=$keyParam&email=$emailParam"
+                                            context.startActivity(Intent(Intent.ACTION_VIEW, Uri.parse(checkoutUrl)))
+                                        },
+                                        modifier = Modifier.weight(1f),
+                                        colors = ButtonDefaults.buttonColors(containerColor = Color(0xFF00E676)),
+                                        shape = RoundedCornerShape(10.dp)
+                                    ) {
+                                        Column(horizontalAlignment = Alignment.CenterHorizontally) {
+                                            Text("$25 Growth", fontWeight = FontWeight.Black, fontSize = 12.sp, color = Color.Black)
+                                            Text("115 mins (+15 free)", fontSize = 10.sp, color = Color.Black.copy(alpha = 0.8f))
+                                        }
+                                    }
+                                }
+
+                                Spacer(modifier = Modifier.height(8.dp))
+
+                                Row(
+                                    modifier = Modifier.fillMaxWidth(),
+                                    horizontalArrangement = Arrangement.spacedBy(8.dp)
+                                ) {
+                                    OutlinedButton(
+                                        onClick = {
+                                            val checkoutUrl = "https://missedcallautosms.com/api/create-credit-pack-checkout?pack=50&key=$keyParam&email=$emailParam"
+                                            context.startActivity(Intent(Intent.ACTION_VIEW, Uri.parse(checkoutUrl)))
+                                        },
+                                        modifier = Modifier.weight(1f),
+                                        shape = RoundedCornerShape(10.dp)
+                                    ) {
+                                        Column(horizontalAlignment = Alignment.CenterHorizontally) {
+                                            Text("$50 Pro", fontWeight = FontWeight.Bold, fontSize = 12.sp)
+                                            Text("250 mins (+50 free)", fontSize = 10.sp, color = MaterialTheme.colorScheme.onSurfaceVariant)
+                                        }
+                                    }
+
+                                    OutlinedButton(
+                                        onClick = {
+                                            val checkoutUrl = "https://missedcallautosms.com/api/create-credit-pack-checkout?pack=100&key=$keyParam&email=$emailParam"
+                                            context.startActivity(Intent(Intent.ACTION_VIEW, Uri.parse(checkoutUrl)))
+                                        },
+                                        modifier = Modifier.weight(1f),
+                                        shape = RoundedCornerShape(10.dp)
+                                    ) {
+                                        Column(horizontalAlignment = Alignment.CenterHorizontally) {
+                                            Text("$100 Fleet", fontWeight = FontWeight.Bold, fontSize = 12.sp)
+                                            Text("550 mins (+150 free)", fontSize = 10.sp, color = MaterialTheme.colorScheme.onSurfaceVariant)
+                                        }
+                                    }
+                                }
+                            }
+                        }
+                    }
+
+                    // Card 1.7: Pro Gateway Upgrade Option (if not already Pro)
+                    if (!isPro && liveTier != "PRO") {
+                        item {
+                            Card(
+                                colors = CardDefaults.cardColors(containerColor = Color(0xFF1E1B4B).copy(alpha = 0.7f)),
+                                border = androidx.compose.foundation.BorderStroke(1.dp, Color(0xFF818CF8).copy(alpha = 0.5f)),
+                                shape = RoundedCornerShape(16.dp)
+                            ) {
+                                Column(modifier = Modifier.padding(16.dp)) {
+                                    Row(verticalAlignment = Alignment.CenterVertically) {
+                                        Icon(Icons.Default.Bolt, contentDescription = null, tint = Color(0xFFC084FC))
+                                        Spacer(modifier = Modifier.width(8.dp))
                                         Text(
-                                            text = if (liveOverageMinutes > 0) {
-                                                "⚠️ $liveOverageMinutes Mins Overage (+$${"%.2f".format(liveOverageAmount)})"
-                                            } else {
-                                                "${maxOf(0, liveQuotaMinutes - liveMinutesUsed)} Mins Left"
-                                            },
-                                            fontWeight = FontWeight.SemiBold,
-                                            style = MaterialTheme.typography.bodySmall,
-                                            color = if (liveOverageMinutes > 0) RedError else ActiveGreenText
+                                            text = "Upgrade to Pro Automation Gateway",
+                                            style = MaterialTheme.typography.titleSmall,
+                                            fontWeight = FontWeight.Bold,
+                                            color = Color.White
                                         )
                                     }
 
-                                    Spacer(modifier = Modifier.height(4.dp))
+                                    Spacer(modifier = Modifier.height(6.dp))
                                     Text(
-                                        text = "Overage rate: $${"%.2f".format(liveOverageRate)}/min. Additional minutes roll into your monthly Stripe renewal automatically.",
-                                        fontSize = 11.sp,
-                                        color = MaterialTheme.colorScheme.onSurfaceVariant
+                                        text = "Unlock Dual-SIM slot routing, Local HTTP Webhook Bridge, and 1-Year Cloud Relay API for \$249.99 (Differential Upgrade).",
+                                        style = MaterialTheme.typography.bodySmall,
+                                        color = Color(0xFFCBD5E0)
                                     )
+
+                                    Spacer(modifier = Modifier.height(12.dp))
+
+                                    Button(
+                                        onClick = {
+                                            val checkoutUrl = "https://buy.stripe.com/cNi5kDdJQ558c6k2yB2go0b"
+                                            context.startActivity(Intent(Intent.ACTION_VIEW, Uri.parse(checkoutUrl)))
+                                        },
+                                        colors = ButtonDefaults.buttonColors(containerColor = Color(0xFF9333EA)),
+                                        modifier = Modifier.fillMaxWidth(),
+                                        shape = RoundedCornerShape(10.dp)
+                                    ) {
+                                        Text("⭐ Upgrade to Pro Gateway ($249.99)", fontWeight = FontWeight.Bold)
+                                    }
                                 }
                             }
                         }
@@ -656,10 +820,10 @@ fun CustomerAccountPortalDialog(
                                             .padding(end = 8.dp),
                                         verticalAlignment = Alignment.CenterVertically
                                     ) {
-                                        Icon(Icons.Default.PhoneForwarded, contentDescription = null, tint = MaterialTheme.colorScheme.primary)
+                                        Icon(Icons.AutoMirrored.Filled.PhoneForwarded, contentDescription = null, tint = MaterialTheme.colorScheme.primary)
                                         Spacer(modifier = Modifier.width(8.dp))
                                         Text(
-                                            text = "Voice Pro Subscription ($29/mo)",
+                                            text = "Voice Pro Subscription ($9.99/mo)",
                                             style = MaterialTheme.typography.titleSmall,
                                             fontWeight = FontWeight.Bold
                                         )

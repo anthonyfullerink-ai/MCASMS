@@ -21,13 +21,13 @@ const MIME_TYPES = {
 };
 
 const LATEST_APP_VERSION = {
-  versionCode: 17,
-  versionName: '1.7.0',
+  versionCode: 19,
+  versionName: '1.7.2',
   downloadUrl: 'https://raw.githubusercontent.com/anthonyfullerink-ai/MCASMS/main/MissedCallAutoSMS.apk',
   proDownloadUrl: 'https://raw.githubusercontent.com/anthonyfullerink-ai/MCASMS/main/MissedCallAutoSMS.apk',
-  releaseNotes: '• 🎙️ Dual-Mode AI Voice Receptionist Test Call (In-App Speaker & Live Cellular)\n• 🧠 AI Model Selector with 1.5% Overage Markup for GPT-4o\n• 🎛️ Clean Voice Hub Studio with 1-Tap Carrier Forwarding (*71/*73)\n• ⚡ Real-Time Instant OTA Update Trigger & Firebase Push\n• 🛡️ Direct SIM Carrier SMS dispatch with 15s human jitter',
-  mandatory: true,
-  minSupportedVersion: 15
+  releaseNotes: '• 💳 In-App Membership & Credit Reload Portal\n• ⚡ 1-Tap Stripe Add Minutes ($10, $25, $50, $100)\n• 💎 Self-Service Pro Gateway Tier Upgrade\n• 🎛️ Owner Admin Subscriptions & Minutes Management Hub',
+  mandatory: false,
+  minSupportedVersion: 16
 };
 
 
@@ -4249,12 +4249,29 @@ const server = http.createServer((req, res) => {
         const overageMinutes = Math.max(0, minutesUsed - quotaMinutes);
         const overageAmount = Number((overageMinutes * overageRatePerMinute).toFixed(2));
 
+        const isAgency = licenseKey.startsWith('MCAS-AGENCY-') || licenseKey.startsWith('MCAT-AGENCY-');
+        const isTrial = licenseKey.includes('TRIAL') || subscriber?.status === 'TRIAL' || subscriber?.type === 'TRIAL';
+        const tier = isAgency ? 'AGENCY' : (isPro ? 'PRO' : (isTrial ? 'TRIAL' : 'FLAGSHIP'));
+        const tierName = isAgency ? 'Agency Fleet Edition' : (isPro ? 'Pro Automation Gateway ($299 Perpetual)' : (isTrial ? '3-Day Free Trial ($0 Today)' : 'Founder\'s Flagship ($49.99 Lifetime)'));
+
+        const voiceMinutesBalance = Number(subscriber?.voiceMinutesBalance ?? (isPro ? 50 : 40));
+        const voiceSubWaived = !!(subscriber?.voiceSubWaived || subscriber?.type === 'FREE_VOICE_COMP');
+        const voiceSubActive = subscriber ? (subscriber.voiceSubActive !== false && subscriber.voiceActive !== false) : true;
+        const forwardingNumber = subscriber?.forwardingNumber || '+1 (732) 660-9121';
+        const cleanDigits = forwardingNumber.replace(/\D/g, '');
+        const carrierCode = subscriber?.carrierCode || `*71${cleanDigits.slice(-10)}`;
+
         res.writeHead(200, { 'Content-Type': 'application/json; charset=utf-8', 'Access-Control-Allow-Origin': '*' });
         res.end(JSON.stringify({
           success: true,
           licenseKey,
           status: subscriber?.status || (isDev ? 'ACTIVE' : 'ACTIVE'),
+          tier,
+          tierName,
           voiceActive: subscriber ? subscriber.voiceActive !== false : true,
+          voiceSubActive,
+          voiceSubWaived,
+          voiceMinutesBalance,
           plan,
           planName,
           quotaMinutes,
@@ -4266,9 +4283,24 @@ const server = http.createServer((req, res) => {
           modelTier: isPremiumModel ? 'PREMIUM (+1.5% Overage Markup)' : 'STANDARD (Included)',
           hasPremiumModel: isPremiumModel,
           billingCycleEnd: subscriber?.billingCycleEnd || new Date(Date.now() + 30 * 24 * 60 * 60 * 1000).toISOString(),
-          forwardingNumber: subscriber?.forwardingNumber || '+18005550199',
-          isUnlimitedGateway: plan === 'PRO_GATEWAY',
-          cloudApiActive: subscriber ? subscriber.cloudApiActive !== false && subscriber.status !== 'CANCELLED' : true
+          forwardingNumber,
+          carrierCode,
+          carrierDeactivateCode: '*73',
+          isUnlimitedGateway: plan === 'PRO_GATEWAY' || isPro,
+          cloudApiActive: subscriber ? subscriber.cloudApiActive !== false && subscriber.status !== 'CANCELLED' : true,
+          upgradeOptions: {
+            proUpgradeAvailable: !isPro && !isAgency,
+            proUpgradePrice: 249.99,
+            proUpgradeUrl: 'https://buy.stripe.com/cNi5kDdJQ558c6k2yB2go0b',
+            voiceSubscriptionPrice: 9.99,
+            voiceSubscriptionUrl: 'https://buy.stripe.com/4gMeVdcFMaps6M0b572go0f',
+            creditPacks: [
+              { pack: 10, minutes: 40, price: 10.00, label: '$10 Starter (40m)' },
+              { pack: 25, minutes: 115, price: 25.00, label: '$25 Growth (115m)' },
+              { pack: 50, minutes: 250, price: 50.00, label: '$50 Pro (250m)' },
+              { pack: 100, minutes: 550, price: 100.00, label: '$100 Fleet (550m)' }
+            ]
+          }
         }));
       } catch (err) {
         res.writeHead(500, { 'Content-Type': 'application/json; charset=utf-8', 'Access-Control-Allow-Origin': '*' });
