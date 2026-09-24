@@ -156,7 +156,7 @@ function generateFallbackAngles(niche = 'Contractor Speed-to-Lead') {
       imagePrompt: "Macro cinematic shot of water dripping through ceiling drywall next to a glowing smartphone displaying a 15-second auto-reply text, 16:9.",
       imageUrl: "https://raw.githubusercontent.com/anthonyfullerink-ai/MCASMS/main/assets/social/universal-service-appliance.jpg",
       videoPrompt: "Cinematic vertical 9:16 24fps. A homeowner looking stressed holding their phone as a dripping pipe sounds in the background. Split screen reveals an instant SMS notification chime landing on their screen saying 'Hey, Dave here from Apex Plumbing - what is going on with your pipes?'.",
-      videoAsset: "assets/ads/v150_ai_voice_launch_reel_9x16.mp4",
+      videoAsset: `assets/ads/reels/reel_${ts}_9x16.mp4`,
       status: "draft",
       createdAt: new Date().toISOString(),
       channelTargets: ["facebook", "instagram"],
@@ -244,14 +244,47 @@ ${researchContext || 'General trade business context: Homeowners hiring the firs
       scheduledFor: `${dateStr}T${slotHours[idx] || "17:00:00.000Z"}`
     }));
 
+    // Pre-render bespoke reels to guarantee media uniqueness
+    await ensureBespokeReels(queueItems);
+
     // Save to queue
     saveToQueue(queueItems);
     return { success: true, count: queueItems.length, data: queueItems };
   } catch (err) {
     console.warn(`[ContentEngine] Falling back to structured templates: ${err.message}`);
     const fallback = generateFallbackAngles(userNiche);
+    await ensureBespokeReels(fallback);
     saveToQueue(fallback);
     return { success: true, count: fallback.length, data: fallback, note: "Generated via resilient template engine (configure GEMINI_API_KEY for live LLM mode)" };
+  }
+}
+
+async function ensureBespokeReels(items) {
+  const { buildBespokeReel } = require('./build_bespoke_reel');
+  const { isVideoAlreadyUsed } = require('./media_guard');
+  for (const item of items) {
+    if (item.format === 'reel_video') {
+      const target = item.videoAsset || `assets/ads/reels/reel_${item.id}_9x16.mp4`;
+      item.videoAsset = target;
+      const fullPath = path.join(__dirname, '..', target);
+      if (!fs.existsSync(fullPath) || isVideoAlreadyUsed(target, item.id)) {
+        console.log(`🎬 [ContentEngine] Pre-rendering bespoke 9:16 reel for: "${item.title}"`);
+        try {
+          const bespoke = await buildBespokeReel({
+            id: item.id,
+            title: item.title,
+            hook: item.hook,
+            narrativeBody: item.narrativeBody,
+            trade: item.niche,
+            imageAsset: item.imageUrl,
+            outputRelativePath: target
+          });
+          item.videoAsset = bespoke.relative;
+        } catch (e) {
+          console.warn(`[ContentEngine] Warning: Could not pre-render reel: ${e.message}`);
+        }
+      }
+    }
   }
 }
 

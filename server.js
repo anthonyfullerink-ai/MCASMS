@@ -957,25 +957,17 @@ function generateVoiceProOnboardingEmailHtml(params) {
 }
 
 // ═══════════════════════════════════════════════════════════════════
-//  CONTENT ENGINE & BLOG ZERO-IMAGE-REUSE SAFEGUARDS
+//  CONTENT ENGINE & BLOG ZERO-IMAGE & ZERO-VIDEO REUSE SAFEGUARDS
 // ═══════════════════════════════════════════════════════════════════
+const {
+  isVideoAlreadyUsed,
+  isImageAlreadyUsed,
+  assertUniqueMedia,
+  cleanBasename
+} = require('./scripts/media_guard');
+
 function isImageAlreadyUsedInBlog(imageUrl, currentSlug = null) {
-  if (!imageUrl) return false;
-  const targetBase = path.basename(imageUrl).toLowerCase();
-  const blogPostsFile = path.join(__dirname, 'blog', 'posts.json');
-  if (fs.existsSync(blogPostsFile)) {
-    try {
-      const blogPosts = JSON.parse(fs.readFileSync(blogPostsFile, 'utf8'));
-      for (const p of blogPosts) {
-        if (currentSlug && p.slug === currentSlug) continue;
-        const pImg = p.imageUrl || p.image || '';
-        if (pImg && path.basename(pImg).toLowerCase() === targetBase) {
-          return true;
-        }
-      }
-    } catch (e) {}
-  }
-  return false;
+  return isImageAlreadyUsed(imageUrl, currentSlug);
 }
 
 async function executePostPublish(post) {
@@ -1134,6 +1126,9 @@ async function executePostPublish(post) {
     if (!post.imageUrl) {
       throw new Error(`[ZeroReuseGuard] Cannot publish social card "${post.title}" without post.imageUrl.`);
     }
+    if (isImageAlreadyUsed(post.imageUrl, post.id)) {
+      throw new Error(`[ZeroMediaReuseGuard] HARD BLOCK: Image "${cleanBasename(post.imageUrl)}" has already been used in an existing article or post. Recycling visual assets is STRICTLY FORBIDDEN per Workspace Guidelines.`);
+    }
 
     const captionText = `${post.title}\n\n${post.narrativeBody || post.hook}\n\nTry Missed Call Auto SMS free for 3 days ($0.00 today) at missedcallautosms.com`;
 
@@ -1184,12 +1179,19 @@ async function executePostPublish(post) {
   // ─────────────────────────────────────────────────────────────
   else if (format === 'reel_video') {
     let videoUrl = post.videoUrl;
-    if (!videoUrl || !videoUrl.startsWith('http')) {
-      if (post.videoAsset) {
-        videoUrl = `https://raw.githubusercontent.com/anthonyfullerink-ai/MCASMS/main/${post.videoAsset}`;
-      } else {
-        videoUrl = `https://raw.githubusercontent.com/anthonyfullerink-ai/MCASMS/main/assets/ads/v150_ai_voice_launch_reel_9x16.mp4`;
-      }
+    if (!videoUrl && post.videoAsset) {
+      videoUrl = post.videoAsset.startsWith('http')
+        ? post.videoAsset
+        : `https://raw.githubusercontent.com/anthonyfullerink-ai/MCASMS/main/${post.videoAsset}`;
+    }
+
+    // MANDATORY ZERO-VIDEO-REUSE HARDCODED GUARD
+    if (!videoUrl) {
+      throw new Error(`[ZeroVideoReuseGuard] HARD BLOCK: Cannot publish reel "${post.title}" because neither post.videoUrl nor post.videoAsset is provided. Every reel MUST have a 100% unique, bespoke video.`);
+    }
+
+    if (isVideoAlreadyUsed(videoUrl, post.id)) {
+      throw new Error(`[ZeroVideoReuseGuard] HARD BLOCK: Video "${cleanBasename(videoUrl)}" has already been used in an existing post/slot. Recycling video assets is STRICTLY FORBIDDEN per Workspace Guidelines.`);
     }
     const coverUrl = post.imageUrl || `https://raw.githubusercontent.com/anthonyfullerink-ai/MCASMS/main/assets/social/contractor-speed-rule.jpg`;
     const reelCaption = `${post.title}\n\n${post.narrativeBody || post.hook}\n\nTry Missed Call Auto SMS free for 3 days ($0.00 today) - link in bio!`;
@@ -5906,17 +5908,23 @@ async function runOmnichannelSchedulerBackgroundCheck() {
 
 server.listen(PORT, '0.0.0.0', () => {
   console.log(`Server running at http://localhost:${PORT}/ and http://10.0.0.65:${PORT}/`);
-  // Start active omnichannel auto-scheduler daemon (checks every 60s)
-  setInterval(runOmnichannelSchedulerBackgroundCheck, 60000);
-  setTimeout(runOmnichannelSchedulerBackgroundCheck, 3000);
+  const enableLocalScheduler = process.argv.includes('--with-scheduler') || process.env.ENABLE_LOCAL_SCHEDULER === 'true';
+  if (enableLocalScheduler) {
+    console.log('⚡ [LOCAL SCHEDULER ACTIVE] Running local dev scheduler loop.');
+    setInterval(runOmnichannelSchedulerBackgroundCheck, 60000);
+    setTimeout(runOmnichannelSchedulerBackgroundCheck, 3000);
+  } else {
+    console.log('🌐 [CLOUD PRODUCTION] Live scheduling & social automation runs serverlessly on https://missedcallautosms.com via Netlify Functions & GitHub Actions (Zero local machine dependency).');
+  }
 });
 
 // ═══════════════════════════════════════════════════════════════════
-//  AUTONOMOUS DAILY SOCIAL AUTOMATION SCHEDULER
-//  Slots: 9:00 AM (morning blog), 12:30 PM (lunch feed), 6:00 PM (evening reel+story)
-//  All times in US Eastern Time (UTC-4 EDT / UTC-5 EST)
+//  OPTIONAL LOCAL DEV SOCIAL SCHEDULER (Only if --with-scheduler)
 // ═══════════════════════════════════════════════════════════════════
 (function startSocialScheduler() {
+  const enableLocalScheduler = process.argv.includes('--with-scheduler') || process.env.ENABLE_LOCAL_SCHEDULER === 'true';
+  if (!enableLocalScheduler) return;
+
   const { publishMorningBlog, publishLunchFeedPost, publishEveningReelAndStory } = require('./scripts/publish_omnichannel');
   const { generateDailyContentBundle } = require('./scripts/generate_daily_content');
 
@@ -5932,11 +5940,10 @@ server.listen(PORT, '0.0.0.0', () => {
     const now = new Date();
     const et = nowEastern();
     const todayTarget = new Date(now);
-    // Compute offset delta: (targetHour:targetMinute ET) - now UTC
     const deltaHours = targetHour - et.getHours();
     const deltaMins = targetMinute - et.getMinutes();
     const deltaMs = (deltaHours * 60 + deltaMins) * 60 * 1000 - (et.getSeconds() * 1000 + et.getMilliseconds());
-    return deltaMs > 0 ? deltaMs : deltaMs + 24 * 60 * 60 * 1000; // wrap to next day
+    return deltaMs > 0 ? deltaMs : deltaMs + 24 * 60 * 60 * 1000;
   }
 
   const histPath = path.join(__dirname, 'data/social_publish_history.json');
@@ -5999,12 +6006,10 @@ server.listen(PORT, '0.0.0.0', () => {
           console.error(`❌ [SCHEDULER] "${slotName}" error:`, err.message);
         }
       }
-      // Re-schedule for same time tomorrow
       setTimeout(tick, msTilNextEastern(targetHour, targetMin));
     }, delay);
   }
 
-  // Wire up all 3 daily slots from settings or defaults
   let slotTimes = ["09:00", "13:00", "18:00"];
   try {
     const ceSettingsFile = path.join(__dirname, 'data/content_engine_settings.json');
@@ -6024,5 +6029,5 @@ server.listen(PORT, '0.0.0.0', () => {
   scheduleSlot('lunch',   lH, lM, publishLunchFeedPost);
   scheduleSlot('evening', eH, eM, publishEveningReelAndStory);
 
-  console.log(`✅ [SCHEDULER] Daily social automation active (${slotTimes[0]} / ${slotTimes[1]} / ${slotTimes[2]} ET)`);
+  console.log(`✅ [SCHEDULER] Local social dev scheduler active (${slotTimes[0]} / ${slotTimes[1]} / ${slotTimes[2]} ET)`);
 })();

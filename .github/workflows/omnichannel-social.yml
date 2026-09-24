@@ -85,10 +85,10 @@ jobs:
           git config --global user.name "github-actions[bot]"
           git config --global user.email "github-actions[bot]@users.noreply.github.com"
           
-          if [ -n "$(git status --porcelain blog sitemap.xml data/ assets/social)" ]; then
-            echo "📝 Committing updated blog and social data..."
-            git add blog/ sitemap.xml data/ assets/social/
-            git commit -m "feat(social): update daily blog and omnichannel buffer"
+          if [ -n "$(git status --porcelain blog sitemap.xml data/ assets/social assets/ads/reels)" ]; then
+            echo "📝 Committing updated blog, social data, and bespoke reels..."
+            git add blog/ sitemap.xml data/ assets/social/ assets/ads/reels/
+            git commit -m "feat(social): update daily blog, omnichannel buffer, and bespoke reels"
             git push origin main
             echo "✅ Successfully synced to repository!"
           else

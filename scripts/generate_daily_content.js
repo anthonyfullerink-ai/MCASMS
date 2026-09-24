@@ -235,7 +235,7 @@ function generateOfflineFallback(pillarConfig, trend, dateStr) {
     },
     reelStory: {
       hook: `Every missed call during a client session is lost revenue down the street.`,
-      videoAsset: 'assets/ads/v150_ai_voice_launch_reel_9x16.mp4',
+      videoAsset: `assets/ads/reels/reel_${pillarConfig.trade.toLowerCase().replace(/[^a-z0-9]/g, '_')}_${dateStr}_9x16.mp4`,
       coverAsset: 'assets/social/v1-5-0-ai-voice-assistant-launch.jpg',
       aspectRatio: '9:16',
       captionInstagram: `When your hands are full with a client, you can't touch the phone. Missed Call Auto SMS replies in 15 seconds directly from your real SIM. Zero monthly fees. Link in bio! 📲 #${pillarConfig.trade.replace(/[^a-zA-Z]/g, '').toLowerCase()} #speedtolead #smallbusiness`,
@@ -313,7 +313,7 @@ Generate a complete, cohesive multi-format daily publishing package in JSON with
   },
   "reelStory": {
     "hook": "1-sentence video hook tailored to ${pillarConfig.trade}",
-    "videoAsset": "assets/ads/v150_ai_voice_launch_reel_9x16.mp4",
+    "videoAsset": "assets/ads/reels/reel_${pillarConfig.trade.toLowerCase().replace(/[^a-z0-9]/g, '_')}_${dateStr}_9x16.mp4",
     "coverAsset": "assets/social/v1-5-0-ai-voice-assistant-launch.jpg",
     "aspectRatio": "9:16",
     "captionInstagram": "Short punchy Reel caption with link in bio callout",
@@ -329,6 +329,32 @@ Generate a complete, cohesive multi-format daily publishing package in JSON with
     }
   } else {
     bundle = generateOfflineFallback(pillarConfig, primaryTrend, dateStr);
+  }
+
+  // Ensure unique bespoke 9:16 reel is rendered locally on disk
+  try {
+    const { buildBespokeReel } = require('./build_bespoke_reel');
+    const { isVideoAlreadyUsed } = require('./media_guard');
+    const tradeSlug = (bundle.trade || 'contractor').toLowerCase().replace(/[^a-z0-9]/g, '_');
+    const targetVideo = bundle.reelStory && bundle.reelStory.videoAsset
+      ? bundle.reelStory.videoAsset
+      : `assets/ads/reels/reel_${tradeSlug}_${dateStr}_9x16.mp4`;
+
+    const fullVideoPath = path.join(__dirname, '..', targetVideo);
+    if (!fs.existsSync(fullVideoPath) || isVideoAlreadyUsed(targetVideo)) {
+      console.log(`🎬 Rendering bespoke 9:16 vertical video reel for ${bundle.trade}...`);
+      const bespoke = await buildBespokeReel({
+        id: `${tradeSlug}_${dateStr}_${Date.now()}`,
+        title: bundle.feedPost?.headline || `Never Lose Another ${bundle.trade} Client`,
+        hook: bundle.reelStory?.hook || 'Every missed call is lost revenue down the street.',
+        narrativeBody: bundle.reelStory?.captionFacebook || 'Missed Call Auto SMS replies in 15 seconds.',
+        trade: bundle.trade,
+        imageAsset: bundle.reelStory?.coverAsset
+      });
+      bundle.reelStory.videoAsset = bespoke.relative;
+    }
+  } catch (reelErr) {
+    console.warn(`⚠️ Could not pre-render bespoke reel: ${reelErr.message}`);
   }
 
   // Ensure data directory exists

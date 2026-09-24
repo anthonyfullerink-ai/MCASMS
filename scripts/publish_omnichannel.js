@@ -2,6 +2,8 @@ const fs = require('fs');
 const path = require('path');
 const https = require('https');
 const { generateDailyContentBundle } = require('./generate_daily_content');
+const { isVideoAlreadyUsed, isImageAlreadyUsed, cleanBasename, assertUniqueMedia } = require('./media_guard');
+const { buildBespokeReel } = require('./build_bespoke_reel');
 
 // Load environment variables safely
 function loadEnv() {
@@ -400,8 +402,33 @@ async function publishEveningReelAndStory(bundle, isDryRun) {
   console.log(`Trade Focus: ${bundle.trade}`);
   console.log(`Video Asset: ${bundle.reelStory.videoAsset} (${bundle.reelStory.aspectRatio})`);
 
-  const videoUrl = `https://raw.githubusercontent.com/anthonyfullerink-ai/MCASMS/main/${bundle.reelStory.videoAsset}`;
-  const coverUrl = `https://raw.githubusercontent.com/anthonyfullerink-ai/MCASMS/main/${bundle.reelStory.coverAsset}`;
+  // ZERO-VIDEO-REUSE HARDCODED ENFORCEMENT
+  let localVideoPath = path.join(__dirname, '..', bundle.reelStory.videoAsset || '');
+  if (!bundle.reelStory.videoAsset || isVideoAlreadyUsed(bundle.reelStory.videoAsset) || !fs.existsSync(localVideoPath)) {
+    console.log(`⚠️ [ZeroVideoReuseGuard] Video "${cleanBasename(bundle.reelStory.videoAsset)}" was previously used or is missing. Auto-generating bespoke unique 9:16 reel for ${bundle.trade}...`);
+    const dateTag = new Date().toISOString().split('T')[0];
+    const tradeSlug = bundle.trade.toLowerCase().replace(/[^a-z0-9]/g, '_');
+    const bespoke = await buildBespokeReel({
+      id: `${tradeSlug}_${dateTag}_${Date.now()}`,
+      title: bundle.feedPost?.headline || `Never Lose Another ${bundle.trade} Client`,
+      hook: bundle.reelStory.hook,
+      narrativeBody: bundle.reelStory.captionFacebook,
+      trade: bundle.trade,
+      imageAsset: bundle.reelStory.coverAsset
+    });
+    bundle.reelStory.videoAsset = bespoke.relative;
+  }
+
+  if (isVideoAlreadyUsed(bundle.reelStory.videoAsset)) {
+    throw new Error(`[ZeroVideoReuseGuard] HARD BLOCK: Video "${cleanBasename(bundle.reelStory.videoAsset)}" has already been published. Aborting to protect media uniqueness mandate.`);
+  }
+
+  const videoUrl = bundle.reelStory.videoAsset.startsWith('http')
+    ? bundle.reelStory.videoAsset
+    : `https://raw.githubusercontent.com/anthonyfullerink-ai/MCASMS/main/${bundle.reelStory.videoAsset}`;
+  const coverUrl = bundle.reelStory.coverAsset.startsWith('http')
+    ? bundle.reelStory.coverAsset
+    : `https://raw.githubusercontent.com/anthonyfullerink-ai/MCASMS/main/${bundle.reelStory.coverAsset}`;
 
   if (isDryRun) {
     console.log('✔ [DRY RUN] Instagram Reel simulated with 9:16 vertical video');
@@ -560,7 +587,154 @@ async function run() {
     await publishEveningReelAndStory(bundle, isDryRun);
   }
 
+  // Also process any due approved posts from content_engine_queue.json
+  await checkAndPublishContentEngineQueue(isDryRun);
+
   console.log('\n🏁 Omnichannel execution finished.');
+}
+
+async function checkAndPublishContentEngineQueue(isDryRun) {
+  const queuePath = path.join(__dirname, '../data/content_engine_queue.json');
+  const pubHistPath = path.join(__dirname, '../data/published_history.json');
+  if (!fs.existsSync(queuePath)) return;
+
+  try {
+    let queue = JSON.parse(fs.readFileSync(queuePath, 'utf8'));
+    const now = new Date();
+    let updated = false;
+
+    for (const post of queue) {
+      const isApproved = post.status === 'approved';
+      const isDue = post.scheduledFor && new Date(post.scheduledFor) <= now;
+      const isNotPublished = post.status !== 'published' && !post.publishedAt;
+
+      if (isApproved && isDue && isNotPublished) {
+        console.log(`\n🚀 [CloudContentEngine] Publishing due approved post: "${post.title}"...`);
+        if (isDryRun) {
+          console.log(`   [DRY RUN] Simulated publish for: ${post.title}`);
+          continue;
+        }
+
+        try {
+          assertUniqueMedia(post);
+
+          const channels = post.channelTargets || ['facebook', 'instagram'];
+          let socialResults = { facebook: null, instagram: null };
+
+          if (post.format === 'blog_article') {
+            const slug = (post.title || 'article').toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/(^-|-$)/g, '');
+            const articleUrl = `https://missedcallautosms.com/blog/${slug}`;
+            if (channels.includes('facebook') && TOKEN) {
+              const fbRes = await postGraphApi(`/v20.0/${FB_PAGE_ID}/feed`, {
+                message: `📢 New Article Published!\n\n${post.title}\n\n${post.hook || ''}\n\n👉 Read the full breakdown: ${articleUrl}`,
+                link: articleUrl,
+                access_token: TOKEN
+              });
+              socialResults.facebook = { success: true, id: fbRes.id };
+            }
+          } else if (post.format === 'social_card' || post.format === 'feed_post') {
+            const caption = `${post.title}\n\n${post.narrativeBody || post.hook}\n\nTry Missed Call Auto SMS free for 3 days ($0.00 today) at missedcallautosms.com`;
+            if (channels.includes('facebook') && TOKEN) {
+              const fbRes = await postGraphApi(`/v20.0/${FB_PAGE_ID}/photos`, {
+                url: post.imageUrl,
+                caption: caption,
+                access_token: TOKEN
+              });
+              socialResults.facebook = { success: true, id: fbRes.id };
+            }
+            if (channels.includes('instagram') && TOKEN) {
+              const container = await postGraphApi(`/v20.0/${IG_USER_ID}/media`, {
+                image_url: post.imageUrl,
+                caption: caption,
+                access_token: TOKEN
+              });
+              await new Promise(r => setTimeout(r, 3000));
+              const igRes = await postGraphApi(`/v20.0/${IG_USER_ID}/media_publish`, {
+                creation_id: container.id,
+                access_token: TOKEN
+              });
+              socialResults.instagram = { success: true, id: igRes.id };
+            }
+          } else if (post.format === 'reel_video') {
+            let videoUrl = post.videoUrl;
+            if (!videoUrl && post.videoAsset) {
+              videoUrl = post.videoAsset.startsWith('http')
+                ? post.videoAsset
+                : `https://raw.githubusercontent.com/anthonyfullerink-ai/MCASMS/main/${post.videoAsset}`;
+            }
+            const coverUrl = post.imageUrl || 'https://raw.githubusercontent.com/anthonyfullerink-ai/MCASMS/main/assets/social/contractor-speed-rule.jpg';
+            const reelCaption = `${post.title}\n\n${post.narrativeBody || post.hook}\n\nTry Missed Call Auto SMS free for 3 days ($0.00 today) - link in bio!`;
+
+            if (channels.includes('facebook') && TOKEN) {
+              const fbRes = await postGraphApi(`/v20.0/${FB_PAGE_ID}/videos`, {
+                file_url: videoUrl,
+                title: post.title,
+                description: reelCaption,
+                access_token: TOKEN
+              });
+              socialResults.facebook = { success: true, id: fbRes.id };
+            }
+            if (channels.includes('instagram') && TOKEN) {
+              const container = await postGraphApi(`/v20.0/${IG_USER_ID}/media`, {
+                media_type: 'REELS',
+                video_url: videoUrl,
+                cover_url: coverUrl,
+                caption: reelCaption,
+                share_to_feed: true,
+                access_token: TOKEN
+              });
+              const delays = [4000, 6000, 8000, 10000, 15000];
+              let ready = false;
+              for (const d of delays) {
+                await new Promise(r => setTimeout(r, d));
+                const s = await getGraphApi(`/v20.0/${container.id}?fields=status_code,status&access_token=${TOKEN}`);
+                const sc = (s.status_code || s.status || '').toUpperCase();
+                if (sc === 'FINISHED' || sc === 'READY') { ready = true; break; }
+              }
+              if (ready) {
+                const igRes = await postGraphApi(`/v20.0/${IG_USER_ID}/media_publish`, {
+                  creation_id: container.id,
+                  access_token: TOKEN
+                });
+                socialResults.instagram = { success: true, id: igRes.id };
+              }
+            }
+          }
+
+          post.status = 'published';
+          post.publishedAt = now.toISOString();
+          post.publishedVia = 'cloud_actions_scheduler';
+          updated = true;
+
+          let pubHist = [];
+          if (fs.existsSync(pubHistPath)) {
+            try { pubHist = JSON.parse(fs.readFileSync(pubHistPath, 'utf8')); } catch (e) {}
+          }
+          pubHist.unshift({
+            id: post.id,
+            title: post.title,
+            format: post.format,
+            imageUrl: post.imageUrl,
+            videoUrl: post.videoUrl || post.videoAsset,
+            publishedAt: now.toISOString(),
+            channels,
+            niche: post.niche,
+            socialResults
+          });
+          fs.writeFileSync(pubHistPath, JSON.stringify(pubHist, null, 2), 'utf8');
+          console.log(`✅ [CloudContentEngine] Successfully published "${post.title}" to channels!`);
+        } catch (postErr) {
+          console.error(`❌ [CloudContentEngine] Failed to publish post "${post.title}":`, postErr.message);
+        }
+      }
+    }
+
+    if (updated) {
+      fs.writeFileSync(queuePath, JSON.stringify(queue, null, 2), 'utf8');
+    }
+  } catch (err) {
+    console.warn(`[CloudContentEngine] Error checking queue: ${err.message}`);
+  }
 }
 
 if (require.main === module) {

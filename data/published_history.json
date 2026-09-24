@@ -1,5 +1,31 @@
 [
   {
+    "id": "angle-1790185169076-reel",
+    "title": "Why Voicemail Is Dead for Emergency Contractors (9:16 Reel)",
+    "slug": null,
+    "format": "reel_video",
+    "imageUrl": "https://raw.githubusercontent.com/anthonyfullerink-ai/MCASMS/main/assets/social/voicemail-dead-ceiling-leak.jpg",
+    "videoUrl": "assets/ads/v150_ai_voice_launch_reel_9x16.mp4",
+    "publishedAt": "2026-09-24T22:00:54.248Z",
+    "channels": [
+      "facebook",
+      "instagram"
+    ],
+    "niche": "Plumbing & Emergency Trades",
+    "socialResults": {
+      "facebook": {
+        "success": true,
+        "id": "1623777009210758",
+        "retriedAt": "2026-09-24T22:53:44.699Z"
+      },
+      "instagram": {
+        "success": true,
+        "id": "17867080863662041",
+        "retriedAt": "2026-09-24T22:51:37.279Z"
+      }
+    }
+  },
+  {
     "id": "angle-1790185169076-blog",
     "title": "The $3,500 Cloud Telephony Trap: Why Local Contractors Are Ditching SaaS for Dedicated Hardware",
     "slug": "the-3-500-cloud-telephony-trap-why-local-contractors-are-ditching-saas-for-dedicated-hardware",
@@ -13,8 +39,9 @@
     "niche": "Appliance vs. SaaS Math",
     "socialResults": {
       "facebook": {
-        "success": false,
-        "error": "HTTP 400: Error validating access token: Session has expired on Wednesday, 23-Sep-26 12:00:00 PDT. The current time is Thursday, 24-Sep-26 13:20:30 PDT."
+        "success": true,
+        "id": "1248332278370968_122103935631483785",
+        "retriedAt": "2026-09-24T22:53:52.136Z"
       },
       "instagram": null
     }
@@ -33,12 +60,14 @@
     "niche": "Contractor Speed-to-Lead",
     "socialResults": {
       "facebook": {
-        "success": false,
-        "error": "HTTP 400: Error validating access token: Session has expired on Wednesday, 23-Sep-26 12:00:00 PDT. The current time is Thursday, 24-Sep-26 10:00:59 PDT."
+        "success": true,
+        "id": "122103935649483785",
+        "retriedAt": "2026-09-24T22:53:57.327Z"
       },
       "instagram": {
-        "success": false,
-        "error": "HTTP 400: Error validating access token: Session has expired on Wednesday, 23-Sep-26 12:00:00 PDT. The current time is Thursday, 24-Sep-26 10:00:59 PDT."
+        "success": true,
+        "id": "17906275995484513",
+        "retriedAt": "2026-09-24T22:51:49.465Z"
       }
     }
   },
