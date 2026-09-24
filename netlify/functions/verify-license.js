@@ -142,6 +142,12 @@ exports.handler = async (event) => {
         packPriceDollars: 10.00,
         packMinutes: 40,
         checkoutCreditPackUrl: 'https://buy.stripe.com/5kA8wPfRY0PS6M014f',
+        creditPackTiers: [
+          { id: 'pack_10', name: 'Starter Pack', price: 10.00, minutes: 40, ratePerMin: 0.250, discountPct: 0, url: 'https://buy.stripe.com/5kA8wPfRY0PS6M014f' },
+          { id: 'pack_25', name: 'Growth Pack (+15 Free Mins)', price: 25.00, minutes: 115, ratePerMin: 0.217, discountPct: 13, bonusMinutes: 15, url: 'https://missedcallautosms.com/api/create-credit-pack-checkout?pack=25' },
+          { id: 'pack_50', name: 'Pro Contractor (+50 Free Mins)', price: 50.00, minutes: 250, ratePerMin: 0.200, discountPct: 20, bonusMinutes: 50, url: 'https://missedcallautosms.com/api/create-credit-pack-checkout?pack=50' },
+          { id: 'pack_100', name: 'Fleet Pack (+150 Free Mins)', price: 100.00, minutes: 550, ratePerMin: 0.181, discountPct: 28, bonusMinutes: 150, url: 'https://missedcallautosms.com/api/create-credit-pack-checkout?pack=100' }
+        ],
         activationPrompt: activationPrompt,
         vapiAssistantId: vapiAssistantId,
         vapiPhoneNumberId: vapiPhoneNumberId,

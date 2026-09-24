@@ -843,13 +843,24 @@
                 <option value="0.00|14|FREE_TRIAL">⏳ 14-Day Free Demo ($0.00)</option>
             </select>
 
-            <div id="voiceAddonOptionWrap" style="margin-top: 14px; padding: 12px; background: rgba(168,85,247,0.08); border: 1px solid rgba(168,85,247,0.3); border-radius: 10px;">
-                <label style="display: flex; align-items: center; gap: 10px; cursor: pointer; color: #FFF; font-weight: 700; margin: 0;">
-                    <input type="checkbox" id="checkIssueVoiceAddon" checked style="width: 18px; height: 18px; accent-color: #A855F7;">
-                    <span id="lblVoiceAddon">🎙️ Enable 24/7 AI Voice Receptionist ($9.99/mo)</span>
-                </label>
-                <div id="descVoiceAddon" style="font-size: 11px; color: #CBD5E0; margin-top: 6px; padding-left: 28px;">
-                    Unlocks AI Voice settings in app. Dedicated phone line and *71 carrier code activate when first $10 credit pack (40 min) is loaded.
+            <div style="margin-top: 14px; padding: 14px; background: rgba(168,85,247,0.08); border: 1px solid rgba(168,85,247,0.3); border-radius: 10px; display: flex; flex-direction: column; gap: 12px;">
+                <div>
+                    <label style="display: flex; align-items: center; gap: 10px; cursor: pointer; color: #FFF; font-weight: 700; margin: 0;">
+                        <input type="checkbox" id="checkIssueProComp" style="width: 18px; height: 18px; accent-color: #A855F7;">
+                        <span>🛠️ Lifetime Pro Automations (Comp Pro License • MCAS-PRO-)</span>
+                    </label>
+                    <div style="font-size: 11px; color: #CBD5E0; margin-top: 4px; padding-left: 28px;">
+                        Grants unlimited webhooks, CRM sync, dual SIM routing, and unmetered cloud relay API.
+                    </div>
+                </div>
+                <div>
+                    <label style="display: flex; align-items: center; gap: 10px; cursor: pointer; color: #FFF; font-weight: 700; margin: 0;">
+                        <input type="checkbox" id="checkIssueVoiceAddon" checked style="width: 18px; height: 18px; accent-color: #00E676;">
+                        <span id="lblVoiceAddon">🎙️ Waive $9.99/mo Voice &amp; Pro Subscription (Free All-Access Waiver)</span>
+                    </label>
+                    <div id="descVoiceAddon" style="font-size: 11px; color: #CBD5E0; margin-top: 4px; padding-left: 28px;">
+                        Unlocks AI Voice Hub &amp; Pro features in app. <strong>$0 COGS to you</strong>: Dedicated line and *71 code activate when caller loads their first credit pack ($10+).
+                    </div>
                 </div>
             </div>
 
@@ -2145,8 +2156,9 @@
                 `;
             } else {
                 actionButtons = `
-                    <button class="btn-action" style="color: ${isPro ? '#C084FC' : 'var(--primary)'};" onclick="triggerEmailForKey('${r.key}')">📧 Email ${isPro ? 'Pro APK' : 'APK'}</button>
+                    <button class="btn-action" style="color: ${isPro ? '#C084FC' : 'var(--primary)'};" onclick="triggerEmailForKey('${r.key}')">📧 Email APK</button>
                     <button class="btn-action" onclick="resetDevice('${r.key}')" ${isRevoked ? 'disabled' : ''}>Reset Lock</button>
+                    <button class="btn-action" style="color: #00E676;" onclick="promptReloadCredits('${r.key}', '${escapeHtml(r.name)}')">💳 Credit Pack</button>
                     ${isPro ? `<button class="btn-action" style="color: #38BDF8;" onclick="toggleVoiceForKey('${r.key}')">${r.voiceActive ? 'Pause Voice' : '🎙️ Attach Voice'}</button>` : ''}
                     <button class="btn-action btn-danger" onclick="toggleRevokeKey('${r.key}')">${isRevoked ? 'Reactivate' : 'Revoke'}</button>
                 `;
@@ -3716,7 +3728,56 @@ ${isVoiceActive ? `🎙️ AI Voice Receptionist Line: ${voiceNumber}\n📲 Acti
         alert(`Voice Pro status for ${rec.name} (${key}): ${rec.voiceActive ? '🎙️ BOUND & ACTIVE (+1 555-349-2810)' : 'PAUSED / INACTIVE'}`);
     }
 
-    async function toggleRevokeKey(key) {
+    async async function promptReloadCredits(key, name) {
+    const choice = prompt(
+        `💳 RELOAD AI VOICE CREDITS FOR: ${name} (${key})\n\n` +
+        `Select Pack Tier to Credit:\n` +
+        `1 = Starter Pack (+40 mins • $10)\n` +
+        `2 = Growth Pack (+115 mins • $25)\n` +
+        `3 = Pro Contractor (+250 mins • $50)\n` +
+        `4 = Fleet Volume (+550 mins • $100)\n` +
+        `Or enter custom minute count (e.g. 100):`,
+        '1'
+    );
+    if (!choice) return;
+
+    let mins = 40;
+    let packName = 'Starter Pack (40 mins)';
+    if (choice === '1') { mins = 40; packName = 'Starter Pack (40 mins)'; }
+    else if (choice === '2') { mins = 115; packName = 'Growth Pack (115 mins)'; }
+    else if (choice === '3') { mins = 250; packName = 'Pro Contractor (250 mins)'; }
+    else if (choice === '4') { mins = 550; packName = 'Fleet Volume (550 mins)'; }
+    else {
+        const parsed = parseFloat(choice);
+        if (isNaN(parsed) || parsed <= 0) { alert('Invalid minutes entered.'); return; }
+        mins = parsed;
+        packName = `Custom Pack (${mins} mins)`;
+    }
+
+    try {
+        const res = await safeFetchJson('/api/vapi/topup-minutes', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ licenseKey: key, minutes: mins })
+        });
+
+        const records = getStore();
+        const rec = records.find(r => r.key === key);
+        if (rec) {
+            rec.voiceMinutesBalance = Math.round(((rec.voiceMinutesBalance || 0) + mins) * 100) / 100;
+            rec.voiceActive = true;
+            rec.vapiProvisioned = true;
+            saveStore(records);
+            renderLicenses();
+        }
+
+        alert(`🎉 Successfully credited +${mins} minutes (${packName}) to ${name} (${key})!\n\nNew Balance: ${res.newBalance || (rec ? rec.voiceMinutesBalance : mins)} mins.`);
+    } catch (e) {
+        alert(`Failed to apply credit reload: ${e.message}`);
+    }
+}
+
+function toggleRevokeKey(key) {
         const records = getStore();
         const rec = records.find(r => r.key === key);
         if (!rec) return;
@@ -3783,9 +3844,16 @@ ${isVoiceActive ? `🎙️ AI Voice Receptionist Line: ${voiceNumber}\n📲 Acti
         const isFree = (price === 0 || typeTag.includes('FREE'));
         const isPro = typeTag.includes('PRO') || typeTag.includes('AGENCY');
         const isAgency = typeTag.includes('AGENCY');
+        const checkProComp = document.getElementById('checkIssueProComp');
         const checkVoice = document.getElementById('checkIssueVoiceAddon');
+        const compProChecked = !!(checkProComp && checkProComp.checked);
         const voiceEntitlement = !!(checkVoice && checkVoice.checked);
         const voiceSubWaived = isFree && voiceEntitlement;
+        if (compProChecked) {
+            isPro = true;
+            tier = 'PRO';
+            prefix = 'MCAS-PRO-';
+        }
 
         const nowSec = Math.floor(Date.now() / 1000);
         const expiryTs = days === 0 ? 0 : nowSec + (days * 86400);

@@ -826,11 +826,18 @@ exports.handler = async (event) => {
       return { statusCode: 200, body: JSON.stringify({ received: true, warning: 'No email found' }) };
     }
 
-    // 0. Voice Credit Pack ($10.00 / 40 min auto reload)
-    const isCreditPack = (amountTotal === 1000) || (session.metadata && (
-      session.metadata.tier === 'credit_pack' ||
-      session.metadata.tier === 'voice_credits'
-    ));
+    // 0. Voice Credit Pack ($10: 40m, $25: 115m, $50: 250m, $100: 550m)
+    const isCreditPack = (
+      (amountTotal === 1000) ||
+      (amountTotal === 2500) ||
+      (amountTotal === 5000) ||
+      (amountTotal === 10000) ||
+      (session.metadata && (
+        session.metadata.tier === 'credit_pack' ||
+        session.metadata.tier === 'voice_credits' ||
+        session.metadata.service === 'voice_credit_reload'
+      ))
+    );
 
     // 1. AI Voice Add-on ($9.99/mo with 15 free test minutes)
     const isVoiceAddon = !isCreditPack && (
@@ -895,10 +902,29 @@ exports.handler = async (event) => {
     const refCode = (session.metadata && (session.metadata.referral_code || session.metadata.ref || session.metadata.aff)) ||
                     (session.client_reference_id && !session.client_reference_id.startsWith('MCAS-') && !session.client_reference_id.toLowerCase().includes('pro') ? session.client_reference_id : null);
 
+    // Determine credit pack tier and minutes if applicable
+    let creditPackMinutes = 40;
+    let creditPackCost = 10.00;
+    if (isCreditPack) {
+      if (amountTotal === 2500 || (session.metadata && session.metadata.pack_tier === 'pack_25')) {
+        creditPackMinutes = 115;
+        creditPackCost = 25.00;
+      } else if (amountTotal === 5000 || (session.metadata && session.metadata.pack_tier === 'pack_50')) {
+        creditPackMinutes = 250;
+        creditPackCost = 50.00;
+      } else if (amountTotal === 10000 || (session.metadata && session.metadata.pack_tier === 'pack_100')) {
+        creditPackMinutes = 550;
+        creditPackCost = 100.00;
+      } else if (session.metadata && session.metadata.minutes) {
+        creditPackMinutes = parseInt(session.metadata.minutes, 10) || 40;
+        if (amountTotal > 0) creditPackCost = amountTotal / 100;
+      }
+    }
+
     if (refCode && !isTrial) {
       let prodType = 'base_appliance';
       let gross = 49.99;
-      if (isCreditPack) { prodType = 'credit_pack'; gross = 10.00; }
+      if (isCreditPack) { prodType = 'credit_pack'; gross = creditPackCost; }
       else if (isVoiceAddon) { prodType = 'voice_addon'; gross = 9.99; }
       else if (isProUpgrade) { prodType = 'pro_upgrade'; gross = 249.99; }
       else if (isProGateway) { prodType = 'pro_gateway'; gross = 299.99; }
@@ -920,9 +946,9 @@ exports.handler = async (event) => {
       }
     }
 
-    // === BRANCH 0A: $10 VOICE CREDIT PACK (+40 MINUTES & STAGE 2 TELEPHONY ACTIVATION) ===
+    // === BRANCH 0A: MULTI-TIER VOICE CREDIT PACK (STAGE 2 TELEPHONY ACTIVATION) ===
     if (isCreditPack) {
-      console.log(`💳 [STRIPE CREDIT PACK INGESTED] Crediting +40 minutes for ${customerEmail}`);
+      console.log(`💳 [STRIPE CREDIT PACK INGESTED] Crediting +${creditPackMinutes} minutes ($${creditPackCost.toFixed(2)}) for ${customerEmail}`);
       const candidateKey = (session.client_reference_id ||
                            (session.metadata && session.metadata.license_key) || '').trim().toUpperCase();
       const db = getFirestore();
@@ -960,7 +986,7 @@ exports.handler = async (event) => {
       }
 
       const currentBal = (existing && typeof existing.voiceMinutesBalance === 'number') ? existing.voiceMinutesBalance : 0;
-      const newBal = Math.round((currentBal + 40) * 100) / 100;
+      const newBal = Math.round((currentBal + creditPackMinutes) * 100) / 100;
       const targetKey = candidateKey || generateKey(customerName, 0, true);
 
       if (db) {
@@ -1018,13 +1044,13 @@ exports.handler = async (event) => {
             forwardingNumber,
             carrierCode,
             carrierDeactivateCode,
-            40,
-            "0.25"
+            creditPackMinutes,
+            (creditPackCost / creditPackMinutes).toFixed(3)
           );
           sendEmail(RESEND_API_KEY, customerEmail, emailSubject, emailHtml).catch(() => {});
         } else {
-          const emailSubject = `⚡ +40 AI Voice Minutes Added to Your Account ($10.00)`;
-          const emailHtml = generateCreditPackEmailHtml(customerName, 40, "10.00");
+          const emailSubject = `⚡ +${creditPackMinutes} AI Voice Minutes Added to Your Account ($${creditPackCost.toFixed(2)})`;
+          const emailHtml = generateCreditPackEmailHtml(customerName, creditPackMinutes, creditPackCost.toFixed(2));
           sendEmail(RESEND_API_KEY, customerEmail, emailSubject, emailHtml).catch(() => {});
         }
       }
@@ -1035,7 +1061,8 @@ exports.handler = async (event) => {
         body: JSON.stringify({
           received: true,
           type: 'voice_credit_pack',
-          minutesCredited: 40,
+          minutesCredited: creditPackMinutes,
+          packCost: creditPackCost,
           newBalance: newBal,
           firstTimeProvisioned: isFirstTimeProvisioning,
           forwardingNumber,

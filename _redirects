@@ -15,6 +15,7 @@
 /api/register-device /.netlify/functions/register-device 200
 /api/create-voice-pro-checkout /.netlify/functions/create-voice-pro-checkout 200
 /api/create-pro-checkout /.netlify/functions/create-pro-checkout 200
+/api/create-credit-pack-checkout /.netlify/functions/create-credit-pack-checkout 200
 /api/support/*      /.netlify/functions/support-gateway 200
 /api/support        /.netlify/functions/support-gateway 200
 /api/vapi/webhook   /.netlify/functions/vapi-webhook 200
@@ -44,5 +45,4 @@
 /voice                  /voice.html                 200
 /voice/                 /voice.html                 200
 /owner   /owner_admin_dashboard.html   200
-/   /voice.html   200
 

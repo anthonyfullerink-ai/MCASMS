@@ -1743,7 +1743,7 @@ const server = http.createServer((req, res) => {
           // AUTOMATION 2: Tier Determination ($9.99 Voice Add-On, $10 Credit Pack, $249 Upgrade, $299 Pro, $49.99 Base, or Legacy)
           const tierMeta = (metadata.tier || '').toLowerCase();
           const isVoiceAddon = (amountTotal === 999) || tierMeta === 'voice_addon' || tierMeta === 'voice_999';
-          const isCreditPack = (amountTotal === 1000) || tierMeta === 'credit_pack' || tierMeta === 'voice_credits';
+          const isCreditPack = (amountTotal === 1000) || (amountTotal === 2500) || (amountTotal === 5000) || (amountTotal === 10000) || tierMeta === 'credit_pack' || tierMeta === 'voice_credits' || tierMeta === 'voice_credit_reload';
           const isProUpgrade = (amountTotal === 24999) || tierMeta === 'pro_upgrade' || tierMeta === 'pro_upgrade_249';
           const isProGateway = (amountTotal === 29999) || (amountTotal === 29900) || tierMeta === 'pro_gateway' || tierMeta === 'pro_automation';
           const isFrontDesk = (amountTotal === 9900) || tierMeta === 'front_desk_bundle' || tierMeta === 'autonomous_front_desk';
@@ -1751,8 +1751,24 @@ const server = http.createServer((req, res) => {
           const isPro = isProGateway || isProUpgrade || isFrontDesk;
           const isBundle = isFrontDesk; // Stage 1 voice addon is now separate soft gate
 
-          // === STAGE 2: $10 Credit Pack (+40 minutes & 1st-Time Telephony Provisioning) ===
+          // === STAGE 2: Multi-Tier Credit Pack (+Minutes & 1st-Time Telephony Provisioning) ===
           if (isCreditPack) {
+            let creditPackMinutes = 40;
+            let creditPackCost = 10.00;
+            if (amountTotal === 2500 || metadata.pack_tier === 'pack_25') {
+              creditPackMinutes = 115;
+              creditPackCost = 25.00;
+            } else if (amountTotal === 5000 || metadata.pack_tier === 'pack_50') {
+              creditPackMinutes = 250;
+              creditPackCost = 50.00;
+            } else if (amountTotal === 10000 || metadata.pack_tier === 'pack_100') {
+              creditPackMinutes = 550;
+              creditPackCost = 100.00;
+            } else if (metadata.minutes) {
+              creditPackMinutes = parseInt(metadata.minutes, 10) || 40;
+              if (amountTotal > 0) creditPackCost = amountTotal / 100;
+            }
+
             const candidateKey = (session.client_reference_id || metadata.license_key || metadata.key || '').trim().toUpperCase();
             const subscribers = getVoiceSubscribers();
             let sub = subscribers.find(s => (candidateKey && s.licenseKey === candidateKey) || (customerEmail && s.email && s.email.toLowerCase() === customerEmail.toLowerCase()));
@@ -1774,7 +1790,7 @@ const server = http.createServer((req, res) => {
             }
 
             const currentBalance = (typeof sub?.voiceMinutesBalance === 'number') ? sub.voiceMinutesBalance : ((typeof masterLic?.voiceMinutesBalance === 'number') ? masterLic.voiceMinutesBalance : 0);
-            const newBalance = Math.round((currentBalance + 40) * 100) / 100;
+            const newBalance = Math.round((currentBalance + creditPackMinutes) * 100) / 100;
 
             const settings = getVoiceSettings();
             settings.voiceMinutesBalance = newBalance;
@@ -1816,7 +1832,7 @@ const server = http.createServer((req, res) => {
               status: 'ACTIVE'
             });
 
-            console.log(`💳 [STRIPE CREDIT PACK INGESTED] Credited +40 minutes for ${customerEmail}. New balance: ${newBalance} min (First-Time Telephony Provisioned: ${isFirstTimeProvisioning})`);
+            console.log(`💳 [STRIPE CREDIT PACK INGESTED] Credited +${creditPackMinutes} minutes ($${creditPackCost.toFixed(2)}) for ${customerEmail}. New balance: ${newBalance} min (First-Time Telephony Provisioned: ${isFirstTimeProvisioning})`);
 
             // Dispatch Email
             try {
@@ -1829,7 +1845,7 @@ const server = http.createServer((req, res) => {
                   forwardingNumber,
                   carrierCode,
                   carrierDeactivateCode,
-                  monthlyMinutesQuota: 40
+                  monthlyMinutesQuota: creditPackMinutes
                 });
                 const safeEmail = customerEmail.replace(/[^a-zA-Z0-9]/g, '_');
                 const fileName = `voice_provisioned_${Date.now()}_${safeEmail}.html`;
@@ -1840,13 +1856,13 @@ const server = http.createServer((req, res) => {
                     .catch(err => console.warn('Resend email error:', err.message));
                 }
               } else {
-                const emailHtml = generateCreditPackEmailHtml(customerName, 40, "10.00", newBalance);
+                const emailHtml = generateCreditPackEmailHtml(customerName, creditPackMinutes, creditPackCost.toFixed(2), newBalance);
                 const safeEmail = customerEmail.replace(/[^a-zA-Z0-9]/g, '_');
                 const fileName = `credit_pack_${Date.now()}_${safeEmail}.html`;
                 fs.writeFileSync(path.join(SENT_EMAILS_DIR, fileName), emailHtml, 'utf8');
 
                 if (resendKey) {
-                  sendResendEmail(resendKey, customerEmail, `⚡ +40 AI Voice Minutes Added to Your Account ($10.00)`, emailHtml)
+                  sendResendEmail(resendKey, customerEmail, `⚡ +${creditPackMinutes} AI Voice Minutes Added to Your Account ($${creditPackCost.toFixed(2)})`, emailHtml)
                     .catch(err => console.warn('Resend email error:', err.message));
                 }
               }
@@ -1862,7 +1878,7 @@ const server = http.createServer((req, res) => {
                 orderId: session.id,
                 customerEmail,
                 productType: 'credit_pack',
-                grossAmount: 10.00
+                grossAmount: creditPackCost
               });
             }
 
@@ -2291,6 +2307,12 @@ const server = http.createServer((req, res) => {
         packPriceDollars: 10.00,
         packMinutes: 40,
         checkoutCreditPackUrl: 'https://buy.stripe.com/5kA8wPfRY0PS6M014f',
+        creditPackTiers: [
+          { id: 'pack_10', name: 'Starter Pack', price: 10.00, minutes: 40, ratePerMin: 0.250, discountPct: 0, url: 'https://buy.stripe.com/5kA8wPfRY0PS6M014f' },
+          { id: 'pack_25', name: 'Growth Pack (+15 Free Mins)', price: 25.00, minutes: 115, ratePerMin: 0.217, discountPct: 13, bonusMinutes: 15, url: 'https://missedcallautosms.com/api/create-credit-pack-checkout?pack=25' },
+          { id: 'pack_50', name: 'Pro Contractor (+50 Free Mins)', price: 50.00, minutes: 250, ratePerMin: 0.200, discountPct: 20, bonusMinutes: 50, url: 'https://missedcallautosms.com/api/create-credit-pack-checkout?pack=50' },
+          { id: 'pack_100', name: 'Fleet Pack (+150 Free Mins)', price: 100.00, minutes: 550, ratePerMin: 0.181, discountPct: 28, bonusMinutes: 150, url: 'https://missedcallautosms.com/api/create-credit-pack-checkout?pack=100' }
+        ],
         activationPrompt: activationPrompt,
         type: key.includes('TRIAL') ? 'TRIAL' : (key.includes('DEMO') ? 'DEMO' : (voiceSubWaived ? 'FREE_VOICE_COMP' : 'PAID')),
         deviceId: boundDevice,
@@ -2663,24 +2685,63 @@ const server = http.createServer((req, res) => {
     return;
   }
 
-  // API: Top-Up $10 Voice Credit Pack (40 Minutes at $0.25/min)
+  // API: Top-Up Voice Credit Pack (Accepts optional { minutes, licenseKey, packTier })
   if ((relativePath === '/api/vapi/topup-minutes' || relativePath === '/api/vapi/topup-minutes/' || relativePath === '/api/vapi/buy-credits') && req.method === 'POST') {
-    const settings = getVoiceSettings();
-    settings.voiceMinutesBalance = (settings.voiceMinutesBalance || 0) + 40;
-    settings.isVoicePaused = false;
-    if (settings.status === 'PAUSED_CREDITS_EXHAUSTED' || settings.status === 'PAUSED' || settings.status === 'QUOTA_FALLBACK') {
-      settings.status = 'ACTIVE';
-    }
-    saveVoiceSettings(settings);
+    let body = '';
+    req.on('data', chunk => body += chunk);
+    req.on('end', () => {
+      try {
+        const payload = JSON.parse(body || '{}');
+        let minsToAdd = 40;
+        if (payload.minutes) {
+          minsToAdd = parseFloat(payload.minutes) || 40;
+        } else if (payload.packTier === 'pack_25' || payload.pack === '25') {
+          minsToAdd = 115;
+        } else if (payload.packTier === 'pack_50' || payload.pack === '50') {
+          minsToAdd = 250;
+        } else if (payload.packTier === 'pack_100' || payload.pack === '100') {
+          minsToAdd = 550;
+        }
 
-    console.log(`💳 [CREDITS TOP-UP APPLIED] Added 40 minutes ($10 pack). New balance: ${settings.voiceMinutesBalance} min.`);
-    res.writeHead(200, { 'Content-Type': 'application/json; charset=utf-8', 'Access-Control-Allow-Origin': '*' });
-    res.end(JSON.stringify({
-      success: true,
-      message: '40 Voice Minutes added successfully! ($10 recharge at $0.25/min)',
-      newBalance: settings.voiceMinutesBalance,
-      isVoicePaused: false
-    }));
+        const settings = getVoiceSettings();
+        settings.voiceMinutesBalance = Math.round(((settings.voiceMinutesBalance || 0) + minsToAdd) * 100) / 100;
+        settings.isVoicePaused = false;
+        if (settings.status === 'PAUSED_CREDITS_EXHAUSTED' || settings.status === 'PAUSED' || settings.status === 'QUOTA_FALLBACK') {
+          settings.status = 'ACTIVE';
+        }
+        saveVoiceSettings(settings);
+
+        if (payload.licenseKey) {
+          const lKey = payload.licenseKey.trim().toUpperCase();
+          const subscribers = getVoiceSubscribers();
+          const sub = subscribers.find(s => s.licenseKey === lKey);
+          if (sub) {
+            sub.voiceMinutesBalance = Math.round(((sub.voiceMinutesBalance || 0) + minsToAdd) * 100) / 100;
+            sub.isVoicePaused = false;
+            saveVoiceSubscriber(lKey, sub);
+          }
+          const masterList = getMasterLicenses();
+          const mLic = masterList.find(m => m.key === lKey);
+          if (mLic) {
+            mLic.voiceMinutesBalance = Math.round(((mLic.voiceMinutesBalance || 0) + minsToAdd) * 100) / 100;
+            saveMasterLicense(mLic);
+          }
+        }
+
+        console.log(`💳 [CREDITS TOP-UP APPLIED] Added ${minsToAdd} minutes. New balance: ${settings.voiceMinutesBalance} min.`);
+        res.writeHead(200, { 'Content-Type': 'application/json; charset=utf-8', 'Access-Control-Allow-Origin': '*' });
+        res.end(JSON.stringify({
+          success: true,
+          message: `${minsToAdd} Voice Minutes added successfully!`,
+          minutesAdded: minsToAdd,
+          newBalance: settings.voiceMinutesBalance,
+          isVoicePaused: false
+        }));
+      } catch (e) {
+        res.writeHead(400, { 'Content-Type': 'application/json; charset=utf-8', 'Access-Control-Allow-Origin': '*' });
+        res.end(JSON.stringify({ success: false, error: e.message }));
+      }
+    });
     return;
   }
 
@@ -3065,6 +3126,103 @@ const server = http.createServer((req, res) => {
       }
     });
     return;
+  }
+
+  // API: Create Credit Pack Checkout Session (POST & GET /api/create-credit-pack-checkout)
+  if (relativePath === '/api/create-credit-pack-checkout' || relativePath === '/api/create-credit-pack-checkout/') {
+    const handleCreditPackRequest = async (params) => {
+      const tierKey = (params.packTier || params.pack || params.tier || '10').toString().toLowerCase();
+      const licenseKey = (params.licenseKey || params.key || '').trim().toUpperCase();
+      const customerEmail = (params.email || '').trim();
+      const refCode = (params.ref || params.referral_code || '').trim();
+
+      const CREDIT_TIERS = {
+        '10': { id: 'pack_10', name: 'Missed Call Auto SMS - Starter Credit Pack (40 Mins)', amount: 1000, minutes: 40, fallbackUrl: 'https://buy.stripe.com/5kA8wPfRY0PS6M014f' },
+        'pack_10': { id: 'pack_10', name: 'Missed Call Auto SMS - Starter Credit Pack (40 Mins)', amount: 1000, minutes: 40, fallbackUrl: 'https://buy.stripe.com/5kA8wPfRY0PS6M014f' },
+        '25': { id: 'pack_25', name: 'Missed Call Auto SMS - Growth Credit Pack (115 Mins - Includes 15 Bonus Mins)', amount: 2500, minutes: 115, fallbackUrl: 'https://buy.stripe.com/5kA8wPfRY0PS6M014f' },
+        'pack_25': { id: 'pack_25', name: 'Missed Call Auto SMS - Growth Credit Pack (115 Mins - Includes 15 Bonus Mins)', amount: 2500, minutes: 115, fallbackUrl: 'https://buy.stripe.com/5kA8wPfRY0PS6M014f' },
+        '50': { id: 'pack_50', name: 'Missed Call Auto SMS - Pro Contractor Pack (250 Mins - Includes 50 Bonus Mins)', amount: 5000, minutes: 250, fallbackUrl: 'https://buy.stripe.com/5kA8wPfRY0PS6M014f' },
+        'pack_50': { id: 'pack_50', name: 'Missed Call Auto SMS - Pro Contractor Pack (250 Mins - Includes 50 Bonus Mins)', amount: 5000, minutes: 250, fallbackUrl: 'https://buy.stripe.com/5kA8wPfRY0PS6M014f' },
+        '100': { id: 'pack_100', name: 'Missed Call Auto SMS - Fleet Credit Pack (550 Mins - Includes 150 Bonus Mins)', amount: 10000, minutes: 550, fallbackUrl: 'https://buy.stripe.com/5kA8wPfRY0PS6M014f' },
+        'pack_100': { id: 'pack_100', name: 'Missed Call Auto SMS - Fleet Credit Pack (550 Mins - Includes 150 Bonus Mins)', amount: 10000, minutes: 550, fallbackUrl: 'https://buy.stripe.com/5kA8wPfRY0PS6M014f' }
+      };
+
+      const tier = CREDIT_TIERS[tierKey] || CREDIT_TIERS['10'];
+      const host = req.headers['host'] || 'missedcallautosms.com';
+      const activeStripeKey = getStripeKey();
+
+      if (!activeStripeKey) {
+        if (req.method === 'GET' && !req.headers['accept']?.includes('application/json')) {
+          res.writeHead(302, { Location: tier.fallbackUrl });
+          res.end();
+          return;
+        }
+        res.writeHead(200, { 'Content-Type': 'application/json; charset=utf-8', 'Access-Control-Allow-Origin': '*' });
+        res.end(JSON.stringify({ success: true, checkoutUrl: tier.fallbackUrl, fallback: true, tier: tier.id, minutes: tier.minutes }));
+        return;
+      }
+
+      const postData = {
+        'mode': 'payment',
+        'payment_method_types[0]': 'card',
+        'line_items[0][price_data][currency]': 'usd',
+        'line_items[0][price_data][unit_amount]': String(tier.amount),
+        'line_items[0][price_data][product_data][name]': tier.name,
+        'line_items[0][price_data][product_data][description]': `Instant addition of +${tier.minutes} minutes to dedicated AI voice line. 100% P2P carrier exempt.`,
+        'metadata[tier]': 'credit_pack',
+        'metadata[pack_tier]': tier.id,
+        'metadata[minutes]': String(tier.minutes),
+        'metadata[price_dollars]': String(tier.amount / 100),
+        'metadata[license_key]': licenseKey,
+        'metadata[referral_code]': refCode,
+        'metadata[service]': 'voice_credit_reload',
+        'success_url': `https://${host}/success.html?session_id={CHECKOUT_SESSION_ID}&type=credit_pack&minutes=${tier.minutes}`,
+        'cancel_url': `https://${host}/voice.html`
+      };
+
+      if (licenseKey) postData['client_reference_id'] = licenseKey;
+      if (customerEmail) postData['customer_email'] = customerEmail;
+
+      try {
+        const session = await stripeApiRequest('/v1/checkout/sessions', 'POST', postData);
+        if (req.method === 'GET' && !req.headers['accept']?.includes('application/json')) {
+          res.writeHead(302, { Location: session.url });
+          res.end();
+          return;
+        }
+        res.writeHead(200, { 'Content-Type': 'application/json; charset=utf-8', 'Access-Control-Allow-Origin': '*' });
+        res.end(JSON.stringify({ success: true, sessionId: session.id, checkoutUrl: session.url, tier: tier.id, minutes: tier.minutes, amount: tier.amount / 100 }));
+      } catch (err) {
+        console.error('Credit pack session creation error:', err.message);
+        if (req.method === 'GET') {
+          res.writeHead(302, { Location: tier.fallbackUrl });
+          res.end();
+          return;
+        }
+        res.writeHead(500, { 'Content-Type': 'application/json; charset=utf-8', 'Access-Control-Allow-Origin': '*' });
+        res.end(JSON.stringify({ success: false, error: err.message, fallbackUrl: tier.fallbackUrl }));
+      }
+    };
+
+    if (req.method === 'POST') {
+      let body = '';
+      req.on('data', chunk => body += chunk);
+      req.on('end', () => {
+        try {
+          const payload = JSON.parse(body || '{}');
+          handleCreditPackRequest(payload);
+        } catch (e) {
+          res.writeHead(400, { 'Content-Type': 'application/json; charset=utf-8' });
+          res.end(JSON.stringify({ success: false, error: 'Invalid JSON payload' }));
+        }
+      });
+      return;
+    } else {
+      const urlObj = new URL(req.url, `http://localhost:${PORT}`);
+      const params = Object.fromEntries(urlObj.searchParams.entries());
+      handleCreditPackRequest(params);
+      return;
+    }
   }
 
   // =====================================================================
