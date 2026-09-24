@@ -2997,24 +2997,26 @@ const server = http.createServer((req, res) => {
         let postData = {};
 
         if (includeVoice) {
-          // BUNDLE: Autonomous Front Desk Bundle ($99/mo with 250 pooled minutes)
+          // 24/7 AI Voice Receptionist ($9.99/mo)
           postData = {
             'mode': 'subscription',
             'payment_method_types[0]': 'card',
             
             'line_items[0][price_data][currency]': 'usd',
-            'line_items[0][price_data][unit_amount]': '9900',
+            'line_items[0][price_data][unit_amount]': '999',
             'line_items[0][price_data][recurring][interval]': 'month',
-            'line_items[0][price_data][product_data][name]': 'Autonomous Front Desk Bundle (All-in-One)',
-            'line_items[0][price_data][product_data][description]': 'Hardware SIM Auto-Text + 24/7 AI Voice Receptionist • 250 Pooled Minutes ($0.20/min overage) • Dual SIM Confirmation Text • 100% A2P 10DLC Exempt',
+            'line_items[0][price_data][product_data][name]': 'Missed Call Auto SMS - 24/7 AI Voice Receptionist ($9.99/mo)',
+            'line_items[0][price_data][product_data][description]': '24/7 Conversational AI Voice Phone Receptionist • 15 Free Test Minutes on Signup • Metered $0.25/min Usage in $10 Credit Packs • Native SIM Confirmation SMS • 1-Tap *71 Carrier Transfer',
             'line_items[0][quantity]': '1',
 
-            'subscription_data[metadata][tier]': 'front_desk_bundle',
+            'subscription_data[metadata][tier]': 'voice_receptionist',
+            'subscription_data[metadata][monthly_fee]': '9.99',
             'subscription_data[metadata][business_name]': businessName,
-            'metadata[tier]': 'front_desk_bundle',
+            'metadata[tier]': 'voice_receptionist',
+            'metadata[monthly_fee]': '9.99',
             'metadata[include_voice]': 'true',
             'metadata[business_name]': businessName,
-            'success_url': 'https://missedcallautosms.com/success.html?session_id={CHECKOUT_SESSION_ID}&tier=pro_bundle',
+            'success_url': 'https://missedcallautosms.com/success.html?session_id={CHECKOUT_SESSION_ID}&tier=voice_receptionist',
             'cancel_url': 'https://missedcallautosms.com/#checkout'
           };
         } else {

@@ -2204,8 +2204,8 @@
                     ⭐ MOST POPULAR • ALL-IN-ONE
                 </div>
                 <div style="font-size: 11px; font-weight: 900; color: #00E676; text-transform: uppercase; letter-spacing: 0.5px; margin-top: 4px;">AUTONOMOUS FRONT DESK</div>
-                <h3 style="font-size: 22px; margin: 6px 0 4px 0; color: #FFF;">Front Desk Bundle</h3>
-                <div style="font-size: 32px; font-weight: 900; color: #FFF; margin-bottom: 4px;">$99.00 <span style="font-size: 14px; color: var(--muted);">/ month</span></div>
+                <h3 style="font-size: 22px; margin: 6px 0 4px 0; color: #FFF;">AI Voice Receptionist</h3>
+                <div style="font-size: 32px; font-weight: 900; color: #FFF; margin-bottom: 4px;">$9.99 <span style="font-size: 14px; color: var(--muted);">/ month + usage</span></div>
                 <p style="font-size: 13px; color: #A7F3D0; margin-bottom: 18px;">24/7 AI Voice Receptionist + Authentic Carrier SIM Auto-Text. Replaces $600/mo answering services.</p>
                 
                 <div style="text-align: left; font-size: 12px; color: #E2E8F0; margin-bottom: 20px; flex-grow: 1; display: flex; flex-direction: column; gap: 8px; background: rgba(0,0,0,0.3); padding: 14px; border-radius: 12px; border: 1px solid rgba(0, 230, 118, 0.3);">
@@ -2451,11 +2451,11 @@
 
         if (isChecked) {
             if (modalTitle) modalTitle.innerText = 'AI Voice Receptionist ($9.99/mo)';
-            if (priceEl) priceEl.innerHTML = '<strong style="color: #00E676;">Included (250 Pooled Mins)</strong>';
-            if (totalDueEl) totalDueEl.innerText = '$99.00 / mo';
+            if (priceEl) priceEl.innerHTML = '<strong style="color: #00E676;">15 Free Test Minutes Included</strong>';
+            if (totalDueEl) totalDueEl.innerText = '$9.99 / mo';
             if (renewsEl) {
                 renewsEl.style.display = 'block';
-                renewsEl.innerText = 'Renews at $99.00/mo. Includes 15 free test minutes ($0.20/min overage). Cancel anytime.';
+                renewsEl.innerText = 'Renews at $9.99/mo. Includes 15 free test minutes ($0.25/min usage in $10 credit packs). Cancel anytime.';
             }
             if (btn) btn.innerHTML = 'Proceed to Checkout with AI Voice Receptionist ($9.99/mo) ➔';
             if (card) {
@@ -2463,9 +2463,9 @@
                 card.style.background = 'linear-gradient(180deg, rgba(0,230,118,0.14) 0%, rgba(9,11,14,0.9) 100%)';
             }
         } else {
-            if (modalTitle) modalTitle.innerText = 'Pro Automation Gateway ($299 Perpetual)';
+            if (modalTitle) modalTitle.innerText = 'Pro Automation Gateway ($299.99 Perpetual)';
             if (priceEl) { priceEl.innerText = 'Not Selected (Add Below)'; priceEl.style.color = '#64748B'; }
-            if (totalDueEl) totalDueEl.innerText = '$149.99';
+            if (totalDueEl) totalDueEl.innerText = '$299.99';
             if (renewsEl) renewsEl.style.display = 'none';
             if (btn) btn.innerHTML = 'Proceed to Checkout with Pro Gateway ($299.99) ➔';
             if (card) {
@@ -3230,7 +3230,7 @@
                         <span style="color: #FFF; font-weight: 800; font-size: 14px;">AI Voice Receptionist ($9.99/mo)</span>
                     </div>
                     <div style="font-size: 12px; color: #00E676; font-weight: 800; margin: 4px 0;">
-                        ⚡ Includes 250 Monthly Pooled Minutes ($0.20/min overage)
+                        ⚡ Includes 15 Free Test Minutes on Signup ($0.25/min usage in $10 credit packs)
                     </div>
                     <p style="margin: 0; font-size: 12px; color: #CBD5E0; line-height: 1.45;">
                         Never lose a customer when your hands are full. Our conversational AI receptionist answers in natural voice, screens incoming jobs, and triggers instant confirmation SMS from your real SIM.
@@ -3247,10 +3247,10 @@
             </div>
             <div style="border-top: 1px solid #222836; padding-top: 8px; display: flex; justify-content: space-between; align-items: baseline;">
                 <span style="font-weight: 800; color: #FFF; font-size: 15px;">Due Today:</span>
-                <span id="summaryTotalDue" style="font-weight: 900; color: #00E676; font-size: 20px;">$149.99</span>
+                <span id="summaryTotalDue" style="font-weight: 900; color: #00E676; font-size: 20px;">$299.99</span>
             </div>
             <div id="summaryTotalRenews" style="display: none; font-size: 11px; color: #94A3B8; text-align: right; margin-top: 4px;">
-                Renews at $99.00/mo. Cancel anytime.
+                Renews at $9.99/mo. Cancel anytime.
             </div>
         </div>
 

@@ -90,26 +90,24 @@ exports.handler = async (event) => {
     let postData = {};
 
     if (includeVoice) {
-      // AUTONOMOUS FRONT DESK BUNDLE: $99.00/mo (Hardware SIM Auto SMS + 24/7 AI Voice, 250 mins)
+      // 24/7 AI VOICE RECEPTIONIST: $9.99/mo (15 Free Test Minutes + Metered $0.25/min Usage)
       postData = {
         'mode': 'subscription',
         'payment_method_types[0]': 'card',
         'line_items[0][price_data][currency]': 'usd',
-        'line_items[0][price_data][unit_amount]': '9900',
+        'line_items[0][price_data][unit_amount]': '999',
         'line_items[0][price_data][recurring][interval]': 'month',
-        'line_items[0][price_data][product_data][name]': 'Missed Call Auto SMS - Autonomous Front Desk Bundle ($99/mo)',
-        'line_items[0][price_data][product_data][description]': 'All-in-One Autonomous Front Desk • 250 Monthly Pooled Minutes ($0.20/min overage) • Dual SIM Outbound Confirmation SMS • Dedicated Local AI Line (*71 Carrier Transfer)',
+        'line_items[0][price_data][product_data][name]': 'Missed Call Auto SMS - 24/7 AI Voice Receptionist ($9.99/mo)',
+        'line_items[0][price_data][product_data][description]': '24/7 Conversational AI Voice Phone Receptionist • 15 Free Test Minutes on Signup • Metered $0.25/min Usage in $10 Credit Packs • Native SIM Confirmation SMS • 1-Tap *71 Carrier Transfer',
         'line_items[0][quantity]': '1',
-        'subscription_data[metadata][tier]': 'autonomous_front_desk',
-        'subscription_data[metadata][quotaMinutes]': '250',
-        'subscription_data[metadata][overageRate]': '0.20',
+        'subscription_data[metadata][tier]': 'voice_receptionist',
+        'subscription_data[metadata][monthly_fee]': '9.99',
         'subscription_data[metadata][business_name]': businessName,
-        'metadata[tier]': 'autonomous_front_desk',
-        'metadata[quotaMinutes]': '250',
-        'metadata[overageRate]': '0.20',
+        'metadata[tier]': 'voice_receptionist',
+        'metadata[monthly_fee]': '9.99',
         'metadata[include_voice]': 'true',
         'metadata[business_name]': businessName,
-        'success_url': 'https://missedcallautosms.com/success.html?session_id={CHECKOUT_SESSION_ID}&tier=autonomous_front_desk',
+        'success_url': 'https://missedcallautosms.com/success.html?session_id={CHECKOUT_SESSION_ID}&tier=voice_receptionist',
         'cancel_url': 'https://missedcallautosms.com/#checkout'
       };
     } else {
