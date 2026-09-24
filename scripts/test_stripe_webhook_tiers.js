@@ -124,7 +124,7 @@ async function runTests() {
   console.log('Response 4:', body4);
   assert.strictEqual(body4.tier, 'pro_gateway');
   assert(body4.licenseKey.startsWith('MCAS-PRO-'), 'License key must be PRO for Pro Gateway');
-  assert(body4.apkUrl.includes('MissedCallAutoSMS-Pro.apk'), 'Must deliver Pro APK');
+  assert(body4.apkUrl.includes('MissedCallAutoSMS.apk'), 'Must deliver Pro APK');
   console.log('✅ Test 4 Passed!\n');
 
   // Test 5: Founder\'s Flagship Appliance ($49.99 One-Time)
@@ -161,7 +161,7 @@ async function runTests() {
   const { generateEmailHtml, generateProPlusVoiceEmailHtml, generateVoiceProEmailHtml } = require('../netlify/functions/stripe-webhook.js');
   
   // Pro Gateway email
-  const proHtml = generateEmailHtml('Dev Partner', 'MCAS-PRO-1234', 'https://missedcallautosms.com/MissedCallAutoSMS-Pro.apk', '299.00', true);
+  const proHtml = generateEmailHtml('Dev Partner', 'MCAS-PRO-1234', 'https://missedcallautosms.com/MissedCallAutoSMS.apk', '299.00', true);
   assert(proHtml.includes('PRO AUTOMATION GATEWAY (A2P 10DLC BYPASS)'), 'Pro email must have Pro badge');
   assert(proHtml.includes('1-Year Cloud Relay API Included'), 'Pro email must mention Cloud Relay API');
 
@@ -170,7 +170,7 @@ async function runTests() {
   assert(founderHtml.includes("FOUNDER'S FLAGSHIP APPLIANCE"), 'Founder email must have Founder badge');
 
   // Autonomous Front Desk email
-  const bundleHtml = generateProPlusVoiceEmailHtml('Clinic Owner', 'MCAS-PRO-5678', 'https://missedcallautosms.com/MissedCallAutoSMS-Pro.apk', '+17326609121', '*717326609121', '*73', 250, "AUTONOMOUS FRONT DESK BUNDLE ($99/MO)", "0.20");
+  const bundleHtml = generateProPlusVoiceEmailHtml('Clinic Owner', 'MCAS-PRO-5678', 'https://missedcallautosms.com/MissedCallAutoSMS.apk', '+17326609121', '*717326609121', '*73', 250, "AUTONOMOUS FRONT DESK BUNDLE ($99/MO)", "0.20");
   assert(bundleHtml.includes('AUTONOMOUS FRONT DESK BUNDLE ($99/MO)'), 'Bundle title missing in email');
   assert(bundleHtml.includes('250 monthly minutes'), 'Bundle minutes quota missing in email');
   assert(bundleHtml.includes('$0.20/min'), 'Bundle overage rate missing in email');

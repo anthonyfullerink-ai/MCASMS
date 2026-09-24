@@ -51,7 +51,7 @@ function syncVersionManifest(gradleVer) {
     versionCode: finalCode,
     versionName: finalName,
     downloadUrl: vData.downloadUrl || 'https://raw.githubusercontent.com/anthonyfullerink-ai/MCASMS/main/MissedCallAutoSMS.apk',
-    proDownloadUrl: vData.proDownloadUrl || 'https://raw.githubusercontent.com/anthonyfullerink-ai/MCASMS/main/MissedCallAutoSMS-Pro.apk',
+    proDownloadUrl: vData.proDownloadUrl || 'https://raw.githubusercontent.com/anthonyfullerink-ai/MCASMS/main/MissedCallAutoSMS.apk',
     releaseNotes: vData.releaseNotes || '✅ Latest stability, voice routing, and UI updates.',
     mandatory: true,
     minSupportedVersion: Math.max(1, finalCode - 2),

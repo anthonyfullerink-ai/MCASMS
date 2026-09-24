@@ -140,7 +140,7 @@ function getUpgradeUrl(currentTier) {
 function buildSetupSheet(clientName, childProKey, branding) {
   const brand = branding?.brandName || 'Missed Call Auto SMS';
   const supportEmail = branding?.supportEmail || 'support@missedcallautosms.com';
-  const downloadUrl = 'https://missedcallautosms.com/MissedCallAutoSMS-Pro.apk';
+  const downloadUrl = 'https://missedcallautosms.com/MissedCallAutoSMS.apk';
 
   return `=====================================================
 ${brand.toUpperCase()} - CLIENT APPLIANCE SETUP SHEET

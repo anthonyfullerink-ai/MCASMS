@@ -162,7 +162,7 @@ class RemoteUpdateManager(private val context: Context) {
 
     private fun resolveApkUrl(rawUrl: String, manifestUrl: String): String {
         val defaultApk = if (com.missedcall.autotext.BuildConfig.IS_PRO_EDITION) {
-            "https://raw.githubusercontent.com/anthonyfullerink-ai/MCASMS/main/MissedCallAutoSMS-Pro.apk"
+            "https://raw.githubusercontent.com/anthonyfullerink-ai/MCASMS/main/MissedCallAutoSMS.apk"
         } else {
             "https://raw.githubusercontent.com/anthonyfullerink-ai/MCASMS/main/MissedCallAutoSMS.apk"
         }

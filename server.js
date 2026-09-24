@@ -24,7 +24,7 @@ const LATEST_APP_VERSION = {
   versionCode: 17,
   versionName: '1.7.0',
   downloadUrl: 'https://raw.githubusercontent.com/anthonyfullerink-ai/MCASMS/main/MissedCallAutoSMS.apk',
-  proDownloadUrl: 'https://raw.githubusercontent.com/anthonyfullerink-ai/MCASMS/main/MissedCallAutoSMS-Pro.apk',
+  proDownloadUrl: 'https://raw.githubusercontent.com/anthonyfullerink-ai/MCASMS/main/MissedCallAutoSMS.apk',
   releaseNotes: '• 🎙️ Dual-Mode AI Voice Receptionist Test Call (In-App Speaker & Live Cellular)\n• 🧠 AI Model Selector with 1.5% Overage Markup for GPT-4o\n• 🎛️ Clean Voice Hub Studio with 1-Tap Carrier Forwarding (*71/*73)\n• ⚡ Real-Time Instant OTA Update Trigger & Firebase Push\n• 🛡️ Direct SIM Carrier SMS dispatch with 15s human jitter',
   mandatory: true,
   minSupportedVersion: 15
@@ -1525,7 +1525,7 @@ const server = http.createServer((req, res) => {
           versionCode: parseInt(payload.versionCode, 10) || current.versionCode || 11,
           versionName: payload.versionName || current.versionName || '1.4.1',
           downloadUrl: payload.downloadUrl || current.downloadUrl || 'https://raw.githubusercontent.com/anthonyfullerink-ai/MCASMS/main/MissedCallAutoSMS.apk',
-          proDownloadUrl: payload.proDownloadUrl || current.proDownloadUrl || 'https://raw.githubusercontent.com/anthonyfullerink-ai/MCASMS/main/MissedCallAutoSMS-Pro.apk',
+          proDownloadUrl: payload.proDownloadUrl || current.proDownloadUrl || 'https://raw.githubusercontent.com/anthonyfullerink-ai/MCASMS/main/MissedCallAutoSMS.apk',
           releaseNotes: payload.releaseNotes || current.releaseNotes || '• 🎙️ 24/7 AI Voice Receptionist (*71 Live Call Forwarding)\n• ⚡ Dual SIM & Webhook Bridge',
           mandatory: Boolean(payload.mandatory),
           minSupportedVersion: parseInt(payload.minSupportedVersion, 10) || 1,
@@ -5498,10 +5498,7 @@ const server = http.createServer((req, res) => {
       filePath = path.join(__dirname, 'app/build/outputs/apk/debug/app-debug.apk');
     }
   } else if (relativePath === '/MissedCallAutoSMS-Pro.apk') {
-    filePath = path.join(__dirname, 'MissedCallAutoSMS-Pro.apk');
-    if (!fs.existsSync(filePath)) {
-      filePath = path.join(__dirname, 'app/build/outputs/apk/proRelease/app-pro-release.apk');
-    }
+    filePath = path.join(__dirname, 'MissedCallAutoSMS.apk');
   }
   
   fs.stat(filePath, (err, stats) => {

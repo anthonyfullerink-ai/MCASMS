@@ -1,10 +1,10 @@
 {
-  "versionCode": 17,
-  "versionName": "1.7.0",
+  "versionCode": 18,
+  "versionName": "1.7.1",
   "downloadUrl": "https://raw.githubusercontent.com/anthonyfullerink-ai/MCASMS/main/MissedCallAutoSMS.apk",
   "proDownloadUrl": "https://raw.githubusercontent.com/anthonyfullerink-ai/MCASMS/main/MissedCallAutoSMS.apk",
-  "releaseNotes": "🚀 v1.7.0 Unified Edition:\n✅ Single Unified Appliance Architecture with Dynamic Server-Side License Gating\n✅ $9.99/mo AI Voice Receptionist with 15 Free Test Minutes & Metered Telephony\n✅ Automated $10 Credit Pack (40 Mins) Reload & Auto-Pause Balance Safeguard\n✅ Perpetual Pro Gateway Integration with Unmetered Cloud Relay & Webhooks\n✅ Universal Agency Partner 25% Lifetime Recurring Rev-Share",
+  "releaseNotes": "🚀 v1.7.1 Unified Single-Appliance Edition:\n✅ Single Unified Appliance Architecture with Dynamic Server-Side License Gating\n✅ $9.99/mo AI Voice Receptionist & Pro Automations Integration\n✅ Multi-Tier Discounted Credit Packs ($10, $25, $50, $100)\n✅ Auto-Pause Telephony Safeguard with Instant Re-enable\n✅ Over-The-Air In-App Direct Updater",
   "mandatory": true,
   "minSupportedVersion": 15,
-  "updatedAt": "2026-09-24T01:41:23.095Z"
+  "updatedAt": "2026-09-24T03:00:00.000Z"
 }

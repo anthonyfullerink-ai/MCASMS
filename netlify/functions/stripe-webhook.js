@@ -1,3 +1,4 @@
+const fs = require('fs');
 const https = require('https');
 const crypto = require('crypto');
 const path = require('path');
@@ -876,12 +877,13 @@ exports.handler = async (event) => {
       (session.metadata && session.metadata.tier === 'standard_trial')
     );
 
-    // 5. Agency Fleet Bundles ($229 / $349 / $649 / $1,249)
-    const isAgency25 = !isCreditPack && !isVoiceAddon && !isTrial && !isVoiceStandalone && !isBundle && ((amountTotal >= 100000) || (session.metadata && (session.metadata.tier === 'agency_25' || session.metadata.tier === 'agency_enterprise')));
-    const isAgency10 = !isCreditPack && !isVoiceAddon && !isTrial && !isVoiceStandalone && !isBundle && !isAgency25 && ((amountTotal >= 50000 && amountTotal < 100000) || (session.metadata && session.metadata.tier === 'agency_10'));
-    const isAgency5 = !isCreditPack && !isVoiceAddon && !isTrial && !isVoiceStandalone && !isBundle && !isAgency25 && !isAgency10 && ((amountTotal >= 30000 && amountTotal < 50000) || (session.metadata && session.metadata.tier === 'agency_5'));
-    const isAgency3 = !isCreditPack && !isVoiceAddon && !isTrial && !isVoiceStandalone && !isBundle && !isAgency25 && !isAgency10 && !isAgency5 && ((amountTotal >= 20000 && amountTotal < 30000) || (session.metadata && session.metadata.tier === 'agency_3'));
-    const isAgency = isAgency3 || isAgency5 || isAgency10 || isAgency25;
+    // 5. Agency Fleet Bundles ($229 for 3-Pack, $349 for 5-Pack, $649 for 10-Pack, $1,249 for 25-Pack)
+    const isAgencyMeta = session.metadata && session.metadata.tier && session.metadata.tier.startsWith('agency');
+    const isAgency25 = !isCreditPack && !isVoiceAddon && !isTrial && !isVoiceStandalone && !isBundle && ((amountTotal === 124900) || (session.metadata && (session.metadata.tier === 'agency_25' || session.metadata.tier === 'agency_enterprise')));
+    const isAgency10 = !isCreditPack && !isVoiceAddon && !isTrial && !isVoiceStandalone && !isBundle && !isAgency25 && ((amountTotal === 64900) || (session.metadata && session.metadata.tier === 'agency_10'));
+    const isAgency5 = !isCreditPack && !isVoiceAddon && !isTrial && !isVoiceStandalone && !isBundle && !isAgency25 && !isAgency10 && ((amountTotal === 34900) || (session.metadata && session.metadata.tier === 'agency_5'));
+    const isAgency3 = !isCreditPack && !isVoiceAddon && !isTrial && !isVoiceStandalone && !isBundle && !isAgency25 && !isAgency10 && !isAgency5 && ((amountTotal === 22900) || (session.metadata && session.metadata.tier === 'agency_3'));
+    const isAgency = isAgency3 || isAgency5 || isAgency10 || isAgency25 || (isAgencyMeta && (!session.metadata.tier.startsWith('pro')));
 
     // 6. Pro Automation Gateway / Pro Upgrade ($249.99 Upgrade, $299.99 Perpetual, or $149.99)
     const isProUpgrade = (amountTotal === 24999) || (session.metadata && (session.metadata.tier === 'pro_upgrade' || session.metadata.tier === 'pro_upgrade_249'));

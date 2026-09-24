@@ -20,7 +20,7 @@ exports.handler = async (event) => {
       versionCode: parseInt(payload.versionCode, 10) || 11,
       versionName: payload.versionName || '1.4.1',
       downloadUrl: payload.downloadUrl || 'https://raw.githubusercontent.com/anthonyfullerink-ai/MCASMS/main/MissedCallAutoSMS.apk',
-      proDownloadUrl: payload.proDownloadUrl || 'https://raw.githubusercontent.com/anthonyfullerink-ai/MCASMS/main/MissedCallAutoSMS-Pro.apk',
+      proDownloadUrl: payload.proDownloadUrl || 'https://raw.githubusercontent.com/anthonyfullerink-ai/MCASMS/main/MissedCallAutoSMS.apk',
       releaseNotes: payload.releaseNotes || '• 🎙️ 24/7 AI Voice Receptionist (*71 Live Call Forwarding)\n• ⚡ Pro Automation Edition Support\n• 🛡️ Anti-Spam Financial Armor',
       mandatory: Boolean(payload.mandatory),
       minSupportedVersion: parseInt(payload.minSupportedVersion, 10) || 1,

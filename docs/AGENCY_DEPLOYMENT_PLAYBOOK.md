@@ -49,7 +49,7 @@ Do NOT buy expensive post-paid plans. Buy cheap prepaid unlimited talk & text SI
 
 ### Step 2: Sideload APK & Activate License
 1. On the phone's Chrome browser, download the Pro APK:
-   `https://missedcallautosms.com/MissedCallAutoSMS-Pro.apk`
+   `https://missedcallautosms.com/MissedCallAutoSMS.apk`
 2. Open the app and paste the client's dedicated **Pro License Key** (generated in your Agency Fleet Dashboard).
 3. Grant standard permissions:
    - Call Log Detection

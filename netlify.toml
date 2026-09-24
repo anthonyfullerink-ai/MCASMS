@@ -216,16 +216,33 @@
   to = "/owner_admin_dashboard.html"
   status = 200
 
+# API Route: Create Credit Pack Checkout Session
+[[redirects]]
+  from = "/api/create-credit-pack-checkout"
+  to = "/.netlify/functions/create-credit-pack-checkout"
+  status = 200
+
+# APK Aliases to Unified MissedCallAutoSMS.apk
+[[redirects]]
+  from = "/MissedCallAutoSMS-Pro.apk"
+  to = "/MissedCallAutoSMS.apk"
+  status = 301
+
+[[redirects]]
+  from = "/app-debug.apk"
+  to = "/MissedCallAutoSMS.apk"
+  status = 301
+
 # Direct access to success confirmation page
 [[redirects]]
   from = "/success"
   to = "/success.html"
   status = 200
 
-# Serve sales_landing_page.html as homepage
+# Serve index.html as homepage
 [[redirects]]
   from = "/"
-  to = "/sales_landing_page.html"
+  to = "/index.html"
   status = 200
 
 # Global & Static CORS Headers

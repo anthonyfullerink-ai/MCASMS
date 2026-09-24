@@ -964,12 +964,12 @@
                 </div>
                 <div>
                     <div style="display: flex; justify-content: space-between; align-items: center;">
-                        <label for="otaProDownloadUrl" style="margin: 0; color: #C084FC;">⚡ Pro Automation APK URL:</label>
-                        <a id="testProApkLink" href="/MissedCallAutoSMS-Pro.apk" target="_blank" class="btn-action" style="font-size: 11px; padding: 2px 8px; margin: 0; text-decoration: none; color: #C084FC; border-color: #A855F7;">📥 Test DL</a>
+                        <label for="otaProDownloadUrl" style="margin: 0; color: #C084FC;">⚡ Unified APK URL (Single App Architecture):</label>
+                        <a id="testProApkLink" href="/MissedCallAutoSMS.apk" target="_blank" class="btn-action" style="font-size: 11px; padding: 2px 8px; margin: 0; text-decoration: none; color: #C084FC; border-color: #A855F7;">📥 Test DL</a>
                     </div>
-                    <input type="text" id="otaProDownloadUrl" placeholder="https://raw.githubusercontent.com/anthonyfullerink-ai/MCASMS/main/MissedCallAutoSMS-Pro.apk" style="border-color: #A855F7;">
+                    <input type="text" id="otaProDownloadUrl" placeholder="https://raw.githubusercontent.com/anthonyfullerink-ai/MCASMS/main/MissedCallAutoSMS.apk" style="border-color: #A855F7;">
                     <div style="font-size: 11px; color: var(--muted); margin-top: 4px;">
-                        Pro Edition APK (<code>/MissedCallAutoSMS-Pro.apk</code> with Dual SIM & Webhooks)
+                        Unified APK (<code>/MissedCallAutoSMS.apk</code> - Pro & AI features gated dynamically)
                     </div>
                 </div>
             </div>
@@ -2834,7 +2834,7 @@
             document.getElementById("otaVersionCode").value = data.versionCode || 1;
             document.getElementById("otaDownloadUrl").value = data.downloadUrl || "";
             const proUrlInput = document.getElementById("otaProDownloadUrl");
-            if (proUrlInput) proUrlInput.value = data.proDownloadUrl || "/MissedCallAutoSMS-Pro.apk";
+            if (proUrlInput) proUrlInput.value = data.proDownloadUrl || "/MissedCallAutoSMS.apk";
             document.getElementById("otaReleaseNotes").value = data.releaseNotes || "";
             document.getElementById("otaMandatory").checked = !!data.mandatory;
 
@@ -2890,7 +2890,7 @@
             });
 
             if (data.success) {
-                resultText.innerHTML = `<span style="color: var(--primary); font-weight: bold;">✅ Successfully Published v${data.version.versionName} (Build ${data.version.versionCode}) Live!</span><br><span style="font-size: 12px; color: var(--muted);">Standard APK: <code>${data.version.downloadUrl}</code> | Pro APK: <code>${data.version.proDownloadUrl || '/MissedCallAutoSMS-Pro.apk'}</code></span>`;
+                resultText.innerHTML = `<span style="color: var(--primary); font-weight: bold;">✅ Successfully Published v${data.version.versionName} (Build ${data.version.versionCode}) Live!</span><br><span style="font-size: 12px; color: var(--muted);">Unified APK: <code>${data.version.downloadUrl}</code></span>`;
                 loadLiveOtaVersion();
             } else {
                 resultText.innerHTML = `<span style="color: var(--danger); font-weight: bold;">❌ Update Failed:</span> ${data.error || data.message}`;
@@ -3045,7 +3045,7 @@
             });
             const json = await res.json();
             if (res.ok && json.received) {
-                alert(`⚡ Pro Automation Gateway ($299) Webhook Test Succeeded!\n\nStatus: HTTP ${res.status} OK\nLicense Key Generated: ${json.licenseKey}\nTier: PRO AUTOMATION GATEWAY\nCustomer Email: ${json.customerEmail}\nAPK Link: ${json.apkDownloadUrl || '/MissedCallAutoSMS-Pro.apk'}\n\nPro Automation Stripe Webhook pipeline is 100% operational!`);
+                alert(`⚡ Pro Automation Gateway ($299) Webhook Test Succeeded!\n\nStatus: HTTP ${res.status} OK\nLicense Key Generated: ${json.licenseKey}\nTier: PRO AUTOMATION GATEWAY\nCustomer Email: ${json.customerEmail}\nAPK Link: ${json.apkDownloadUrl || '/MissedCallAutoSMS.apk'}\n\nPro Automation Stripe Webhook pipeline is 100% operational!`);
                 if (title) title.innerText = "Stripe Pro Gateway Webhook Verified & Responding 200 OK";
                 if (detail) detail.innerHTML = `Last Pro Test: Generated <code>${json.licenseKey}</code> (PRO) for ${json.customerEmail}`;
             } else {
@@ -3085,7 +3085,7 @@
             });
             const json = await res.json();
             if (res.ok && json.received) {
-                alert(`⚡ Autonomous Front Desk Bundle ($99/mo) Webhook Test Succeeded!\n\nStatus: HTTP ${res.status} OK\nLicense Key Generated: ${json.licenseKey}\nTier: AUTONOMOUS_FRONT_DESK\nCustomer Email: ${json.customerEmail}\nQuota: 250 pooled minutes ($0.20/min overage)\nAPK Link: ${json.apkDownloadUrl || '/MissedCallAutoSMS-Pro.apk'}\n\nFront Desk Bundle Webhook pipeline is 100% operational!`);
+                alert(`⚡ Autonomous Front Desk Bundle ($99/mo) Webhook Test Succeeded!\n\nStatus: HTTP ${res.status} OK\nLicense Key Generated: ${json.licenseKey}\nTier: AUTONOMOUS_FRONT_DESK\nCustomer Email: ${json.customerEmail}\nQuota: 250 pooled minutes ($0.20/min overage)\nAPK Link: ${json.apkDownloadUrl || '/MissedCallAutoSMS.apk'}\n\nFront Desk Bundle Webhook pipeline is 100% operational!`);
                 if (title) title.innerText = "Front Desk Bundle Webhook Verified & Responding 200 OK";
                 if (detail) detail.innerHTML = `Last Front Desk Test: Generated <code>${json.licenseKey}</code> (250 mins) for ${json.customerEmail}`;
             } else {
@@ -3445,7 +3445,7 @@
         const email = record.email || '';
         const name = record.name ? record.name.replace(/\s*\(Free License\)/i, '') : 'Valued Customer';
         const key = record.key;
-        const apkUrl = data.apkDownloadUrl || (isPro ? 'https://missedcallautosms.com/MissedCallAutoSMS-Pro.apk' : 'https://missedcallautosms.com/MissedCallAutoSMS.apk');
+        const apkUrl = data.apkDownloadUrl || 'https://missedcallautosms.com/MissedCallAutoSMS.apk';
 
         const tierName = isAgency ? "Agency Fleet Edition" : (isPro ? "Pro Automation Gateway ($299)" : "Flagship Edition ($49.99)");
         const subjectText = `Your Missed Call Auto SMS ${isPro ? 'Pro Automation' : ''} License Key & Setup Guide`;
@@ -5364,7 +5364,7 @@ OPERATIONAL PROTOCOL:
 
     function showSetupSheetForFleetKey(key, clientName, agencyName) {
         const base = getApiBaseUrl();
-        const apkUrl = `${base}/MissedCallAutoSMS-Pro.apk`;
+        const apkUrl = `${base}/MissedCallAutoSMS.apk`;
         const sheet = `======================================================
 📱 CLIENT APPLIANCE SETUP SHEET: ${clientName}
 🏢 MANAGED BY AGENCY: ${agencyName || 'Agency Partner'}

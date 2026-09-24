@@ -65,14 +65,14 @@ If setting up manually in your Stripe Dashboard:
    - Submit a test purchase or use the Stripe CLI / test mode.
    - Check that the email arrives with:
      - Signed hardware license key (MCAS-... or MCAS-PRO-...)
-     - Direct APK download link (MissedCallAutoSMS.apk or MissedCallAutoSMS-Pro.apk)
+     - Direct APK download link (MissedCallAutoSMS.apk or MissedCallAutoSMS.apk)
      - Direct n8n template download button (MissedCallAutoSMS_n8n_Workflow.json) for Pro buyers.
 
 ---
 
 ## 📱 Phase 4: Android Device Hardware Verification
 Before deploying to real business lines:
-1. **Install Release APK**: Sideload MissedCallAutoSMS.apk or MissedCallAutoSMS-Pro.apk on an Android phone.
+1. **Install Release APK**: Sideload MissedCallAutoSMS.apk or MissedCallAutoSMS.apk on an Android phone.
 2. **Permissions**: Grant SMS, Phone, and Call Log permissions when prompted.
 3. **Battery Optimization**:
    - Go to **Android Settings ➔ Apps ➔ Missed Call Auto-SMS ➔ Battery**.
