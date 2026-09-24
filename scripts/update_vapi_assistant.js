@@ -3,7 +3,7 @@ const https = require('https');
 const path = require('path');
 const fs = require('fs');
 
-const apiKey = process.env.VAPI_API_KEY || process.env.VAPI_PRIVATE_API_KEY || 'f47d5c09-6c69-4190-b35b-d32bcf00008e';
+const apiKey = process.env.VAPI_API_KEY || process.env.VAPI_PRIVATE_API_KEY;
 const assistantId = process.env.VAPI_ASSISTANT_ID || '5105b379-8cbf-4037-becc-bba45504f781';
 
 const systemPrompt = `You are Riley, a friendly, warm, and highly capable 24/7 AI Front Desk Receptionist for our business.
