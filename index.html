@@ -2499,17 +2499,6 @@
         openProCheckoutModal(false);
     }
 
-    let selectedProEdition = "pro"; // "pro" ($299.99) or "pro_upgrade" ($249.99)
-
-    function selectProEdition(edition) {
-        selectedProEdition = edition;
-        const radPro = document.getElementById("radEditionNewPro");
-        const radUp = document.getElementById("radEditionUpgrade");
-        if (radPro) radPro.checked = (edition === "pro");
-        if (radUp) radUp.checked = (edition === "pro_upgrade");
-        onProOrderBumpToggle();
-    }
-
     function openProCheckoutModal(withVoice = false) {
         const m = document.getElementById("proCheckoutModal");
         if (m) {
@@ -2528,10 +2517,8 @@
     function onProOrderBumpToggle() {
         const chk = document.getElementById("checkProVoiceOrderBump");
         const isVoiceChecked = chk && chk.checked;
-        const isUpgrade = (selectedProEdition === "pro_upgrade");
-
-        const basePrice = isUpgrade ? 249.99 : 299.99;
-        const baseName = isUpgrade ? "Pro Gateway Upgrade ($249.99)" : "Pro Automation Gateway ($299.99)";
+        const basePrice = 299.99;
+        const baseName = "Pro Automation Gateway ($299.99)";
         const totalDue = isVoiceChecked ? (basePrice + 9.99).toFixed(2) : basePrice.toFixed(2);
 
         const summaryPlanEl = document.getElementById("summaryProPlanName");
@@ -2548,7 +2535,7 @@
             if (totalDueEl) totalDueEl.innerText = "$" + totalDue;
             if (renewsEl) {
                 renewsEl.style.display = "block";
-                renewsEl.innerText = "Includes $" + basePrice.toFixed(2) + " one-time license + $9.99/mo voice add-on (15 free test minutes on activation). Renews at $9.99/mo. Cancel anytime.";
+                renewsEl.innerText = "Includes $299.99 one-time license + $9.99/mo voice add-on (15 free test minutes on activation). Renews at $9.99/mo. Cancel anytime.";
             }
             if (btn) btn.innerHTML = "Proceed to Secure Checkout ($" + totalDue + " Today, then $9.99/mo) ➔";
             if (card) {
@@ -2559,7 +2546,7 @@
             if (voicePriceEl) voicePriceEl.innerHTML = '<span style="color: #64748B;">Not Selected</span>';
             if (totalDueEl) totalDueEl.innerText = "$" + totalDue;
             if (renewsEl) renewsEl.style.display = "none";
-            if (btn) btn.innerHTML = "Proceed to Checkout with " + (isUpgrade ? "Pro Upgrade ($249.99)" : "Pro Gateway ($299.99)") + " ➔";
+            if (btn) btn.innerHTML = "Proceed to Checkout with Pro Gateway ($299.99) ➔";
             if (card) {
                 card.style.borderColor = "#A855F7";
                 card.style.background = "linear-gradient(180deg, rgba(168,85,247,0.12) 0%, rgba(9,11,14,0.85) 100%)";
@@ -2570,10 +2557,9 @@
     async function proceedToProDynamicCheckout() {
         const chk = document.getElementById("checkProVoiceOrderBump");
         const includeVoice = chk && chk.checked;
-        const plan = selectedProEdition;
         const btn = document.getElementById("btnProceedProCheckout");
 
-        if (!includeVoice && plan === "pro") {
+        if (!includeVoice) {
             window.location.href = "https://buy.stripe.com/6oU9ATbBIeFI8U86OR2go0g";
             return;
         }
@@ -2587,7 +2573,7 @@
             const res = await fetch("/api/create-pro-checkout", {
                 method: "POST",
                 headers: { "Content-Type": "application/json" },
-                body: JSON.stringify({ plan, includeVoice })
+                body: JSON.stringify({ plan: "pro", includeVoice: true })
             });
             const data = await res.json();
             if (data.success && data.checkoutUrl) {
@@ -3308,22 +3294,13 @@
             </p>
         </div>
 
-        <!-- Edition Selector: New Pro License vs Owner Upgrade -->
-        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-bottom: 16px;">
-            <label style="background: #090B0E; border: 1px solid #7928CA; border-radius: 10px; padding: 12px; cursor: pointer; display: flex; align-items: center; gap: 8px;">
-                <input type="radio" id="radEditionNewPro" name="proEditionRadio" checked onchange="selectProEdition('pro')" style="accent-color: #A855F7;">
-                <div>
-                    <div style="color: #FFF; font-weight: 800; font-size: 13px;">New Pro Appliance</div>
-                    <div style="color: #C084FC; font-size: 12px; font-weight: bold;">$299.99 Perpetual</div>
-                </div>
-            </label>
-            <label style="background: #090B0E; border: 1px solid #222836; border-radius: 10px; padding: 12px; cursor: pointer; display: flex; align-items: center; gap: 8px;">
-                <input type="radio" id="radEditionUpgrade" name="proEditionRadio" onchange="selectProEdition('pro_upgrade')" style="accent-color: #A855F7;">
-                <div>
-                    <div style="color: #FFF; font-weight: 800; font-size: 13px;">Existing Owner Upgrade</div>
-                    <div style="color: #38BDF8; font-size: 12px; font-weight: bold;">$249.99 One-Time</div>
-                </div>
-            </label>
+        <!-- Pro Appliance Plan Card -->
+        <div style="background: rgba(121,40,202,0.12); border: 1px solid #7928CA; border-radius: 10px; padding: 12px 16px; margin-bottom: 16px; display: flex; justify-content: space-between; align-items: center;">
+            <div>
+                <div style="color: #FFF; font-weight: 800; font-size: 14px;">Pro Automation Appliance License</div>
+                <div style="color: #94A3B8; font-size: 12px; margin-top: 2px;">Perpetual hardware license • Zero monthly fees</div>
+            </div>
+            <div style="color: #00E676; font-size: 18px; font-weight: 900;">$299.99</div>
         </div>
 
         <!-- Optional Voice Order Bump Card -->
@@ -3368,8 +3345,9 @@
             Proceed to Checkout with Pro Gateway ($299.99) ➔
         </button>
 
-        <div style="text-align: center; margin-top: 14px; font-size: 11px; color: #64748B;">
-            🔒 256-Bit Stripe Checkout • Instant License Key Delivery via SMS &amp; Email
+        <div style="text-align: center; margin-top: 14px; font-size: 11px; color: #64748B; line-height: 1.5;">
+            🔒 256-Bit Stripe Checkout • Instant License Key Delivery via SMS &amp; Email<br>
+            <span style="color: #94A3B8; font-size: 11px; display: inline-block; margin-top: 4px;">Already own a standard license? Existing owners can upgrade to Pro directly inside the app for $249.99.</span>
         </div>
     </div>
 </div>

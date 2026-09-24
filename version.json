@@ -6,5 +6,5 @@
   "releaseNotes": "🔒 v1.7.8 100% In-App Payment & AI Voice Engine Update:\n• 💳 100% In-App Payment Experience: Zero external browser redirects. All Stripe checkouts (Voice $9.99/mo, Credit Packs $10-$100, Pro Gateway $249.99) complete directly inside the app\n• 🎁 10 FREE Test Minutes on Voice Subscription: Subscribing to 24/7 AI Voice ($9.99/mo) immediately provisions your Vapi agent & line with 10 free minutes\n• 🛡️ Auto-Pause & Auto-Resume: AI Receptionist auto-pauses at 0.0 mins to prevent unexpected charges, and auto-resumes immediately upon reloading minute packs\n• 🔒 Full Paywall Gating: Voice and Automations hubs are 100% locked and hidden behind paywalls until activated",
   "mandatory": true,
   "minSupportedVersion": 23,
-  "updatedAt": "2026-09-24T22:34:33.446Z"
+  "updatedAt": "2026-09-24T23:13:58.903Z"
 }
