@@ -90,6 +90,11 @@ class SendAutoTextWorker(
                     messageSent = null
                 )
             )
+            com.missedcall.autotext.util.AiNotificationManager.notifyAiSmsIgnored(
+                applicationContext,
+                targetNumber,
+                "Missed call auto-text to $targetNumber was skipped: Number is saved in your contacts ($contactName)."
+            )
             return Result.success()
         }
 
@@ -100,6 +105,7 @@ class SendAutoTextWorker(
                 val cooldownMillis = settings.cooldownHours * 3600 * 1000L
                 val timeElapsed = System.currentTimeMillis() - lastSentTimestamp
                 if (timeElapsed < cooldownMillis) {
+                    val remainingMins = ((cooldownMillis - timeElapsed) / 60000L).coerceAtLeast(1L)
                     Log.d(TAG, "Cooldown active for $targetNumber. Time elapsed: ${timeElapsed / 1000}s, Cooldown: ${settings.cooldownHours}h")
                     dao.insertLog(
                         CallLogEvent(
@@ -107,6 +113,11 @@ class SendAutoTextWorker(
                             status = LogStatus.SKIPPED_COOLDOWN,
                             messageSent = null
                         )
+                    )
+                    com.missedcall.autotext.util.AiNotificationManager.notifyAiSmsIgnored(
+                        applicationContext,
+                        targetNumber,
+                        "Missed call auto-text to $targetNumber was skipped: Cooldown is active ($remainingMins mins remaining in your ${settings.cooldownHours}h window)."
                     )
                     return Result.success()
                 }
@@ -122,6 +133,11 @@ class SendAutoTextWorker(
                     status = LogStatus.SKIPPED_OFF_HOURS,
                     messageSent = null
                 )
+            )
+            com.missedcall.autotext.util.AiNotificationManager.notifyAiSmsIgnored(
+                applicationContext,
+                targetNumber,
+                "Missed call auto-text to $targetNumber was skipped: Call occurred outside configured Business Hours."
             )
             return Result.success()
         }
@@ -224,6 +240,13 @@ class SendAutoTextWorker(
                     status = if (isRemoteTrigger) LogStatus.REMOTE_SENT else LogStatus.SENT,
                     messageSent = messageBody
                 )
+            )
+
+            com.missedcall.autotext.util.AiNotificationManager.notifyAiSmsActivity(
+                context = applicationContext,
+                callerPhone = targetNumber,
+                messageText = messageBody,
+                isOutbound = true
             )
 
             com.missedcall.autotext.util.WebhookDispatcher.dispatchEvent(
