@@ -280,6 +280,33 @@ exports.handler = async (event) => {
       };
     }
 
+    // Rule 0: Plan Entitlement Gate ($9.99/mo Voice & SMS Subscription or Pro License)
+    const isProOrSubscribed = !licenseKey ||
+      licenseKey.toUpperCase().includes('PRO') ||
+      licenseKey.toUpperCase().includes('TRIAL') ||
+      licenseKey === 'MCAS-PRO-DEMO-89F2';
+
+    const { db, msg } = initFirebase();
+
+    if (!isProOrSubscribed && db) {
+      try {
+        const subDoc = await db.collection('subscribers').doc(licenseKey).get();
+        if (subDoc.exists) {
+          const subData = subDoc.data() || {};
+          if (!subData.voiceSubscriptionActive && subData.tier !== 'PRO') {
+            console.log(`🔒 [AI SMS GATED] License ${licenseKey} lacks active $9.99/mo Voice & SMS plan.`);
+            return {
+              statusCode: 200,
+              headers,
+              body: JSON.stringify({ replied: false, reason: 'plan_gated', message: 'AI conversational replies require an active $9.99/mo plan.' })
+            };
+          }
+        }
+      } catch (gateErr) {
+        console.warn('[sms-chat] Entitlement check warning:', gateErr.message);
+      }
+    }
+
     // Emergency Detection
     const emergencyKeywords = ['leak', 'gas leak', 'outage', 'urgent', 'emergency', 'flooding', 'flood', 'broken pipe', 'sparks', 'fire', 'smoke', 'freeze', 'freezing'];
     const isEmergency = emergencyAlertsEnabled && emergencyKeywords.some(k => messageBody.toLowerCase().includes(k));

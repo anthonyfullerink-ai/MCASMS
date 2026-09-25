@@ -492,10 +492,22 @@ exports.handler = async (event) => {
               }
             }
 
-            // Post-Call SIM SMS Confirmation (if enabled by subscriber)
+            // Post-Call SIM SMS Confirmation & Disconnected Recovery (if enabled by subscriber)
             if (sub.postCallSmsEnabled !== false) {
-              const nameGreeting = customer.name ? `Hi ${customer.name}, ` : 'Hi, ';
-              const postCallText = `${nameGreeting}thanks for calling! Our AI receptionist noted your request: "${summary.substring(0, 85)}". Feel free to reply here if you have any questions or want to update your time!`;
+              const endedReason = message.endedReason || callObj.endedReason || payload.endedReason || '';
+              const isSilence = endedReason === 'silence-timed-out' || lowerTrans.includes('could not hear') || lowerTrans.includes('cannot hear');
+              const isDisconnected = (endedReason === 'customer-ended-call' || endedReason === 'phone-call-provider-closed-call' || endedReason === 'assistant-error') && durationSec < 35 && !isBooking;
+
+              let postCallText = '';
+              if (isSilence) {
+                postCallText = `Hi, sorry we couldn't hear each other on the call! Were you still looking for assistance or an estimate today? Feel free to reply directly to this text!`;
+              } else if (isDisconnected) {
+                postCallText = `Hey, seems like we got disconnected! Were you still looking for a quote or technician visit? Let me know how I can help!`;
+              } else {
+                const nameGreeting = customer.name ? `Hi ${customer.name}, ` : 'Hi, ';
+                postCallText = `${nameGreeting}thanks for calling! Our AI receptionist noted your request: "${summary.substring(0, 85)}". Feel free to reply here if you have any questions or want to update your time!`;
+              }
+
               try {
                 await msg.send({
                   token: deviceRecord.fcm_token,
@@ -508,7 +520,7 @@ exports.handler = async (event) => {
                   },
                   android: { priority: 'high' }
                 });
-                console.log(`📱 [POST-CALL SIM SMS] Dispatched to device SIM relay for ${callerNum}`);
+                console.log(`📱 [POST-CALL SIM SMS] Dispatched (${isSilence ? 'SILENCE RECOVERY' : isDisconnected ? 'DISCONNECTED RECOVERY' : 'NORMAL'}) to device SIM relay for ${callerNum}`);
               } catch (simErr) {
                 console.warn('[vapi-webhook] Post-call SIM SMS dispatch warning:', simErr.message);
               }

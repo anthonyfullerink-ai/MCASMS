@@ -78,6 +78,25 @@ class IncomingSmsReceiver : BroadcastReceiver() {
 
             // 3. Conversational AI SMS Engine
             if (settings.aiSmsMasterEnabled && settings.aiSmsInboundAgentEnabled) {
+                // Rule 0: Plan Entitlement Gate ($9.99/mo Voice & SMS Subscription or Pro License)
+                val licenseInfo = com.missedcall.autotext.data.license.LicenseManager.verifyLicenseKey(settings.licenseKey)
+                val hasAiSubscription = settings.voiceSubscriptionActive ||
+                        licenseInfo.tier == com.missedcall.autotext.data.license.LicenseTier.PRO ||
+                        settings.licenseKey.contains("PRO", ignoreCase = true) ||
+                        settings.licenseKey.contains("TRIAL", ignoreCase = true) ||
+                        settings.licenseKey == "MCAS-PRO-DEMO-89F2" ||
+                        com.missedcall.autotext.BuildConfig.IS_PRO_EDITION
+
+                if (!hasAiSubscription) {
+                    Log.i(TAG, "Inbound SMS received from $senderNumber, but AI conversational reply is skipped: Active $9.99/mo plan required.")
+                    com.missedcall.autotext.util.AiNotificationManager.notifyAiSmsIgnored(
+                        context = context,
+                        callerPhone = senderNumber,
+                        reason = "Inbound text from $senderNumber received. AI conversational replies require an active $9.99/mo plan."
+                    )
+                    return@launch
+                }
+
                 // Rule A: Phone Contacts Exemption (Family, Crew & Saved Contacts Shield)
                 val isSavedContact = com.missedcall.autotext.util.ContactUtils.getContactName(context, senderNumber) != null
                 if (isSavedContact) {

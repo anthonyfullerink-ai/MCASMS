@@ -111,7 +111,7 @@ class SendAutoTextWorker(
         }
 
         // 3. Check Cooldown Window (Skip for explicit remote webhook triggers)
-        if (!isRemoteTrigger) {
+        if (!isRemoteTrigger && settings.cooldownHours > 0) {
             val lastSentTimestamp = dao.getLastSentTimestamp(targetNumber)
             if (lastSentTimestamp != null) {
                 val cooldownMillis = settings.cooldownHours * 3600 * 1000L
@@ -171,7 +171,7 @@ class SendAutoTextWorker(
         // 5.5 Check AI Voice Receptionist Forwarding (Approach 2: Event-Driven Reconciliation Buffer)
         if (!isRemoteTrigger && settings.voiceReceptionistEnabled) {
             val cleanDigits = targetNumber.filter { it.isDigit() }.takeLast(10)
-            val recentCutoff = System.currentTimeMillis() - 10 * 60 * 1000L // last 10 minutes
+            val recentCutoff = System.currentTimeMillis() - 45_000L // 45-second reconciliation window for active voice call
             val hasRecentVoiceCall = try {
                 app.database.voiceCallDao().countRecentVoiceCalls(cleanDigits, recentCutoff) > 0
             } catch (e: Exception) {
@@ -179,7 +179,7 @@ class SendAutoTextWorker(
             }
 
             if (hasRecentVoiceCall) {
-                Log.i(TAG, "AI Voice Receptionist handled call for $targetNumber. Suppressing native canned SMS.")
+                Log.i(TAG, "AI Voice Receptionist handled call for $targetNumber within last 45s. Suppressing native canned SMS.")
                 dao.insertLog(
                     CallLogEvent(
                         phoneNumber = targetNumber,
@@ -189,7 +189,7 @@ class SendAutoTextWorker(
                 )
                 return Result.success()
             } else {
-                Log.i(TAG, "Reconciliation Buffer expired for $targetNumber: No AI voice session detected (caller hung up early). Proceeding with native auto-reply!")
+                Log.i(TAG, "Reconciliation Buffer clear for $targetNumber: No active AI voice session. Proceeding with native auto-reply!")
             }
         }
 
@@ -222,9 +222,14 @@ class SendAutoTextWorker(
                 .replace("{agent_name}", cleanAgent, ignoreCase = true)
         }
 
-        // Apply 40-Second Delay (Human pacing simulation requested by user)
-        val delayMillis = 40_000L
-        Log.d(TAG, "Applying human pacing 40-second delay before sending SMS to $targetNumber...")
+        // Apply Pacing Delay
+        val delayMillis = if (isRemoteTrigger) {
+            40_000L // 40-second delay strictly for Conversational AI back-and-forth replies
+        } else {
+            // For missed call auto-text: respect user's configured jitterDelaySeconds (minimum 2s)
+            (settings.jitterDelaySeconds * 1000L).coerceAtLeast(2_000L)
+        }
+        Log.d(TAG, "Applying pacing delay (${delayMillis / 1000}s) before sending SMS to $targetNumber...")
         delay(delayMillis)
 
         // Carrier Anti-Spam & SIM Burn Safeguard™ (Minimum 3.5s pacing + burst protection)

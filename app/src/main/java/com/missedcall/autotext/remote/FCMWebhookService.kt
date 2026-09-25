@@ -120,6 +120,24 @@ class FCMWebhookService : FirebaseMessagingService() {
         val eventType = data["type"] ?: ""
         if (eventType == "voice_call_started") {
             val callerPhone = data["caller_phone"] ?: data["phone"] ?: "Unknown"
+            serviceScope.launch {
+                try {
+                    val app = applicationContext as App
+                    app.database.voiceCallDao().insert(
+                        VoiceCallEvent(
+                            phoneNumber = callerPhone,
+                            callerName = null,
+                            timestamp = System.currentTimeMillis(),
+                            durationSeconds = 0,
+                            intent = "IN_PROGRESS",
+                            summary = "AI Voice Receptionist answered call",
+                            transcript = ""
+                        )
+                    )
+                } catch (e: Exception) {
+                    Log.w(TAG, "Failed to insert voice_call_started event: ${e.message}")
+                }
+            }
             com.missedcall.autotext.util.AiNotificationManager.notifyVoiceCallStarted(applicationContext, callerPhone)
             return
         }

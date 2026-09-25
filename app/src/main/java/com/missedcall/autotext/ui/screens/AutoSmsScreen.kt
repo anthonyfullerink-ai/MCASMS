@@ -321,7 +321,7 @@ fun AutoSmsScreen(
                             color = MaterialTheme.colorScheme.primaryContainer
                         ) {
                             Text(
-                                text = "${settings.cooldownHours} hr(s)",
+                                text = if (settings.cooldownHours == 0) "Disabled (0 hrs)" else "${settings.cooldownHours} hr(s)",
                                 modifier = Modifier.padding(horizontal = 8.dp, vertical = 4.dp),
                                 style = MaterialTheme.typography.labelSmall,
                                 fontWeight = FontWeight.Bold,
@@ -333,8 +333,8 @@ fun AutoSmsScreen(
                     Slider(
                         value = settings.cooldownHours.toFloat(),
                         onValueChange = { onSettingsChanged(settings.copy(cooldownHours = it.toInt())) },
-                        valueRange = 1f..24f,
-                        steps = 22,
+                        valueRange = 0f..24f,
+                        steps = 23,
                         modifier = Modifier.fillMaxWidth()
                     )
 
@@ -342,7 +342,7 @@ fun AutoSmsScreen(
                         modifier = Modifier.fillMaxWidth(),
                         horizontalArrangement = Arrangement.SpaceBetween
                     ) {
-                        Text("1 hour", style = MaterialTheme.typography.labelSmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
+                        Text("0 hrs (Off)", style = MaterialTheme.typography.labelSmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
                         Text("4 hrs (Recommended)", style = MaterialTheme.typography.labelSmall, color = ActiveGreenText, fontWeight = FontWeight.Bold)
                         Text("24 hrs", style = MaterialTheme.typography.labelSmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
                     }

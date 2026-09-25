@@ -49,35 +49,52 @@ class CallStateReceiver : BroadcastReceiver() {
                 }
             }
             TelephonyManager.EXTRA_STATE_IDLE -> {
-                var targetNumber = incomingNumber
-                val recentMissedFromLog = getRecentMissedOrRejectedCall(context)
+                val wasRinging = isRinging.getAndSet(false)
+                val answered = wasAnswered.getAndSet(false)
+                val capturedNumber = incomingNumber
+                incomingNumber = null
 
-                // If CallLog confirms a missed (3), rejected (5), or blocked (6) call, treat as missed
-                val isMissedOrRejected = (isRinging.get() && !wasAnswered.get()) || (recentMissedFromLog != null)
-                if (targetNumber.isNullOrBlank() && recentMissedFromLog != null) {
-                    targetNumber = recentMissedFromLog
-                }
-
-                if (isMissedOrRejected && !targetNumber.isNullOrBlank()) {
-                    Log.d(TAG, "Missed / Rejected call confirmed from: $targetNumber")
-                    enqueueAutoTextWorker(context, targetNumber)
-                } else if (isRinging.get() && wasAnswered.get() && !targetNumber.isNullOrBlank()) {
-                    Log.d(TAG, "Completed call detected with: $targetNumber")
+                if (wasRinging && answered && !capturedNumber.isNullOrBlank()) {
+                    Log.d(TAG, "Completed call detected with: $capturedNumber")
                     CoroutineScope(Dispatchers.IO).launch {
                         val settingsRepo = (context.applicationContext as App).settingsRepository
                         com.missedcall.autotext.util.WebhookDispatcher.dispatchEvent(
                             context = context,
                             settings = settingsRepo.getSettings(),
                             eventType = "call.completed",
-                            callerNumber = targetNumber,
+                            callerNumber = capturedNumber,
                             disposition = "answered"
                         )
                     }
+                } else {
+                    // Missed, rejected, or unanswered call
+                    val pendingResult = goAsync()
+                    CoroutineScope(Dispatchers.IO).launch {
+                        try {
+                            var targetNumber = capturedNumber
+                            if (targetNumber.isNullOrBlank()) {
+                                // Modern Android takes 300-1500ms to insert missed call into CallLog after IDLE broadcast
+                                for (attempt in 1..8) {
+                                    val logNumber = getRecentMissedOrRejectedCall(context)
+                                    if (!logNumber.isNullOrBlank()) {
+                                        targetNumber = logNumber
+                                        break
+                                    }
+                                    kotlinx.coroutines.delay(400)
+                                }
+                            }
+
+                            if (!targetNumber.isNullOrBlank()) {
+                                Log.i(TAG, "Missed / Rejected call confirmed from: $targetNumber. Triggering auto-text.")
+                                enqueueAutoTextWorker(context, targetNumber)
+                            } else {
+                                Log.w(TAG, "IDLE reached but no caller number could be identified.")
+                            }
+                        } finally {
+                            pendingResult.finish()
+                        }
+                    }
                 }
-                // Reset state machine flags
-                isRinging.set(false)
-                wasAnswered.set(false)
-                incomingNumber = null
             }
         }
     }
@@ -104,7 +121,9 @@ class CallStateReceiver : BroadcastReceiver() {
             ) ?: return null
 
             cursor.use {
-                if (it.moveToFirst()) {
+                var count = 0
+                while (it.moveToNext() && count < 5) {
+                    count++
                     val numberIdx = it.getColumnIndex(android.provider.CallLog.Calls.NUMBER)
                     val typeIdx = it.getColumnIndex(android.provider.CallLog.Calls.TYPE)
                     val dateIdx = it.getColumnIndex(android.provider.CallLog.Calls.DATE)
@@ -115,8 +134,8 @@ class CallStateReceiver : BroadcastReceiver() {
                         val date = it.getLong(dateIdx)
                         val ageMs = System.currentTimeMillis() - date
 
-                        // If call was within last 25 seconds and was missed (3), rejected (5), or blocked (6)
-                        if (ageMs < 25_000L && (type == android.provider.CallLog.Calls.MISSED_TYPE ||
+                        // If call was within last 45 seconds and was missed (3), rejected (5), or blocked (6)
+                        if (ageMs < 45_000L && (type == android.provider.CallLog.Calls.MISSED_TYPE ||
                                                type == android.provider.CallLog.Calls.REJECTED_TYPE ||
                                                type == android.provider.CallLog.Calls.BLOCKED_TYPE)) {
                             Log.d(TAG, "Resolved missed/rejected call from CallLog: $number (type: $type, age: ${ageMs}ms)")
