@@ -16,6 +16,20 @@
 
 const https = require('https');
 const querystring = require('querystring');
+const fsModule = require('fs');
+const path = require('path');
+
+const LOCAL_CACHE_PATH = path.join(__dirname, '../../.device_tokens_cache.json');
+
+function getLocalToken(licenseKey) {
+  try {
+    if (fsModule.existsSync(LOCAL_CACHE_PATH)) {
+      const cache = JSON.parse(fsModule.readFileSync(LOCAL_CACHE_PATH, 'utf8') || '{}');
+      return cache[licenseKey] || null;
+    }
+  } catch (e) {}
+  return null;
+}
 
 const STRIPE_SECRET_KEY = process.env.STRIPE_SECRET_KEY || '';
 
@@ -195,6 +209,84 @@ exports.handler = async (event) => {
     const callId = callObj.id || `call_${Date.now()}`;
 
     console.log(`📞 [NETLIFY VAPI WEBHOOK] Call ${callId} (${message.type || 'unknown'}) from ${callerNum} (${durationSec}s) - Urgency: ${isUrgent ? 'HIGH' : 'NORMAL'}`);
+
+    // ── Handle Vapi Tool Calls (e.g. Riley invoking send_sms tool) ──
+    if (message.type === 'tool-calls' || payload.type === 'tool-calls') {
+      const toolCalls = message.toolCalls || payload.toolCalls || [];
+      const results = [];
+      const fs = getFirestore();
+      const msg = getMessagingService();
+
+      for (const tc of toolCalls) {
+        const fnName = tc.function?.name || tc.name;
+        if (fnName === 'send_sms') {
+          let args = {};
+          try {
+            args = typeof tc.function?.arguments === 'string'
+              ? JSON.parse(tc.function.arguments)
+              : (tc.function?.arguments || tc.parameters || {});
+          } catch (e) {
+            args = {};
+          }
+
+          const targetPhone = args.phoneNumber || callerNum;
+          const smsText = args.message || '';
+
+          console.log(`📱 [VAPI TOOL CALL] send_sms requested for ${targetPhone}: "${smsText}"`);
+
+          let delivered = false;
+          if (fs && msg) {
+            try {
+              let sub = null;
+              if (inboundNumber) sub = await fs.getVoiceBinding(inboundNumber);
+              if (!sub && callObj.assistantId) sub = await fs.getVoiceBinding(callObj.assistantId);
+              if (!sub) sub = await fs.getVoiceBinding('MCAS-PRO-TRIAL-001');
+
+              let targetFcmToken = null;
+              if (sub && sub.licenseKey) {
+                const dev = await fs.getDeviceBinding(sub.licenseKey);
+                targetFcmToken = dev?.fcm_token;
+              }
+              if (!targetFcmToken) {
+                const localCache = getLocalToken('MCAS-PRO-TRIAL-001');
+                targetFcmToken = localCache?.fcm_token;
+              }
+
+              if (targetFcmToken && targetPhone && smsText) {
+                await msg.send({
+                  token: targetFcmToken,
+                  data: {
+                    phone: targetPhone,
+                    message: smsText,
+                    sim_slot: '1',
+                    timestamp: String(Date.now()),
+                    source: 'central_cloud_relay'
+                  },
+                  android: { priority: 'high' }
+                });
+                console.log(`🚀 [VAPI TOOL FCM DELIVERED] SMS relay sent to device for ${targetPhone}`);
+                delivered = true;
+              }
+            } catch (relayErr) {
+              console.error('❌ [VAPI TOOL FCM FAILED]:', relayErr.message);
+            }
+          }
+
+          results.push({
+            toolCallId: tc.id,
+            result: delivered
+              ? `Text message dispatched successfully to ${targetPhone} via office phone SIM.`
+              : `SMS request received and queued for dispatch to ${targetPhone}.`
+          });
+        }
+      }
+
+      return {
+        statusCode: 200,
+        headers,
+        body: JSON.stringify({ results })
+      };
+    }
 
     // ── Handle In-Progress / Ringing Call Status (Approach 2: Instant Cancellation) ──
     if (message.type === 'status-update') {

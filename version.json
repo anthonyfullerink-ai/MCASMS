@@ -5,6 +5,6 @@
   "proDownloadUrl": "https://raw.githubusercontent.com/anthonyfullerink-ai/MCASMS/main/MissedCallAutoSMS.apk",
   "releaseNotes": "🎯 v1.8.4 Contextual AI Intelligence & 40s Human Pacing Delay:\n• 🧠 Contextual Conversation Pivot: Directly answers customer questions first (e.g. 'Are you open today?' -> 'Yes, we are open today!') without robotic premature booking intake\n• ⏱️ 40-Second Human Pacing Delay: Outgoing text messages now wait exactly 40 seconds before dispatching via SIM, simulating natural human reading and typing\n• ⚡ Gemini 3.6 Flash Multi-Model Engine: Instant sub-second AI reasoning with multi-model fallback across Gemini 3.6, 3.1-Lite, and 3.8\n• 🛡️ Smart Conversational Fallbacks: Context-aware responses even under extreme network dropouts",
   "mandatory": true,
-  "minSupportedVersion": 25,
-  "updatedAt": "2026-09-25T17:39:00.000Z"
+  "minSupportedVersion": 28,
+  "updatedAt": "2026-09-25T17:41:11.424Z"
 }
