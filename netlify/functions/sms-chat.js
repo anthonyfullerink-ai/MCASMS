@@ -111,9 +111,33 @@ function sendResendEmail(apiKey, toEmail, fromEmail, subject, htmlContent) {
 }
 
 /**
- * Call Gemini 2.0 Flash / 1.5 Flash
+ * Call Gemini API with Multi-Model Fallback
  */
-function callGemini(contents, systemInstruction, apiKey) {
+const CANDIDATE_MODELS = [
+  'gemini-3.6-flash',
+  'gemini-3.1-flash-lite',
+  'gemini-3.8-flash',
+  'gemini-3.5-flash',
+  'gemini-flash-latest'
+];
+
+async function callGemini(contents, systemInstruction, apiKey) {
+  let lastError = null;
+  for (const model of CANDIDATE_MODELS) {
+    try {
+      const res = await callGeminiModel(model, contents, systemInstruction, apiKey);
+      if (res && res.trim().length > 0) {
+        return res.trim();
+      }
+    } catch (err) {
+      lastError = err;
+      console.warn(`[sms-chat] Model ${model} failed (${err.message}). Trying next candidate...`);
+    }
+  }
+  throw lastError || new Error('All Gemini candidate models failed');
+}
+
+function callGeminiModel(model, contents, systemInstruction, apiKey) {
   return new Promise((resolve, reject) => {
     const postData = JSON.stringify({
       systemInstruction: {
@@ -121,12 +145,14 @@ function callGemini(contents, systemInstruction, apiKey) {
       },
       contents: contents,
       generationConfig: {
-        temperature: 0.4,
-        maxOutputTokens: 300
+        temperature: 0.5,
+        maxOutputTokens: 1000,
+        thinkingConfig: {
+          thinkingBudget: 0
+        }
       }
     });
 
-    const model = 'gemini-2.0-flash';
     const options = {
       hostname: 'generativelanguage.googleapis.com',
       port: 443,
@@ -357,42 +383,52 @@ exports.handler = async (event) => {
     });
 
     // Construct tailored system instructions based on Business Service Type
-    let systemInstruction = `You are a polite, helpful, and concise AI Front Desk Assistant for a local business communicating with a client via SMS text message.
-Keep replies strictly to 1 to 3 short sentences. Sound human, professional, and friendly. Never use Markdown formatting like **bold** or # headings or bullet lists because this will be sent as a plain SMS.
+    let systemInstruction = `You are a helpful, human-sounding AI Front Desk Assistant for a local business communicating with a client via SMS text message.
+Keep replies strictly to 1 or 2 concise, natural sentences. Sound like a real person working the front desk—warm, attentive, and practical. Never use Markdown formatting like **bold** or # headings or bullet lists because this will be sent as a plain SMS.
 
-CRITICAL RULES:
-1. Always be conversational, reassuring, and answer the client's question or greeting directly.
+CRITICAL CONVERSATIONAL RULES:
+1. ALWAYS ANSWER THE PROSPECT'S QUESTION DIRECTLY FIRST:
+   - If they ask "Are you open today?" or ask about hours: Answer clearly and directly (e.g. "Yes, we are open today and ready to help! What can we do for you?").
+   - If they send a casual greeting ("Hi", "Hello", "Yo"): Greet them warmly and ask how you can help them today.
+   - If they ask about services, pricing, or turnaround: Answer their specific question directly.
+2. PIVOT NATURALLY - DO NOT FORCE APPOINTMENTS PREMATURELY:
+   - NEVER ask for their street address or attempt to schedule an appointment on the first message unless the customer explicitly asked for an appointment, quote, or technician visit!
+   - Meet them where they are in the conversation. Answer first, then politely invite them to share what project or issue they need assistance with.
 `;
 
     if (businessType === 'IN_SHOP') {
       systemInstruction += `
-BUSINESS TYPE: IN-SHOP / STUDIO / WALK-IN LOCATION (e.g., Barber, Stylist, Salon, Auto Shop, Clinic).
+BUSINESS TYPE: IN-SHOP / STUDIO / STOREFRONT LOCATION.
 - We have a fixed physical location.
-${shopAddress ? `- Our shop address is: ${shopAddress}. Direct customers to come here.` : `- Direct customers to come to our storefront studio.`}
-${shopInstructions ? `- Important arrival / parking instructions: ${shopInstructions}` : ``}
-- When scheduling an appointment, offer specific appointment times during normal business hours.
+${shopAddress ? `- Our location is: ${shopAddress}.` : `- We operate out of our local studio.`}
+${shopInstructions ? `- Arrival / parking notes: ${shopInstructions}` : ``}
+- Only offer specific appointment times when they indicate they want to book or come in.
 - If the customer confirms a specific appointment slot or time, append [BOOKING: {"service":"requested service", "time":"slot confirmed", "location":"${shopAddress || 'In-Shop'}"}] at the very end of your response.
 `;
     } else {
       // MOBILE_TRADE
       systemInstruction += `
-BUSINESS TYPE: MOBILE FIELD TRADE (e.g., Plumber, Electrician, HVAC, Roofer, Mobile Auto Detailer).
+BUSINESS TYPE: MOBILE FIELD TRADE (e.g., Plumber, Electrician, HVAC, Contractor, Handyman, Mobile Mechanic).
 - We travel directly to the client's home or job site.
-- NEVER provide a shop or storefront address (we do not accept walk-ins).
-- When booking or dispatching a technician, always politely ask the customer for their street address and city.
-- Offer 2-hour arrival windows (e.g. "between 9 AM - 11 AM" or "between 1 PM - 3 PM").
+- NEVER disclose a storefront or shop address.
+- Only when the customer asks for a service, estimate, or technician visit: politely ask for their address and suggest a 2-hour arrival window (e.g. "between 9 AM - 11 AM").
 - If the customer confirms a specific day, arrival window, and their address, append [BOOKING: {"service":"requested service", "time":"arrival window", "address":"client street address"}] at the very end of your response.
 `;
     }
 
     if (isEmergency) {
       systemInstruction += `
-NOTE: The customer's message indicates an urgent or emergency situation. Acknowledge the urgency immediately, reassure them that our team has been alerted, and ask for their exact address/location if not already provided.
+NOTE: The customer's message indicates an urgent or emergency situation. Acknowledge the emergency with urgency, reassure them that our team is on alert, and ask for their exact address if not already provided.
 `;
     }
 
-    // Call Gemini 2.0 Flash
-    const apiKey = process.env.GEMINI_API_KEY;
+    // Resolve API key with multiple fallbacks
+    const apiKey = process.env.GEMINI_API_KEY || 
+                   process.env.GEMINI_KEY || 
+                   process.env.GOOGLE_API_KEY || 
+                   process.env.GOOGLE_GEMINI_API_KEY || 
+                   process.env.GEMINI_SECRET || '';
+
     let aiReply = '';
 
     if (apiKey) {
@@ -403,12 +439,19 @@ NOTE: The customer's message indicates an urgent or emergency situation. Acknowl
       }
     }
 
-    // Fallback reply if AI call fails
+    // Contextual Fallback reply if AI calls completely fail
     if (!aiReply) {
-      if (businessType === 'IN_SHOP') {
-        aiReply = `Thanks for reaching out! We're located at ${shopAddress || 'our studio'}. What day and time works best for your appointment?`;
+      const lower = messageBody.toLowerCase();
+      if (lower.includes('open') || lower.includes('hour') || lower.includes('today') || lower.includes('tomorrow') || lower.includes('available') || lower.includes('time')) {
+        aiReply = `Hi there! Yes, we're open and available to help today. What can we do for you?`;
+      } else if (lower.includes('price') || lower.includes('cost') || lower.includes('quote') || lower.includes('rate') || lower.includes('how much')) {
+        aiReply = `Thanks for reaching out! What specific service or project do you need so we can give you an accurate estimate?`;
+      } else if (lower.length < 15 && (lower.includes('hi') || lower.includes('hello') || lower.includes('hey') || lower.includes('yo'))) {
+        aiReply = `Hey there! Thanks for reaching out. How can we help you today?`;
+      } else if (businessType === 'IN_SHOP') {
+        aiReply = `Thanks for reaching out! How can we help you today? We're located at ${shopAddress || 'our studio'}.`;
       } else {
-        aiReply = `Thanks for reaching out! We'd love to help. What is your street address and what day works best for our technician to stop by?`;
+        aiReply = `Thanks for reaching out! How can we help you today?`;
       }
     }
 

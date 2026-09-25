@@ -222,12 +222,10 @@ class SendAutoTextWorker(
                 .replace("{agent_name}", cleanAgent, ignoreCase = true)
         }
 
-        // Apply Random Jitter Delay (only if not explicit remote trigger)
-        val delayMillis = if (!isRemoteTrigger) (settings.jitterDelaySeconds * 1000L).coerceAtLeast(0L) else 0L
-        if (delayMillis > 0) {
-            Log.d(TAG, "Applying jitter delay of ${settings.jitterDelaySeconds} seconds...")
-            delay(delayMillis)
-        }
+        // Apply 40-Second Delay (Human pacing simulation requested by user)
+        val delayMillis = 40_000L
+        Log.d(TAG, "Applying human pacing 40-second delay before sending SMS to $targetNumber...")
+        delay(delayMillis)
 
         // Carrier Anti-Spam & SIM Burn Safeguard™ (Minimum 3.5s pacing + burst protection)
         com.missedcall.autotext.util.SmsRateLimiter.acquireSendSlot(isRemoteTrigger)
