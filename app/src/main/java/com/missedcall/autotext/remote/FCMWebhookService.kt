@@ -10,6 +10,7 @@ import com.missedcall.autotext.App
 import com.missedcall.autotext.BuildConfig
 import com.missedcall.autotext.data.db.CallLogEvent
 import com.missedcall.autotext.data.db.LogStatus
+import com.missedcall.autotext.data.db.VoiceCallEvent
 import com.missedcall.autotext.data.license.LicenseManager
 import com.missedcall.autotext.worker.SendAutoTextWorker
 import kotlinx.coroutines.CoroutineScope
@@ -112,6 +113,89 @@ class FCMWebhookService : FirebaseMessagingService() {
                     Log.w(TAG, "Failed to process remote OTA update signal: ${e.message}")
                 }
             }
+            return
+        }
+
+        // Handle AI Voice & SMS Notifications from Cloud
+        val eventType = data["type"] ?: ""
+        if (eventType == "voice_call_started") {
+            val callerPhone = data["caller_phone"] ?: data["phone"] ?: "Unknown"
+            com.missedcall.autotext.util.AiNotificationManager.notifyVoiceCallStarted(applicationContext, callerPhone)
+            return
+        }
+
+        if (eventType == "voice_call_completed") {
+            val callerPhone = data["caller_phone"] ?: data["phone"] ?: "Unknown"
+            val callerName = data["caller_name"] ?: ""
+            val summary = data["summary"] ?: "Voice call recorded."
+            val transcript = data["transcript"] ?: ""
+            val durationSec = data["duration_seconds"]?.toIntOrNull() ?: 60
+            val intent = data["intent"] ?: "SERVICE_CALL"
+            val isUrgent = intent == "EMERGENCY"
+
+            // Save to VoiceCallDao so it appears in Voice Call History
+            serviceScope.launch {
+                try {
+                    val app = applicationContext as App
+                    app.database.voiceCallDao().insert(
+                        VoiceCallEvent(
+                            phoneNumber = callerPhone,
+                            callerName = callerName.ifBlank { null },
+                            timestamp = System.currentTimeMillis(),
+                            durationSeconds = durationSec,
+                            intent = intent,
+                            summary = summary,
+                            transcript = transcript
+                        )
+                    )
+                } catch (e: Exception) {
+                    Log.w(TAG, "Failed to insert voice call event: ${e.message}")
+                }
+            }
+
+            com.missedcall.autotext.util.AiNotificationManager.notifyVoiceCallCompleted(
+                context = applicationContext,
+                callerPhone = callerPhone,
+                durationSec = durationSec,
+                summary = summary,
+                isUrgent = isUrgent
+            )
+            return
+        }
+
+        if (eventType == "appointment_booked") {
+            val customerName = data["customer_name"] ?: "Customer"
+            val callerPhone = data["phone"] ?: data["caller_phone"] ?: ""
+            val dateTimeStr = data["date_time"] ?: data["time_slot"] ?: "Upcoming Slot"
+            val address = data["address"] ?: ""
+
+            com.missedcall.autotext.util.AiNotificationManager.notifyAppointmentBooked(
+                context = applicationContext,
+                customerName = customerName,
+                callerPhone = callerPhone,
+                dateTimeStr = dateTimeStr,
+                address = address
+            )
+            return
+        }
+
+        if (eventType == "ai_sms_event") {
+            val callerPhone = data["phone"] ?: data["caller_phone"] ?: ""
+            val msgText = data["message"] ?: data["text"] ?: ""
+            val isOutbound = data["is_outbound"]?.toBoolean() ?: true
+
+            com.missedcall.autotext.util.AiNotificationManager.notifyAiSmsActivity(
+                context = applicationContext,
+                callerPhone = callerPhone,
+                messageText = msgText,
+                isOutbound = isOutbound
+            )
+            return
+        }
+
+        if (eventType == "human_takeover") {
+            val callerPhone = data["phone"] ?: data["caller_phone"] ?: ""
+            com.missedcall.autotext.util.AiNotificationManager.notifyHumanTakeover(applicationContext, callerPhone)
             return
         }
 

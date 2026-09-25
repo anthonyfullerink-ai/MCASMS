@@ -26,6 +26,9 @@ import com.missedcall.autotext.ui.theme.ActiveGreenText
 import com.missedcall.autotext.ui.theme.GrayPaused
 import kotlinx.coroutines.launch
 
+import androidx.compose.ui.graphics.Color
+import com.missedcall.autotext.data.db.AppNotificationEvent
+
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun MainScreen(
@@ -41,11 +44,17 @@ fun MainScreen(
     onRequestPermissionBatch: (List<String>) -> Unit = {},
     voiceCalls: List<VoiceCallEvent> = emptyList(),
     onMarkVoiceCallRead: (Long) -> Unit = {},
-    onClearVoiceCalls: () -> Unit = {}
+    onClearVoiceCalls: () -> Unit = {},
+    notifications: List<AppNotificationEvent> = emptyList(),
+    onMarkAllNotificationsRead: () -> Unit = {},
+    onClearNotifications: () -> Unit = {},
+    onMarkNotificationRead: (Long) -> Unit = {},
+    initialOpenNotifications: Boolean = false
 ) {
     var selectedTab by remember { mutableIntStateOf(0) }
     var showCustomerPortalDialog by remember { mutableStateOf(false) }
     var showOnboardingDialog by remember { mutableStateOf(false) }
+    var showNotificationsPanel by remember { mutableStateOf(initialOpenNotifications) }
 
     val context = LocalContext.current
     val coroutineScope = rememberCoroutineScope()
@@ -220,6 +229,16 @@ fun MainScreen(
         )
     }
 
+    if (showNotificationsPanel) {
+        NotificationsPanelDialog(
+            notifications = notifications,
+            onDismiss = { showNotificationsPanel = false },
+            onMarkAllRead = onMarkAllNotificationsRead,
+            onClearAll = onClearNotifications,
+            onMarkRead = onMarkNotificationRead
+        )
+    }
+
     Scaffold(
         topBar = {
             TopAppBar(
@@ -240,6 +259,32 @@ fun MainScreen(
                     }
                 },
                 actions = {
+                    // AI Activity Notifications Bell Icon
+                    val unreadNotifs = remember(notifications) { notifications.count { !it.isRead } }
+                    IconButton(
+                        onClick = { showNotificationsPanel = true }
+                    ) {
+                        BadgedBox(
+                            badge = {
+                                if (unreadNotifs > 0) {
+                                    Badge(
+                                        containerColor = Color(0xFF00E676),
+                                        contentColor = Color.Black
+                                    ) {
+                                        Text("$unreadNotifs", fontSize = 10.sp, fontWeight = FontWeight.Bold)
+                                    }
+                                }
+                            }
+                        ) {
+                            Icon(
+                                Icons.Default.Notifications,
+                                contentDescription = "AI Activity Feed",
+                                tint = if (unreadNotifs > 0) Color(0xFF00E676) else MaterialTheme.colorScheme.onSurfaceVariant,
+                                modifier = Modifier.size(24.dp)
+                            )
+                        }
+                    }
+
                     // Profile Dialog Icon
                     IconButton(
                         onClick = { showProfileDialog = true }

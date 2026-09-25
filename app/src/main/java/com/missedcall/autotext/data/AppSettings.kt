@@ -66,7 +66,22 @@ data class AppSettings(
     val vapiVoiceProvider: String = "cartesia",
     val dashboardCardOrder: String = "HERO,SMS_METRICS,VOICE_METRICS,COST_QUOTA,REVENUE,FOLLOW_UPS,HARDWARE",
     val dashboardHiddenCards: String = "",
-    val permissionsOnboardingCompleted: Boolean = false
+    val permissionsOnboardingCompleted: Boolean = false,
+    val aiSmsMasterEnabled: Boolean = true,
+    val aiSmsVoicePostCallEnabled: Boolean = true,
+    val aiSmsInboundAgentEnabled: Boolean = true,
+    val aiSmsScope: String = "STRICT", // "STRICT", "ALL_UNKNOWN", "OFF"
+    val aiSmsBusinessServiceType: String = "MOBILE", // "MOBILE", "IN_SHOP"
+    val aiSmsShopAddress: String = "",
+    val aiSmsShopInstructions: String = "",
+    val aiSmsCalendarConnected: Boolean = false,
+    val aiSmsCalendarEmail: String = "",
+    val aiSmsCalendarWorkingHours: String = "08:00 - 17:00",
+    val aiSmsSlotDurationMinutes: Int = 60,
+    val aiSmsTravelBufferMinutes: Int = 30,
+    val aiSmsAutoPauseOnHumanReply: Boolean = true,
+    val aiSmsMaxRepliesPerContact: Int = 5,
+    val aiSmsEmergencyAlertsEnabled: Boolean = true
 )
 
 

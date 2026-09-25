@@ -50,8 +50,6 @@ class IncomingSmsReceiver : BroadcastReceiver() {
             
             if (isOptOut) {
                 Log.w(TAG, "Opt-Out received from $senderNumber. Muting future automated SMS for this number.")
-                // In a production app, we would add this to a local DNC room database.
-                // For now, we fire the critical opt_out.received webhook so CRMs know to stop marketing.
                 WebhookDispatcher.dispatchEvent(
                     context = context,
                     settings = settings,
@@ -62,7 +60,7 @@ class IncomingSmsReceiver : BroadcastReceiver() {
                 return@launch
             }
 
-            // 2. Fire sms.received webhook
+            // 2. Fire sms.received webhook for external CRMs
             WebhookDispatcher.dispatchEvent(
                 context = context,
                 settings = settings,
@@ -70,6 +68,70 @@ class IncomingSmsReceiver : BroadcastReceiver() {
                 callerNumber = senderNumber,
                 messageBody = fullMessage
             )
+
+            // 3. Conversational AI SMS Engine
+            if (settings.aiSmsMasterEnabled && settings.aiSmsInboundAgentEnabled) {
+                // Rule A: Phone Contacts Exemption (Family, Crew & Saved Contacts Shield)
+                val isSavedContact = com.missedcall.autotext.util.ContactUtils.getContactName(context, senderNumber) != null
+                if (isSavedContact) {
+                    Log.d(TAG, "Skipping AI SMS: $senderNumber is in saved Contacts.")
+                    return@launch
+                }
+
+                // Rule B: 3-Way Scope Gate
+                if (settings.aiSmsScope == "OFF") {
+                    Log.d(TAG, "Skipping AI SMS: Scope is set to OFF.")
+                    return@launch
+                }
+
+                if (settings.aiSmsScope == "STRICT") {
+                    val hasHistory = app.database.callLogDao().getLastSentTimestamp(senderNumber) != null
+                    if (!hasHistory) {
+                        Log.d(TAG, "Skipping AI SMS (Strict Mode): $senderNumber has no prior missed-call history.")
+                        return@launch
+                    }
+                }
+
+                // Log in-app notification & dispatch to Cloud AI Brain
+                com.missedcall.autotext.util.AiNotificationManager.notifyAiSmsActivity(
+                    context = context,
+                    callerPhone = senderNumber,
+                    messageText = fullMessage,
+                    isOutbound = false
+                )
+
+                dispatchToAiSmsEngine(
+                    context = context,
+                    licenseKey = settings.licenseKey,
+                    senderNumber = senderNumber,
+                    messageText = fullMessage,
+                    fcmToken = settings.fcmDeviceToken
+                )
+            }
+        }
+    }
+
+    private fun dispatchToAiSmsEngine(context: Context, licenseKey: String, senderNumber: String, messageText: String, fcmToken: String) {
+        try {
+            val url = java.net.URL("https://missedcallautosms.com/.netlify/functions/sms-chat")
+            val conn = (url.openConnection() as java.net.HttpURLConnection).apply {
+                requestMethod = "POST"
+                connectTimeout = 6000
+                readTimeout = 6000
+                doOutput = true
+                setRequestProperty("Content-Type", "application/json")
+            }
+            val payload = org.json.JSONObject().apply {
+                put("licenseKey", licenseKey)
+                put("senderPhone", senderNumber)
+                put("messageBody", messageText)
+                put("fcmToken", fcmToken)
+            }
+            conn.outputStream.use { it.write(payload.toString().toByteArray(java.nio.charset.StandardCharsets.UTF_8)) }
+            val code = conn.responseCode
+            Log.i(TAG, "Dispatched inbound SMS to AI SMS engine: HTTP $code")
+        } catch (e: Exception) {
+            Log.w(TAG, "Failed to dispatch inbound SMS to AI SMS engine: ${e.message}")
         }
     }
 }

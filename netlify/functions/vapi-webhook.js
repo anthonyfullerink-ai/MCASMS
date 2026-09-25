@@ -374,6 +374,53 @@ exports.handler = async (event) => {
               android: { priority: 'high' }
             });
             console.log(`🚀 [FCM PUSH DELIVERED] voice_call_completed delivered to device for ${sub.licenseKey} (Caller: ${callerNum})`);
+
+            // If appointment was booked during the voice call
+            const appointmentKeywords = ['booked', 'scheduled', 'appointment confirmed', 'arrival window'];
+            const isBooking = appointmentKeywords.some(k => lowerTrans.includes(k));
+            if (isBooking) {
+              try {
+                await msg.send({
+                  token: deviceRecord.fcm_token,
+                  data: {
+                    type: 'appointment_booked',
+                    customer_name: customer.name || callerNum,
+                    phone: callerNum,
+                    date_time: 'Confirmed via Voice Call',
+                    address: sub.aiSmsShopAddress || 'Customer Address',
+                    notes: summary,
+                    timestamp: String(Date.now()),
+                    source: 'vapi_call_booking'
+                  },
+                  android: { priority: 'high' }
+                });
+                console.log(`🎉 [VOICE APPOINTMENT PUSH] Delivered to device for ${callerNum}`);
+              } catch (appErr) {
+                console.warn('[vapi-webhook] Appointment push warning:', appErr.message);
+              }
+            }
+
+            // Post-Call SIM SMS Confirmation (if enabled by subscriber)
+            if (sub.postCallSmsEnabled !== false) {
+              const nameGreeting = customer.name ? `Hi ${customer.name}, ` : 'Hi, ';
+              const postCallText = `${nameGreeting}thanks for calling! Our AI receptionist noted your request: "${summary.substring(0, 85)}". Feel free to reply here if you have any questions or want to update your time!`;
+              try {
+                await msg.send({
+                  token: deviceRecord.fcm_token,
+                  data: {
+                    phone: callerNum,
+                    message: postCallText,
+                    sim_slot: '1',
+                    timestamp: String(Date.now()),
+                    source: 'central_cloud_relay'
+                  },
+                  android: { priority: 'high' }
+                });
+                console.log(`📱 [POST-CALL SIM SMS] Dispatched to device SIM relay for ${callerNum}`);
+              } catch (simErr) {
+                console.warn('[vapi-webhook] Post-call SIM SMS dispatch warning:', simErr.message);
+              }
+            }
           }
         }
       } catch (fcmErr) {

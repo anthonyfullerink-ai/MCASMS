@@ -94,6 +94,9 @@ class MainActivity : ComponentActivity() {
                     val voiceCalls by voiceDao.getAllVoiceCallsFlow().collectAsState(initial = emptyList())
                     val devRecords by devRegistry.recordsFlow.collectAsState(initial = emptyList())
 
+                    val notifDao = app.database.appNotificationDao()
+                    val notifications by notifDao.getAllNotificationsFlow().collectAsState(initial = emptyList())
+
                     if (settings.licenseKey.isBlank()) {
                         com.missedcall.autotext.ui.screens.LicenseGateScreen(
                             onActivationSuccess = { updater ->
@@ -146,6 +149,23 @@ class MainActivity : ComponentActivity() {
                                 devRegistry.toggleRevokeRecord(licenseKey)
                             }
                         },
+                        notifications = notifications,
+                        onMarkAllNotificationsRead = {
+                            lifecycleScope.launch {
+                                notifDao.markAllAsRead()
+                            }
+                        },
+                        onClearNotifications = {
+                            lifecycleScope.launch {
+                                notifDao.clearAll()
+                            }
+                        },
+                        onMarkNotificationRead = { id ->
+                            lifecycleScope.launch {
+                                notifDao.markAsRead(id)
+                            }
+                        },
+                        initialOpenNotifications = intent?.getBooleanExtra("OPEN_NOTIFICATIONS_PANEL", false) ?: false,
                         missingPermissions = missingPermissions,
                         onRequestPermissions = {
                             permissionLauncher.launch(requiredPermissions)

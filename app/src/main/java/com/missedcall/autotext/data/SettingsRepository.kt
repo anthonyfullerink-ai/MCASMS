@@ -81,6 +81,22 @@ class SettingsRepository(private val context: Context) {
         val DASHBOARD_CARD_ORDER = stringPreferencesKey("dashboard_card_order")
         val DASHBOARD_HIDDEN_CARDS = stringPreferencesKey("dashboard_hidden_cards")
         val PERMISSIONS_ONBOARDING_COMPLETED = booleanPreferencesKey("permissions_onboarding_completed")
+
+        val AI_SMS_MASTER_ENABLED = booleanPreferencesKey("ai_sms_master_enabled")
+        val AI_SMS_VOICE_POST_CALL_ENABLED = booleanPreferencesKey("ai_sms_voice_post_call_enabled")
+        val AI_SMS_INBOUND_AGENT_ENABLED = booleanPreferencesKey("ai_sms_inbound_agent_enabled")
+        val AI_SMS_SCOPE = stringPreferencesKey("ai_sms_scope")
+        val AI_SMS_BUSINESS_SERVICE_TYPE = stringPreferencesKey("ai_sms_business_service_type")
+        val AI_SMS_SHOP_ADDRESS = stringPreferencesKey("ai_sms_shop_address")
+        val AI_SMS_SHOP_INSTRUCTIONS = stringPreferencesKey("ai_sms_shop_instructions")
+        val AI_SMS_CALENDAR_CONNECTED = booleanPreferencesKey("ai_sms_calendar_connected")
+        val AI_SMS_CALENDAR_EMAIL = stringPreferencesKey("ai_sms_calendar_email")
+        val AI_SMS_CALENDAR_WORKING_HOURS = stringPreferencesKey("ai_sms_calendar_working_hours")
+        val AI_SMS_SLOT_DURATION_MINUTES = intPreferencesKey("ai_sms_slot_duration_minutes")
+        val AI_SMS_TRAVEL_BUFFER_MINUTES = intPreferencesKey("ai_sms_travel_buffer_minutes")
+        val AI_SMS_AUTO_PAUSE_ON_HUMAN_REPLY = booleanPreferencesKey("ai_sms_auto_pause_on_human_reply")
+        val AI_SMS_MAX_REPLIES_PER_CONTACT = intPreferencesKey("ai_sms_max_replies_per_contact")
+        val AI_SMS_EMERGENCY_ALERTS_ENABLED = booleanPreferencesKey("ai_sms_emergency_alerts_enabled")
     }
 
 
@@ -167,7 +183,22 @@ class SettingsRepository(private val context: Context) {
             vapiVoiceProvider = preferences[VAPI_VOICE_PROVIDER] ?: "cartesia",
             dashboardCardOrder = preferences[DASHBOARD_CARD_ORDER] ?: "HERO,SMS_METRICS,VOICE_METRICS,COST_QUOTA,REVENUE,FOLLOW_UPS,HARDWARE",
             dashboardHiddenCards = preferences[DASHBOARD_HIDDEN_CARDS] ?: "",
-            permissionsOnboardingCompleted = preferences[PERMISSIONS_ONBOARDING_COMPLETED] ?: false
+            permissionsOnboardingCompleted = preferences[PERMISSIONS_ONBOARDING_COMPLETED] ?: false,
+            aiSmsMasterEnabled = preferences[AI_SMS_MASTER_ENABLED] ?: true,
+            aiSmsVoicePostCallEnabled = preferences[AI_SMS_VOICE_POST_CALL_ENABLED] ?: true,
+            aiSmsInboundAgentEnabled = preferences[AI_SMS_INBOUND_AGENT_ENABLED] ?: true,
+            aiSmsScope = preferences[AI_SMS_SCOPE] ?: "STRICT",
+            aiSmsBusinessServiceType = preferences[AI_SMS_BUSINESS_SERVICE_TYPE] ?: "MOBILE",
+            aiSmsShopAddress = preferences[AI_SMS_SHOP_ADDRESS] ?: "",
+            aiSmsShopInstructions = preferences[AI_SMS_SHOP_INSTRUCTIONS] ?: "",
+            aiSmsCalendarConnected = preferences[AI_SMS_CALENDAR_CONNECTED] ?: false,
+            aiSmsCalendarEmail = preferences[AI_SMS_CALENDAR_EMAIL] ?: "",
+            aiSmsCalendarWorkingHours = preferences[AI_SMS_CALENDAR_WORKING_HOURS] ?: "08:00 - 17:00",
+            aiSmsSlotDurationMinutes = preferences[AI_SMS_SLOT_DURATION_MINUTES] ?: 60,
+            aiSmsTravelBufferMinutes = preferences[AI_SMS_TRAVEL_BUFFER_MINUTES] ?: 30,
+            aiSmsAutoPauseOnHumanReply = preferences[AI_SMS_AUTO_PAUSE_ON_HUMAN_REPLY] ?: true,
+            aiSmsMaxRepliesPerContact = preferences[AI_SMS_MAX_REPLIES_PER_CONTACT] ?: 5,
+            aiSmsEmergencyAlertsEnabled = preferences[AI_SMS_EMERGENCY_ALERTS_ENABLED] ?: true
         )
 
 
@@ -272,6 +303,22 @@ class SettingsRepository(private val context: Context) {
             preferences[DASHBOARD_CARD_ORDER] = settings.dashboardCardOrder
             preferences[DASHBOARD_HIDDEN_CARDS] = settings.dashboardHiddenCards
             preferences[PERMISSIONS_ONBOARDING_COMPLETED] = settings.permissionsOnboardingCompleted
+
+            preferences[AI_SMS_MASTER_ENABLED] = settings.aiSmsMasterEnabled
+            preferences[AI_SMS_VOICE_POST_CALL_ENABLED] = settings.aiSmsVoicePostCallEnabled
+            preferences[AI_SMS_INBOUND_AGENT_ENABLED] = settings.aiSmsInboundAgentEnabled
+            preferences[AI_SMS_SCOPE] = settings.aiSmsScope
+            preferences[AI_SMS_BUSINESS_SERVICE_TYPE] = settings.aiSmsBusinessServiceType
+            preferences[AI_SMS_SHOP_ADDRESS] = settings.aiSmsShopAddress
+            preferences[AI_SMS_SHOP_INSTRUCTIONS] = settings.aiSmsShopInstructions
+            preferences[AI_SMS_CALENDAR_CONNECTED] = settings.aiSmsCalendarConnected
+            preferences[AI_SMS_CALENDAR_EMAIL] = settings.aiSmsCalendarEmail
+            preferences[AI_SMS_CALENDAR_WORKING_HOURS] = settings.aiSmsCalendarWorkingHours
+            preferences[AI_SMS_SLOT_DURATION_MINUTES] = settings.aiSmsSlotDurationMinutes
+            preferences[AI_SMS_TRAVEL_BUFFER_MINUTES] = settings.aiSmsTravelBufferMinutes
+            preferences[AI_SMS_AUTO_PAUSE_ON_HUMAN_REPLY] = settings.aiSmsAutoPauseOnHumanReply
+            preferences[AI_SMS_MAX_REPLIES_PER_CONTACT] = settings.aiSmsMaxRepliesPerContact
+            preferences[AI_SMS_EMERGENCY_ALERTS_ENABLED] = settings.aiSmsEmergencyAlertsEnabled
         }
     }
 

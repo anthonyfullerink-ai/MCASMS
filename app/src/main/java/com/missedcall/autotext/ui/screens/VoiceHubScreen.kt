@@ -167,9 +167,18 @@ fun VoiceHubScreen(
         mutableStateOf(settings.voiceEmergencyKeywords)
     }
 
-    var postCallTemplateInput by remember(settings.postCallSmsTemplate) {
-        mutableStateOf(settings.postCallSmsTemplate)
-    }
+    var aiSmsMasterEnabled by remember(settings.aiSmsMasterEnabled) { mutableStateOf(settings.aiSmsMasterEnabled) }
+    var aiSmsVoicePostCallEnabled by remember(settings.aiSmsVoicePostCallEnabled) { mutableStateOf(settings.aiSmsVoicePostCallEnabled) }
+    var aiSmsInboundAgentEnabled by remember(settings.aiSmsInboundAgentEnabled) { mutableStateOf(settings.aiSmsInboundAgentEnabled) }
+    var aiSmsScope by remember(settings.aiSmsScope) { mutableStateOf(settings.aiSmsScope) }
+    var aiSmsBusinessServiceType by remember(settings.aiSmsBusinessServiceType) { mutableStateOf(settings.aiSmsBusinessServiceType) }
+    var aiSmsShopAddressInput by remember(settings.aiSmsShopAddress) { mutableStateOf(settings.aiSmsShopAddress) }
+    var aiSmsShopInstructionsInput by remember(settings.aiSmsShopInstructions) { mutableStateOf(settings.aiSmsShopInstructions) }
+    var aiSmsCalendarConnected by remember(settings.aiSmsCalendarConnected) { mutableStateOf(settings.aiSmsCalendarConnected) }
+    var aiSmsCalendarEmailInput by remember(settings.aiSmsCalendarEmail) { mutableStateOf(settings.aiSmsCalendarEmail) }
+    var aiSmsWorkingHoursInput by remember(settings.aiSmsCalendarWorkingHours) { mutableStateOf(settings.aiSmsCalendarWorkingHours) }
+    var aiSmsAutoPauseOnHumanReply by remember(settings.aiSmsAutoPauseOnHumanReply) { mutableStateOf(settings.aiSmsAutoPauseOnHumanReply) }
+    var aiSmsEmergencyAlertsEnabled by remember(settings.aiSmsEmergencyAlertsEnabled) { mutableStateOf(settings.aiSmsEmergencyAlertsEnabled) }
 
     var isSavingToVapi by remember { mutableStateOf(false) }
     var saveStatusMessage by remember { mutableStateOf<String?>(null) }
@@ -1044,21 +1053,400 @@ fun VoiceHubScreen(
                     Spacer(modifier = Modifier.height(12.dp))
 
                     // Post-Call Authentic SIM SMS
-                    Text("Post-Call SIM SMS Follow-Up:", style = MaterialTheme.typography.labelMedium, fontWeight = FontWeight.SemiBold)
-                    Text("Sent automatically from your real SIM phone number as soon as the AI hangs up.", style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
-                    Spacer(modifier = Modifier.height(6.dp))
-
-                    OutlinedTextField(
-                        value = postCallTemplateInput,
-                        onValueChange = {
-                            postCallTemplateInput = it
-                            onSettingsChanged(settings.copy(postCallSmsTemplate = it))
-                        },
+                    Row(
                         modifier = Modifier.fillMaxWidth(),
-                        minLines = 2,
-                        maxLines = 4,
-                        label = { Text("Follow-Up Text Template") }
-                    )
+                        horizontalArrangement = Arrangement.SpaceBetween,
+                        verticalAlignment = Alignment.CenterVertically
+                    ) {
+                        Column(modifier = Modifier.weight(1f)) {
+                            Text("Post-Call SIM SMS Confirmation", style = MaterialTheme.typography.labelMedium, fontWeight = FontWeight.SemiBold)
+                            Text("Automatically text caller a booking confirmation or summary from your real SIM as soon as AI hangs up.", style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
+                        }
+                        Switch(
+                            checked = aiSmsVoicePostCallEnabled,
+                            onCheckedChange = {
+                                aiSmsVoicePostCallEnabled = it
+                                onSettingsChanged(settings.copy(
+                                    aiSmsVoicePostCallEnabled = it,
+                                    postCallSmsEnabled = it
+                                ))
+                            },
+                            enabled = isVoiceActive
+                        )
+                    }
+                }
+            }
+        }
+
+        // 6.5 CONVERSATIONAL AI SMS & GOOGLE CALENDAR STUDIO
+        item {
+            Card(
+                modifier = Modifier.fillMaxWidth(),
+                shape = RoundedCornerShape(16.dp),
+                colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface),
+                border = BorderStroke(1.dp, Color(0xFF7928CA).copy(alpha = 0.5f))
+            ) {
+                Column(modifier = Modifier.padding(16.dp)) {
+                    Row(
+                        modifier = Modifier.fillMaxWidth(),
+                        horizontalArrangement = Arrangement.SpaceBetween,
+                        verticalAlignment = Alignment.CenterVertically
+                    ) {
+                        Row(verticalAlignment = Alignment.CenterVertically, modifier = Modifier.weight(1f)) {
+                            Text("💬", fontSize = 20.sp)
+                            Spacer(modifier = Modifier.width(8.dp))
+                            Column {
+                                Text("24/7 AI SMS Studio", style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.Bold)
+                                Text("2-way text qualification & Google Calendar booking", style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
+                            }
+                        }
+                        Switch(
+                            checked = aiSmsMasterEnabled,
+                            onCheckedChange = {
+                                aiSmsMasterEnabled = it
+                                onSettingsChanged(settings.copy(aiSmsMasterEnabled = it))
+                            },
+                            enabled = isVoiceActive
+                        )
+                    }
+
+                    if (aiSmsMasterEnabled) {
+                        Spacer(modifier = Modifier.height(14.dp))
+                        HorizontalDivider(color = MaterialTheme.colorScheme.surfaceVariant)
+                        Spacer(modifier = Modifier.height(14.dp))
+
+                        // Channels Active
+                        Text("Active Channels:", style = MaterialTheme.typography.labelMedium, fontWeight = FontWeight.Bold)
+                        Spacer(modifier = Modifier.height(6.dp))
+
+                        Row(
+                            modifier = Modifier.fillMaxWidth(),
+                            horizontalArrangement = Arrangement.SpaceBetween,
+                            verticalAlignment = Alignment.CenterVertically
+                        ) {
+                            Text("Voice Agent Post-Call SMS", style = MaterialTheme.typography.bodyMedium)
+                            Switch(
+                                checked = aiSmsVoicePostCallEnabled,
+                                onCheckedChange = {
+                                    aiSmsVoicePostCallEnabled = it
+                                    onSettingsChanged(settings.copy(aiSmsVoicePostCallEnabled = it, postCallSmsEnabled = it))
+                                }
+                            )
+                        }
+
+                        Row(
+                            modifier = Modifier.fillMaxWidth(),
+                            horizontalArrangement = Arrangement.SpaceBetween,
+                            verticalAlignment = Alignment.CenterVertically
+                        ) {
+                            Text("Inbound SMS Agent (Replies to texts)", style = MaterialTheme.typography.bodyMedium)
+                            Switch(
+                                checked = aiSmsInboundAgentEnabled,
+                                onCheckedChange = {
+                                    aiSmsInboundAgentEnabled = it
+                                    onSettingsChanged(settings.copy(aiSmsInboundAgentEnabled = it))
+                                }
+                            )
+                        }
+
+                        Spacer(modifier = Modifier.height(14.dp))
+
+                        // 3-Way Incoming SMS Scope Gatekeeper
+                        Text("Incoming SMS Scope (Who AI replies to):", style = MaterialTheme.typography.labelMedium, fontWeight = FontWeight.Bold)
+                        Spacer(modifier = Modifier.height(6.dp))
+
+                        // Option 1: STRICT
+                        Row(
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .clickable {
+                                    aiSmsScope = "STRICT"
+                                    onSettingsChanged(settings.copy(aiSmsScope = "STRICT"))
+                                },
+                            verticalAlignment = Alignment.CenterVertically
+                        ) {
+                            RadioButton(
+                                selected = aiSmsScope == "STRICT",
+                                onClick = {
+                                    aiSmsScope = "STRICT"
+                                    onSettingsChanged(settings.copy(aiSmsScope = "STRICT"))
+                                }
+                            )
+                            Spacer(modifier = Modifier.width(6.dp))
+                            Column {
+                                Text("🛡️ Strict Mode (Recommended)", style = MaterialTheme.typography.bodyMedium, fontWeight = FontWeight.SemiBold)
+                                Text("Only replies if number had a recent missed call or auto-text", style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
+                            }
+                        }
+
+                        Spacer(modifier = Modifier.height(6.dp))
+
+                        // Option 2: ALL_UNKNOWN
+                        Row(
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .clickable {
+                                    aiSmsScope = "ALL_UNKNOWN"
+                                    onSettingsChanged(settings.copy(aiSmsScope = "ALL_UNKNOWN"))
+                                },
+                            verticalAlignment = Alignment.CenterVertically
+                        ) {
+                            RadioButton(
+                                selected = aiSmsScope == "ALL_UNKNOWN",
+                                onClick = {
+                                    aiSmsScope = "ALL_UNKNOWN"
+                                    onSettingsChanged(settings.copy(aiSmsScope = "ALL_UNKNOWN"))
+                                }
+                            )
+                            Spacer(modifier = Modifier.width(6.dp))
+                            Column {
+                                Text("🌐 All Unknown Numbers", style = MaterialTheme.typography.bodyMedium, fontWeight = FontWeight.SemiBold)
+                                Text("Replies to any unknown inbound text not in your Contacts", style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
+                            }
+                        }
+
+                        Spacer(modifier = Modifier.height(6.dp))
+
+                        // Option 3: OFF
+                        Row(
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .clickable {
+                                    aiSmsScope = "OFF"
+                                    onSettingsChanged(settings.copy(aiSmsScope = "OFF"))
+                                },
+                            verticalAlignment = Alignment.CenterVertically
+                        ) {
+                            RadioButton(
+                                selected = aiSmsScope == "OFF",
+                                onClick = {
+                                    aiSmsScope = "OFF"
+                                    onSettingsChanged(settings.copy(aiSmsScope = "OFF"))
+                                }
+                            )
+                            Spacer(modifier = Modifier.width(6.dp))
+                            Column {
+                                Text("⛔ Off (Voice Only)", style = MaterialTheme.typography.bodyMedium, fontWeight = FontWeight.SemiBold)
+                                Text("Never auto-reply to incoming text messages", style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
+                            }
+                        }
+
+                        Spacer(modifier = Modifier.height(10.dp))
+
+                        // Contacts Exemption Notice Box
+                        Surface(
+                            shape = RoundedCornerShape(8.dp),
+                            color = Color(0xFF00E676).copy(alpha = 0.08f),
+                            border = BorderStroke(1.dp, Color(0xFF00E676).copy(alpha = 0.3f)),
+                            modifier = Modifier.fillMaxWidth()
+                        ) {
+                            Row(modifier = Modifier.padding(10.dp), verticalAlignment = Alignment.CenterVertically) {
+                                Text("🔒", fontSize = 16.sp)
+                                Spacer(modifier = Modifier.width(8.dp))
+                                Text(
+                                    "Phone Contacts Shield: Always Active. AI will NEVER text family, crew, or contacts saved in your phone address book.",
+                                    style = MaterialTheme.typography.bodySmall,
+                                    color = ActiveGreenText,
+                                    fontSize = 11.sp
+                                )
+                            }
+                        }
+
+                        Spacer(modifier = Modifier.height(16.dp))
+                        HorizontalDivider(color = MaterialTheme.colorScheme.surfaceVariant)
+                        Spacer(modifier = Modifier.height(14.dp))
+
+                        // Google Calendar Direct Booking Section
+                        Text("📅 Google Calendar Direct Sync", style = MaterialTheme.typography.labelMedium, fontWeight = FontWeight.Bold)
+                        Spacer(modifier = Modifier.height(8.dp))
+
+                        Surface(
+                            shape = RoundedCornerShape(10.dp),
+                            color = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.4f),
+                            modifier = Modifier.fillMaxWidth()
+                        ) {
+                            Row(
+                                modifier = Modifier
+                                    .fillMaxWidth()
+                                    .padding(12.dp),
+                                horizontalArrangement = Arrangement.SpaceBetween,
+                                verticalAlignment = Alignment.CenterVertically
+                            ) {
+                                Column(modifier = Modifier.weight(1f)) {
+                                    Text(
+                                        if (aiSmsCalendarConnected) "Connected ✅" else "Google Calendar Ready",
+                                        fontWeight = FontWeight.Bold,
+                                        style = MaterialTheme.typography.bodyMedium,
+                                        color = if (aiSmsCalendarConnected) ActiveGreenText else MaterialTheme.colorScheme.onSurface
+                                    )
+                                    Text(
+                                        if (aiSmsCalendarConnected)
+                                            aiSmsCalendarEmailInput.ifBlank { settings.customerEmail.ifBlank { "Primary Calendar" } }
+                                        else
+                                            "Direct live appointment booking & slot lookup",
+                                        style = MaterialTheme.typography.bodySmall,
+                                        color = MaterialTheme.colorScheme.onSurfaceVariant
+                                    )
+                                }
+                                Button(
+                                    onClick = {
+                                        aiSmsCalendarConnected = !aiSmsCalendarConnected
+                                        if (aiSmsCalendarConnected && aiSmsCalendarEmailInput.isBlank()) {
+                                            aiSmsCalendarEmailInput = settings.customerEmail
+                                        }
+                                        onSettingsChanged(settings.copy(
+                                            aiSmsCalendarConnected = aiSmsCalendarConnected,
+                                            aiSmsCalendarEmail = aiSmsCalendarEmailInput
+                                        ))
+                                    },
+                                    colors = ButtonDefaults.buttonColors(
+                                        containerColor = if (aiSmsCalendarConnected) Color(0xFF1E293B) else Color(0xFF00E676)
+                                    )
+                                ) {
+                                    Text(
+                                        if (aiSmsCalendarConnected) "Disconnect" else "Connect Calendar",
+                                        color = if (aiSmsCalendarConnected) Color(0xFF94A3B8) else Color.Black,
+                                        fontWeight = FontWeight.Bold,
+                                        fontSize = 12.sp
+                                    )
+                                }
+                            }
+                        }
+
+                        Spacer(modifier = Modifier.height(14.dp))
+
+                        // Service Location: Mobile Field vs In-Shop
+                        Text("Business Service Location:", style = MaterialTheme.typography.labelMedium, fontWeight = FontWeight.Bold)
+                        Spacer(modifier = Modifier.height(6.dp))
+
+                        Row(
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .clickable {
+                                    aiSmsBusinessServiceType = "MOBILE"
+                                    onSettingsChanged(settings.copy(aiSmsBusinessServiceType = "MOBILE"))
+                                },
+                            verticalAlignment = Alignment.CenterVertically
+                        ) {
+                            RadioButton(
+                                selected = aiSmsBusinessServiceType == "MOBILE",
+                                onClick = {
+                                    aiSmsBusinessServiceType = "MOBILE"
+                                    onSettingsChanged(settings.copy(aiSmsBusinessServiceType = "MOBILE"))
+                                }
+                            )
+                            Spacer(modifier = Modifier.width(6.dp))
+                            Column {
+                                Text("🚐 Mobile Field Trade (Plumber, HVAC, Cleaners, Tow)", style = MaterialTheme.typography.bodyMedium, fontWeight = FontWeight.SemiBold)
+                                Text("Asks client for job address • 30-min travel buffer • 2-hour arrival windows", style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
+                            }
+                        }
+
+                        Spacer(modifier = Modifier.height(6.dp))
+
+                        Row(
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .clickable {
+                                    aiSmsBusinessServiceType = "IN_SHOP"
+                                    onSettingsChanged(settings.copy(aiSmsBusinessServiceType = "IN_SHOP"))
+                                },
+                            verticalAlignment = Alignment.CenterVertically
+                        ) {
+                            RadioButton(
+                                selected = aiSmsBusinessServiceType == "IN_SHOP",
+                                onClick = {
+                                    aiSmsBusinessServiceType = "IN_SHOP"
+                                    onSettingsChanged(settings.copy(aiSmsBusinessServiceType = "IN_SHOP"))
+                                }
+                            )
+                            Spacer(modifier = Modifier.width(6.dp))
+                            Column {
+                                Text("🏪 In-Shop / Studio (Barbers, Salons, Auto Mechanics)", style = MaterialTheme.typography.bodyMedium, fontWeight = FontWeight.SemiBold)
+                                Text("Texts client your shop address • Zero travel buffer • Exact appointment times", style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
+                            }
+                        }
+
+                        if (aiSmsBusinessServiceType == "IN_SHOP") {
+                            Spacer(modifier = Modifier.height(10.dp))
+                            OutlinedTextField(
+                                value = aiSmsShopAddressInput,
+                                onValueChange = {
+                                    aiSmsShopAddressInput = it
+                                    onSettingsChanged(settings.copy(aiSmsShopAddress = it))
+                                },
+                                modifier = Modifier.fillMaxWidth(),
+                                label = { Text("Your Shop / Studio Address") },
+                                placeholder = { Text("124 Main St, Suite B, Austin, TX") }
+                            )
+
+                            Spacer(modifier = Modifier.height(8.dp))
+                            OutlinedTextField(
+                                value = aiSmsShopInstructionsInput,
+                                onValueChange = {
+                                    aiSmsShopInstructionsInput = it
+                                    onSettingsChanged(settings.copy(aiSmsShopInstructions = it))
+                                },
+                                modifier = Modifier.fillMaxWidth(),
+                                label = { Text("Parking & Arrival Notes (Optional)") },
+                                placeholder = { Text("Free parking behind building. Enter front door.") }
+                            )
+                        }
+
+                        Spacer(modifier = Modifier.height(10.dp))
+                        OutlinedTextField(
+                            value = aiSmsWorkingHoursInput,
+                            onValueChange = {
+                                aiSmsWorkingHoursInput = it
+                                onSettingsChanged(settings.copy(aiSmsCalendarWorkingHours = it))
+                            },
+                            modifier = Modifier.fillMaxWidth(),
+                            label = { Text("Working Booking Hours") },
+                            placeholder = { Text("08:00 - 17:00") }
+                        )
+
+                        Spacer(modifier = Modifier.height(14.dp))
+
+                        // Smart Contractor Safeguards
+                        Text("🛡️ Safety Controls:", style = MaterialTheme.typography.labelMedium, fontWeight = FontWeight.Bold)
+                        Spacer(modifier = Modifier.height(6.dp))
+
+                        Row(
+                            modifier = Modifier.fillMaxWidth(),
+                            horizontalArrangement = Arrangement.SpaceBetween,
+                            verticalAlignment = Alignment.CenterVertically
+                        ) {
+                            Column(modifier = Modifier.weight(1f)) {
+                                Text("Auto-Pause on Human Reply", style = MaterialTheme.typography.bodyMedium)
+                                Text("Mutes AI for 24h if you manually text the customer", style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
+                            }
+                            Switch(
+                                checked = aiSmsAutoPauseOnHumanReply,
+                                onCheckedChange = {
+                                    aiSmsAutoPauseOnHumanReply = it
+                                    onSettingsChanged(settings.copy(aiSmsAutoPauseOnHumanReply = it))
+                                }
+                            )
+                        }
+
+                        Row(
+                            modifier = Modifier.fillMaxWidth(),
+                            horizontalArrangement = Arrangement.SpaceBetween,
+                            verticalAlignment = Alignment.CenterVertically
+                        ) {
+                            Column(modifier = Modifier.weight(1f)) {
+                                Text("Emergency Lead Alert Notifications", style = MaterialTheme.typography.bodyMedium)
+                                Text("High-priority alert when customer mentions hazard/emergency", style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
+                            }
+                            Switch(
+                                checked = aiSmsEmergencyAlertsEnabled,
+                                onCheckedChange = {
+                                    aiSmsEmergencyAlertsEnabled = it
+                                    onSettingsChanged(settings.copy(aiSmsEmergencyAlertsEnabled = it))
+                                }
+                            )
+                        }
+                    }
                 }
             }
         }
@@ -1091,6 +1479,18 @@ fun VoiceHubScreen(
                                     put("temperature", temperatureVal)
                                     put("voiceProvider", "cartesia")
                                     put("voiceId", if (selectedVoice.contains("Austin")) "a0e998e3-182d-4f23-adf1-5324ed7dbf11" else "248be419-c632-4f23-adf1-5324ed7dbf10")
+                                    put("aiSmsMasterEnabled", aiSmsMasterEnabled)
+                                    put("aiSmsVoicePostCallEnabled", aiSmsVoicePostCallEnabled)
+                                    put("aiSmsInboundAgentEnabled", aiSmsInboundAgentEnabled)
+                                    put("aiSmsScope", aiSmsScope)
+                                    put("aiSmsBusinessServiceType", aiSmsBusinessServiceType)
+                                    put("aiSmsShopAddress", aiSmsShopAddressInput)
+                                    put("aiSmsShopInstructions", aiSmsShopInstructionsInput)
+                                    put("aiSmsCalendarConnected", aiSmsCalendarConnected)
+                                    put("aiSmsCalendarEmail", aiSmsCalendarEmailInput)
+                                    put("aiSmsCalendarWorkingHours", aiSmsWorkingHoursInput)
+                                    put("aiSmsAutoPauseOnHumanReply", aiSmsAutoPauseOnHumanReply)
+                                    put("aiSmsEmergencyAlertsEnabled", aiSmsEmergencyAlertsEnabled)
                                 }
                                 outputStream.use { os -> os.write(payload.toString().toByteArray(StandardCharsets.UTF_8)) }
                             }

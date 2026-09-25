@@ -195,6 +195,20 @@ exports.handler = async (event) => {
               temperature: asstData?.model?.temperature ?? 0.3,
               voiceProvider: asstData?.voice?.provider || 'cartesia',
               voiceId: asstData?.voice?.voiceId || '248be419-c632-4f23-adf1-5324ed7dbf10'
+            },
+            aiSms: {
+              postCallSmsEnabled: binding?.postCallSmsEnabled ?? true,
+              aiSmsMasterEnabled: binding?.aiSmsMasterEnabled ?? true,
+              aiSmsScope: binding?.aiSmsScope || 'STRICT',
+              aiSmsBusinessServiceType: binding?.aiSmsBusinessServiceType || 'MOBILE_TRADE',
+              aiSmsShopAddress: binding?.aiSmsShopAddress || '',
+              aiSmsShopInstructions: binding?.aiSmsShopInstructions || '',
+              aiSmsCalendarWorkingHours: binding?.aiSmsCalendarWorkingHours || '8:00 AM - 6:00 PM',
+              aiSmsSlotDurationMinutes: binding?.aiSmsSlotDurationMinutes || 60,
+              aiSmsTravelBufferMinutes: binding?.aiSmsTravelBufferMinutes || 30,
+              aiSmsAutoPauseOnHumanReply: binding?.aiSmsAutoPauseOnHumanReply ?? true,
+              aiSmsMaxRepliesPerContact: binding?.aiSmsMaxRepliesPerContact || 5,
+              aiSmsEmergencyAlertsEnabled: binding?.aiSmsEmergencyAlertsEnabled ?? true
             }
           })
         };
@@ -242,18 +256,33 @@ exports.handler = async (event) => {
 
         const vapiRes = await vapiApiRequest(`/assistant/${targetAssistantId}`, 'PATCH', patchPayload);
 
-        // Store model & tier preferences in Firestore voice_pro_bindings
+        // Store model & tier preferences, plus 24/7 AI SMS & Calendar settings in Firestore voice_pro_bindings
         const isPremiumModel = (payload.model || '').toLowerCase().includes('gpt-4o') && !(payload.model || '').toLowerCase().includes('mini');
         if (key && fsModule && process.env.FIREBASE_SERVICE_ACCOUNT_KEY) {
           try {
+            const aiSmsUpdate = {};
+            if (payload.postCallSmsEnabled !== undefined) aiSmsUpdate.postCallSmsEnabled = Boolean(payload.postCallSmsEnabled);
+            if (payload.aiSmsMasterEnabled !== undefined) aiSmsUpdate.aiSmsMasterEnabled = Boolean(payload.aiSmsMasterEnabled);
+            if (payload.aiSmsScope !== undefined) aiSmsUpdate.aiSmsScope = payload.aiSmsScope;
+            if (payload.aiSmsBusinessServiceType !== undefined) aiSmsUpdate.aiSmsBusinessServiceType = payload.aiSmsBusinessServiceType;
+            if (payload.aiSmsShopAddress !== undefined) aiSmsUpdate.aiSmsShopAddress = payload.aiSmsShopAddress;
+            if (payload.aiSmsShopInstructions !== undefined) aiSmsUpdate.aiSmsShopInstructions = payload.aiSmsShopInstructions;
+            if (payload.aiSmsCalendarWorkingHours !== undefined) aiSmsUpdate.aiSmsCalendarWorkingHours = payload.aiSmsCalendarWorkingHours;
+            if (payload.aiSmsSlotDurationMinutes !== undefined) aiSmsUpdate.aiSmsSlotDurationMinutes = payload.aiSmsSlotDurationMinutes;
+            if (payload.aiSmsTravelBufferMinutes !== undefined) aiSmsUpdate.aiSmsTravelBufferMinutes = payload.aiSmsTravelBufferMinutes;
+            if (payload.aiSmsAutoPauseOnHumanReply !== undefined) aiSmsUpdate.aiSmsAutoPauseOnHumanReply = Boolean(payload.aiSmsAutoPauseOnHumanReply);
+            if (payload.aiSmsMaxRepliesPerContact !== undefined) aiSmsUpdate.aiSmsMaxRepliesPerContact = payload.aiSmsMaxRepliesPerContact;
+            if (payload.aiSmsEmergencyAlertsEnabled !== undefined) aiSmsUpdate.aiSmsEmergencyAlertsEnabled = Boolean(payload.aiSmsEmergencyAlertsEnabled);
+
             await fsModule.saveVoiceBinding(key, {
               model: payload.model || 'gpt-4o-mini',
               hasPremiumModel: isPremiumModel,
               temperature: typeof payload.temperature === 'number' ? payload.temperature : 0.3,
+              ...aiSmsUpdate,
               lastSyncedAt: new Date().toISOString()
             });
           } catch (e) {
-            console.warn('[vapi-live] Failed to save model tier to Firestore:', e.message);
+            console.warn('[vapi-live] Failed to save AI SMS settings to Firestore:', e.message);
           }
         }
 
@@ -266,6 +295,12 @@ exports.handler = async (event) => {
               raw[key].model = payload.model || 'gpt-4o-mini';
               raw[key].hasPremiumModel = isPremiumModel;
               raw[key].temperature = typeof payload.temperature === 'number' ? payload.temperature : 0.3;
+              if (payload.postCallSmsEnabled !== undefined) raw[key].postCallSmsEnabled = Boolean(payload.postCallSmsEnabled);
+              if (payload.aiSmsMasterEnabled !== undefined) raw[key].aiSmsMasterEnabled = Boolean(payload.aiSmsMasterEnabled);
+              if (payload.aiSmsScope !== undefined) raw[key].aiSmsScope = payload.aiSmsScope;
+              if (payload.aiSmsBusinessServiceType !== undefined) raw[key].aiSmsBusinessServiceType = payload.aiSmsBusinessServiceType;
+              if (payload.aiSmsShopAddress !== undefined) raw[key].aiSmsShopAddress = payload.aiSmsShopAddress;
+              if (payload.aiSmsShopInstructions !== undefined) raw[key].aiSmsShopInstructions = payload.aiSmsShopInstructions;
               fs.writeFileSync(bindingsPath, JSON.stringify(raw, null, 2), 'utf8');
             }
           }
@@ -276,7 +311,7 @@ exports.handler = async (event) => {
           headers,
           body: JSON.stringify({
             success: true,
-            message: `Your AI Voice Receptionist settings were updated live in Vapi!`,
+            message: `Your AI Voice Receptionist and AI SMS Studio settings were updated live!`,
             assistant: vapiRes,
             hasPremiumModel: isPremiumModel
           })
