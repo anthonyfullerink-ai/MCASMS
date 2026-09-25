@@ -109,6 +109,16 @@ class IncomingSmsReceiver : BroadcastReceiver() {
                     }
                 }
 
+                // Rule C: Auto-Pause on Human Reply (24-Hour Takeover Protection)
+                if (settings.aiSmsAutoPauseOnHumanReply) {
+                    val humanSentRecently = hasHumanSentSmsRecently(context, senderNumber, 24 * 60 * 60 * 1000L)
+                    if (humanSentRecently) {
+                        Log.i(TAG, "Skipping AI SMS: Human manual takeover detected within last 24h for $senderNumber.")
+                        com.missedcall.autotext.util.AiNotificationManager.notifyHumanTakeover(context, senderNumber)
+                        return@launch
+                    }
+                }
+
                 // Log in-app notification & dispatch to Cloud AI Brain
                 com.missedcall.autotext.util.AiNotificationManager.notifyAiSmsActivity(
                     context = context,
@@ -178,6 +188,41 @@ class IncomingSmsReceiver : BroadcastReceiver() {
             Log.i(TAG, "Dispatched inbound SMS to AI SMS engine: HTTP $code")
         } catch (e: Exception) {
             Log.w(TAG, "Failed to dispatch inbound SMS to AI SMS engine: ${e.message}")
+        }
+    }
+
+    private fun hasHumanSentSmsRecently(context: Context, phoneNumber: String, windowMillis: Long): Boolean {
+        val cleanDigits = phoneNumber.filter { it.isDigit() }
+        val last7 = if (cleanDigits.length >= 7) cleanDigits.takeLast(7) else cleanDigits
+        val cutoffTime = System.currentTimeMillis() - windowMillis
+
+        val projection = arrayOf(Telephony.Sms.Sent.ADDRESS, Telephony.Sms.Sent.DATE)
+        val selection = "${Telephony.Sms.Sent.DATE} > ?"
+        val selectionArgs = arrayOf(cutoffTime.toString())
+
+        return try {
+            context.contentResolver.query(
+                Telephony.Sms.Sent.CONTENT_URI,
+                projection,
+                selection,
+                selectionArgs,
+                "${Telephony.Sms.Sent.DATE} DESC"
+            )?.use { cursor ->
+                val addressIdx = cursor.getColumnIndex(Telephony.Sms.Sent.ADDRESS)
+                while (cursor.moveToNext()) {
+                    val address = if (addressIdx != -1) cursor.getString(addressIdx) else null
+                    if (address != null) {
+                        val addrDigits = address.filter { it.isDigit() }
+                        if (addrDigits.endsWith(last7) || addrDigits == cleanDigits) {
+                            return true
+                        }
+                    }
+                }
+                false
+            } ?: false
+        } catch (e: Exception) {
+            Log.w(TAG, "Could not query sent SMS table for human takeover check: ${e.message}")
+            false
         }
     }
 }

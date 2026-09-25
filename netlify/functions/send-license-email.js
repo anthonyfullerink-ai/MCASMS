@@ -36,20 +36,28 @@ function generateEmailHtml(name, licenseKey, apkDownloadUrl, isFree) {
         </div>
 
         <!-- APK Download Button -->
-        <div style="text-align: center; margin-bottom: 30px;">
+        <div style="text-align: center; margin-bottom: 20px;">
             <a href="${apkDownloadUrl}" style="display: inline-block; background: #00E676; color: #000000; font-weight: bold; font-size: 16px; padding: 14px 32px; border-radius: 30px; text-decoration: none; box-shadow: 0 6px 20px rgba(0,230,118,0.3);">
-                📥 Download Android App (.APK)
+                📥 1. Download Android App (.APK)
             </a>
             <div style="font-size: 12px; color: #949BAE; margin-top: 8px;">Direct Link: ${apkDownloadUrl}</div>
         </div>
 
+        <!-- 1-Tap Deep Link Activation -->
+        <div style="text-align: center; margin-bottom: 28px;">
+            <a href="mcasms://activate?key=${licenseKey}" style="display: inline-block; background: #1A2234; border: 1px solid #00E676; color: #00E676; font-weight: bold; font-size: 14px; padding: 12px 26px; border-radius: 24px; text-decoration: none;">
+                ⚡ 2. One-Tap Device Activation
+            </a>
+            <div style="font-size: 11px; color: #949BAE; margin-top: 6px;">(Tap after installing to auto-activate without typing)</div>
+        </div>
+
         <!-- 3-Step Quick Start -->
         <div style="border-top: 1px solid #222836; padding-top: 24px;">
-            <h3 style="color: #FFF; font-size: 16px; margin: 0 0 16px 0;">🚀 3-Step Activation Guide</h3>
+            <h3 style="color: #FFF; font-size: 16px; margin: 0 0 16px 0;">🚀 Super-Fast Activation Guide</h3>
             <ol style="color: #CBD5E0; font-size: 14px; padding-left: 20px; line-height: 1.8;">
-                <li><strong>Download & Install</strong> the APK file on your Android phone.</li>
-                <li>Open the app and <strong>paste your License Key</strong> (<code style="color:#00E676;">${licenseKey}</code>).</li>
-                <li>Grant standard SMS and Call Log permissions, then <strong>Toggle Master Appliance ON</strong>.</li>
+                <li><strong>Download & Install</strong> the APK above onto your Android device.</li>
+                <li>Tap <strong>"One-Tap Device Activation"</strong> above (or copy your key <code style="color:#00E676;">${licenseKey}</code> — the app auto-detects it from your clipboard!).</li>
+                <li>Tap <strong>"Grant All Required Permissions (1-Tap)"</strong> and turn the Master Switch <strong>ON</strong>.</li>
             </ol>
         </div>
 

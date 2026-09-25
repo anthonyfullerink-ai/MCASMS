@@ -248,18 +248,56 @@ exports.handler = async (event) => {
     if (db) {
       try {
         threadRef = db.collection('ai_sms_conversations').doc(threadId);
+
+        // Handle explicit manual takeover action
+        if (payload.action === 'human_takeover' || payload.humanTakeover) {
+          const takeoverUntil = Date.now() + (24 * 60 * 60 * 1000); // Mute AI for 24 hours
+          await threadRef.set({
+            licenseKey,
+            senderPhone: cleanPhone,
+            humanTakeoverUntil: takeoverUntil,
+            lastTakeoverAt: Date.now()
+          }, { merge: true });
+          console.log(`🛑 [MANUAL TAKEOVER] Thread ${threadId} muted for 24 hours until ${new Date(takeoverUntil).toISOString()}`);
+          return {
+            statusCode: 200,
+            headers,
+            body: JSON.stringify({ success: true, muted: true, humanTakeoverUntil: takeoverUntil })
+          };
+        }
+
         const threadDoc = await threadRef.get();
         if (threadDoc.exists) {
           const tData = threadDoc.data();
-          threadHistory = tData.messages || [];
-          replyCount = tData.aiReplyCount || 0;
+
+          // Check if active human takeover mute window is still ongoing
+          if (tData.humanTakeoverUntil && Date.now() < tData.humanTakeoverUntil) {
+            console.log(`🛑 [HUMAN TAKEOVER ACTIVE] Thread ${threadId} muted until ${new Date(tData.humanTakeoverUntil).toISOString()}. Skipping AI.`);
+            return {
+              statusCode: 200,
+              headers,
+              body: JSON.stringify({ success: true, replied: false, reason: 'human_takeover_active' })
+            };
+          }
+
+          const lastMessageAt = tData.lastMessageAt || 0;
+          const isOlderThan24h = (Date.now() - lastMessageAt) > (24 * 60 * 60 * 1000);
+
+          if (isOlderThan24h) {
+            console.log(`🔄 [24H SESSION RESET] Thread ${threadId} last message was >24h ago (${new Date(lastMessageAt).toISOString()}). Resetting reply count for returning customer.`);
+            replyCount = 0;
+            threadHistory = [];
+          } else {
+            threadHistory = tData.messages || [];
+            replyCount = tData.aiReplyCount || 0;
+          }
         }
       } catch (err) {
         console.warn('[sms-chat] Conversation history read error:', err.message);
       }
     }
 
-    // Enforce safety reply ceiling (e.g. max 5 back-and-forth replies)
+    // Enforce safety reply ceiling (e.g. max 5 back-and-forth replies in an active session)
     if (replyCount >= maxReplies) {
       console.log(`🛑 [SAFETY CEILING] Thread ${threadId} reached reply limit (${replyCount}/${maxReplies}). Pausing AI.`);
       return {

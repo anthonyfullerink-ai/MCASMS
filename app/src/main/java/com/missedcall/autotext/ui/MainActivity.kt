@@ -43,6 +43,7 @@ class MainActivity : ComponentActivity() {
         }
 
     private var missingPermissions by mutableStateOf<List<String>>(emptyList())
+    private var deepLinkLicenseKey by mutableStateOf<String?>(null)
 
     private val permissionLauncher = registerForActivityResult(
         ActivityResultContracts.RequestMultiplePermissions()
@@ -52,6 +53,7 @@ class MainActivity : ComponentActivity() {
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
+        extractDeepLink(intent)
         checkPermissions()
 
         val app = application as App
@@ -99,6 +101,7 @@ class MainActivity : ComponentActivity() {
 
                     if (settings.licenseKey.isBlank()) {
                         com.missedcall.autotext.ui.screens.LicenseGateScreen(
+                            initialLicenseKey = deepLinkLicenseKey,
                             onActivationSuccess = { updater ->
                                 lifecycleScope.launch {
                                     settingsRepo.updateSettings(settings.updater())
@@ -177,6 +180,20 @@ class MainActivity : ComponentActivity() {
                     }
                 }
             }
+        }
+    }
+
+    override fun onNewIntent(intent: Intent) {
+        super.onNewIntent(intent)
+        setIntent(intent)
+        extractDeepLink(intent)
+    }
+
+    private fun extractDeepLink(intent: Intent?) {
+        val data = intent?.data ?: return
+        val key = data.getQueryParameter("key")?.trim()
+        if (!key.isNullOrBlank()) {
+            deepLinkLicenseKey = key
         }
     }
 

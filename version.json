@@ -1,10 +1,10 @@
 {
-  "versionCode": 26,
-  "versionName": "1.8.0",
+  "versionCode": 27,
+  "versionName": "1.8.1",
   "downloadUrl": "https://raw.githubusercontent.com/anthonyfullerink-ai/MCASMS/main/MissedCallAutoSMS.apk",
   "proDownloadUrl": "https://raw.githubusercontent.com/anthonyfullerink-ai/MCASMS/main/MissedCallAutoSMS.apk",
   "releaseNotes": "🚀 v1.8.0 24/7 AI SMS Studio & Notifications Engine:\n• 💬 24/7 AI Conversational SMS: Multi-turn SMS booking assistant answers questions, schedules arrivals, and interacts directly via phone SIM\n• 🔔 Live Notifications & Activity Feed: Top-bar bell icon with real-time badges, category filters, and Android system notifications for AI calls, SMS chats, and emergencies\n• 🛡️ 3-Way Incoming SMS Scope Gatekeeper: Enforce Strict mode (missed calls only), All Unknowns, or Voice-Only, protected by a Contacts Exemption shield\n• 🚐 Mobile Field Trade vs. 🏪 In-Shop Studio: Customized scheduling windows for traveling trades vs exact time slots and directions for storefronts\n• 🧹 Clean Voice Hub UI: Replaced redundant text template input with clean Post-Call SIM SMS toggle",
   "mandatory": true,
-  "minSupportedVersion": 24,
-  "updatedAt": "2026-09-25T03:27:41.823Z"
+  "minSupportedVersion": 25,
+  "updatedAt": "2026-09-25T16:51:15.713Z"
 }

@@ -86,7 +86,9 @@ fun MainScreen(
         }
     }
 
-    if (showOnboardingDialog && !settings.permissionsOnboardingCompleted && missingPermissions.isNotEmpty()) {
+    val isMandatoryUpdatePending = availableUpdate != null && availableUpdate!!.mandatory
+
+    if (showOnboardingDialog && !isMandatoryUpdatePending && !settings.permissionsOnboardingCompleted && missingPermissions.isNotEmpty()) {
         PermissionOnboardingDialog(
             missingPermissions = missingPermissions,
             onRequestPermissionBatch = onRequestPermissionBatch,

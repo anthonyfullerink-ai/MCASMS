@@ -6,37 +6,36 @@ import android.net.Uri
 import android.os.Build
 import android.os.PowerManager
 import android.provider.Settings
+import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.BatteryFull
 import androidx.compose.material.icons.filled.Call
 import androidx.compose.material.icons.filled.CheckCircle
 import androidx.compose.material.icons.filled.Contacts
+import androidx.compose.material.icons.filled.Info
 import androidx.compose.material.icons.filled.Message
 import androidx.compose.material.icons.filled.Notifications
 import androidx.compose.material.icons.filled.Security
+import androidx.compose.material.icons.filled.VerifiedUser
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.sp
 import androidx.compose.ui.window.Dialog
 import androidx.compose.ui.window.DialogProperties
 import com.missedcall.autotext.ui.MainActivity
 
-data class PermissionStep(
-    val title: String,
-    val description: String,
-    val icon: ImageVector,
-    val permissions: List<String>
-)
-
-
-// Sentinel permission string used to identify the battery optimization step
 private const val BATTERY_OPTIMIZATION_SENTINEL = "BATTERY_OPTIMIZATION"
 
 @Composable
@@ -46,61 +45,33 @@ fun PermissionOnboardingDialog(
     onDismiss: () -> Unit
 ) {
     val context = LocalContext.current
-    var currentStepIndex by remember { mutableIntStateOf(0) }
+    val scrollState = rememberScrollState()
 
-    val steps = remember {
+    // Identify standard runtime permissions that can be requested in a batch
+    val runtimePermissionsToRequest = remember(missingPermissions) {
         val list = mutableListOf(
-            PermissionStep(
-                title = "1. Call & Phone State Detection",
-                description = "Required to intercept incoming calls and detect when a call is missed or rejected.",
-                icon = Icons.Default.Call,
-                permissions = listOf(android.Manifest.permission.READ_PHONE_STATE, android.Manifest.permission.READ_CALL_LOG)
-            ),
-            PermissionStep(
-                title = "2. SMS Auto-Reply & Delivery",
-                description = "Required to dispatch the automated text reply from your device SIM card and verify message status.",
-                icon = Icons.Default.Message,
-                permissions = listOf(
-                    android.Manifest.permission.SEND_SMS,
-                    android.Manifest.permission.READ_SMS,
-                    android.Manifest.permission.RECEIVE_SMS
-                )
-            ),
-            PermissionStep(
-                title = "3. Contacts Exclusion Filter",
-                description = "Required to check your address book so saved contacts are not texted automatically.",
-                icon = Icons.Default.Contacts,
-                permissions = listOf(android.Manifest.permission.READ_CONTACTS)
-            )
+            android.Manifest.permission.READ_PHONE_STATE,
+            android.Manifest.permission.READ_CALL_LOG,
+            android.Manifest.permission.SEND_SMS,
+            android.Manifest.permission.READ_SMS,
+            android.Manifest.permission.RECEIVE_SMS,
+            android.Manifest.permission.READ_CONTACTS
         )
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
-            list.add(
-                PermissionStep(
-                    title = "4. Background Notifications",
-                    description = "Required to display status alerts and persistent foreground service indicators.",
-                    icon = Icons.Default.Notifications,
-                    permissions = listOf(android.Manifest.permission.POST_NOTIFICATIONS)
-                )
-            )
+            list.add(android.Manifest.permission.POST_NOTIFICATIONS)
         }
-        list.add(
-            PermissionStep(
-                title = "${list.size + 1}. Disable Battery Optimization",
-                description = "Android's battery manager can kill this app mid-call, causing missed texts. Tap 'Exempt App' to ensure 100% reliable auto-reply delivery — even while your phone is locked.",
-                icon = Icons.Default.BatteryFull,
-                permissions = listOf(BATTERY_OPTIMIZATION_SENTINEL)
-            )
-        )
-        list.toList()
+        list.filter { missingPermissions.contains(it) }
     }
 
-    val currentStep = steps.getOrNull(currentStepIndex) ?: steps.last()
-    val isBatteryStep = currentStep.permissions.firstOrNull() == BATTERY_OPTIMIZATION_SENTINEL
-
-    // Check if battery optimization is already exempted (so we can skip this step)
-    val isBatteryAlreadyExempted = remember {
+    // Check battery optimization exemption
+    var isBatteryExempted by remember {
         val pm = context.getSystemService(Context.POWER_SERVICE) as PowerManager
-        pm.isIgnoringBatteryOptimizations(context.packageName)
+        mutableStateOf(pm.isIgnoringBatteryOptimizations(context.packageName))
+    }
+
+    // Check if SMS permissions are blocked (often due to Android 13+ restricted settings)
+    val hasSmsMissing = missingPermissions.any {
+        it == android.Manifest.permission.SEND_SMS || it == android.Manifest.permission.RECEIVE_SMS || it == android.Manifest.permission.READ_SMS
     }
 
     Dialog(
@@ -108,177 +79,244 @@ fun PermissionOnboardingDialog(
         properties = DialogProperties(dismissOnBackPress = true, dismissOnClickOutside = false)
     ) {
         Surface(
-            shape = RoundedCornerShape(20.dp),
+            shape = RoundedCornerShape(24.dp),
             color = MaterialTheme.colorScheme.surface,
             modifier = Modifier
                 .fillMaxWidth()
-                .padding(16.dp)
+                .padding(12.dp)
         ) {
             Column(
-                modifier = Modifier.padding(20.dp),
+                modifier = Modifier
+                    .padding(20.dp)
+                    .verticalScroll(scrollState),
                 horizontalAlignment = Alignment.CenterHorizontally
             ) {
                 Icon(
-                    imageVector = currentStep.icon,
+                    imageVector = Icons.Default.VerifiedUser,
                     contentDescription = null,
-                    tint = if (isBatteryStep) MaterialTheme.colorScheme.tertiary
-                           else MaterialTheme.colorScheme.primary,
+                    tint = MaterialTheme.colorScheme.primary,
                     modifier = Modifier.size(48.dp)
                 )
 
-                Spacer(modifier = Modifier.height(12.dp))
+                Spacer(modifier = Modifier.height(10.dp))
 
                 Text(
-                    text = "App Setup: Essential Permissions",
-                    style = MaterialTheme.typography.labelLarge,
-                    color = MaterialTheme.colorScheme.onSurfaceVariant
+                    text = "Quick Device Setup",
+                    style = MaterialTheme.typography.headlineSmall,
+                    fontWeight = FontWeight.Bold,
+                    color = MaterialTheme.colorScheme.onSurface
                 )
 
                 Spacer(modifier = Modifier.height(4.dp))
 
                 Text(
-                    text = currentStep.title,
-                    style = MaterialTheme.typography.titleMedium,
-                    fontWeight = FontWeight.Bold
-                )
-
-                Spacer(modifier = Modifier.height(8.dp))
-
-                Text(
-                    text = currentStep.description,
+                    text = "Grant permissions below so Missed Call Auto SMS can detect missed calls and auto-reply via SIM.",
                     style = MaterialTheme.typography.bodySmall,
-                    color = MaterialTheme.colorScheme.onSurfaceVariant
+                    color = MaterialTheme.colorScheme.onSurfaceVariant,
+                    textAlign = TextAlign.Center
                 )
 
                 Spacer(modifier = Modifier.height(16.dp))
 
-                // Context-sensitive tip card
-                if (isBatteryStep) {
+                // Summary of required permissions
+                Column(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .background(MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.4f), RoundedCornerShape(12.dp))
+                        .padding(12.dp),
+                    verticalArrangement = Arrangement.spacedBy(10.dp)
+                ) {
+                    PermissionFeatureRow(
+                        icon = Icons.Default.Call,
+                        title = "Phone & Call Logs",
+                        subtitle = "Detect incoming missed & rejected calls instantly",
+                        isGranted = !missingPermissions.contains(android.Manifest.permission.READ_PHONE_STATE) &&
+                                    !missingPermissions.contains(android.Manifest.permission.READ_CALL_LOG)
+                    )
+                    PermissionFeatureRow(
+                        icon = Icons.Default.Message,
+                        title = "SMS Auto-Reply",
+                        subtitle = "Send auto-text replies directly from your phone's SIM",
+                        isGranted = !hasSmsMissing
+                    )
+                    PermissionFeatureRow(
+                        icon = Icons.Default.Contacts,
+                        title = "Contacts Exclusion",
+                        subtitle = "Prevent texting saved family, friends, or VIPs",
+                        isGranted = !missingPermissions.contains(android.Manifest.permission.READ_CONTACTS)
+                    )
+                    if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
+                        PermissionFeatureRow(
+                            icon = Icons.Default.Notifications,
+                            title = "Status Alerts",
+                            subtitle = "Show live foreground service & dispatch status",
+                            isGranted = !missingPermissions.contains(android.Manifest.permission.POST_NOTIFICATIONS)
+                        )
+                    }
+                    PermissionFeatureRow(
+                        icon = Icons.Default.BatteryFull,
+                        title = "Battery Unrestricted",
+                        subtitle = "Ensures texts send even when screen is locked",
+                        isGranted = isBatteryExempted
+                    )
+                }
+
+                Spacer(modifier = Modifier.height(16.dp))
+
+                // Android 13+ Sideload Restricted Settings Guidance Banner
+                if (hasSmsMissing && Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
                     Surface(
-                        shape = RoundedCornerShape(8.dp),
-                        color = MaterialTheme.colorScheme.tertiaryContainer.copy(alpha = 0.5f),
+                        shape = RoundedCornerShape(12.dp),
+                        color = MaterialTheme.colorScheme.errorContainer.copy(alpha = 0.7f),
                         modifier = Modifier.fillMaxWidth()
                     ) {
-                        Column(modifier = Modifier.padding(10.dp)) {
+                        Column(modifier = Modifier.padding(12.dp)) {
+                            Row(verticalAlignment = Alignment.CenterVertically) {
+                                Icon(
+                                    imageVector = Icons.Default.Security,
+                                    contentDescription = null,
+                                    tint = MaterialTheme.colorScheme.error,
+                                    modifier = Modifier.size(20.dp)
+                                )
+                                Spacer(modifier = Modifier.width(6.dp))
+                                Text(
+                                    text = "Android 13+ Sideload Security Notice:",
+                                    fontWeight = FontWeight.Bold,
+                                    style = MaterialTheme.typography.labelMedium,
+                                    color = MaterialTheme.colorScheme.onErrorContainer
+                                )
+                            }
+                            Spacer(modifier = Modifier.height(6.dp))
                             Text(
-                                text = "🔋 Why This Matters:",
-                                fontWeight = FontWeight.Bold,
-                                style = MaterialTheme.typography.labelSmall
+                                text = "If Android shows 'Restricted Setting' or denies SMS access:\n1. Tap 'Open App Info' below.\n2. Tap the 3 dots (⋮) in the top-right corner.\n3. Tap 'Allow restricted settings'.\n4. Return here and tap 'Grant All Permissions'.",
+                                style = MaterialTheme.typography.bodySmall,
+                                color = MaterialTheme.colorScheme.onErrorContainer,
+                                lineHeight = 18.sp
                             )
-                            Text(
-                                text = "Samsung, Xiaomi, OnePlus and other OEM Androids kill background apps aggressively. Without this exemption, the app may miss calls while your screen is off. See dontkillmyapp.com for device-specific guides.",
-                                style = MaterialTheme.typography.bodySmall
-                            )
+                            Spacer(modifier = Modifier.height(8.dp))
+                            OutlinedButton(
+                                onClick = { MainActivity.openAppSettings(context) },
+                                modifier = Modifier.fillMaxWidth()
+                            ) {
+                                Text("Open App Info (Tap ⋮ for Restricted Settings)")
+                            }
                         }
                     }
-                } else {
-                    // Standard sideloaded restricted settings tip
-                    Surface(
-                        shape = RoundedCornerShape(8.dp),
-                        color = MaterialTheme.colorScheme.primaryContainer.copy(alpha = 0.5f),
-                        modifier = Modifier.fillMaxWidth()
+                    Spacer(modifier = Modifier.height(14.dp))
+                }
+
+                // Primary 1-Tap Action: Batch Grant
+                if (runtimePermissionsToRequest.isNotEmpty()) {
+                    Button(
+                        onClick = {
+                            onRequestPermissionBatch(runtimePermissionsToRequest)
+                        },
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .height(48.dp),
+                        shape = RoundedCornerShape(12.dp)
                     ) {
-                        Column(modifier = Modifier.padding(10.dp)) {
-                            Text(
-                                text = "💡 Android Security Tip:",
-                                fontWeight = FontWeight.Bold,
-                                style = MaterialTheme.typography.labelSmall
-                            )
-                            Text(
-                                text = "If SMS permission says 'Restricted Setting', tap 'Open App Info' below, tap the 3 dots (⋮) in App Info, and select 'Allow restricted settings'.",
-                                style = MaterialTheme.typography.bodySmall
-                            )
-                        }
+                        Text("🚀 Grant All Required Permissions (1-Tap)", fontWeight = FontWeight.Bold)
+                    }
+                } else if (!isBatteryExempted) {
+                    // All runtime permissions granted, only battery exemption remains
+                    Button(
+                        onClick = {
+                            try {
+                                val intent = Intent(Settings.ACTION_REQUEST_IGNORE_BATTERY_OPTIMIZATIONS).apply {
+                                    data = Uri.parse("package:${context.packageName}")
+                                }
+                                context.startActivity(intent)
+                            } catch (e: Exception) {
+                                try {
+                                    context.startActivity(Intent(Settings.ACTION_IGNORE_BATTERY_OPTIMIZATION_SETTINGS))
+                                } catch (ex: Exception) { /* ignore */ }
+                            }
+                            // Refresh battery status
+                            val pm = context.getSystemService(Context.POWER_SERVICE) as PowerManager
+                            isBatteryExempted = pm.isIgnoringBatteryOptimizations(context.packageName)
+                        },
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .height(48.dp),
+                        colors = ButtonDefaults.buttonColors(
+                            containerColor = MaterialTheme.colorScheme.tertiary
+                        ),
+                        shape = RoundedCornerShape(12.dp)
+                    ) {
+                        Text("🔋 Exempt App from Battery Saver", fontWeight = FontWeight.Bold)
+                    }
+                } else {
+                    // All permissions completely granted!
+                    Button(
+                        onClick = onDismiss,
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .height(48.dp),
+                        shape = RoundedCornerShape(12.dp)
+                    ) {
+                        Text("✓ All Setup Complete! Continue to App", fontWeight = FontWeight.Bold)
                     }
                 }
 
-                Spacer(modifier = Modifier.height(20.dp))
+                Spacer(modifier = Modifier.height(8.dp))
 
                 Row(
                     modifier = Modifier.fillMaxWidth(),
-                    horizontalArrangement = Arrangement.spacedBy(10.dp)
+                    horizontalArrangement = Arrangement.SpaceBetween,
+                    verticalAlignment = Alignment.CenterVertically
                 ) {
-                    if (isBatteryStep) {
-                        // Battery step: open dontkillmyapp.com link
-                        OutlinedButton(
-                            onClick = {
-                                try {
-                                    val intent = Intent(Intent.ACTION_VIEW, Uri.parse("https://dontkillmyapp.com"))
-                                    context.startActivity(intent)
-                                } catch (e: Exception) { /* ignore */ }
-                            },
-                            modifier = Modifier.weight(1f)
-                        ) {
-                            Text("Device Guide")
-                        }
-
-                        Button(
-                            onClick = {
-                                // Request battery optimization exemption via system intent
-                                try {
-                                    val intent = Intent(Settings.ACTION_REQUEST_IGNORE_BATTERY_OPTIMIZATIONS).apply {
-                                        data = Uri.parse("package:${context.packageName}")
-                                    }
-                                    context.startActivity(intent)
-                                } catch (e: Exception) {
-                                    // Fallback to general battery settings on devices that block the direct intent
-                                    try {
-                                        context.startActivity(Intent(Settings.ACTION_IGNORE_BATTERY_OPTIMIZATION_SETTINGS))
-                                    } catch (ex: Exception) { /* ignore */ }
-                                }
-                                // Advance to next step (or finish) regardless — user may skip
-                                if (currentStepIndex < steps.size - 1) {
-                                    currentStepIndex++
-                                } else {
-                                    onDismiss()
-                                }
-                            },
-                            modifier = Modifier.weight(1.2f),
-                            colors = ButtonDefaults.buttonColors(
-                                containerColor = MaterialTheme.colorScheme.tertiary
-                            )
-                        ) {
-                            Text(if (isBatteryAlreadyExempted) "Already Exempt ✓" else "Exempt App")
-                        }
-                    } else {
-                        // Standard permission step
-                        OutlinedButton(
-                            onClick = { MainActivity.openAppSettings(context) },
-                            modifier = Modifier.weight(1f)
-                        ) {
-                            Text("Open App Info")
-                        }
-
-                        Button(
-                            onClick = {
-                                onRequestPermissionBatch(currentStep.permissions)
-                                if (currentStepIndex < steps.size - 1) {
-                                    currentStepIndex++
-                                } else {
-                                    onDismiss()
-                                }
-                            },
-                            modifier = Modifier.weight(1.2f)
-                        ) {
-                            Text(if (currentStepIndex < steps.size - 1) "Allow & Next" else "Allow & Finish")
-                        }
+                    TextButton(onClick = { MainActivity.openAppSettings(context) }) {
+                        Text("App Settings", style = MaterialTheme.typography.bodySmall)
                     }
-                }
-
-                Spacer(modifier = Modifier.height(10.dp))
-
-                TextButton(
-                    onClick = onDismiss,
-                    modifier = Modifier.fillMaxWidth()
-                ) {
-                    Text(
-                        text = "Skip for Now (Don't Ask Again)",
-                        style = MaterialTheme.typography.bodySmall,
-                        color = MaterialTheme.colorScheme.onSurfaceVariant
-                    )
+                    TextButton(onClick = onDismiss) {
+                        Text("Skip / Finish Later", style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
+                    }
                 }
             }
         }
     }
 }
 
+@Composable
+private fun PermissionFeatureRow(
+    icon: ImageVector,
+    title: String,
+    subtitle: String,
+    isGranted: Boolean
+) {
+    Row(
+        modifier = Modifier.fillMaxWidth(),
+        verticalAlignment = Alignment.CenterVertically
+    ) {
+        Icon(
+            imageVector = icon,
+            contentDescription = null,
+            tint = if (isGranted) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.onSurfaceVariant,
+            modifier = Modifier.size(24.dp)
+        )
+        Spacer(modifier = Modifier.width(12.dp))
+        Column(modifier = Modifier.weight(1f)) {
+            Text(
+                text = title,
+                style = MaterialTheme.typography.labelMedium,
+                fontWeight = FontWeight.Bold,
+                color = MaterialTheme.colorScheme.onSurface
+            )
+            Text(
+                text = subtitle,
+                style = MaterialTheme.typography.bodySmall,
+                color = MaterialTheme.colorScheme.onSurfaceVariant,
+                fontSize = 11.sp
+            )
+        }
+        if (isGranted) {
+            Icon(
+                imageVector = Icons.Default.CheckCircle,
+                contentDescription = "Granted",
+                tint = MaterialTheme.colorScheme.primary,
+                modifier = Modifier.size(20.dp)
+            )
+        }
+    }
+}

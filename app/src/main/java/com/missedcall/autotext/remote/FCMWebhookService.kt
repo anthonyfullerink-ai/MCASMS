@@ -202,12 +202,14 @@ class FCMWebhookService : FirebaseMessagingService() {
         val app = applicationContext as App
         val settings = runBlocking { app.settingsRepository.getSettings() }
 
-        if (!settings.webhookEnabled) {
-            Log.w(TAG, "Webhook processing is disabled in App Settings. Ignoring FCM payload.")
+        val isCentralRelay = data["source"] == "central_cloud_relay"
+
+        // External third-party webhooks require webhookEnabled in App Settings; central cloud relay (AI SMS & Vapi) is always permitted
+        if (!isCentralRelay && !settings.webhookEnabled) {
+            Log.w(TAG, "Webhook processing is disabled in App Settings. Ignoring external FCM payload.")
             return
         }
 
-        val isCentralRelay = data["source"] == "central_cloud_relay"
         val secret = data["secret"] ?: data["api_secret"] ?: data["auth_token"] ?: ""
         val targetPhone = data["phone"] ?: data["phone_number"] ?: data["recipientPhone"] ?: data["recipient_phone"] ?: ""
         val customMessage = data["message"] ?: data["message_text"] ?: data["text"] ?: ""
