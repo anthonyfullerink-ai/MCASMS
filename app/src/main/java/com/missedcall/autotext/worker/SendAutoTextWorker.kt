@@ -34,6 +34,8 @@ class SendAutoTextWorker(
         const val KEY_IS_REMOTE_TRIGGER = "key_is_remote_trigger"
         const val KEY_CALLBACK_URL = "key_callback_url"
         const val KEY_SIM_SLOT = "key_sim_slot"
+
+        private val recentDispatches = java.util.concurrent.ConcurrentHashMap<String, Long>()
     }
 
     override suspend fun doWork(): Result {
@@ -48,6 +50,16 @@ class SendAutoTextWorker(
         val isRemoteTrigger = inputData.getBoolean(KEY_IS_REMOTE_TRIGGER, false)
         val callbackUrl = inputData.getString(KEY_CALLBACK_URL)
         val requestedSimSlot = inputData.getInt(KEY_SIM_SLOT, 0)
+
+        // Deduplication safeguard: Prevent duplicate dispatch if both direct HTTP and FCM trigger
+        val dedupKey = "$targetNumber:${overrideMessage?.hashCode() ?: 0}"
+        val now = System.currentTimeMillis()
+        val lastDispatched = recentDispatches[dedupKey] ?: 0L
+        if (now - lastDispatched < 20_000L) {
+            Log.i(TAG, "Suppressing duplicate SMS dispatch for $targetNumber within 20s window.")
+            return Result.success()
+        }
+        recentDispatches[dedupKey] = now
 
         val app = applicationContext as App
         val settingsRepo = app.settingsRepository

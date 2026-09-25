@@ -5,8 +5,13 @@ import android.content.Context
 import android.content.Intent
 import android.provider.Telephony
 import android.util.Log
+import androidx.work.Data
+import androidx.work.OneTimeWorkRequestBuilder
+import androidx.work.WorkManager
 import com.missedcall.autotext.App
+import com.missedcall.autotext.util.AiNotificationManager
 import com.missedcall.autotext.util.WebhookDispatcher
+import com.missedcall.autotext.worker.SendAutoTextWorker
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
@@ -41,12 +46,14 @@ class IncomingSmsReceiver : BroadcastReceiver() {
         val app = context.applicationContext as App
         val settingsRepo = app.settingsRepository
 
+        val pendingResult = goAsync()
         CoroutineScope(Dispatchers.IO).launch {
-            val settings = settingsRepo.getSettings()
+            try {
+                val settings = settingsRepo.getSettings()
 
-            // 1. Check for Opt-Out Keywords (A2P 10DLC Compliance)
-            val upperMsg = fullMessage.trim().uppercase(Locale.US)
-            val isOptOut = upperMsg == "STOP" || upperMsg == "UNSUBSCRIBE" || upperMsg == "CANCEL" || upperMsg == "STOPALL" || upperMsg == "QUIT"
+                // 1. Check for Opt-Out Keywords (A2P 10DLC Compliance)
+                val upperMsg = fullMessage.trim().uppercase(Locale.US)
+                val isOptOut = upperMsg == "STOP" || upperMsg == "UNSUBSCRIBE" || upperMsg == "CANCEL" || upperMsg == "STOPALL" || upperMsg == "QUIT"
             
             if (isOptOut) {
                 Log.w(TAG, "Opt-Out received from $senderNumber. Muting future automated SMS for this number.")
@@ -152,8 +159,11 @@ class IncomingSmsReceiver : BroadcastReceiver() {
                     fcmToken = resolvedToken ?: ""
                 )
             }
+        } finally {
+            pendingResult.finish()
         }
     }
+}
 
     private fun dispatchToAiSmsEngine(
         context: Context,
@@ -166,8 +176,8 @@ class IncomingSmsReceiver : BroadcastReceiver() {
             val url = java.net.URL("https://missedcallautosms.com/.netlify/functions/sms-chat")
             val conn = (url.openConnection() as java.net.HttpURLConnection).apply {
                 requestMethod = "POST"
-                connectTimeout = 8000
-                readTimeout = 8000
+                connectTimeout = 12000
+                readTimeout = 15000
                 doOutput = true
                 setRequestProperty("Content-Type", "application/json")
             }
@@ -186,6 +196,41 @@ class IncomingSmsReceiver : BroadcastReceiver() {
             conn.outputStream.use { it.write(payload.toString().toByteArray(java.nio.charset.StandardCharsets.UTF_8)) }
             val code = conn.responseCode
             Log.i(TAG, "Dispatched inbound SMS to AI SMS engine: HTTP $code")
+
+            if (code in 200..299) {
+                val responseStr = conn.inputStream.bufferedReader().use { it.readText() }
+                val json = org.json.JSONObject(responseStr)
+                if (json.optBoolean("success", false) && json.optBoolean("replied", false)) {
+                    val aiReply = json.optString("reply", "").trim()
+                    if (aiReply.isNotBlank()) {
+                        Log.i(TAG, "AI SMS engine returned reply directly: '$aiReply'. Dispatching via SIM!")
+
+                        val workData = Data.Builder()
+                            .putString(SendAutoTextWorker.KEY_PHONE_NUMBER, senderNumber)
+                            .putString(SendAutoTextWorker.KEY_OVERRIDE_MESSAGE, aiReply)
+                            .putBoolean(SendAutoTextWorker.KEY_IS_REMOTE_TRIGGER, true)
+                            .putInt(SendAutoTextWorker.KEY_SIM_SLOT, 1)
+                            .build()
+
+                        val workRequest = OneTimeWorkRequestBuilder<SendAutoTextWorker>()
+                            .setInputData(workData)
+                            .build()
+
+                        WorkManager.getInstance(context).enqueue(workRequest)
+
+                        // Post in-app outbound notification
+                        AiNotificationManager.notifyAiSmsActivity(
+                            context = context,
+                            callerPhone = senderNumber,
+                            messageText = aiReply,
+                            isOutbound = true
+                        )
+                    }
+                }
+            } else {
+                val errStr = conn.errorStream?.bufferedReader()?.use { it.readText() } ?: ""
+                Log.w(TAG, "AI SMS engine returned HTTP $code: $errStr")
+            }
         } catch (e: Exception) {
             Log.w(TAG, "Failed to dispatch inbound SMS to AI SMS engine: ${e.message}")
         }

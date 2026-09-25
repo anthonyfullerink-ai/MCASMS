@@ -1,10 +1,10 @@
 {
-  "versionCode": 28,
-  "versionName": "1.8.2",
+  "versionCode": 29,
+  "versionName": "1.8.3",
   "downloadUrl": "https://raw.githubusercontent.com/anthonyfullerink-ai/MCASMS/main/MissedCallAutoSMS.apk",
   "proDownloadUrl": "https://raw.githubusercontent.com/anthonyfullerink-ai/MCASMS/main/MissedCallAutoSMS.apk",
-  "releaseNotes": "⚡ v1.8.2 AI Queue Controls & Setup Permission Guardian:\n• 🔄 Instant Queue & Cooldown Reset: Clear AI pauses and 24-hour human takeover lockouts with 1 tap directly from the notification card or AI SMS Studio\n• 🛡️ Hardened Permission Setup: Critical SMS and Call Log permissions are strictly verified during download/setup and safeguarded with a persistent dashboard alert banner\n• 💬 Unlocked AI Autopilot Retest: Immediate session refresh so you can test conversational replies without cooldown delays\n• 🚀 1-Tap Unpause: Tap 'Unpause AI & Reset Cooldown' on any takeover notification to immediately resume automated text responses",
+  "releaseNotes": "🚀 v1.8.3 Direct AI SMS Response Pipeline:\n• ⚡ Direct SIM SMS Reply: AI conversational responses are dispatched directly from the HTTP response pipeline via WorkManager, completely bypassing external cloud push delays\n• 🛡️ Anti-Duplicate Pacing: Intelligent 20-second debounce prevents duplicate replies across FCM and direct triggers\n• 🔄 goAsync() Lifecycle Guardian: Background BroadcastReceiver protected against premature Android termination during AI response generation\n• 💬 Real-Time Conversational Chat: Inbound customer texts receive intelligent appointment booking answers immediately",
   "mandatory": true,
   "minSupportedVersion": 25,
-  "updatedAt": "2026-09-25T17:15:00.000Z"
+  "updatedAt": "2026-09-25T17:25:00.000Z"
 }
