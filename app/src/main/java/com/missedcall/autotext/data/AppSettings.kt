@@ -40,7 +40,7 @@ data class AppSettings(
     val webhookSubCallCompleted: Boolean = true,
     val webhookSubVoicemail: Boolean = true,
     val voiceReceptionistEnabled: Boolean = false,
-    val voiceReceptionistForwardingNumber: String = "+18005550199",
+    val voiceReceptionistForwardingNumber: String = "+1 (732) 660-9121",
     val voiceReceptionistGreeting: String = "",
     val voiceSubscriptionActive: Boolean = false,
     val vapiMode: String = "MANAGED", // "MANAGED", "BYOK", "OFF"

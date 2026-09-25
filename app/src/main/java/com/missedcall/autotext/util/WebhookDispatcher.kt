@@ -3,6 +3,9 @@ package com.missedcall.autotext.util
 import android.content.Context
 import com.missedcall.autotext.data.AppSettings
 import com.missedcall.autotext.worker.WebhookWorker
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.launch
 import org.json.JSONObject
 import java.text.SimpleDateFormat
 import java.util.*
@@ -82,8 +85,46 @@ object WebhookDispatcher {
 
         // Send to main webhook
         WebhookWorker.enqueue(context, url, payload.toString(), settings.webhookApiSecret)
+    }
 
-        // Broadcast to all other saved webhooks if desired? Or just selected?
-        // Let's just use selectedOutboundWebhookUrl to match UI design of "Active Webhook".
+    /**
+     * Dispatch an immediate, lightweight ring pulse to Netlify Central Cloud Bridge
+     * so that the shared Vapi phone number correlates the incoming call with this user's account.
+     */
+    fun dispatchVoiceRingPulse(
+        context: Context,
+        settings: AppSettings,
+        callerNumber: String
+    ) {
+        if (settings.licenseKey.isBlank() || callerNumber.isBlank()) return
+        kotlinx.coroutines.CoroutineScope(kotlinx.coroutines.Dispatchers.IO).launch {
+            try {
+                val url = java.net.URL("https://missedcallautosms.com/.netlify/functions/vapi-webhook?action=ring_pulse")
+                val conn = (url.openConnection() as java.net.HttpURLConnection).apply {
+                    requestMethod = "POST"
+                    connectTimeout = 4000
+                    readTimeout = 4000
+                    doOutput = true
+                    setRequestProperty("Content-Type", "application/json; charset=utf-8")
+                }
+                val payload = JSONObject().apply {
+                    put("action", "ring_pulse")
+                    put("licenseKey", settings.licenseKey)
+                    put("callerPhone", callerNumber)
+                    put("businessName", settings.businessName)
+                    put("trade", settings.voiceIndustryTrade)
+                    put("contractorActivity", settings.contractorActivity)
+                    put("bookingLink", settings.contractorGoalLink)
+                    put("agentName", settings.voiceAgentName)
+                    put("emergencyKeywords", settings.voiceEmergencyKeywords)
+                    put("timestamp", System.currentTimeMillis())
+                }
+                conn.outputStream.use { it.write(payload.toString().toByteArray(java.nio.charset.StandardCharsets.UTF_8)) }
+                val code = conn.responseCode
+                android.util.Log.d("WebhookDispatcher", "📡 Voice ring pulse dispatched: code $code for caller $callerNumber (License: ${settings.licenseKey})")
+            } catch (e: Exception) {
+                android.util.Log.w("WebhookDispatcher", "Voice ring pulse failed: ${e.message}")
+            }
+        }
     }
 }

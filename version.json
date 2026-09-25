@@ -1,10 +1,10 @@
 {
-  "versionCode": 33,
-  "versionName": "1.8.7",
+  "versionCode": 34,
+  "versionName": "1.8.8",
   "downloadUrl": "https://raw.githubusercontent.com/anthonyfullerink-ai/MCASMS/main/MissedCallAutoSMS.apk",
   "proDownloadUrl": "https://raw.githubusercontent.com/anthonyfullerink-ai/MCASMS/main/MissedCallAutoSMS.apk",
-  "releaseNotes": "⚡ v1.8.7 Flagship Missed Call Auto-SMS & AI Conflict Resolution:\n• 🚀 Instant Missed Call Auto-SMS: Pacing respects configured natural delay (minimum 2s) rather than 40s AI conversational pacing\n• 🛡️ CallLog Polling Safeguard: Async polling ensures missed calls on modern Android devices are reliably captured even if OS intent extras are delayed\n• 🎙️ Auto-SMS vs Vapi Conflict Resolution: Active voice call reconciliation buffer tightened to 45s. Vapi in-progress answers immediately mute canned SMS\n• 🔐 $9.99 Plan Entitlement Gating: Conversational AI replies strictly gated to active $9.99/mo voice & SMS subscribers\n• 🔄 Dropped Call Recovery SMS: Contextual text automatically dispatched if voice calls disconnect or drop prematurely",
+  "releaseNotes": "🎙️ v1.8.8 Shared-Number Multi-Tenant AI Voice Receptionist Engine:\n• 🌐 Single Phone Number Architecture: Shared primary Vapi number (+1 732-660-9121) dynamically serves every subscriber with their bespoke company name, trade prompt, first message, and calendar\n• 📡 Instant Ring-Correlation Pulse: Android devices send a lightweight pulse on incoming ringing calls so the backend binds the incoming forwarded call directly to the user's account\n• 🔄 SIP Diversion Header Carrier Support: Native telecom header extraction automatically identifies the forwarding contractor cell number\n• 📱 Isolated Multi-Tenant Tool Execution: In-call 'send_sms' tools and post-call recovery texts dispatch exclusively from the specific subscriber's Android phone SIM\n• 📊 Exact Account Metering: Call logs, duration minutes, and Stripe usage automatically route to each individual subscriber's dashboard",
   "mandatory": true,
-  "minSupportedVersion": 30,
-  "updatedAt": "2026-09-25T18:35:00.000Z"
+  "minSupportedVersion": 31,
+  "updatedAt": "2026-09-25T18:57:00.000Z"
 }

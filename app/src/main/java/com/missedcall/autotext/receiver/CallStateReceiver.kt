@@ -42,6 +42,23 @@ class CallStateReceiver : BroadcastReceiver() {
             TelephonyManager.EXTRA_STATE_RINGING -> {
                 isRinging.set(true)
                 wasAnswered.set(false)
+                val ringingNumber = incomingNumber
+                if (!ringingNumber.isNullOrBlank()) {
+                    CoroutineScope(Dispatchers.IO).launch {
+                        try {
+                            val settings = (context.applicationContext as App).settingsRepository.getSettings()
+                            if (settings.voiceReceptionistEnabled || settings.voiceSubscriptionActive) {
+                                com.missedcall.autotext.util.WebhookDispatcher.dispatchVoiceRingPulse(
+                                    context = context,
+                                    settings = settings,
+                                    callerNumber = ringingNumber
+                                )
+                            }
+                        } catch (e: Exception) {
+                            Log.w(TAG, "Ring pulse dispatch exception: ${e.message}")
+                        }
+                    }
+                }
             }
             TelephonyManager.EXTRA_STATE_OFFHOOK -> {
                 if (isRinging.get()) {

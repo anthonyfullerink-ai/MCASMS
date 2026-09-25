@@ -33,6 +33,10 @@ function getLocalToken(licenseKey) {
 
 const STRIPE_SECRET_KEY = process.env.STRIPE_SECRET_KEY || '';
 
+// In-Memory Shared Phone Number Routing Caches
+const RING_CORRELATION_CACHE = new Map(); // cleanDigits -> pulseData
+const CALL_LICENSE_MAP = new Map();        // callId -> sessionData
+
 let initializeApp, getApps, cert, getMessaging;
 try {
   const adminApp = require('firebase-admin/app');
@@ -210,6 +214,171 @@ exports.handler = async (event) => {
 
     console.log(`📞 [NETLIFY VAPI WEBHOOK] Call ${callId} (${message.type || 'unknown'}) from ${callerNum} (${durationSec}s) - Urgency: ${isUrgent ? 'HIGH' : 'NORMAL'}`);
 
+    // ── 0. Handle Ring Pulse from Android Devices (Multi-Tenant Ring Correlation) ──
+    const action = event.queryStringParameters?.action || payload.action;
+    if (action === 'ring_pulse') {
+      const licenseKey = payload.licenseKey;
+      const callerPhone = payload.callerPhone;
+      if (!licenseKey || !callerPhone) {
+        return { statusCode: 400, headers, body: JSON.stringify({ error: 'Missing licenseKey or callerPhone' }) };
+      }
+      const cleanDigits = String(callerPhone).replace(/\D/g, '').slice(-10);
+      const pulseData = {
+        licenseKey,
+        callerPhone,
+        businessName: payload.businessName || '',
+        trade: payload.trade || '',
+        contractorActivity: payload.contractorActivity || '',
+        bookingLink: payload.bookingLink || '',
+        agentName: payload.agentName || 'Riley',
+        emergencyKeywords: payload.emergencyKeywords || '',
+        timestamp: payload.timestamp || Date.now()
+      };
+
+      RING_CORRELATION_CACHE.set(cleanDigits, pulseData);
+      const fs = getFirestore();
+      if (fs && fs.saveRingPulse) {
+        await fs.saveRingPulse(cleanDigits, pulseData);
+      }
+
+      console.log(`📡 [RING PULSE INGESTED] Caller: ${cleanDigits} -> License: ${licenseKey} (${pulseData.businessName})`);
+      return {
+        statusCode: 200,
+        headers,
+        body: JSON.stringify({ success: true, registered: true, cleanDigits })
+      };
+    }
+
+    // ── 1. Handle Dynamic Inbound Assistant Request (Single Number Multi-Tenant Routing) ──
+    if (message.type === 'assistant-request' || payload.type === 'assistant-request') {
+      console.log(`🎙️ [VAPI ASSISTANT REQUEST] Dynamic routing requested for call ${callId} from ${callerNum}`);
+
+      const cleanCallerDigits = String(callerNum).replace(/\D/g, '').slice(-10);
+      const fs = getFirestore();
+
+      // Step A: Check In-Memory Ring Pulse Cache
+      let matchedPulse = cleanCallerDigits ? RING_CORRELATION_CACHE.get(cleanCallerDigits) : null;
+
+      // Step B: Check Firestore Ring Pulse
+      if (!matchedPulse && cleanCallerDigits && fs && fs.getRingPulse) {
+        matchedPulse = await fs.getRingPulse(cleanCallerDigits);
+      }
+
+      // Step C: Check SIP Diversion Header (carrier conditional call forwarding)
+      const sipHeaders = callObj.sipHeaders || callObj.headers || message.sipHeaders || {};
+      const diversionHeader = sipHeaders['diversion'] || sipHeaders['Diversion'] || sipHeaders['x-diversion'] || '';
+      let matchedSub = null;
+
+      if (diversionHeader && fs && fs.getVoiceBinding) {
+        const divDigits = String(diversionHeader).replace(/\D/g, '').slice(-10);
+        if (divDigits) {
+          console.log(`📞 [SIP DIVERSION DETECTED] Forwarded from: ${divDigits}`);
+          matchedSub = await fs.getVoiceBinding(divDigits);
+        }
+      }
+
+      // If pulse matched, load the subscriber's full binding
+      if (matchedPulse && fs && fs.getVoiceBinding) {
+        matchedSub = await fs.getVoiceBinding(matchedPulse.licenseKey);
+      }
+
+      // Fallback: Check by inbound number or default active subscriber
+      if (!matchedSub && fs && fs.getVoiceBinding) {
+        if (inboundNumber) matchedSub = await fs.getVoiceBinding(inboundNumber);
+        if (!matchedSub) matchedSub = await fs.getVoiceBinding('MCAS-PRO-TRIAL-001');
+      }
+
+      const licenseKey = matchedPulse?.licenseKey || matchedSub?.licenseKey || 'MCAS-PRO-TRIAL-001';
+      const businessName = matchedPulse?.businessName || matchedSub?.businessName || 'Our Business';
+      const trade = matchedPulse?.trade || matchedSub?.voiceIndustryTrade || matchedSub?.trade || 'Home Services & Repairs';
+      const contractorActivity = matchedPulse?.contractorActivity || matchedSub?.contractorActivity || 'on a job with hands full';
+      const agentName = matchedPulse?.agentName || matchedSub?.voiceAgentName || 'Riley';
+      const bookingLink = matchedPulse?.bookingLink || matchedSub?.contractorGoalLink || 'https://missedcallautosms.com';
+      const emergencyKeywords = matchedPulse?.emergencyKeywords || matchedSub?.voiceEmergencyKeywords || 'leak, flooding, broken pipe, sparking, fire';
+      const shopAddress = matchedSub?.aiSmsShopAddress || '';
+
+      // Save session mapping for subsequent status-update, tool-calls, and end-of-call-report
+      const sessionData = {
+        callId,
+        licenseKey,
+        businessName,
+        callerNum,
+        createdAt: Date.now()
+      };
+      CALL_LICENSE_MAP.set(callId, sessionData);
+      if (fs && fs.saveCallSession) {
+        await fs.saveCallSession(callId, sessionData);
+      }
+
+      const systemPrompt = `You are ${agentName}, the professional, friendly, and efficient AI front desk receptionist for ${businessName}.
+Specialty / Trade: ${trade}.
+Current Status: The team is currently ${contractorActivity}, so you are answering and triaging incoming calls.
+Booking Link: ${bookingLink}
+${shopAddress ? `Shop Address: ${shopAddress}` : ''}
+Emergency Priority Keywords: ${emergencyKeywords}
+
+Key Objectives:
+1. Greet the caller warmly and clearly identify that you are ${agentName} at ${businessName}.
+2. Ask how you can help them today and listen carefully to their project or service inquiry.
+3. If their request is urgent or an emergency (${emergencyKeywords}), prioritize safety, assure them that our technician is being alerted immediately, and verify their address and callback number.
+4. For bookings, estimates, or service quotes, offer to send a direct link to their mobile phone right away, or collect their preferred date and time.
+5. You can use the 'send_sms' tool to text the caller quote links, confirmations, or office contact details instantly while on the call!
+6. Keep responses natural, concise (1-3 sentences per turn), and conversational. Do not sound robotic.`;
+
+      const firstMessage = `Hi! Thanks for calling ${businessName}. I'm ${agentName}, the AI assistant. How can I help you today?`;
+
+      console.log(`🎯 [VAPI DYNAMIC ASSISTANT RETURNED] Call ${callId} -> "${businessName}" (License: ${licenseKey})`);
+
+      return {
+        statusCode: 200,
+        headers,
+        body: JSON.stringify({
+          assistant: {
+            name: `${agentName} - ${businessName}`,
+            firstMessage: firstMessage,
+            model: {
+              provider: 'openai',
+              model: 'gpt-4o-mini',
+              temperature: 0.3,
+              messages: [
+                {
+                  role: 'system',
+                  content: systemPrompt
+                }
+              ],
+              tools: [
+                {
+                  type: 'function',
+                  function: {
+                    name: 'send_sms',
+                    description: 'Send a text message with a booking link, quote, or confirmation directly to the caller via the office SMS relay.',
+                    parameters: {
+                      type: 'object',
+                      properties: {
+                        message: { type: 'string', description: 'The exact SMS text message to send to the caller.' },
+                        phoneNumber: { type: 'string', description: 'The caller phone number in E.164 format.' }
+                      },
+                      required: ['message']
+                    }
+                  }
+                }
+              ]
+            },
+            voice: {
+              provider: 'cartesia',
+              voiceId: '248be419-c632-4f23-adf1-5324ed7dbf10'
+            },
+            metadata: {
+              licenseKey: licenseKey,
+              businessName: businessName,
+              callerPhone: callerNum,
+              callId: callId
+            }
+          }
+        })
+      };
+    }
+
     // ── Handle Vapi Tool Calls (e.g. Riley invoking send_sms tool) ──
     if (message.type === 'tool-calls' || payload.type === 'tool-calls') {
       const toolCalls = message.toolCalls || payload.toolCalls || [];
@@ -237,8 +406,11 @@ exports.handler = async (event) => {
           let delivered = false;
           if (fs && msg) {
             try {
+              let session = CALL_LICENSE_MAP.get(callId) || (fs.getCallSession ? await fs.getCallSession(callId) : null);
+              let resolvedKey = callObj.metadata?.licenseKey || message.metadata?.licenseKey || session?.licenseKey;
               let sub = null;
-              if (inboundNumber) sub = await fs.getVoiceBinding(inboundNumber);
+              if (resolvedKey) sub = await fs.getVoiceBinding(resolvedKey);
+              if (!sub && inboundNumber) sub = await fs.getVoiceBinding(inboundNumber);
               if (!sub && callObj.assistantId) sub = await fs.getVoiceBinding(callObj.assistantId);
               if (!sub) sub = await fs.getVoiceBinding('MCAS-PRO-TRIAL-001');
 
@@ -247,8 +419,8 @@ exports.handler = async (event) => {
                 const dev = await fs.getDeviceBinding(sub.licenseKey);
                 targetFcmToken = dev?.fcm_token;
               }
-              if (!targetFcmToken) {
-                const localCache = getLocalToken('MCAS-PRO-TRIAL-001');
+              if (!targetFcmToken && sub?.licenseKey) {
+                const localCache = getLocalToken(sub.licenseKey);
                 targetFcmToken = localCache?.fcm_token;
               }
 
@@ -264,7 +436,7 @@ exports.handler = async (event) => {
                   },
                   android: { priority: 'high' }
                 });
-                console.log(`🚀 [VAPI TOOL FCM DELIVERED] SMS relay sent to device for ${targetPhone}`);
+                console.log(`🚀 [VAPI TOOL FCM DELIVERED] SMS relay sent to device for ${targetPhone} (${sub?.licenseKey})`);
                 delivered = true;
               }
             } catch (relayErr) {
@@ -296,9 +468,14 @@ exports.handler = async (event) => {
       if (callStatus === 'in-progress' || callStatus === 'ringing') {
         const fs = getFirestore();
         const msg = getMessagingService();
-        if (fs && msg && inboundNumber) {
+        const session = CALL_LICENSE_MAP.get(callId) || (fs && fs.getCallSession ? await fs.getCallSession(callId) : null);
+        const resolvedKey = callObj.metadata?.licenseKey || message.metadata?.licenseKey || session?.licenseKey;
+
+        if (fs && msg) {
           try {
-            const sub = await fs.getVoiceBinding(inboundNumber);
+            let sub = null;
+            if (resolvedKey) sub = await fs.getVoiceBinding(resolvedKey);
+            if (!sub && inboundNumber) sub = await fs.getVoiceBinding(inboundNumber);
             if (sub && sub.licenseKey) {
               const deviceRecord = await fs.getDeviceBinding(sub.licenseKey);
               if (deviceRecord && deviceRecord.fcm_token) {
@@ -350,7 +527,9 @@ exports.handler = async (event) => {
         });
 
         // 2. Increment per-subscriber minutesUsed & compute overage
-        meterResult = await fs.incrementMinutesUsed(inboundNumber || 'unknown', durationSec);
+        const session = CALL_LICENSE_MAP.get(callId) || (fs && fs.getCallSession ? await fs.getCallSession(callId) : null);
+        const resolvedKey = callObj.metadata?.licenseKey || message.metadata?.licenseKey || session?.licenseKey;
+        meterResult = await fs.incrementMinutesUsed(resolvedKey || inboundNumber || 'unknown', durationSec);
 
         // 3. Automated Stripe Billing for Increments / Overage
         const sub = meterResult?.subscriber;
@@ -444,9 +623,16 @@ exports.handler = async (event) => {
 
     // ── Dispatch Completed Voice Call Push to Android Device ───────────────
     const msg = getMessagingService();
-    if (fs && msg && inboundNumber) {
+    const sessionPush = CALL_LICENSE_MAP.get(callId) || (fs && fs.getCallSession ? await fs.getCallSession(callId) : null);
+    const resolvedPushKey = callObj.metadata?.licenseKey || message.metadata?.licenseKey || sessionPush?.licenseKey;
+
+    if (fs && msg) {
       try {
-        const sub = await fs.getVoiceBinding(inboundNumber);
+        let sub = null;
+        if (resolvedPushKey) sub = await fs.getVoiceBinding(resolvedPushKey);
+        if (!sub && inboundNumber) sub = await fs.getVoiceBinding(inboundNumber);
+        if (!sub) sub = await fs.getVoiceBinding('MCAS-PRO-TRIAL-001');
+
         if (sub && sub.licenseKey) {
           const deviceRecord = await fs.getDeviceBinding(sub.licenseKey);
           if (deviceRecord && deviceRecord.fcm_token) {
