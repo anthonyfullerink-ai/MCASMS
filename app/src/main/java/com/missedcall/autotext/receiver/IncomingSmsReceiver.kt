@@ -75,19 +75,36 @@ class IncomingSmsReceiver : BroadcastReceiver() {
                 val isSavedContact = com.missedcall.autotext.util.ContactUtils.getContactName(context, senderNumber) != null
                 if (isSavedContact) {
                     Log.d(TAG, "Skipping AI SMS: $senderNumber is in saved Contacts.")
+                    com.missedcall.autotext.util.AiNotificationManager.notifyAiSmsIgnored(
+                        context = context,
+                        callerPhone = senderNumber,
+                        reason = "Inbound text from $senderNumber was bypassed: Number is saved in your Android Contacts (Contacts Shield is active)."
+                    )
                     return@launch
                 }
 
                 // Rule B: 3-Way Scope Gate
                 if (settings.aiSmsScope == "OFF") {
                     Log.d(TAG, "Skipping AI SMS: Scope is set to OFF.")
+                    com.missedcall.autotext.util.AiNotificationManager.notifyAiSmsIgnored(
+                        context = context,
+                        callerPhone = senderNumber,
+                        reason = "Inbound text from $senderNumber was bypassed: AI SMS Scope is set to 'Off'."
+                    )
                     return@launch
                 }
 
                 if (settings.aiSmsScope == "STRICT") {
-                    val hasHistory = app.database.callLogDao().getLastSentTimestamp(senderNumber) != null
+                    val rawDigits = senderNumber.filter { it.isDigit() }
+                    val last7Digits = if (rawDigits.length >= 7) rawDigits.takeLast(7) else rawDigits
+                    val hasHistory = app.database.callLogDao().getLastSentTimestampFlexible(senderNumber, last7Digits) != null
                     if (!hasHistory) {
                         Log.d(TAG, "Skipping AI SMS (Strict Mode): $senderNumber has no prior missed-call history.")
+                        com.missedcall.autotext.util.AiNotificationManager.notifyAiSmsIgnored(
+                            context = context,
+                            callerPhone = senderNumber,
+                            reason = "Inbound text from $senderNumber was bypassed: Strict Mode is active (no prior missed call from this number). Set Scope to 'All Unknown Numbers' to reply to cold texts."
+                        )
                         return@launch
                     }
                 }
@@ -100,32 +117,61 @@ class IncomingSmsReceiver : BroadcastReceiver() {
                     isOutbound = false
                 )
 
+                // Resolve FCM token
+                var resolvedToken = settings.fcmDeviceToken
+                if (resolvedToken.isBlank()) {
+                    try {
+                        resolvedToken = com.google.android.gms.tasks.Tasks.await(
+                            com.google.firebase.messaging.FirebaseMessaging.getInstance().token,
+                            3,
+                            java.util.concurrent.TimeUnit.SECONDS
+                        )
+                        if (!resolvedToken.isNullOrBlank()) {
+                            settingsRepo.saveFcmToken(resolvedToken)
+                        }
+                    } catch (e: Exception) {
+                        Log.w(TAG, "Could not resolve live FCM token: ${e.message}")
+                    }
+                }
+
                 dispatchToAiSmsEngine(
                     context = context,
-                    licenseKey = settings.licenseKey,
+                    settings = settings,
                     senderNumber = senderNumber,
                     messageText = fullMessage,
-                    fcmToken = settings.fcmDeviceToken
+                    fcmToken = resolvedToken ?: ""
                 )
             }
         }
     }
 
-    private fun dispatchToAiSmsEngine(context: Context, licenseKey: String, senderNumber: String, messageText: String, fcmToken: String) {
+    private fun dispatchToAiSmsEngine(
+        context: Context,
+        settings: com.missedcall.autotext.data.AppSettings,
+        senderNumber: String,
+        messageText: String,
+        fcmToken: String
+    ) {
         try {
             val url = java.net.URL("https://missedcallautosms.com/.netlify/functions/sms-chat")
             val conn = (url.openConnection() as java.net.HttpURLConnection).apply {
                 requestMethod = "POST"
-                connectTimeout = 6000
-                readTimeout = 6000
+                connectTimeout = 8000
+                readTimeout = 8000
                 doOutput = true
                 setRequestProperty("Content-Type", "application/json")
             }
             val payload = org.json.JSONObject().apply {
-                put("licenseKey", licenseKey)
+                put("licenseKey", settings.licenseKey)
                 put("senderPhone", senderNumber)
                 put("messageBody", messageText)
                 put("fcmToken", fcmToken)
+                put("scope", settings.aiSmsScope)
+                put("businessType", settings.aiSmsBusinessServiceType)
+                put("shopAddress", settings.aiSmsShopAddress)
+                put("shopInstructions", settings.aiSmsShopInstructions)
+                put("maxReplies", settings.aiSmsMaxRepliesPerContact)
+                put("emergencyAlertsEnabled", settings.aiSmsEmergencyAlertsEnabled)
             }
             conn.outputStream.use { it.write(payload.toString().toByteArray(java.nio.charset.StandardCharsets.UTF_8)) }
             val code = conn.responseCode

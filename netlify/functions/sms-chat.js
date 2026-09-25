@@ -183,6 +183,7 @@ exports.handler = async (event) => {
     const licenseKey = (payload.licenseKey || payload.key || '').trim().toUpperCase();
     const senderPhone = (payload.senderPhone || payload.phone || '').trim();
     const messageBody = (payload.messageBody || payload.message || '').trim();
+    const directFcmToken = (payload.fcmToken || payload.fcm_token || '').trim();
     const scope = payload.scope || 'STRICT';
     const businessType = payload.businessType || 'MOBILE_TRADE'; // MOBILE_TRADE vs IN_SHOP
     const shopAddress = (payload.shopAddress || '').trim();
@@ -390,12 +391,14 @@ NOTE: The customer's message indicates an urgent or emergency situation. Acknowl
       deviceRecord = getLocalToken(licenseKey);
     }
 
+    const targetFcmToken = directFcmToken || deviceRecord?.fcm_token;
+
     // Dispatch FCM Relay to Phone so SIM card sends the SMS!
-    if (msg && deviceRecord && deviceRecord.fcm_token) {
+    if (msg && targetFcmToken) {
       // 1. Outbound SMS trigger to SIM
       try {
         await msg.send({
-          token: deviceRecord.fcm_token,
+          token: targetFcmToken,
           data: {
             phone: senderPhone,
             message: aiReply,
@@ -405,7 +408,7 @@ NOTE: The customer's message indicates an urgent or emergency situation. Acknowl
           },
           android: { priority: 'high' }
         });
-        console.log(`🚀 [FCM SMS RELAY DELIVERED] to SIM for ${licenseKey} -> ${senderPhone}`);
+        console.log(`🚀 [FCM SMS RELAY DELIVERED] to SIM for ${licenseKey || 'DIRECT'} -> ${senderPhone}`);
       } catch (fcmErr) {
         console.error('❌ [FCM RELAY FAILED]:', fcmErr.message);
       }
@@ -413,7 +416,7 @@ NOTE: The customer's message indicates an urgent or emergency situation. Acknowl
       // 2. In-App Notification Feed Push
       try {
         await msg.send({
-          token: deviceRecord.fcm_token,
+          token: targetFcmToken,
           data: {
             type: 'ai_sms_event',
             caller_phone: senderPhone,
@@ -430,7 +433,7 @@ NOTE: The customer's message indicates an urgent or emergency situation. Acknowl
       if (bookingData) {
         try {
           await msg.send({
-            token: deviceRecord.fcm_token,
+            token: targetFcmToken,
             data: {
               type: 'appointment_booked',
               customer_name: senderPhone,
@@ -451,7 +454,7 @@ NOTE: The customer's message indicates an urgent or emergency situation. Acknowl
       if (isEmergency) {
         try {
           await msg.send({
-            token: deviceRecord.fcm_token,
+            token: targetFcmToken,
             data: {
               type: 'emergency_alert',
               caller_phone: senderPhone,
@@ -464,7 +467,7 @@ NOTE: The customer's message indicates an urgent or emergency situation. Acknowl
         } catch (e) {}
       }
     } else {
-      console.log(`ℹ️ [OFFLINE SIMULATION] No FCM token for ${licenseKey}. AI reply ready: "${aiReply}"`);
+      console.log(`ℹ️ [OFFLINE SIMULATION] No FCM token found for ${licenseKey}. AI reply ready: "${aiReply}"`);
     }
 
     return {

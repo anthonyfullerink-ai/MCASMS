@@ -15,6 +15,9 @@ interface CallLogDao {
     @Query("SELECT MAX(timestamp) FROM call_log_events WHERE phone_number = :phoneNumber AND status = 'SENT'")
     suspend fun getLastSentTimestamp(phoneNumber: String): Long?
 
+    @Query("SELECT MAX(timestamp) FROM call_log_events WHERE (phone_number = :phoneNumber OR phone_number LIKE '%' || :last7Digits) AND status = 'SENT'")
+    suspend fun getLastSentTimestampFlexible(phoneNumber: String, last7Digits: String): Long?
+
     @Query("SELECT * FROM call_log_events ORDER BY timestamp DESC")
     fun getAllLogsFlow(): Flow<List<CallLogEvent>>
 

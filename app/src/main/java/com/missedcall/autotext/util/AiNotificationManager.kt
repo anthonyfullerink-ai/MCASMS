@@ -161,6 +161,18 @@ object AiNotificationManager {
         )
     }
 
+    fun notifyAiSmsIgnored(context: Context, callerPhone: String, reason: String) {
+        postNotificationAndSave(
+            context = context,
+            title = "💬 AI SMS Filtered: $callerPhone",
+            message = reason,
+            type = "SMS_ACTIVITY",
+            phoneNumber = callerPhone,
+            channelId = CHANNEL_ACTIVITY_ID,
+            notificationId = (4000 + (System.currentTimeMillis() % 1000)).toInt()
+        )
+    }
+
     private fun postNotificationAndSave(
         context: Context,
         title: String,
