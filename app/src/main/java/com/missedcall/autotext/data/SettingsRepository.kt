@@ -7,6 +7,7 @@ import androidx.datastore.preferences.core.booleanPreferencesKey
 import androidx.datastore.preferences.core.edit
 import androidx.datastore.preferences.core.floatPreferencesKey
 import androidx.datastore.preferences.core.intPreferencesKey
+import androidx.datastore.preferences.core.longPreferencesKey
 import androidx.datastore.preferences.core.stringPreferencesKey
 import androidx.datastore.preferences.preferencesDataStore
 import com.google.gson.Gson
@@ -97,6 +98,7 @@ class SettingsRepository(private val context: Context) {
         val AI_SMS_AUTO_PAUSE_ON_HUMAN_REPLY = booleanPreferencesKey("ai_sms_auto_pause_on_human_reply")
         val AI_SMS_MAX_REPLIES_PER_CONTACT = intPreferencesKey("ai_sms_max_replies_per_contact")
         val AI_SMS_EMERGENCY_ALERTS_ENABLED = booleanPreferencesKey("ai_sms_emergency_alerts_enabled")
+        val AI_SMS_TAKEOVER_RESET_TIMESTAMP = longPreferencesKey("ai_sms_takeover_reset_timestamp")
     }
 
 
@@ -198,7 +200,8 @@ class SettingsRepository(private val context: Context) {
             aiSmsTravelBufferMinutes = preferences[AI_SMS_TRAVEL_BUFFER_MINUTES] ?: 30,
             aiSmsAutoPauseOnHumanReply = preferences[AI_SMS_AUTO_PAUSE_ON_HUMAN_REPLY] ?: true,
             aiSmsMaxRepliesPerContact = preferences[AI_SMS_MAX_REPLIES_PER_CONTACT] ?: 5,
-            aiSmsEmergencyAlertsEnabled = preferences[AI_SMS_EMERGENCY_ALERTS_ENABLED] ?: true
+            aiSmsEmergencyAlertsEnabled = preferences[AI_SMS_EMERGENCY_ALERTS_ENABLED] ?: true,
+            aiSmsTakeoverResetTimestamp = preferences[AI_SMS_TAKEOVER_RESET_TIMESTAMP] ?: 0L
         )
 
 
@@ -319,8 +322,14 @@ class SettingsRepository(private val context: Context) {
             preferences[AI_SMS_AUTO_PAUSE_ON_HUMAN_REPLY] = settings.aiSmsAutoPauseOnHumanReply
             preferences[AI_SMS_MAX_REPLIES_PER_CONTACT] = settings.aiSmsMaxRepliesPerContact
             preferences[AI_SMS_EMERGENCY_ALERTS_ENABLED] = settings.aiSmsEmergencyAlertsEnabled
+            preferences[AI_SMS_TAKEOVER_RESET_TIMESTAMP] = settings.aiSmsTakeoverResetTimestamp
         }
     }
 
-
+    suspend fun resetAiSmsTakeoverCooldowns() {
+        val now = System.currentTimeMillis()
+        context.dataStore.edit { preferences ->
+            preferences[AI_SMS_TAKEOVER_RESET_TIMESTAMP] = now
+        }
+    }
 }

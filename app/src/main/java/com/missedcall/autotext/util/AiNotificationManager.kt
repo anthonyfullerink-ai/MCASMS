@@ -238,4 +238,42 @@ object AiNotificationManager {
             }
         }
     }
+
+    fun clearTakeoverAndResetQueue(context: Context, phoneNumber: String = "ALL", onDone: (() -> Unit)? = null) {
+        scope.launch {
+            try {
+                val app = context.applicationContext as? App ?: return@launch
+                val settingsRepo = app.settingsRepository
+                val settings = settingsRepo.getSettings()
+
+                // 1. Reset local timestamp so IncomingSmsReceiver ignores earlier sent texts
+                settingsRepo.resetAiSmsTakeoverCooldowns()
+
+                // 2. Clear takeover in Cloud Firestore
+                val postJson = org.json.JSONObject().apply {
+                    put("action", "clear_takeover")
+                    put("licenseKey", settings.licenseKey)
+                    put("senderPhone", phoneNumber)
+                }
+
+                val conn = java.net.URL("https://missedcallautosms.com/api/sms-chat").openConnection() as java.net.HttpURLConnection
+                conn.requestMethod = "POST"
+                conn.setRequestProperty("Content-Type", "application/json; charset=utf-8")
+                conn.connectTimeout = 8000
+                conn.readTimeout = 8000
+                conn.doOutput = true
+                conn.outputStream.use { os ->
+                    os.write(postJson.toString().toByteArray(Charsets.UTF_8))
+                }
+                val code = conn.responseCode
+                android.util.Log.i("AiNotificationManager", "Cleared takeover in cloud, HTTP $code")
+            } catch (e: Exception) {
+                android.util.Log.w("AiNotificationManager", "Could not sync cloud takeover reset: ${e.message}")
+            } finally {
+                kotlinx.coroutines.withContext(kotlinx.coroutines.Dispatchers.Main) {
+                    onDone?.invoke()
+                }
+            }
+        }
+    }
 }

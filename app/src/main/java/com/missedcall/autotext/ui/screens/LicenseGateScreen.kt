@@ -93,7 +93,8 @@ fun LicenseGateScreen(
                             voiceIndustryTrade = trade,
                             messageTemplate = template,
                             outboundWebhookEnabled = tier == "PRO",
-                            remoteAccessEnabled = tier == "PRO"
+                            remoteAccessEnabled = tier == "PRO",
+                            permissionsOnboardingCompleted = false
                         )
                     }
                     Toast.makeText(context, "Provisioning Successful!", Toast.LENGTH_LONG).show()
@@ -115,7 +116,8 @@ fun LicenseGateScreen(
                             businessName = businessName,
                             messageTemplate = "Hey! Sorry I missed your call. How can I help you today? - $businessName",
                             outboundWebhookEnabled = tier == "PRO",
-                            remoteAccessEnabled = tier == "PRO"
+                            remoteAccessEnabled = tier == "PRO",
+                            permissionsOnboardingCompleted = false
                         )
                     }
                     Toast.makeText(context, "Offline Provisioning Successful!", Toast.LENGTH_LONG).show()

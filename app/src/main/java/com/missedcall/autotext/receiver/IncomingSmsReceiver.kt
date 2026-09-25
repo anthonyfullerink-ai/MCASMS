@@ -111,7 +111,7 @@ class IncomingSmsReceiver : BroadcastReceiver() {
 
                 // Rule C: Auto-Pause on Human Reply (24-Hour Takeover Protection)
                 if (settings.aiSmsAutoPauseOnHumanReply) {
-                    val humanSentRecently = hasHumanSentSmsRecently(context, senderNumber, 24 * 60 * 60 * 1000L)
+                    val humanSentRecently = hasHumanSentSmsRecently(context, senderNumber, 24 * 60 * 60 * 1000L, settings.aiSmsTakeoverResetTimestamp)
                     if (humanSentRecently) {
                         Log.i(TAG, "Skipping AI SMS: Human manual takeover detected within last 24h for $senderNumber.")
                         com.missedcall.autotext.util.AiNotificationManager.notifyHumanTakeover(context, senderNumber)
@@ -191,10 +191,10 @@ class IncomingSmsReceiver : BroadcastReceiver() {
         }
     }
 
-    private fun hasHumanSentSmsRecently(context: Context, phoneNumber: String, windowMillis: Long): Boolean {
+    private fun hasHumanSentSmsRecently(context: Context, phoneNumber: String, windowMillis: Long, resetTimestamp: Long = 0L): Boolean {
         val cleanDigits = phoneNumber.filter { it.isDigit() }
         val last7 = if (cleanDigits.length >= 7) cleanDigits.takeLast(7) else cleanDigits
-        val cutoffTime = System.currentTimeMillis() - windowMillis
+        val cutoffTime = maxOf(System.currentTimeMillis() - windowMillis, resetTimestamp)
 
         val projection = arrayOf(Telephony.Sms.Sent.ADDRESS, Telephony.Sms.Sent.DATE)
         val selection = "${Telephony.Sms.Sent.DATE} > ?"

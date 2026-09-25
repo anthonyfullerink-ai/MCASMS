@@ -1446,6 +1446,40 @@ fun VoiceHubScreen(
                                 }
                             )
                         }
+
+                        Spacer(modifier = Modifier.height(14.dp))
+                        HorizontalDivider(color = MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.5f))
+                        Spacer(modifier = Modifier.height(12.dp))
+
+                        Text("⚡ Instant Queue & Cooldown Controls:", style = MaterialTheme.typography.labelMedium, fontWeight = FontWeight.Bold)
+                        Spacer(modifier = Modifier.height(4.dp))
+                        Text(
+                            "If an AI conversation is paused from a manual text or safety reply limit, tap below to immediately unpause and reset the queue for testing.",
+                            style = MaterialTheme.typography.bodySmall,
+                            color = MaterialTheme.colorScheme.onSurfaceVariant
+                        )
+                        Spacer(modifier = Modifier.height(8.dp))
+
+                        var isResettingQueue by remember { mutableStateOf(false) }
+
+                        OutlinedButton(
+                            onClick = {
+                                isResettingQueue = true
+                                com.missedcall.autotext.util.AiNotificationManager.clearTakeoverAndResetQueue(context, "ALL") {
+                                    isResettingQueue = false
+                                    Toast.makeText(context, "✅ AI Queue & Cooldowns Cleared! Ready for incoming texts.", Toast.LENGTH_LONG).show()
+                                }
+                            },
+                            modifier = Modifier.fillMaxWidth(),
+                            enabled = !isResettingQueue,
+                            colors = ButtonDefaults.outlinedButtonColors(
+                                contentColor = MaterialTheme.colorScheme.primary
+                            )
+                        ) {
+                            Icon(Icons.Default.Refresh, contentDescription = null, modifier = Modifier.size(18.dp))
+                            Spacer(modifier = Modifier.width(6.dp))
+                            Text(if (isResettingQueue) "Resetting Queue..." else "🔄 Clear AI Queue & Reset Cooldowns", fontWeight = FontWeight.Bold)
+                        }
                     }
                 }
             }

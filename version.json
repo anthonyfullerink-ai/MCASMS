@@ -1,10 +1,10 @@
 {
-  "versionCode": 27,
-  "versionName": "1.8.1",
+  "versionCode": 28,
+  "versionName": "1.8.2",
   "downloadUrl": "https://raw.githubusercontent.com/anthonyfullerink-ai/MCASMS/main/MissedCallAutoSMS.apk",
   "proDownloadUrl": "https://raw.githubusercontent.com/anthonyfullerink-ai/MCASMS/main/MissedCallAutoSMS.apk",
-  "releaseNotes": "🚀 v1.8.0 24/7 AI SMS Studio & Notifications Engine:\n• 💬 24/7 AI Conversational SMS: Multi-turn SMS booking assistant answers questions, schedules arrivals, and interacts directly via phone SIM\n• 🔔 Live Notifications & Activity Feed: Top-bar bell icon with real-time badges, category filters, and Android system notifications for AI calls, SMS chats, and emergencies\n• 🛡️ 3-Way Incoming SMS Scope Gatekeeper: Enforce Strict mode (missed calls only), All Unknowns, or Voice-Only, protected by a Contacts Exemption shield\n• 🚐 Mobile Field Trade vs. 🏪 In-Shop Studio: Customized scheduling windows for traveling trades vs exact time slots and directions for storefronts\n• 🧹 Clean Voice Hub UI: Replaced redundant text template input with clean Post-Call SIM SMS toggle",
+  "releaseNotes": "⚡ v1.8.2 AI Queue Controls & Setup Permission Guardian:\n• 🔄 Instant Queue & Cooldown Reset: Clear AI pauses and 24-hour human takeover lockouts with 1 tap directly from the notification card or AI SMS Studio\n• 🛡️ Hardened Permission Setup: Critical SMS and Call Log permissions are strictly verified during download/setup and safeguarded with a persistent dashboard alert banner\n• 💬 Unlocked AI Autopilot Retest: Immediate session refresh so you can test conversational replies without cooldown delays\n• 🚀 1-Tap Unpause: Tap 'Unpause AI & Reset Cooldown' on any takeover notification to immediately resume automated text responses",
   "mandatory": true,
   "minSupportedVersion": 25,
-  "updatedAt": "2026-09-25T16:51:15.713Z"
+  "updatedAt": "2026-09-25T17:15:00.000Z"
 }

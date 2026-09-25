@@ -81,7 +81,8 @@ data class AppSettings(
     val aiSmsTravelBufferMinutes: Int = 30,
     val aiSmsAutoPauseOnHumanReply: Boolean = true,
     val aiSmsMaxRepliesPerContact: Int = 5,
-    val aiSmsEmergencyAlertsEnabled: Boolean = true
+    val aiSmsEmergencyAlertsEnabled: Boolean = true,
+    val aiSmsTakeoverResetTimestamp: Long = 0L
 )
 
 

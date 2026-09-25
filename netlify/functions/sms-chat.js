@@ -191,6 +191,40 @@ exports.handler = async (event) => {
     const maxReplies = parseInt(payload.maxReplies || 5, 10);
     const emergencyAlertsEnabled = payload.emergencyAlertsEnabled !== false;
 
+    // Action: Clear Takeover / Reset Queue Cooldowns
+    if (payload.action === 'clear_takeover' || payload.action === 'reset_queue') {
+      const { db } = initFirebase();
+      if (db) {
+        try {
+          if (senderPhone && senderPhone !== 'ALL') {
+            const cleanPhone = senderPhone.replace(/[^0-9+]/g, '');
+            const threadId = `${licenseKey || 'GLOBAL'}_${cleanPhone}`;
+            await db.collection('ai_sms_conversations').doc(threadId).set({
+              humanTakeoverUntil: 0,
+              aiReplyCount: 0,
+              lastResetAt: Date.now()
+            }, { merge: true });
+            console.log(`⚡ [TAKEOVER CLEARED] Thread ${threadId} unpaused immediately.`);
+          } else if (licenseKey) {
+            const snapshot = await db.collection('ai_sms_conversations').where('licenseKey', '==', licenseKey).get();
+            const batch = db.batch();
+            snapshot.forEach(doc => {
+              batch.set(doc.ref, { humanTakeoverUntil: 0, aiReplyCount: 0, lastResetAt: Date.now() }, { merge: true });
+            });
+            await batch.commit();
+            console.log(`⚡ [ALL TAKEOVERS CLEARED] Reset all conversations for license ${licenseKey}.`);
+          }
+        } catch (e) {
+          console.warn('[sms-chat] Failed to clear takeover:', e.message);
+        }
+      }
+      return {
+        statusCode: 200,
+        headers,
+        body: JSON.stringify({ success: true, cleared: true })
+      };
+    }
+
     if (!senderPhone || !messageBody) {
       return {
         statusCode: 400,

@@ -1,6 +1,7 @@
 package com.missedcall.autotext.ui.screens
 
 import android.text.format.DateUtils
+import android.widget.Toast
 import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
@@ -20,12 +21,14 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.vector.ImageVector
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.compose.ui.window.Dialog
 import androidx.compose.ui.window.DialogProperties
 import com.missedcall.autotext.data.db.AppNotificationEvent
+import com.missedcall.autotext.util.AiNotificationManager
 
 @Composable
 fun NotificationsPanelDialog(
@@ -35,6 +38,7 @@ fun NotificationsPanelDialog(
     onClearAll: () -> Unit,
     onMarkRead: (Long) -> Unit
 ) {
+    val context = LocalContext.current
     var selectedFilter by remember { mutableStateOf("ALL") }
 
     val filteredList = remember(notifications, selectedFilter) {
@@ -240,12 +244,23 @@ fun NotificationsPanelDialog(
                             Spacer(modifier = Modifier.height(8.dp))
                             Row(
                                 modifier = Modifier.fillMaxWidth(),
-                                horizontalArrangement = Arrangement.Center
+                                horizontalArrangement = Arrangement.SpaceEvenly,
+                                verticalAlignment = Alignment.CenterVertically
                             ) {
+                                TextButton(onClick = {
+                                    AiNotificationManager.clearTakeoverAndResetQueue(context, "ALL") {
+                                        Toast.makeText(context, "⚡ AI Queue & Takeovers Reset!", Toast.LENGTH_SHORT).show()
+                                    }
+                                }) {
+                                    Icon(Icons.Default.Refresh, contentDescription = null, tint = Color(0xFF38BDF8), modifier = Modifier.size(16.dp))
+                                    Spacer(modifier = Modifier.width(4.dp))
+                                    Text("Reset AI Queue & Pauses", color = Color(0xFF38BDF8), fontSize = 12.sp)
+                                }
+
                                 TextButton(onClick = onClearAll) {
                                     Icon(Icons.Default.DeleteOutline, contentDescription = null, tint = Color(0xFFEF4444), modifier = Modifier.size(16.dp))
                                     Spacer(modifier = Modifier.width(4.dp))
-                                    Text("Clear All Notification History", color = Color(0xFFEF4444), fontSize = 12.sp)
+                                    Text("Clear Feed", color = Color(0xFFEF4444), fontSize = 12.sp)
                                 }
                             }
                         }
@@ -355,6 +370,35 @@ private fun NotificationCard(
                     fontSize = 12.sp,
                     lineHeight = 16.sp
                 )
+
+                if (item.type == "HUMAN_TAKEOVER") {
+                    val context = LocalContext.current
+                    var isUnpausing by remember { mutableStateOf(false) }
+                    Spacer(modifier = Modifier.height(8.dp))
+                    Button(
+                        onClick = {
+                            isUnpausing = true
+                            AiNotificationManager.clearTakeoverAndResetQueue(context, item.phoneNumber) {
+                                isUnpausing = false
+                                Toast.makeText(context, "AI Unpaused for ${item.phoneNumber}!", Toast.LENGTH_SHORT).show()
+                                onMarkRead()
+                            }
+                        },
+                        colors = ButtonDefaults.buttonColors(containerColor = Color(0xFFF59E0B)),
+                        shape = RoundedCornerShape(8.dp),
+                        modifier = Modifier.fillMaxWidth().height(36.dp),
+                        enabled = !isUnpausing
+                    ) {
+                        Icon(Icons.Default.PlayArrow, contentDescription = null, tint = Color.Black, modifier = Modifier.size(16.dp))
+                        Spacer(modifier = Modifier.width(6.dp))
+                        Text(
+                            if (isUnpausing) "Unpausing..." else "⚡ Unpause AI & Reset Cooldown",
+                            color = Color.Black,
+                            fontWeight = FontWeight.Bold,
+                            fontSize = 11.sp
+                        )
+                    }
+                }
             }
         }
     }

@@ -77,24 +77,34 @@ fun MainScreen(
         }
     }
 
-    // Trigger onboarding dialog if missing permissions exist and user hasn't completed/dismissed onboarding
+    val hasCriticalMissing = remember(missingPermissions) {
+        missingPermissions.any {
+            it == android.Manifest.permission.SEND_SMS ||
+            it == android.Manifest.permission.READ_CALL_LOG ||
+            it == android.Manifest.permission.RECEIVE_SMS
+        }
+    }
+
+    // Trigger onboarding dialog if critical permissions are missing or user hasn't completed onboarding
     LaunchedEffect(missingPermissions, settings.permissionsOnboardingCompleted) {
-        if (!settings.permissionsOnboardingCompleted && missingPermissions.isNotEmpty()) {
+        if (hasCriticalMissing || (!settings.permissionsOnboardingCompleted && missingPermissions.isNotEmpty())) {
             showOnboardingDialog = true
-        } else if (settings.permissionsOnboardingCompleted) {
+        } else if (missingPermissions.isEmpty()) {
             showOnboardingDialog = false
         }
     }
 
     val isMandatoryUpdatePending = availableUpdate != null && availableUpdate!!.mandatory
 
-    if (showOnboardingDialog && !isMandatoryUpdatePending && !settings.permissionsOnboardingCompleted && missingPermissions.isNotEmpty()) {
+    if (showOnboardingDialog && !isMandatoryUpdatePending && missingPermissions.isNotEmpty()) {
         PermissionOnboardingDialog(
             missingPermissions = missingPermissions,
             onRequestPermissionBatch = onRequestPermissionBatch,
             onDismiss = {
                 showOnboardingDialog = false
-                onSettingsChanged(settings.copy(permissionsOnboardingCompleted = true))
+                if (!hasCriticalMissing) {
+                    onSettingsChanged(settings.copy(permissionsOnboardingCompleted = true))
+                }
             }
         )
     }
@@ -366,6 +376,54 @@ fun MainScreen(
                 .fillMaxSize()
                 .padding(innerPadding)
         ) {
+            if (missingPermissions.isNotEmpty()) {
+                Surface(
+                    color = MaterialTheme.colorScheme.errorContainer,
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .clickable { onRequestPermissions() }
+                ) {
+                    Row(
+                        modifier = Modifier.padding(horizontal = 14.dp, vertical = 8.dp),
+                        verticalAlignment = Alignment.CenterVertically
+                    ) {
+                        Icon(
+                            imageVector = Icons.Default.Warning,
+                            contentDescription = null,
+                            tint = MaterialTheme.colorScheme.error,
+                            modifier = Modifier.size(20.dp)
+                        )
+                        Spacer(modifier = Modifier.width(10.dp))
+                        Column(modifier = Modifier.weight(1f)) {
+                            Text(
+                                text = "⚠️ Action Required: Missing App Permissions",
+                                fontWeight = FontWeight.Bold,
+                                style = MaterialTheme.typography.labelMedium,
+                                color = MaterialTheme.colorScheme.onErrorContainer
+                            )
+                            Text(
+                                text = "SMS & Call Log permissions are required to detect calls and send auto-replies.",
+                                style = MaterialTheme.typography.bodySmall,
+                                color = MaterialTheme.colorScheme.onErrorContainer,
+                                fontSize = 11.sp
+                            )
+                        }
+                        Spacer(modifier = Modifier.width(6.dp))
+                        FilledTonalButton(
+                            onClick = onRequestPermissions,
+                            colors = ButtonDefaults.filledTonalButtonColors(
+                                containerColor = MaterialTheme.colorScheme.error,
+                                contentColor = MaterialTheme.colorScheme.onError
+                            ),
+                            contentPadding = PaddingValues(horizontal = 10.dp, vertical = 4.dp),
+                            modifier = Modifier.height(32.dp)
+                        ) {
+                            Text("Enable", fontSize = 11.sp, fontWeight = FontWeight.Bold)
+                        }
+                    }
+                }
+            }
+
             ScrollableTabRow(
                 selectedTabIndex = selectedTab,
                 edgePadding = 8.dp,
