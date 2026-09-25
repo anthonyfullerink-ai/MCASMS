@@ -311,8 +311,6 @@ exports.handler = async (event) => {
     const emergencyKeywords = ['leak', 'gas leak', 'outage', 'urgent', 'emergency', 'flooding', 'flood', 'broken pipe', 'sparks', 'fire', 'smoke', 'freeze', 'freezing'];
     const isEmergency = emergencyAlertsEnabled && emergencyKeywords.some(k => messageBody.toLowerCase().includes(k));
 
-    const { db, msg } = initFirebase();
-
     // Send emergency alert email to business owner if detected
     if (isEmergency && process.env.RESEND_API_KEY) {
       const ownerEmail = process.env.OWNER_EMAIL || 'contactus@offgridmediagroup.com';

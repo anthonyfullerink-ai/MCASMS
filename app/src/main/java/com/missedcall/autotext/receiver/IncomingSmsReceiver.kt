@@ -135,17 +135,17 @@ class IncomingSmsReceiver : BroadcastReceiver() {
                     }
                 }
 
-                // Rule C: Auto-Pause on Human Reply (24-Hour Takeover Protection with AI Safeguard)
+                // Rule C: Auto-Pause on Human Reply (30-Minute Takeover Protection with AI Safeguard)
                 if (settings.aiSmsAutoPauseOnHumanReply) {
                     val humanSentRecently = hasHumanSentSmsRecently(
                         context = context,
                         callLogDao = app.database.callLogDao(),
                         phoneNumber = senderNumber,
-                        windowMillis = 24 * 60 * 60 * 1000L,
+                        windowMillis = 30 * 60 * 1000L,
                         resetTimestamp = settings.aiSmsTakeoverResetTimestamp
                     )
                     if (humanSentRecently) {
-                        Log.i(TAG, "Skipping AI SMS: Human manual takeover detected within last 24h for $senderNumber.")
+                        Log.i(TAG, "Skipping AI SMS: Human manual takeover detected within last 30m for $senderNumber.")
                         com.missedcall.autotext.util.AiNotificationManager.notifyHumanTakeover(context, senderNumber)
                         return@launch
                     }
@@ -245,13 +245,24 @@ class IncomingSmsReceiver : BroadcastReceiver() {
                             .build()
 
                         WorkManager.getInstance(context).enqueue(workRequest)
-
-                        // Post in-app outbound notification
-                        AiNotificationManager.notifyAiSmsActivity(
+                    }
+                } else {
+                    val reason = json.optString("reason", "")
+                    val message = json.optString("message", "")
+                    Log.i(TAG, "AI SMS engine did not send reply: reason=$reason, message=$message")
+                    if (reason == "human_takeover_active") {
+                        com.missedcall.autotext.util.AiNotificationManager.notifyHumanTakeover(context, senderNumber)
+                    } else if (reason == "plan_gated") {
+                        com.missedcall.autotext.util.AiNotificationManager.notifyAiSmsIgnored(
                             context = context,
                             callerPhone = senderNumber,
-                            messageText = aiReply,
-                            isOutbound = true
+                            reason = "AI conversational reply skipped: $message"
+                        )
+                    } else if (reason == "max_replies_reached") {
+                        com.missedcall.autotext.util.AiNotificationManager.notifyAiSmsIgnored(
+                            context = context,
+                            callerPhone = senderNumber,
+                            reason = "AI reached safety conversation limit (${settings.aiSmsMaxRepliesPerContact} turns). Pausing auto-replies for safety."
                         )
                     }
                 }
@@ -316,7 +327,7 @@ class IncomingSmsReceiver : BroadcastReceiver() {
                                 val timeDiff = Math.abs(ai.timestamp - sentDate)
                                 val bodyMatches = !ai.messageSent.isNullOrBlank() && sentBody.isNotBlank() &&
                                         (sentBody.contains(ai.messageSent.take(20)) || ai.messageSent.contains(sentBody.take(20)))
-                                timeDiff < 45_000L || bodyMatches
+                                timeDiff < 120_000L || bodyMatches
                             }
 
                             if (!isAiDispatched) {

@@ -12,6 +12,7 @@
 /api/update-version /.netlify/functions/update-version 200
 /api/submit-ticket  /.netlify/functions/submit-ticket 200
 /api/dispatch-sms   /.netlify/functions/dispatch-sms 200
+/api/sms-chat       /.netlify/functions/sms-chat 200
 /api/register-device /.netlify/functions/register-device 200
 /api/create-voice-pro-checkout /.netlify/functions/create-voice-pro-checkout 200
 /api/create-pro-checkout /.netlify/functions/create-pro-checkout 200

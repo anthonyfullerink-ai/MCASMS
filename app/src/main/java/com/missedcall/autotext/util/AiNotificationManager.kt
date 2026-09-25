@@ -148,7 +148,7 @@ object AiNotificationManager {
 
     fun notifyHumanTakeover(context: Context, callerPhone: String) {
         val title = "🛑 AI Paused for $callerPhone"
-        val message = "You manually replied to this customer. AI text autopilot is muted for 24 hours."
+        val message = "You manually replied to this customer. AI text autopilot is muted for 30 minutes."
 
         postNotificationAndSave(
             context = context,
@@ -256,7 +256,7 @@ object AiNotificationManager {
                     put("senderPhone", phoneNumber)
                 }
 
-                val conn = java.net.URL("https://missedcallautosms.com/api/sms-chat").openConnection() as java.net.HttpURLConnection
+                val conn = java.net.URL("https://missedcallautosms.com/.netlify/functions/sms-chat").openConnection() as java.net.HttpURLConnection
                 conn.requestMethod = "POST"
                 conn.setRequestProperty("Content-Type", "application/json; charset=utf-8")
                 conn.connectTimeout = 8000

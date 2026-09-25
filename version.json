@@ -1,10 +1,10 @@
 {
-  "versionCode": 34,
-  "versionName": "1.8.8",
+  "versionCode": 35,
+  "versionName": "1.8.9",
   "downloadUrl": "https://raw.githubusercontent.com/anthonyfullerink-ai/MCASMS/main/MissedCallAutoSMS.apk",
   "proDownloadUrl": "https://raw.githubusercontent.com/anthonyfullerink-ai/MCASMS/main/MissedCallAutoSMS.apk",
-  "releaseNotes": "🎙️ v1.8.8 Shared-Number Multi-Tenant AI Voice Receptionist Engine:\n• 🌐 Single Phone Number Architecture: Shared primary Vapi number (+1 732-660-9121) dynamically serves every subscriber with their bespoke company name, trade prompt, first message, and calendar\n• 📡 Instant Ring-Correlation Pulse: Android devices send a lightweight pulse on incoming ringing calls so the backend binds the incoming forwarded call directly to the user's account\n• 🔄 SIP Diversion Header Carrier Support: Native telecom header extraction automatically identifies the forwarding contractor cell number\n• 📱 Isolated Multi-Tenant Tool Execution: In-call 'send_sms' tools and post-call recovery texts dispatch exclusively from the specific subscriber's Android phone SIM\n• 📊 Exact Account Metering: Call logs, duration minutes, and Stripe usage automatically route to each individual subscriber's dashboard",
+  "releaseNotes": "⚡ v1.8.9 AI Conversational SMS Engine & Takeover Safeguard:\n• 🚀 Cloud SMS Brain Hotfix: Resolved backend handler syntax conflict ensuring instant, intelligent conversational SMS auto-replies across all business types\n• ⏱️ Human Takeover Window: Reduced takeover pause duration from 24h to 30m with instant unpause queue resetting\n• 🛡️ Pacing Delay Protection: Extended AI dispatch matching window to 120s to ensure delayed AI auto-texts never falsely trigger manual human pauses\n• 🔔 Transparent Activity Notifications: Real-time reasons displayed directly in the in-app Activity Feed for complete visibility",
   "mandatory": true,
-  "minSupportedVersion": 31,
-  "updatedAt": "2026-09-25T18:57:00.000Z"
+  "minSupportedVersion": 33,
+  "updatedAt": "2026-09-25T19:30:00.000Z"
 }
