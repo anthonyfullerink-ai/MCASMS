@@ -1,10 +1,10 @@
 {
-  "versionCode": 30,
-  "versionName": "1.8.4",
+  "versionCode": 31,
+  "versionName": "1.8.5",
   "downloadUrl": "https://raw.githubusercontent.com/anthonyfullerink-ai/MCASMS/main/MissedCallAutoSMS.apk",
   "proDownloadUrl": "https://raw.githubusercontent.com/anthonyfullerink-ai/MCASMS/main/MissedCallAutoSMS.apk",
-  "releaseNotes": "🎯 v1.8.4 Contextual AI Intelligence & 40s Human Pacing Delay:\n• 🧠 Contextual Conversation Pivot: Directly answers customer questions first (e.g. 'Are you open today?' -> 'Yes, we are open today!') without robotic premature booking intake\n• ⏱️ 40-Second Human Pacing Delay: Outgoing text messages now wait exactly 40 seconds before dispatching via SIM, simulating natural human reading and typing\n• ⚡ Gemini 3.6 Flash Multi-Model Engine: Instant sub-second AI reasoning with multi-model fallback across Gemini 3.6, 3.1-Lite, and 3.8\n• 🛡️ Smart Conversational Fallbacks: Context-aware responses even under extreme network dropouts",
+  "releaseNotes": "🎯 v1.8.5 Ongoing Conversation Safeguard & Vapi AI Agent Sync:\n• 🛡️ Ongoing Conversation Safeguard: Fixes issue where AI text replies were mistaken for human replies in Android's sent database, preventing false-positive 24h AI pauses during ongoing conversations\n• 👤 True Human Takeover Detection: Accurately pauses only when the business owner manually types an SMS in their messaging app\n• 🎙️ Universal Vapi Front Desk: Riley assistant updated in Vapi with natural conversational pivoting and native send_sms tool relay",
   "mandatory": true,
   "minSupportedVersion": 28,
-  "updatedAt": "2026-09-25T17:41:11.424Z"
+  "updatedAt": "2026-09-25T18:05:00.000Z"
 }

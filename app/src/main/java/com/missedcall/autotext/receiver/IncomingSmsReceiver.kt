@@ -116,9 +116,15 @@ class IncomingSmsReceiver : BroadcastReceiver() {
                     }
                 }
 
-                // Rule C: Auto-Pause on Human Reply (24-Hour Takeover Protection)
+                // Rule C: Auto-Pause on Human Reply (24-Hour Takeover Protection with AI Safeguard)
                 if (settings.aiSmsAutoPauseOnHumanReply) {
-                    val humanSentRecently = hasHumanSentSmsRecently(context, senderNumber, 24 * 60 * 60 * 1000L, settings.aiSmsTakeoverResetTimestamp)
+                    val humanSentRecently = hasHumanSentSmsRecently(
+                        context = context,
+                        callLogDao = app.database.callLogDao(),
+                        phoneNumber = senderNumber,
+                        windowMillis = 24 * 60 * 60 * 1000L,
+                        resetTimestamp = settings.aiSmsTakeoverResetTimestamp
+                    )
                     if (humanSentRecently) {
                         Log.i(TAG, "Skipping AI SMS: Human manual takeover detected within last 24h for $senderNumber.")
                         com.missedcall.autotext.util.AiNotificationManager.notifyHumanTakeover(context, senderNumber)
@@ -236,12 +242,30 @@ class IncomingSmsReceiver : BroadcastReceiver() {
         }
     }
 
-    private fun hasHumanSentSmsRecently(context: Context, phoneNumber: String, windowMillis: Long, resetTimestamp: Long = 0L): Boolean {
+    private suspend fun hasHumanSentSmsRecently(
+        context: Context,
+        callLogDao: com.missedcall.autotext.data.db.CallLogDao,
+        phoneNumber: String,
+        windowMillis: Long,
+        resetTimestamp: Long = 0L
+    ): Boolean {
         val cleanDigits = phoneNumber.filter { it.isDigit() }
         val last7 = if (cleanDigits.length >= 7) cleanDigits.takeLast(7) else cleanDigits
         val cutoffTime = maxOf(System.currentTimeMillis() - windowMillis, resetTimestamp)
 
-        val projection = arrayOf(Telephony.Sms.Sent.ADDRESS, Telephony.Sms.Sent.DATE)
+        // Retrieve all AI-dispatched messages recorded in our database during this window
+        val aiLogs = try {
+            callLogDao.getRecentAiSentLogs(phoneNumber, last7, cutoffTime)
+        } catch (e: Exception) {
+            Log.w(TAG, "Could not fetch AI logs for human takeover verification: ${e.message}")
+            emptyList()
+        }
+
+        val projection = arrayOf(
+            Telephony.Sms.Sent.ADDRESS,
+            Telephony.Sms.Sent.DATE,
+            Telephony.Sms.Sent.BODY
+        )
         val selection = "${Telephony.Sms.Sent.DATE} > ?"
         val selectionArgs = arrayOf(cutoffTime.toString())
 
@@ -254,12 +278,31 @@ class IncomingSmsReceiver : BroadcastReceiver() {
                 "${Telephony.Sms.Sent.DATE} DESC"
             )?.use { cursor ->
                 val addressIdx = cursor.getColumnIndex(Telephony.Sms.Sent.ADDRESS)
+                val dateIdx = cursor.getColumnIndex(Telephony.Sms.Sent.DATE)
+                val bodyIdx = cursor.getColumnIndex(Telephony.Sms.Sent.BODY)
+
                 while (cursor.moveToNext()) {
                     val address = if (addressIdx != -1) cursor.getString(addressIdx) else null
                     if (address != null) {
                         val addrDigits = address.filter { it.isDigit() }
                         if (addrDigits.endsWith(last7) || addrDigits == cleanDigits) {
-                            return true
+                            val sentDate = if (dateIdx != -1) cursor.getLong(dateIdx) else 0L
+                            val sentBody = if (bodyIdx != -1) cursor.getString(bodyIdx)?.trim() ?: "" else ""
+
+                            // Verify if this sent text was generated & dispatched by the AI agent
+                            val isAiDispatched = aiLogs.any { ai ->
+                                val timeDiff = Math.abs(ai.timestamp - sentDate)
+                                val bodyMatches = !ai.messageSent.isNullOrBlank() && sentBody.isNotBlank() &&
+                                        (sentBody.contains(ai.messageSent.take(20)) || ai.messageSent.contains(sentBody.take(20)))
+                                timeDiff < 45_000L || bodyMatches
+                            }
+
+                            if (!isAiDispatched) {
+                                Log.i(TAG, "Genuine human manual reply detected to $phoneNumber: '${sentBody.take(30)}...'. Pausing AI.")
+                                return true
+                            } else {
+                                Log.d(TAG, "Sent SMS to $phoneNumber matched AI dispatch history. Allowing automated conversation to continue.")
+                            }
                         }
                     }
                 }
