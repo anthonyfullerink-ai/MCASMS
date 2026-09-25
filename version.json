@@ -1,10 +1,10 @@
 {
-  "versionCode": 31,
-  "versionName": "1.8.5",
+  "versionCode": 32,
+  "versionName": "1.8.6",
   "downloadUrl": "https://raw.githubusercontent.com/anthonyfullerink-ai/MCASMS/main/MissedCallAutoSMS.apk",
   "proDownloadUrl": "https://raw.githubusercontent.com/anthonyfullerink-ai/MCASMS/main/MissedCallAutoSMS.apk",
-  "releaseNotes": "🎯 v1.8.5 Ongoing Conversation Safeguard & Vapi AI Agent Sync:\n• 🛡️ Ongoing Conversation Safeguard: Fixes issue where AI text replies were mistaken for human replies in Android's sent database, preventing false-positive 24h AI pauses during ongoing conversations\n• 👤 True Human Takeover Detection: Accurately pauses only when the business owner manually types an SMS in their messaging app\n• 🎙️ Universal Vapi Front Desk: Riley assistant updated in Vapi with natural conversational pivoting and native send_sms tool relay",
+  "releaseNotes": "🎯 v1.8.6 Universal Multi-Turn AI Memory & Context Retention:\n• 🧠 Multi-Turn Context Retention: AI maintains full conversational memory across all back-and-forth SMS turns. Automatically remembers previously stated issues (e.g. active leaks, furnace breakdown) and answers pricing/availability directly without asking what project you need done\n• 📱 Direct Device SMS Thread Ingestion: Phone transmits full verified SMS chat history directly to the AI engine on every turn\n• 🎙️ Global Vapi Agent Memory: Universal front desk assistant prompt updated in Vapi with strict context continuity rules",
   "mandatory": true,
-  "minSupportedVersion": 28,
-  "updatedAt": "2026-09-25T18:05:00.000Z"
+  "minSupportedVersion": 29,
+  "updatedAt": "2026-09-25T18:17:00.000Z"
 }

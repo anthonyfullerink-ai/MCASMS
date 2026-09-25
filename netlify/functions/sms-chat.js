@@ -37,6 +37,7 @@ try {
 
 const PROJECT_ID = process.env.FIREBASE_PROJECT_ID || 'offgrid-saas-core-1e97a9';
 const LOCAL_CACHE_PATH = path.join(__dirname, '../../.device_tokens_cache.json');
+const MEMORY_THREAD_CACHE = new Map();
 
 let firestoreDb = null;
 let messagingService = null;
@@ -45,19 +46,26 @@ function initFirebase() {
   if (!initializeApp) return { db: null, msg: null };
   try {
     if (getApps().length === 0) {
-      if (process.env.FIREBASE_SERVICE_ACCOUNT_KEY || process.env.FIREBASE_SERVICE_ACCOUNT) {
-        const saRaw = process.env.FIREBASE_SERVICE_ACCOUNT_KEY || process.env.FIREBASE_SERVICE_ACCOUNT;
+      const saRaw = (process.env.FIREBASE_SERVICE_ACCOUNT_KEY || process.env.FIREBASE_SERVICE_ACCOUNT || '').trim();
+      if (saRaw && saRaw.startsWith('{')) {
         const sa = JSON.parse(saRaw);
         initializeApp({
           credential: cert(sa),
           projectId: sa.project_id || PROJECT_ID
         });
+        firestoreDb = getFirestore();
+        messagingService = getMessaging();
       } else {
-        initializeApp({ projectId: PROJECT_ID });
+        return { db: null, msg: null };
+      }
+    } else {
+      if (!firestoreDb) {
+        try { firestoreDb = getFirestore(); } catch (e) { firestoreDb = null; }
+      }
+      if (!messagingService) {
+        try { messagingService = getMessaging(); } catch (e) { messagingService = null; }
       }
     }
-    if (!firestoreDb) firestoreDb = getFirestore();
-    if (!messagingService) messagingService = getMessaging();
     return { db: firestoreDb, msg: messagingService };
   } catch (e) {
     console.warn('[sms-chat] Firebase init warning:', e.message);
@@ -296,12 +304,27 @@ exports.handler = async (event) => {
         .catch(e => console.warn('[sms-chat] Emergency email error:', e.message));
     }
 
-    // Fetch conversation thread history from Firestore
+    // Fetch conversation thread history: Phone device payload -> RAM cache -> Firestore
     const cleanPhone = senderPhone.replace(/[^0-9+]/g, '');
     const threadId = `${licenseKey || 'GLOBAL'}_${cleanPhone}`;
     let threadHistory = [];
     let replyCount = 0;
     let threadRef = null;
+
+    // 1. Primary: Ingest authentic verified history from phone's Telephony SMS database
+    if (Array.isArray(payload.conversationHistory) && payload.conversationHistory.length > 0) {
+      threadHistory = payload.conversationHistory
+        .filter(m => m && m.text && m.text.trim())
+        .map(m => ({
+          role: m.role === 'assistant' ? 'assistant' : 'user',
+          text: m.text.trim()
+        }));
+      console.log(`📱 [DEVICE MEMORY INGESTED] Loaded ${threadHistory.length} turns from phone SMS store for ${cleanPhone}`);
+    } else if (MEMORY_THREAD_CACHE.has(cleanPhone)) {
+      // 2. RAM Cache fallback
+      threadHistory = MEMORY_THREAD_CACHE.get(cleanPhone) || [];
+      console.log(`🧠 [RAM CACHE INGESTED] Loaded ${threadHistory.length} turns from memory cache for ${cleanPhone}`);
+    }
 
     if (db) {
       try {
@@ -346,7 +369,9 @@ exports.handler = async (event) => {
             replyCount = 0;
             threadHistory = [];
           } else {
-            threadHistory = tData.messages || [];
+            if (threadHistory.length === 0) {
+              threadHistory = tData.messages || [];
+            }
             replyCount = tData.aiReplyCount || 0;
           }
         }
@@ -367,11 +392,12 @@ exports.handler = async (event) => {
 
     // Build Gemini contents array from conversation history
     const contents = [];
-    const recentHistory = threadHistory.slice(-6); // last 6 turns
+    const recentHistory = threadHistory.slice(-10); // last 10 turns
     for (const item of recentHistory) {
+      if (!item.text || !item.text.trim()) continue;
       contents.push({
         role: item.role === 'assistant' ? 'model' : 'user',
-        parts: [{ text: item.text }]
+        parts: [{ text: item.text.trim() }]
       });
     }
     // Append the new incoming user message
@@ -385,13 +411,17 @@ exports.handler = async (event) => {
 Keep replies strictly to 1 or 2 concise, natural sentences. Sound like a real person working the front desk—warm, attentive, and practical. Never use Markdown formatting like **bold** or # headings or bullet lists because this will be sent as a plain SMS.
 
 CRITICAL CONVERSATIONAL RULES:
-1. ALWAYS ANSWER THE PROSPECT'S QUESTION DIRECTLY FIRST:
+1. CONVERSATION CONTINUITY & CONTEXT RETENTION (STRICT MANDATE):
+   - You MUST maintain full context across previous turns in this conversation.
+   - If the customer already stated their problem, project, or issue in an earlier message (e.g., they have an active leak, water issue, broken heater/AC, need a haircut, need detailing/mechanic, etc.), DO NOT ask them what kind of project, service, or repair they are looking to get done! You already know!
+   - When answering follow-up questions like pricing, availability, or dispatch, directly reference their specific issue (e.g., "For a leak repair, our technician will provide a clear upfront estimate on-site before starting any work. Where are you located so we can get someone out to look at it?").
+2. ALWAYS ANSWER THE PROSPECT'S QUESTION DIRECTLY FIRST:
    - If they ask "Are you open today?" or ask about hours: Answer clearly and directly (e.g. "Yes, we are open today and ready to help! What can we do for you?").
+   - If they ask about pricing or costs: Explain the pricing/estimate structure for their specific issue clearly.
    - If they send a casual greeting ("Hi", "Hello", "Yo"): Greet them warmly and ask how you can help them today.
-   - If they ask about services, pricing, or turnaround: Answer their specific question directly.
-2. PIVOT NATURALLY - DO NOT FORCE APPOINTMENTS PREMATURELY:
-   - NEVER ask for their street address or attempt to schedule an appointment on the first message unless the customer explicitly asked for an appointment, quote, or technician visit!
-   - Meet them where they are in the conversation. Answer first, then politely invite them to share what project or issue they need assistance with.
+3. PIVOT NATURALLY - DO NOT FORCE APPOINTMENTS PREMATURELY:
+   - NEVER ask for their street address on casual greetings or basic informational questions unless the customer explicitly asked for an appointment, quote, or technician visit!
+   - Meet them where they are in the conversation.
 `;
 
     if (businessType === 'IN_SHOP') {
@@ -469,14 +499,16 @@ NOTE: The customer's message indicates an urgent or emergency situation. Acknowl
       console.log(`📅 [APPOINTMENT DETECTED]:`, bookingData);
     }
 
-    // Persist conversation update to Firestore
+    // Persist conversation update to RAM cache and Firestore
+    const updatedMessages = [
+      ...threadHistory,
+      { role: 'user', text: messageBody, timestamp: Date.now() },
+      { role: 'assistant', text: aiReply, timestamp: Date.now() }
+    ];
+    MEMORY_THREAD_CACHE.set(cleanPhone, updatedMessages.slice(-20));
+
     if (db && threadRef) {
       try {
-        const updatedMessages = [
-          ...threadHistory,
-          { role: 'user', text: messageBody, timestamp: Date.now() },
-          { role: 'assistant', text: aiReply, timestamp: Date.now() }
-        ];
         await threadRef.set({
           licenseKey,
           senderPhone: cleanPhone,

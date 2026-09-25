@@ -187,6 +187,8 @@ class IncomingSmsReceiver : BroadcastReceiver() {
                 doOutput = true
                 setRequestProperty("Content-Type", "application/json")
             }
+            val conversationHistory = getRecentConversationThread(context, senderNumber, messageText)
+
             val payload = org.json.JSONObject().apply {
                 put("licenseKey", settings.licenseKey)
                 put("senderPhone", senderNumber)
@@ -198,10 +200,11 @@ class IncomingSmsReceiver : BroadcastReceiver() {
                 put("shopInstructions", settings.aiSmsShopInstructions)
                 put("maxReplies", settings.aiSmsMaxRepliesPerContact)
                 put("emergencyAlertsEnabled", settings.aiSmsEmergencyAlertsEnabled)
+                put("conversationHistory", conversationHistory)
             }
             conn.outputStream.use { it.write(payload.toString().toByteArray(java.nio.charset.StandardCharsets.UTF_8)) }
             val code = conn.responseCode
-            Log.i(TAG, "Dispatched inbound SMS to AI SMS engine: HTTP $code")
+            Log.i(TAG, "Dispatched inbound SMS to AI SMS engine with ${conversationHistory.length()} turns history: HTTP $code")
 
             if (code in 200..299) {
                 val responseStr = conn.inputStream.bufferedReader().use { it.readText() }
@@ -312,5 +315,85 @@ class IncomingSmsReceiver : BroadcastReceiver() {
             Log.w(TAG, "Could not query sent SMS table for human takeover check: ${e.message}")
             false
         }
+    }
+
+    private fun getRecentConversationThread(
+        context: Context,
+        phoneNumber: String,
+        currentIncomingText: String,
+        windowMillis: Long = 4 * 60 * 60 * 1000L
+    ): org.json.JSONArray {
+        val cleanDigits = phoneNumber.filter { it.isDigit() }
+        val last7 = if (cleanDigits.length >= 7) cleanDigits.takeLast(7) else cleanDigits
+        val cutoffTime = System.currentTimeMillis() - windowMillis
+
+        val threadArray = org.json.JSONArray()
+        val tempMessages = mutableListOf<Triple<Long, String, String>>()
+
+        val projection = arrayOf(
+            Telephony.Sms.ADDRESS,
+            Telephony.Sms.BODY,
+            Telephony.Sms.DATE,
+            Telephony.Sms.TYPE
+        )
+        val selection = "${Telephony.Sms.DATE} > ?"
+        val selectionArgs = arrayOf(cutoffTime.toString())
+
+        try {
+            context.contentResolver.query(
+                Telephony.Sms.CONTENT_URI,
+                projection,
+                selection,
+                selectionArgs,
+                "${Telephony.Sms.DATE} DESC"
+            )?.use { cursor ->
+                val addressIdx = cursor.getColumnIndex(Telephony.Sms.ADDRESS)
+                val bodyIdx = cursor.getColumnIndex(Telephony.Sms.BODY)
+                val dateIdx = cursor.getColumnIndex(Telephony.Sms.DATE)
+                val typeIdx = cursor.getColumnIndex(Telephony.Sms.TYPE)
+
+                var count = 0
+                while (cursor.moveToNext() && count < 12) {
+                    val address = if (addressIdx != -1) cursor.getString(addressIdx) else null
+                    if (address != null) {
+                        val addrDigits = address.filter { it.isDigit() }
+                        if (addrDigits.endsWith(last7) || addrDigits == cleanDigits) {
+                            val body = if (bodyIdx != -1) cursor.getString(bodyIdx)?.trim() ?: "" else ""
+                            val date = if (dateIdx != -1) cursor.getLong(dateIdx) else 0L
+                            val type = if (typeIdx != -1) cursor.getInt(typeIdx) else 1
+
+                            if (body.isNotBlank()) {
+                                val role = if (type == Telephony.Sms.MESSAGE_TYPE_SENT) "assistant" else "user"
+                                tempMessages.add(Triple(date, role, body))
+                                count++
+                            }
+                        }
+                    }
+                }
+            }
+        } catch (e: Exception) {
+            Log.w(TAG, "Could not fetch conversation thread from SMS provider: ${e.message}")
+        }
+
+        // Sort ascending chronologically (oldest to newest)
+        tempMessages.sortBy { it.first }
+
+        // Remove trailing duplicate of current incoming message if already saved to provider
+        if (tempMessages.isNotEmpty()) {
+            val last = tempMessages.last()
+            if (last.second == "user" && last.third.trim() == currentIncomingText.trim()) {
+                tempMessages.removeAt(tempMessages.lastIndex)
+            }
+        }
+
+        for (item in tempMessages) {
+            val obj = org.json.JSONObject().apply {
+                put("role", item.second)
+                put("text", item.third)
+                put("timestamp", item.first)
+            }
+            threadArray.put(obj)
+        }
+        return threadArray
     }
 }
