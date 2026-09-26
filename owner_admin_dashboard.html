@@ -2252,12 +2252,12 @@
             if (r.voiceEntitlement || r.voiceActive) {
                 if (r.voiceSubWaived || r.type === "FREE_VOICE_COMP") {
                     if (r.vapiProvisioned) {
-                        voiceDisplay = `<span class="badge" style="background: rgba(168,85,247,0.2); color: #C084FC; border: 1px solid rgba(168,85,247,0.4);">🎙️ COMP WAIVED</span><br><span class="badge badge-voice" style="margin-top:4px;">*71 ACTIVE (${escapeHtml(r.voiceNumber || '+1 (732) 660-9121')})</span>`;
+                        voiceDisplay = `<span class="badge" style="background: rgba(168,85,247,0.2); color: #C084FC; border: 1px solid rgba(168,85,247,0.4);">🎙️ COMP WAIVED</span><br><span class="badge badge-voice" style="margin-top:4px;">*71 ACTIVE (${escapeHtml(r.voiceNumber || '+1 (732) 903-5611')})</span>`;
                     } else {
                         voiceDisplay = `<span class="badge" style="background: rgba(168,85,247,0.2); color: #C084FC; border: 1px solid rgba(168,85,247,0.4);">🎙️ COMP WAIVED</span><br><span class="badge" style="background: rgba(245,158,11,0.15); color: #FBBF24; border: 1px solid rgba(245,158,11,0.3); font-size: 10px; margin-top:4px;">⏳ PENDING 1ST PACK ($10)</span>`;
                     }
                 } else if (r.vapiProvisioned) {
-                    voiceDisplay = `<span class="badge badge-voice">🎙️ *71 ACTIVE (${escapeHtml(r.voiceNumber || '+1 (732) 660-9121')})</span>`;
+                    voiceDisplay = `<span class="badge badge-voice">🎙️ *71 ACTIVE (${escapeHtml(r.voiceNumber || '+1 (732) 903-5611')})</span>`;
                 } else {
                     voiceDisplay = `<span class="badge" style="background: rgba(168,85,247,0.15); color: #C084FC; border: 1px solid rgba(168,85,247,0.3);">🎙️ UNLOCKED ($9.99/mo)</span><br><span class="badge" style="background: rgba(245,158,11,0.15); color: #FBBF24; border: 1px solid rgba(245,158,11,0.3); font-size: 10px; margin-top:4px;">⏳ PENDING 1ST PACK ($10)</span>`;
                 }
@@ -6061,8 +6061,8 @@ To transfer to a new device at any time, contact your agency administrator.
                     isPaidVoice: isPaidVoice,
                     vapiProvisioned: !!r.vapiProvisioned,
                     voiceMinutesBalance: Number(r.voiceMinutesBalance || 0),
-                    voiceNumber: r.voiceNumber || r.forwardingNumber || '+1 (732) 660-9121',
-                    carrierCode: r.carrierCode || '*717326609121',
+                    voiceNumber: r.voiceNumber || r.forwardingNumber || '+1 (732) 903-5611',
+                    carrierCode: r.carrierCode || '*717329035611',
                     deviceId: r.deviceId || null,
                     date: r.date || new Date().toISOString()
                 };
@@ -6206,7 +6206,7 @@ To transfer to a new device at any time, contact your agency administrator.
         document.getElementById('modalSubVoiceToggle').checked = !!(rec.voiceEntitlement || rec.voiceActive);
         document.getElementById('modalSubWaivedToggle').checked = !!(rec.voiceSubWaived || rec.type === 'FREE_VOICE_COMP');
         document.getElementById('modalSubMinutesInput').value = rec.voiceMinutesBalance || 0;
-        document.getElementById('modalSubForwardingNumber').value = rec.voiceNumber || '+1 (732) 660-9121';
+        document.getElementById('modalSubForwardingNumber').value = rec.voiceNumber || '+1 (732) 903-5611';
         document.getElementById('modalSubDeviceId').innerText = rec.deviceId ? `🔒 Bound: ${rec.deviceId}` : '📱 Unbound (Ready to pair)';
 
         modal.style.display = 'flex';
@@ -6307,8 +6307,8 @@ To transfer to a new device at any time, contact your agency administrator.
                 vapiProvisioned: true,
                 voiceMinutesBalance: 50.0,
                 voiceActive: true,
-                voiceNumber: '+1 (732) 660-9121',
-                carrierCode: '*717326609121'
+                voiceNumber: '+1 (732) 903-5611',
+                carrierCode: '*717329035611'
             };
             records.unshift(rec);
         } else {
@@ -6317,8 +6317,8 @@ To transfer to a new device at any time, contact your agency administrator.
             rec.voiceActive = true;
             rec.vapiProvisioned = true;
             rec.voiceMinutesBalance = Math.max(rec.voiceMinutesBalance || 0, 50.0);
-            rec.voiceNumber = rec.voiceNumber || '+1 (732) 660-9121';
-            rec.carrierCode = rec.carrierCode || '*717326609121';
+            rec.voiceNumber = rec.voiceNumber || '+1 (732) 903-5611';
+            rec.carrierCode = rec.carrierCode || '*717329035611';
         }
 
         saveStore(records);
@@ -6563,7 +6563,7 @@ To transfer to a new device at any time, contact your agency administrator.
             </div>
             <div>
                 <label>Forwarding Phone Number</label>
-                <input type="text" id="modalSubForwardingNumber" placeholder="+1 (732) 660-9121" style="width: 100%; font-family: monospace;">
+                <input type="text" id="modalSubForwardingNumber" placeholder="+1 (732) 903-5611" style="width: 100%; font-family: monospace;">
                 <small style="color: var(--muted); font-size: 11px;">Assigned Vapi Inbound Line (*71)</small>
             </div>
         </div>
