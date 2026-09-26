@@ -1006,11 +1006,15 @@
             background: #FFFFFF;
             border: 1px solid var(--line-subtle);
             border-radius: var(--radius-xl);
-            overflow: hidden;
+            overflow-x: auto;
+            -webkit-overflow-scrolling: touch;
             box-shadow: var(--shadow-subtle);
+            width: 100%;
+            max-width: 100%;
         }
         .comp-table {
             width: 100%;
+            min-width: 640px;
             border-collapse: collapse;
             text-align: left;
             font-size: 15px;
@@ -1315,6 +1319,47 @@
             }
             body {
                 padding-bottom: 74px;
+            }
+            .footer-grid {
+                grid-template-columns: 1fr !important;
+                gap: 28px !important;
+            }
+            .hero-title {
+                font-size: 34px !important;
+                letter-spacing: -1px !important;
+            }
+            .hero-actions {
+                flex-direction: column !important;
+                align-items: center !important;
+            }
+            .hero-actions button, .hero-actions a {
+                width: 100% !important;
+                max-width: 360px !important;
+            }
+            .hero-reassurances {
+                flex-direction: column !important;
+                gap: 12px !important;
+            }
+            .showcase-stage {
+                padding: 24px 16px !important;
+            }
+            .showcase-stage::before {
+                display: none !important;
+            }
+            .showcase-tabs {
+                width: 100% !important;
+                max-width: 100% !important;
+                justify-content: center !important;
+            }
+            .tab-btn {
+                font-size: 12px !important;
+                padding: 6px 12px !important;
+            }
+            .stepper-box, .calculator-card {
+                padding: 32px 20px !important;
+            }
+            .container {
+                padding: 0 16px !important;
             }
         }
         .mobile-sticky-btn {

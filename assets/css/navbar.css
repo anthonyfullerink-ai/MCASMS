@@ -1,7 +1,26 @@
-/* ==========================================================================
-   GLOBAL UNIFIED NAVIGATION BAR - MISSED CALL AUTO SMS
-   Works across all landing pages (index, voice, pro, agency, developers, blog, etc.)
-   ========================================================================== */
+/* Responsive Viewport & Overflow Shield (Mobile, Tablet, Desktop) */
+html, body {
+    overflow-x: hidden !important;
+    max-width: 100% !important;
+    width: 100% !important;
+    position: relative;
+    box-sizing: border-box;
+}
+
+*, *::before, *::after {
+    box-sizing: border-box;
+}
+
+img, svg, video, canvas, audio, iframe, embed, object {
+    max-width: 100%;
+    height: auto;
+}
+
+pre, code {
+    max-width: 100%;
+    overflow-x: auto;
+    word-break: break-word;
+}
 
 /* Top Announcement Strip (Optional on pages) */
 .global-announcement-bar {
@@ -320,21 +339,42 @@
     gap: 10px;
 }
 
-/* Breakpoint Logic */
+/* Breakpoint Logic (Tablet & Mobile) */
 @media (max-width: 1060px) {
     .global-nav-links {
-        display: none;
+        display: none !important;
     }
     .global-mobile-menu-btn {
-        display: flex;
+        display: flex !important;
+    }
+    .footer-grid {
+        grid-template-columns: 1fr 1fr !important;
+        gap: 36px !important;
     }
 }
 
-@media (max-width: 640px) {
+@media (max-width: 768px) {
     .global-nav-phone {
-        display: none;
+        display: none !important;
     }
     .global-nav-container {
-        padding: 0 16px;
+        padding: 0 16px !important;
+        height: 64px !important;
+    }
+    .global-btn-trial {
+        padding: 8px 14px !important;
+        font-size: 13px !important;
+    }
+    .footer-grid {
+        grid-template-columns: 1fr !important;
+        gap: 28px !important;
+    }
+    .footer-col {
+        width: 100% !important;
+    }
+    .footer-bottom {
+        flex-direction: column !important;
+        text-align: center !important;
+        gap: 16px !important;
     }
 }

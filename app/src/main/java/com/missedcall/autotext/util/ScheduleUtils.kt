@@ -107,4 +107,13 @@ object ScheduleUtils {
     fun isWithinBusinessHours(schedule: AppSchedule): Boolean {
         return checkScheduleDetailed(schedule).isWithinHours
     }
+
+    fun format12Hour(time24: String, defaultHour: Int = 9): String {
+        return try {
+            val t = parseTimeFlexible(time24, defaultHour, 0)
+            t.format(DateTimeFormatter.ofPattern("h:mm a", Locale.US))
+        } catch (e: Exception) {
+            time24
+        }
+    }
 }

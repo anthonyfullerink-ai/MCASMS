@@ -744,14 +744,15 @@
 
         /* Infinite Scrolling Marquee Ticker */
         .ticker-section {
-            width: 100vw;
-            margin-left: calc(-50vw + 50%);
+            width: 100%;
+            max-width: 100%;
             background: var(--bg-surface);
             border-top: 1px solid var(--line-subtle);
             border-bottom: 1px solid var(--line-subtle);
             padding: 18px 0;
             overflow: hidden;
             white-space: nowrap;
+            box-sizing: border-box;
         }
         .ticker-track {
             display: inline-flex;
@@ -1133,6 +1134,19 @@
             align-items: center;
             box-shadow: 0 -8px 24px rgba(0, 0, 0, 0.35);
         }
+        @media (max-width: 1024px) {
+            .footer-grid {
+                grid-template-columns: 1fr 1fr !important;
+                gap: 32px !important;
+            }
+            .stepper-grid, .metric-strip {
+                grid-template-columns: 1fr 1fr !important;
+            }
+            .pricing-grid {
+                grid-template-columns: 1fr !important;
+                max-width: 520px;
+            }
+        }
         @media (max-width: 768px) {
             .mobile-sticky-bar {
                 display: flex;
@@ -1141,7 +1155,31 @@
                 padding-bottom: 74px;
             }
             .stepper-grid, .bento-grid, .pricing-grid, .metric-strip, .footer-grid {
-                grid-template-columns: 1fr;
+                grid-template-columns: 1fr !important;
+            }
+            .hero-title {
+                font-size: 32px !important;
+            }
+            .hero-actions {
+                flex-direction: column !important;
+                align-items: center !important;
+            }
+            .hero-actions button, .hero-actions a {
+                width: 100% !important;
+                max-width: 360px !important;
+            }
+            .final-cta {
+                padding: 36px 20px !important;
+            }
+            .final-cta div {
+                flex-direction: column !important;
+            }
+            .final-cta a, .final-cta button {
+                width: 100% !important;
+                max-width: 360px !important;
+            }
+            .container {
+                padding: 0 16px !important;
             }
             .nav-links, .nav-phone-pill {
                 display: none;

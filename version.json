@@ -6,5 +6,5 @@
   "releaseNotes": "🚀 v1.9.0 Major Release: Native In-App Billing & 1-Tap Minute Packs\n• 💳 Saved Card Vaulting: View and manage your vaulted card securely inside the app\n• ⚡ 1-Tap Minute Reloads: Add 40 minutes for $10 instantly with zero web redirects\n• 🔄 Auto-Billing Refill Engine: Automatically recharge minutes when balance drops below threshold during calls\n• 🎙️ Standard $9.99/mo Voice Management: Native subscribe and cancel controls\n• 🌐 Global Unified Navigation: Consistent responsive menu and smooth scrolling across all web portals",
   "mandatory": false,
   "minSupportedVersion": 1,
-  "updatedAt": "2026-09-26T19:53:07.554Z"
+  "updatedAt": "2026-09-26T20:32:30.505Z"
 }

@@ -350,8 +350,18 @@ fun AutoSmsScreen(
             }
         }
 
-        // 5. Business Hours & Operating Schedule Card
+        // 5. Unified Master Business Hours & Operating Schedule Card
         item {
+            var showStartTimeDialog by remember { mutableStateOf(false) }
+            var showEndTimeDialog by remember { mutableStateOf(false) }
+
+            val formattedStart = remember(settings.schedule.startTime) {
+                com.missedcall.autotext.util.ScheduleUtils.format12Hour(settings.schedule.startTime, 9)
+            }
+            val formattedEnd = remember(settings.schedule.endTime) {
+                com.missedcall.autotext.util.ScheduleUtils.format12Hour(settings.schedule.endTime, 18)
+            }
+
             Card(
                 shape = RoundedCornerShape(16.dp),
                 modifier = Modifier.fillMaxWidth()
@@ -365,7 +375,7 @@ fun AutoSmsScreen(
                         Row(verticalAlignment = Alignment.CenterVertically) {
                             Icon(Icons.Default.AccessTime, contentDescription = null, tint = MaterialTheme.colorScheme.primary, modifier = Modifier.size(20.dp))
                             Spacer(modifier = Modifier.width(8.dp))
-                            Text("Business Hours Filter", fontWeight = FontWeight.Bold, style = MaterialTheme.typography.titleSmall)
+                            Text("Master Operating Hours", fontWeight = FontWeight.Bold, style = MaterialTheme.typography.titleSmall)
                         }
                         Switch(
                             checked = settings.businessHoursEnabled,
@@ -376,62 +386,251 @@ fun AutoSmsScreen(
                     Spacer(modifier = Modifier.height(4.dp))
                     Text(
                         text = if (settings.businessHoursEnabled)
-                            "Auto-SMS only responds during your configured operating hours."
+                            "Master Schedule Active: Governs Auto-SMS dispatch, 24/7 AI Voice reception (*71), and AI appointment booking."
                         else
-                            "24/7 Mode: Auto-SMS replies at all times of day and night.",
+                            "24/7 Always-Open Mode: Auto-SMS and Voice AI handle callers at all hours of day and night.",
                         style = MaterialTheme.typography.bodySmall,
                         color = MaterialTheme.colorScheme.onSurfaceVariant
                     )
 
                     AnimatedVisibility(visible = settings.businessHoursEnabled) {
-                        Column(modifier = Modifier.padding(top = 12.dp)) {
+                        Column(modifier = Modifier.padding(top = 14.dp)) {
+                            // Quick Schedule Presets
+                            Text("Quick Presets:", style = MaterialTheme.typography.labelSmall, fontWeight = FontWeight.Bold, color = MaterialTheme.colorScheme.primary)
+                            Spacer(modifier = Modifier.height(6.dp))
+
+                            Row(
+                                modifier = Modifier.fillMaxWidth(),
+                                horizontalArrangement = Arrangement.spacedBy(6.dp)
+                            ) {
+                                val standardDays = listOf("MONDAY", "TUESDAY", "WEDNESDAY", "THURSDAY", "FRIDAY")
+                                val sixDays = listOf("MONDAY", "TUESDAY", "WEDNESDAY", "THURSDAY", "FRIDAY", "SATURDAY")
+                                val allSevenDays = daysOfWeek
+
+                                Button(
+                                    onClick = {
+                                        onSettingsChanged(
+                                            settings.copy(
+                                                schedule = settings.schedule.copy(
+                                                    activeDays = standardDays,
+                                                    startTime = "09:00",
+                                                    endTime = "17:00"
+                                                )
+                                            )
+                                        )
+                                        Toast.makeText(context, "Set to Mon-Fri (9 AM - 5 PM)", Toast.LENGTH_SHORT).show()
+                                    },
+                                    contentPadding = PaddingValues(horizontal = 6.dp, vertical = 4.dp),
+                                    modifier = Modifier.weight(1f),
+                                    colors = ButtonDefaults.buttonColors(containerColor = MaterialTheme.colorScheme.surfaceVariant)
+                                ) {
+                                    Text("Mon-Fri (9-5)", fontSize = 10.sp, color = MaterialTheme.colorScheme.onSurface)
+                                }
+
+                                Button(
+                                    onClick = {
+                                        onSettingsChanged(
+                                            settings.copy(
+                                                schedule = settings.schedule.copy(
+                                                    activeDays = sixDays,
+                                                    startTime = "08:00",
+                                                    endTime = "18:00"
+                                                )
+                                            )
+                                        )
+                                        Toast.makeText(context, "Set to Mon-Sat (8 AM - 6 PM)", Toast.LENGTH_SHORT).show()
+                                    },
+                                    contentPadding = PaddingValues(horizontal = 6.dp, vertical = 4.dp),
+                                    modifier = Modifier.weight(1f),
+                                    colors = ButtonDefaults.buttonColors(containerColor = MaterialTheme.colorScheme.surfaceVariant)
+                                ) {
+                                    Text("Mon-Sat (8-6)", fontSize = 10.sp, color = MaterialTheme.colorScheme.onSurface)
+                                }
+
+                                Button(
+                                    onClick = {
+                                        onSettingsChanged(
+                                            settings.copy(
+                                                schedule = settings.schedule.copy(
+                                                    activeDays = allSevenDays,
+                                                    startTime = "08:00",
+                                                    endTime = "20:00"
+                                                )
+                                            )
+                                        )
+                                        Toast.makeText(context, "Set to 7 Days (8 AM - 8 PM)", Toast.LENGTH_SHORT).show()
+                                    },
+                                    contentPadding = PaddingValues(horizontal = 6.dp, vertical = 4.dp),
+                                    modifier = Modifier.weight(1f),
+                                    colors = ButtonDefaults.buttonColors(containerColor = MaterialTheme.colorScheme.surfaceVariant)
+                                ) {
+                                    Text("7 Days (8-8)", fontSize = 10.sp, color = MaterialTheme.colorScheme.onSurface)
+                                }
+                            }
+
+                            Spacer(modifier = Modifier.height(14.dp))
+
+                            // Responsive 7-Day Badges (Guaranteed to fit without clipping)
                             Text("Active Operating Days:", style = MaterialTheme.typography.labelMedium, fontWeight = FontWeight.SemiBold)
                             Spacer(modifier = Modifier.height(8.dp))
 
                             Row(
                                 modifier = Modifier.fillMaxWidth(),
-                                horizontalArrangement = Arrangement.SpaceBetween
+                                horizontalArrangement = Arrangement.spacedBy(4.dp)
                             ) {
                                 daysOfWeek.forEach { day ->
                                     val isSelected = settings.schedule.activeDays.contains(day)
-                                    FilterChip(
-                                        selected = isSelected,
-                                        onClick = {
-                                            val currentDays = settings.schedule.activeDays.toMutableList()
-                                            if (isSelected) currentDays.remove(day) else currentDays.add(day)
-                                            onSettingsChanged(
-                                                settings.copy(schedule = settings.schedule.copy(activeDays = currentDays))
+                                    Surface(
+                                        shape = RoundedCornerShape(10.dp),
+                                        color = if (isSelected) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.45f),
+                                        border = BorderStroke(
+                                            1.dp,
+                                            if (isSelected) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.outline.copy(alpha = 0.2f)
+                                        ),
+                                        modifier = Modifier
+                                            .weight(1f)
+                                            .clickable {
+                                                val currentDays = settings.schedule.activeDays.toMutableList()
+                                                if (isSelected) currentDays.remove(day) else currentDays.add(day)
+                                                onSettingsChanged(
+                                                    settings.copy(schedule = settings.schedule.copy(activeDays = currentDays))
+                                                )
+                                            }
+                                    ) {
+                                        Column(
+                                            modifier = Modifier.padding(vertical = 8.dp),
+                                            horizontalAlignment = Alignment.CenterHorizontally
+                                        ) {
+                                            Text(
+                                                dayLabels[day]?.take(1) ?: "",
+                                                fontWeight = FontWeight.Black,
+                                                fontSize = 13.sp,
+                                                color = if (isSelected) MaterialTheme.colorScheme.onPrimary else MaterialTheme.colorScheme.onSurface
                                             )
-                                        },
-                                        label = { Text(dayLabels[day] ?: day, fontSize = 10.sp) },
-                                        modifier = Modifier.padding(horizontal = 2.dp)
-                                    )
+                                            Text(
+                                                dayLabels[day] ?: "",
+                                                fontWeight = if (isSelected) FontWeight.Bold else FontWeight.Normal,
+                                                fontSize = 9.sp,
+                                                color = if (isSelected) MaterialTheme.colorScheme.onPrimary.copy(alpha = 0.85f) else MaterialTheme.colorScheme.onSurfaceVariant
+                                            )
+                                        }
+                                    }
                                 }
                             }
 
-                            Spacer(modifier = Modifier.height(12.dp))
+                            Spacer(modifier = Modifier.height(14.dp))
 
+                            // Interactive Time Pickers with 12-Hour Display
                             Row(
                                 modifier = Modifier.fillMaxWidth(),
                                 horizontalArrangement = Arrangement.spacedBy(12.dp)
                             ) {
-                                OutlinedTextField(
-                                    value = settings.schedule.startTime,
-                                    onValueChange = { newStart ->
-                                        onSettingsChanged(settings.copy(schedule = settings.schedule.copy(startTime = newStart)))
+                                Surface(
+                                    shape = RoundedCornerShape(10.dp),
+                                    color = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.45f),
+                                    border = BorderStroke(1.dp, MaterialTheme.colorScheme.outline.copy(alpha = 0.25f)),
+                                    modifier = Modifier
+                                        .weight(1f)
+                                        .clickable { showStartTimeDialog = true }
+                                ) {
+                                    Column(modifier = Modifier.padding(12.dp)) {
+                                        Text("Opening Time", fontSize = 11.sp, color = MaterialTheme.colorScheme.onSurfaceVariant)
+                                        Spacer(modifier = Modifier.height(2.dp))
+                                        Text(formattedStart, fontWeight = FontWeight.Bold, fontSize = 16.sp, color = MaterialTheme.colorScheme.primary)
+                                    }
+                                }
+
+                                Surface(
+                                    shape = RoundedCornerShape(10.dp),
+                                    color = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.45f),
+                                    border = BorderStroke(1.dp, MaterialTheme.colorScheme.outline.copy(alpha = 0.25f)),
+                                    modifier = Modifier
+                                        .weight(1f)
+                                        .clickable { showEndTimeDialog = true }
+                                ) {
+                                    Column(modifier = Modifier.padding(12.dp)) {
+                                        Text("Closing Time", fontSize = 11.sp, color = MaterialTheme.colorScheme.onSurfaceVariant)
+                                        Spacer(modifier = Modifier.height(2.dp))
+                                        Text(formattedEnd, fontWeight = FontWeight.Bold, fontSize = 16.sp, color = MaterialTheme.colorScheme.primary)
+                                    }
+                                }
+                            }
+
+                            // Start Time Selection Dialog
+                            if (showStartTimeDialog) {
+                                AlertDialog(
+                                    onDismissRequest = { showStartTimeDialog = false },
+                                    title = { Text("Select Opening Time") },
+                                    text = {
+                                        Column(modifier = Modifier.fillMaxWidth()) {
+                                            val options = listOf("06:00", "07:00", "07:30", "08:00", "08:30", "09:00", "09:30", "10:00")
+                                            options.chunked(2).forEach { rowOptions ->
+                                                Row(
+                                                    modifier = Modifier.fillMaxWidth().padding(vertical = 4.dp),
+                                                    horizontalArrangement = Arrangement.spacedBy(8.dp)
+                                                ) {
+                                                    rowOptions.forEach { opt ->
+                                                        val label12 = com.missedcall.autotext.util.ScheduleUtils.format12Hour(opt, 9)
+                                                        val isCurr = settings.schedule.startTime == opt
+                                                        Button(
+                                                            onClick = {
+                                                                onSettingsChanged(settings.copy(schedule = settings.schedule.copy(startTime = opt)))
+                                                                showStartTimeDialog = false
+                                                            },
+                                                            modifier = Modifier.weight(1f),
+                                                            colors = if (isCurr) ButtonDefaults.buttonColors() else ButtonDefaults.buttonColors(containerColor = MaterialTheme.colorScheme.surfaceVariant)
+                                                        ) {
+                                                            Text(label12, fontSize = 13.sp, color = if (isCurr) MaterialTheme.colorScheme.onPrimary else MaterialTheme.colorScheme.onSurface)
+                                                        }
+                                                    }
+                                                }
+                                            }
+                                        }
                                     },
-                                    modifier = Modifier.weight(1f),
-                                    label = { Text("Start (e.g. 09:00)") },
-                                    singleLine = true
+                                    confirmButton = {
+                                        TextButton(onClick = { showStartTimeDialog = false }) {
+                                            Text("Close")
+                                        }
+                                    }
                                 )
-                                OutlinedTextField(
-                                    value = settings.schedule.endTime,
-                                    onValueChange = { newEnd ->
-                                        onSettingsChanged(settings.copy(schedule = settings.schedule.copy(endTime = newEnd)))
+                            }
+
+                            // End Time Selection Dialog
+                            if (showEndTimeDialog) {
+                                AlertDialog(
+                                    onDismissRequest = { showEndTimeDialog = false },
+                                    title = { Text("Select Closing Time") },
+                                    text = {
+                                        Column(modifier = Modifier.fillMaxWidth()) {
+                                            val options = listOf("16:00", "17:00", "17:30", "18:00", "18:30", "19:00", "20:00", "21:00")
+                                            options.chunked(2).forEach { rowOptions ->
+                                                Row(
+                                                    modifier = Modifier.fillMaxWidth().padding(vertical = 4.dp),
+                                                    horizontalArrangement = Arrangement.spacedBy(8.dp)
+                                                ) {
+                                                    rowOptions.forEach { opt ->
+                                                        val label12 = com.missedcall.autotext.util.ScheduleUtils.format12Hour(opt, 18)
+                                                        val isCurr = settings.schedule.endTime == opt
+                                                        Button(
+                                                            onClick = {
+                                                                onSettingsChanged(settings.copy(schedule = settings.schedule.copy(endTime = opt)))
+                                                                showEndTimeDialog = false
+                                                            },
+                                                            modifier = Modifier.weight(1f),
+                                                            colors = if (isCurr) ButtonDefaults.buttonColors() else ButtonDefaults.buttonColors(containerColor = MaterialTheme.colorScheme.surfaceVariant)
+                                                        ) {
+                                                            Text(label12, fontSize = 13.sp, color = if (isCurr) MaterialTheme.colorScheme.onPrimary else MaterialTheme.colorScheme.onSurface)
+                                                        }
+                                                    }
+                                                }
+                                            }
+                                        }
                                     },
-                                    modifier = Modifier.weight(1f),
-                                    label = { Text("End (e.g. 18:00)") },
-                                    singleLine = true
+                                    confirmButton = {
+                                        TextButton(onClick = { showEndTimeDialog = false }) {
+                                            Text("Close")
+                                        }
+                                    }
                                 )
                             }
                         }

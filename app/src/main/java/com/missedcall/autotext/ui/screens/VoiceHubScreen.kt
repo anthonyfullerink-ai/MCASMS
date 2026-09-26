@@ -282,7 +282,6 @@ fun VoiceHubScreen(
     var aiSmsShopInstructionsInput by remember(settings.aiSmsShopInstructions) { mutableStateOf(settings.aiSmsShopInstructions) }
     var aiSmsCalendarConnected by remember(settings.aiSmsCalendarConnected) { mutableStateOf(settings.aiSmsCalendarConnected) }
     var aiSmsCalendarEmailInput by remember(settings.aiSmsCalendarEmail) { mutableStateOf(settings.aiSmsCalendarEmail) }
-    var aiSmsWorkingHoursInput by remember(settings.aiSmsCalendarWorkingHours) { mutableStateOf(settings.aiSmsCalendarWorkingHours) }
     var aiSmsAutoPauseOnHumanReply by remember(settings.aiSmsAutoPauseOnHumanReply) { mutableStateOf(settings.aiSmsAutoPauseOnHumanReply) }
     var aiSmsEmergencyAlertsEnabled by remember(settings.aiSmsEmergencyAlertsEnabled) { mutableStateOf(settings.aiSmsEmergencyAlertsEnabled) }
 
@@ -294,6 +293,7 @@ fun VoiceHubScreen(
     var isPlacingOutboundCall by remember { mutableStateOf(false) }
     var testCallDialogStatus by remember { mutableStateOf<String?>(null) }
     var showAccountPortal by remember { mutableStateOf(false) }
+    var showCalendarSetupDialog by remember { mutableStateOf(false) }
     var tts by remember { mutableStateOf<TextToSpeech?>(null) }
 
     if (showAccountPortal) {
@@ -301,6 +301,14 @@ fun VoiceHubScreen(
             settings = settings,
             onSettingsChanged = onSettingsChanged,
             onDismiss = { showAccountPortal = false }
+        )
+    }
+
+    if (showCalendarSetupDialog) {
+        GoogleCalendarSetupDialog(
+            settings = settings,
+            onSettingsChanged = onSettingsChanged,
+            onDismiss = { showCalendarSetupDialog = false }
         )
     }
 
@@ -1473,41 +1481,55 @@ fun VoiceHubScreen(
                             ) {
                                 Column(modifier = Modifier.weight(1f)) {
                                     Text(
-                                        if (aiSmsCalendarConnected) "Connected ✅" else "Google Calendar Ready",
+                                        if (settings.aiSmsCalendarConnected) "Connected ✅" else "Google Calendar Ready",
                                         fontWeight = FontWeight.Bold,
                                         style = MaterialTheme.typography.bodyMedium,
-                                        color = if (aiSmsCalendarConnected) ActiveGreenText else MaterialTheme.colorScheme.onSurface
+                                        color = if (settings.aiSmsCalendarConnected) ActiveGreenText else MaterialTheme.colorScheme.onSurface
                                     )
+                                    val calDesc = if (settings.aiSmsCalendarConnected) {
+                                        val email = settings.aiSmsCalendarEmail.ifBlank { settings.customerEmail.ifBlank { "Primary Calendar" } }
+                                        "$email • ${settings.aiSmsSlotDurationMinutes}m slots"
+                                    } else {
+                                        "Direct live appointment booking & slot lookup"
+                                    }
                                     Text(
-                                        if (aiSmsCalendarConnected)
-                                            aiSmsCalendarEmailInput.ifBlank { settings.customerEmail.ifBlank { "Primary Calendar" } }
-                                        else
-                                            "Direct live appointment booking & slot lookup",
+                                        calDesc,
                                         style = MaterialTheme.typography.bodySmall,
                                         color = MaterialTheme.colorScheme.onSurfaceVariant
                                     )
                                 }
-                                Button(
-                                    onClick = {
-                                        aiSmsCalendarConnected = !aiSmsCalendarConnected
-                                        if (aiSmsCalendarConnected && aiSmsCalendarEmailInput.isBlank()) {
-                                            aiSmsCalendarEmailInput = settings.customerEmail
+
+                                if (!settings.aiSmsCalendarConnected) {
+                                    Button(
+                                        onClick = { showCalendarSetupDialog = true },
+                                        colors = ButtonDefaults.buttonColors(containerColor = Color(0xFF10B981))
+                                    ) {
+                                        Text(
+                                            "Connect Calendar",
+                                            color = Color.Black,
+                                            fontWeight = FontWeight.Bold,
+                                            fontSize = 12.sp
+                                        )
+                                    }
+                                } else {
+                                    Row(horizontalArrangement = Arrangement.spacedBy(6.dp)) {
+                                        OutlinedButton(
+                                            onClick = { showCalendarSetupDialog = true },
+                                            contentPadding = PaddingValues(horizontal = 8.dp, vertical = 4.dp)
+                                        ) {
+                                            Text("⚙️ Setup", fontSize = 11.sp, fontWeight = FontWeight.Bold)
                                         }
-                                        onSettingsChanged(settings.copy(
-                                            aiSmsCalendarConnected = aiSmsCalendarConnected,
-                                            aiSmsCalendarEmail = aiSmsCalendarEmailInput
-                                        ))
-                                    },
-                                    colors = ButtonDefaults.buttonColors(
-                                        containerColor = if (aiSmsCalendarConnected) Color(0xFF1E293B) else Color(0xFF10B981)
-                                    )
-                                ) {
-                                    Text(
-                                        if (aiSmsCalendarConnected) "Disconnect" else "Connect Calendar",
-                                        color = if (aiSmsCalendarConnected) Color(0xFF94A3B8) else Color.Black,
-                                        fontWeight = FontWeight.Bold,
-                                        fontSize = 12.sp
-                                    )
+                                        OutlinedButton(
+                                            onClick = {
+                                                onSettingsChanged(settings.copy(aiSmsCalendarConnected = false))
+                                                Toast.makeText(context, "Calendar Disconnected", Toast.LENGTH_SHORT).show()
+                                            },
+                                            contentPadding = PaddingValues(horizontal = 8.dp, vertical = 4.dp),
+                                            colors = ButtonDefaults.outlinedButtonColors(contentColor = Color(0xFFEF4444))
+                                        ) {
+                                            Text("Disconnect", fontSize = 11.sp)
+                                        }
+                                    }
                                 }
                             }
                         }
@@ -1593,16 +1615,46 @@ fun VoiceHubScreen(
                         }
 
                         Spacer(modifier = Modifier.height(10.dp))
-                        OutlinedTextField(
-                            value = aiSmsWorkingHoursInput,
-                            onValueChange = {
-                                aiSmsWorkingHoursInput = it
-                                onSettingsChanged(settings.copy(aiSmsCalendarWorkingHours = it))
-                            },
-                            modifier = Modifier.fillMaxWidth(),
-                            label = { Text("Working Booking Hours") },
-                            placeholder = { Text("08:00 - 17:00") }
-                        )
+                        // Unified Synchronized Master Operating Hours Display
+                        Surface(
+                            shape = RoundedCornerShape(10.dp),
+                            color = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.35f),
+                            border = androidx.compose.foundation.BorderStroke(1.dp, MaterialTheme.colorScheme.outline.copy(alpha = 0.2f)),
+                            modifier = Modifier.fillMaxWidth()
+                        ) {
+                            Row(
+                                modifier = Modifier.padding(12.dp),
+                                horizontalArrangement = Arrangement.SpaceBetween,
+                                verticalAlignment = Alignment.CenterVertically
+                            ) {
+                                Column(modifier = Modifier.weight(1f)) {
+                                    Text(
+                                        "🕒 Operating & Booking Hours",
+                                        fontWeight = FontWeight.Bold,
+                                        style = MaterialTheme.typography.bodyMedium
+                                    )
+                                    val scheduleSummary = if (settings.businessHoursEnabled) {
+                                        val start = com.missedcall.autotext.util.ScheduleUtils.format12Hour(settings.schedule.startTime, 9)
+                                        val end = com.missedcall.autotext.util.ScheduleUtils.format12Hour(settings.schedule.endTime, 18)
+                                        "$start - $end (${settings.schedule.activeDays.size} days/wk)"
+                                    } else {
+                                        "24/7 Always Open"
+                                    }
+                                    Text(
+                                        "Synced with Master Schedule: $scheduleSummary",
+                                        style = MaterialTheme.typography.bodySmall,
+                                        color = MaterialTheme.colorScheme.onSurfaceVariant
+                                    )
+                                }
+                                TextButton(
+                                    onClick = {
+                                        Toast.makeText(context, "Configured in Auto-SMS tab -> Master Operating Hours", Toast.LENGTH_LONG).show()
+                                    }
+                                ) {
+                                    Text("Master Hours", fontSize = 11.sp, fontWeight = FontWeight.Bold)
+                                }
+                            }
+                        }
 
                         Spacer(modifier = Modifier.height(14.dp))
 
@@ -1720,8 +1772,8 @@ fun VoiceHubScreen(
                                     put("aiSmsShopAddress", aiSmsShopAddressInput)
                                     put("aiSmsShopInstructions", aiSmsShopInstructionsInput)
                                     put("aiSmsCalendarConnected", aiSmsCalendarConnected)
-                                    put("aiSmsCalendarEmail", aiSmsCalendarEmailInput)
-                                    put("aiSmsCalendarWorkingHours", aiSmsWorkingHoursInput)
+                                    val masterWorkingHours = if (settings.businessHoursEnabled) "${settings.schedule.startTime} - ${settings.schedule.endTime}" else "24/7"
+                                    put("aiSmsCalendarWorkingHours", masterWorkingHours)
                                     put("aiSmsAutoPauseOnHumanReply", aiSmsAutoPauseOnHumanReply)
                                     put("aiSmsEmergencyAlertsEnabled", aiSmsEmergencyAlertsEnabled)
                                 }
