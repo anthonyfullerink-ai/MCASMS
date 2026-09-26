@@ -86,6 +86,50 @@ exports.handler = async (event) => {
       return await usageHandler(event);
     }
 
+    // 0.1 Mint Scoped JWT for WebRTC Browser Audio (GET or POST /api/vapi/web-token)
+    if (reqPath.includes('token') || (event.queryStringParameters && event.queryStringParameters.action === 'web-token')) {
+      if (!apiKey) {
+        return {
+          statusCode: 500,
+          headers,
+          body: JSON.stringify({ success: false, error: 'VAPI_PRIVATE_API_KEY is not configured' })
+        };
+      }
+      const crypto = require('crypto');
+      function base64url(source) {
+        let encodedSource = Buffer.from(source).toString('base64');
+        encodedSource = encodedSource.replace(/=+$/, '');
+        encodedSource = encodedSource.replace(/\+/g, '-');
+        encodedSource = encodedSource.replace(/\//g, '_');
+        return encodedSource;
+      }
+      const header = { alg: 'HS256', typ: 'JWT' };
+      const now = Math.floor(Date.now() / 1000);
+      const jwtPayload = {
+        orgId: '3a30b5e8-76ce-4e41-84ea-e55886e5ce48',
+        token: { tag: 'public' },
+        iat: now,
+        exp: now + 3600
+      };
+      const stringifiedHeader = base64url(JSON.stringify(header));
+      const stringifiedPayload = base64url(JSON.stringify(jwtPayload));
+      const signature = crypto.createHmac('sha256', apiKey)
+        .update(stringifiedHeader + '.' + stringifiedPayload)
+        .digest();
+      const stringifiedSignature = base64url(signature);
+      const token = stringifiedHeader + '.' + stringifiedPayload + '.' + stringifiedSignature;
+
+      return {
+        statusCode: 200,
+        headers,
+        body: JSON.stringify({
+          success: true,
+          token,
+          assistantId: '2e486e8a-2875-4d99-b6dd-7f1162601874'
+        })
+      };
+    }
+
     // 1. POST /api/vapi/set-webhook
     if (reqPath.includes('set-webhook') && event.httpMethod === 'POST') {
       const payload = JSON.parse(event.body || '{}');

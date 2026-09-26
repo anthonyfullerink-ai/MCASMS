@@ -1809,10 +1809,22 @@
                 endedControls.style.display = 'none';
                 connectingControls.style.display = 'block';
                 statusBadge.className = 'call-status-badge connecting';
-                statusBadge.innerHTML = '<span>Connecting...</span>';
+                statusBadge.innerHTML = '<span>Connecting to Demo Agent...</span>';
+
+                // Fetch dynamic scoped JWT from secure backend
+                let tokenRes = await fetch('/api/vapi/web-token').catch(() => null);
+                if (!tokenRes || !tokenRes.ok) {
+                    tokenRes = await fetch('/.netlify/functions/vapi-live?action=web-token');
+                }
+                const tokenData = await tokenRes.json();
+                if (!tokenData.success || !tokenData.token) {
+                    throw new Error(tokenData.error || 'Failed to acquire secure call token');
+                }
+
+                const targetAssistantId = tokenData.assistantId || ASSISTANT_ID;
 
                 if (!vapi) {
-                    vapi = new Vapi(VAPI_PUBLIC_KEY);
+                    vapi = new Vapi(tokenData.token);
 
                     vapi.on('call-start', () => {
                         connectingControls.style.display = 'none';
@@ -1864,7 +1876,7 @@
                     });
                 }
 
-                await vapi.start(ASSISTANT_ID);
+                await vapi.start(targetAssistantId);
 
             } catch (err) {
                 console.error('Failed to start call:', err);
@@ -1872,7 +1884,7 @@
                 idleControls.style.display = 'block';
                 statusBadge.className = 'call-status-badge';
                 statusBadge.innerHTML = '<span>Ready to Connect</span>';
-                alert('Microphone access was denied or WebRTC is not supported in this browser. Please check browser permissions.');
+                addTranscriptMessage('system', 'Could not connect call: ' + (err.message || 'Please check microphone permissions.'));
             }
         };
 
