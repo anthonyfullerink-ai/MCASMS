@@ -43,18 +43,42 @@ function syncVersionManifest(gradleVer) {
     } catch (e) {}
   }
 
+  // Copy latest compiled APKs if present in build outputs
+  const standardApkSrc = path.join(ROOT_DIR, 'app', 'build', 'outputs', 'apk', 'standard', 'release', 'app-standard-release.apk');
+  const proApkSrc = path.join(ROOT_DIR, 'app', 'build', 'outputs', 'apk', 'pro', 'release', 'app-pro-release.apk');
+  const standardDest = path.join(ROOT_DIR, 'MissedCallAutoSMS.apk');
+  const proDest = path.join(ROOT_DIR, 'MissedCallAutoSMS-Pro.apk');
+
+  if (fs.existsSync(standardApkSrc)) {
+    try {
+      fs.copyFileSync(standardApkSrc, standardDest);
+      console.log('📦 [APK SYNC] Successfully updated root MissedCallAutoSMS.apk from Gradle build output');
+    } catch (e) {
+      console.warn('⚠️ [APK SYNC] Warning copying standard APK:', e.message);
+    }
+  }
+
+  if (fs.existsSync(proApkSrc)) {
+    try {
+      fs.copyFileSync(proApkSrc, proDest);
+      console.log('📦 [APK SYNC] Successfully updated root MissedCallAutoSMS-Pro.apk from Gradle build output');
+    } catch (e) {
+      console.warn('⚠️ [APK SYNC] Warning copying pro APK:', e.message);
+    }
+  }
+
   // Ensure versionCode is at least what's in gradle
   const finalCode = Math.max(vData.versionCode || 0, gradleVer.versionCode);
-  const finalName = gradleVer.versionName || vData.versionName || '1.7.0';
+  const finalName = gradleVer.versionName || vData.versionName || '1.9.0';
 
   const updatedManifest = {
     versionCode: finalCode,
     versionName: finalName,
     downloadUrl: vData.downloadUrl || 'https://raw.githubusercontent.com/anthonyfullerink-ai/MCASMS/main/MissedCallAutoSMS.apk',
-    proDownloadUrl: vData.proDownloadUrl || 'https://raw.githubusercontent.com/anthonyfullerink-ai/MCASMS/main/MissedCallAutoSMS.apk',
+    proDownloadUrl: vData.proDownloadUrl || 'https://raw.githubusercontent.com/anthonyfullerink-ai/MCASMS/main/MissedCallAutoSMS-Pro.apk',
     releaseNotes: vData.releaseNotes || '✅ Latest stability, voice routing, and UI updates.',
-    mandatory: true,
-    minSupportedVersion: Math.max(1, finalCode - 2),
+    mandatory: vData.mandatory !== undefined ? vData.mandatory : false,
+    minSupportedVersion: vData.minSupportedVersion !== undefined ? vData.minSupportedVersion : 1,
     updatedAt: new Date().toISOString()
   };
 

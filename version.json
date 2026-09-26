@@ -4,7 +4,7 @@
   "downloadUrl": "https://raw.githubusercontent.com/anthonyfullerink-ai/MCASMS/main/MissedCallAutoSMS.apk",
   "proDownloadUrl": "https://raw.githubusercontent.com/anthonyfullerink-ai/MCASMS/main/MissedCallAutoSMS-Pro.apk",
   "releaseNotes": "🚀 v1.9.0 Major Release: Native In-App Billing & 1-Tap Minute Packs\n• 💳 Saved Card Vaulting: View and manage your vaulted card securely inside the app\n• ⚡ 1-Tap Minute Reloads: Add 40 minutes for $10 instantly with zero web redirects\n• 🔄 Auto-Billing Refill Engine: Automatically recharge minutes when balance drops below threshold during calls\n• 🎙️ Standard $9.99/mo Voice Management: Native subscribe and cancel controls\n• 🌐 Global Unified Navigation: Consistent responsive menu and smooth scrolling across all web portals",
-  "mandatory": true,
-  "minSupportedVersion": 34,
-  "updatedAt": "2026-09-26T19:32:34.227Z"
+  "mandatory": false,
+  "minSupportedVersion": 1,
+  "updatedAt": "2026-09-26T19:46:13.307Z"
 }
