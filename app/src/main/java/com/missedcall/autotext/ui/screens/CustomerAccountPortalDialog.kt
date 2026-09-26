@@ -95,6 +95,13 @@ fun CustomerAccountPortalDialog(
     var isUnlimitedGateway by remember { mutableStateOf(false) }
     var isLoadingUsage by remember { mutableStateOf(false) }
 
+    var hasPaymentMethod by remember { mutableStateOf(false) }
+    var cardBrand by remember { mutableStateOf("") }
+    var cardLast4 by remember { mutableStateOf("") }
+    var cardExp by remember { mutableStateOf("") }
+    var autoBillingEnabled by remember { mutableStateOf(true) }
+    var isChargingOneTap by remember { mutableStateOf(false) }
+
     var showInAppPayment by remember { mutableStateOf(false) }
     var inAppPaymentUrl by remember { mutableStateOf("") }
     var inAppPaymentTitle by remember { mutableStateOf("Secure Checkout") }
@@ -141,6 +148,34 @@ fun CustomerAccountPortalDialog(
                         }
                     }
                 }
+
+                // Also fetch Customer Payment & Saved Card info
+                try {
+                    val billEndpoint = if (settings.remoteUpdateUrl.contains("localhost") || settings.remoteUpdateUrl.contains("10.0.")) {
+                        "http://10.0.2.2:8000/api/billing/customer-payment-info?key=$key"
+                    } else {
+                        "https://missedcallautosms.com/api/billing/customer-payment-info?key=$key"
+                    }
+                    val billConn = (URL(billEndpoint).openConnection() as HttpURLConnection).apply {
+                        connectTimeout = 4000
+                        readTimeout = 4000
+                    }
+                    if (billConn.responseCode == 200) {
+                        val billBody = billConn.inputStream.bufferedReader().use { it.readText() }
+                        val billJson = JSONObject(billBody)
+                        if (billJson.optBoolean("success", false)) {
+                            withContext(Dispatchers.Main) {
+                                hasPaymentMethod = billJson.optBoolean("hasPaymentMethod", false)
+                                cardBrand = billJson.optString("cardBrand", "").replaceFirstChar { it.uppercase() }
+                                cardLast4 = billJson.optString("cardLast4", "")
+                                val expM = billJson.optInt("cardExpMonth", 0)
+                                val expY = billJson.optInt("cardExpYear", 0)
+                                cardExp = if (expM > 0 && expY > 0) "$expM/$expY" else ""
+                                autoBillingEnabled = billJson.optBoolean("autoBillingEnabled", true)
+                            }
+                        }
+                    }
+                } catch (e: Exception) {}
             } catch (e: Exception) {
             } finally {
                 withContext(Dispatchers.Main) {
@@ -155,6 +190,97 @@ fun CustomerAccountPortalDialog(
         val key = licenseKeyInput.trim().ifBlank { settings.licenseKey.trim() }
         inAppPaymentTitle = "Add Minute Pack ($packTier)"
         inAppPaymentUrl = "https://missedcallautosms.com/api/create-credit-pack-checkout?pack=$packTier&key=${Uri.encode(key)}&email=${Uri.encode(email)}"
+        showInAppPayment = true
+    }
+
+    fun oneTapChargeSavedCard(packTier: Int) {
+        val key = licenseKeyInput.trim().ifBlank { settings.licenseKey.trim() }
+        if (!hasPaymentMethod) {
+            purchaseCreditPack(packTier)
+            return
+        }
+        isChargingOneTap = true
+        coroutineScope.launch(Dispatchers.IO) {
+            try {
+                val endpoint = if (settings.remoteUpdateUrl.contains("localhost") || settings.remoteUpdateUrl.contains("10.0.")) {
+                    "http://10.0.2.2:8000/api/billing/charge-saved-card"
+                } else {
+                    "https://missedcallautosms.com/api/billing/charge-saved-card"
+                }
+                val conn = (URL(endpoint).openConnection() as HttpURLConnection).apply {
+                    requestMethod = "POST"
+                    connectTimeout = 8000
+                    readTimeout = 8000
+                    doOutput = true
+                    setRequestProperty("Content-Type", "application/json; charset=utf-8")
+                    val payload = JSONObject().apply {
+                        put("licenseKey", key)
+                        put("pack", packTier.toString())
+                    }.toString()
+                    outputStream.use { it.write(payload.toByteArray(StandardCharsets.UTF_8)) }
+                }
+                val code = conn.responseCode
+                val stream = if (code in 200..299) conn.inputStream else conn.errorStream
+                val resp = stream?.bufferedReader()?.use { it.readText() } ?: "{}"
+                val json = JSONObject(resp)
+                withContext(Dispatchers.Main) {
+                    isChargingOneTap = false
+                    if (json.optBoolean("success", false)) {
+                        val newBal = json.optDouble("newBalance", liveVoiceMinutesBalance)
+                        val added = json.optInt("minutesAdded", 40)
+                        liveVoiceMinutesBalance = newBal
+                        Toast.makeText(context, "⚡ +$added Minutes Added! Charged to $cardBrand •••• $cardLast4", Toast.LENGTH_LONG).show()
+                    } else {
+                        val errMsg = json.optString("message", "Payment failed")
+                        Toast.makeText(context, "❌ $errMsg", Toast.LENGTH_LONG).show()
+                        purchaseCreditPack(packTier)
+                    }
+                }
+            } catch (e: Exception) {
+                withContext(Dispatchers.Main) {
+                    isChargingOneTap = false
+                    Toast.makeText(context, "Connection error: ${e.message}", Toast.LENGTH_SHORT).show()
+                    purchaseCreditPack(packTier)
+                }
+            }
+        }
+    }
+
+    fun toggleAutoBilling(enabled: Boolean) {
+        val key = licenseKeyInput.trim().ifBlank { settings.licenseKey.trim() }
+        autoBillingEnabled = enabled
+        coroutineScope.launch(Dispatchers.IO) {
+            try {
+                val endpoint = if (settings.remoteUpdateUrl.contains("localhost") || settings.remoteUpdateUrl.contains("10.0.")) {
+                    "http://10.0.2.2:8000/api/billing/toggle-auto-billing"
+                } else {
+                    "https://missedcallautosms.com/api/billing/toggle-auto-billing"
+                }
+                val conn = (URL(endpoint).openConnection() as HttpURLConnection).apply {
+                    requestMethod = "POST"
+                    connectTimeout = 5000
+                    readTimeout = 5000
+                    doOutput = true
+                    setRequestProperty("Content-Type", "application/json; charset=utf-8")
+                    val payload = JSONObject().apply {
+                        put("licenseKey", key)
+                        put("enabled", enabled)
+                    }.toString()
+                    outputStream.use { it.write(payload.toByteArray(StandardCharsets.UTF_8)) }
+                }
+                conn.responseCode
+                withContext(Dispatchers.Main) {
+                    Toast.makeText(context, if (enabled) "✅ Auto-refill enabled (reloads 40 mins at <15 mins)" else "⏸️ Auto-refill disabled", Toast.LENGTH_SHORT).show()
+                }
+            } catch (e: Exception) {}
+        }
+    }
+
+    fun saveOrUpdateCard() {
+        val email = customerEmailInput.trim().ifBlank { settings.customerEmail.trim() }
+        val key = licenseKeyInput.trim().ifBlank { settings.licenseKey.trim() }
+        inAppPaymentTitle = "Save Payment Method"
+        inAppPaymentUrl = "https://missedcallautosms.com/api/billing/create-save-card-session?key=${Uri.encode(key)}&email=${Uri.encode(email)}"
         showInAppPayment = true
     }
 
@@ -332,7 +458,7 @@ fun CustomerAccountPortalDialog(
                                         verticalAlignment = Alignment.CenterVertically,
                                         modifier = Modifier.weight(1f, fill = false)
                                     ) {
-                                        Icon(Icons.Default.Timer, contentDescription = null, tint = Color(0xFF00E676))
+                                        Icon(Icons.Default.Timer, contentDescription = null, tint = Color(0xFF10B981))
                                         Spacer(modifier = Modifier.width(8.dp))
                                         Text(
                                             text = "Voice Minutes & Credit Pack Balance",
@@ -342,7 +468,7 @@ fun CustomerAccountPortalDialog(
                                     }
                                     Spacer(modifier = Modifier.width(8.dp))
                                     Surface(
-                                        color = if (liveVoiceMinutesBalance <= 5.0) RedError else Color(0xFF00E676),
+                                        color = if (liveVoiceMinutesBalance <= 5.0) RedError else Color(0xFF10B981),
                                         shape = RoundedCornerShape(6.dp)
                                     ) {
                                         Text(
@@ -403,7 +529,7 @@ fun CustomerAccountPortalDialog(
                     item {
                         Card(
                             colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.7f)),
-                            border = androidx.compose.foundation.BorderStroke(1.dp, if (isVoiceSubActive) Color(0xFF00E676).copy(alpha = 0.4f) else RedError.copy(alpha = 0.35f)),
+                            border = androidx.compose.foundation.BorderStroke(1.dp, if (isVoiceSubActive) Color(0xFF10B981).copy(alpha = 0.4f) else RedError.copy(alpha = 0.35f)),
                             shape = RoundedCornerShape(16.dp)
                         ) {
                             Column(modifier = Modifier.padding(16.dp)) {
@@ -416,7 +542,7 @@ fun CustomerAccountPortalDialog(
                                         modifier = Modifier.weight(1f).padding(end = 4.dp),
                                         verticalAlignment = Alignment.CenterVertically
                                     ) {
-                                        Icon(if (isVoiceSubActive) Icons.Default.AddCard else Icons.Default.Lock, contentDescription = null, tint = if (isVoiceSubActive) Color(0xFF00E676) else RedError)
+                                        Icon(if (isVoiceSubActive) Icons.Default.AddCard else Icons.Default.Lock, contentDescription = null, tint = if (isVoiceSubActive) Color(0xFF10B981) else RedError)
                                         Spacer(modifier = Modifier.width(8.dp))
                                         Text(
                                             text = if (isVoiceSubActive) "Add Money / Load Credit Pack" else "Add Money / Load Credit Pack 🔒",
@@ -433,7 +559,7 @@ fun CustomerAccountPortalDialog(
                                             Icon(
                                                 Icons.Default.Refresh,
                                                 contentDescription = "Refresh",
-                                                tint = Color(0xFF00E676),
+                                                tint = Color(0xFF10B981),
                                                 modifier = Modifier.size(20.dp)
                                             )
                                         }
@@ -443,7 +569,7 @@ fun CustomerAccountPortalDialog(
                                 if (!isVoiceSubActive) {
                                     Spacer(modifier = Modifier.height(8.dp))
                                     Text(
-                                        text = "🔒 AI Voice Subscription Required ($9.99/mo). You must subscribe to the 24/7 AI Voice Receptionist first to unlock the paywall before you can load minute packs to trigger the agent.",
+                                        text = "🔒 AI Voice Subscription Required ($9.99/mo). Subscribe to unlock your dedicated carrier line (*71) and voice answering agent.",
                                         style = MaterialTheme.typography.bodySmall,
                                         color = RedError
                                     )
@@ -456,74 +582,148 @@ fun CustomerAccountPortalDialog(
                                     ) {
                                         Icon(Icons.Default.Star, contentDescription = null, modifier = Modifier.size(16.dp))
                                         Spacer(modifier = Modifier.width(6.dp))
-                                        Text("⭐ Subscribe to Voice Pro ($9.99/mo) First", fontWeight = FontWeight.Bold)
+                                        Text("⭐ Subscribe to Voice Pro ($9.99/mo)", fontWeight = FontWeight.Bold)
                                     }
                                 } else {
-                                    Text(
-                                        text = "Top up your dedicated AI telephone line with instant Stripe Checkout. Credits never expire and roll over automatically.",
-                                        style = MaterialTheme.typography.bodySmall,
-                                        color = MaterialTheme.colorScheme.onSurfaceVariant
-                                    )
+                                    // ── SAVED CARD & AUTO-BILLING STATUS CARD ──
+                                    Surface(
+                                        shape = RoundedCornerShape(12.dp),
+                                        color = Color(0xFF0F172A),
+                                        border = androidx.compose.foundation.BorderStroke(1.dp, Color(0xFF1E293B)),
+                                        modifier = Modifier.fillMaxWidth()
+                                    ) {
+                                        Column(modifier = Modifier.padding(12.dp)) {
+                                            Row(
+                                                modifier = Modifier.fillMaxWidth(),
+                                                horizontalArrangement = Arrangement.SpaceBetween,
+                                                verticalAlignment = Alignment.CenterVertically
+                                            ) {
+                                                Row(verticalAlignment = Alignment.CenterVertically) {
+                                                    Icon(
+                                                        if (hasPaymentMethod) Icons.Default.CreditCard else Icons.Default.AddCard,
+                                                        contentDescription = null,
+                                                        tint = if (hasPaymentMethod) Color(0xFF38BDF8) else Color(0xFF94A3B8),
+                                                        modifier = Modifier.size(18.dp)
+                                                    )
+                                                    Spacer(modifier = Modifier.width(8.dp))
+                                                    Text(
+                                                        text = if (hasPaymentMethod) "$cardBrand •••• $cardLast4 (Exp $cardExp)" else "No Saved Card On File",
+                                                        style = MaterialTheme.typography.bodySmall,
+                                                        fontWeight = FontWeight.Bold,
+                                                        color = Color.White
+                                                    )
+                                                }
+                                                TextButton(
+                                                    onClick = { saveOrUpdateCard() },
+                                                    contentPadding = PaddingValues(horizontal = 8.dp, vertical = 2.dp)
+                                                ) {
+                                                    Text(
+                                                        text = if (hasPaymentMethod) "Update" else "+ Save Card",
+                                                        fontSize = 11.sp,
+                                                        fontWeight = FontWeight.Bold,
+                                                        color = Color(0xFF38BDF8)
+                                                    )
+                                                }
+                                            }
 
-                                    Spacer(modifier = Modifier.height(12.dp))
+                                            Spacer(modifier = Modifier.height(8.dp))
+                                            HorizontalDivider(color = Color(0xFF1E293B))
+                                            Spacer(modifier = Modifier.height(8.dp))
 
-                                    // 2x2 Grid of 1-Tap Stripe Reload Buttons
+                                            // Auto-Billing Toggle
+                                            Row(
+                                                modifier = Modifier.fillMaxWidth(),
+                                                horizontalArrangement = Arrangement.SpaceBetween,
+                                                verticalAlignment = Alignment.CenterVertically
+                                            ) {
+                                                Column(modifier = Modifier.weight(1f)) {
+                                                    Text("Auto-Refill Balance", fontWeight = FontWeight.SemiBold, fontSize = 12.sp, color = Color.White)
+                                                    Text("Auto-charges $10 (+40 mins) to card when under 15 mins", fontSize = 10.sp, color = Color(0xFF94A3B8))
+                                                }
+                                                Switch(
+                                                    checked = autoBillingEnabled,
+                                                    onCheckedChange = { toggleAutoBilling(it) },
+                                                    enabled = hasPaymentMethod
+                                                )
+                                            }
+                                        }
+                                    }
+
+                                    Spacer(modifier = Modifier.height(14.dp))
+
+                                    // Quick 1-Tap $10 Recharge Action
+                                    Button(
+                                        onClick = { oneTapChargeSavedCard(10) },
+                                        enabled = !isChargingOneTap,
+                                        modifier = Modifier.fillMaxWidth().height(48.dp),
+                                        colors = ButtonDefaults.buttonColors(containerColor = Color(0xFF2563EB)),
+                                        shape = RoundedCornerShape(10.dp)
+                                    ) {
+                                        if (isChargingOneTap) {
+                                            CircularProgressIndicator(modifier = Modifier.size(18.dp), color = Color.White, strokeWidth = 2.dp)
+                                            Spacer(modifier = Modifier.width(8.dp))
+                                            Text("Charging Card in Background...", fontSize = 12.sp, fontWeight = FontWeight.Bold)
+                                        } else {
+                                            Icon(Icons.Default.Bolt, contentDescription = null, modifier = Modifier.size(16.dp))
+                                            Spacer(modifier = Modifier.width(6.dp))
+                                            Text(
+                                                if (hasPaymentMethod) "⚡ 1-Tap Add $10 Pack (+40 Mins)" else "Add $10 Pack (+40 Mins)",
+                                                fontWeight = FontWeight.Bold,
+                                                fontSize = 13.sp
+                                            )
+                                        }
+                                    }
+
+                                    Spacer(modifier = Modifier.height(10.dp))
+
+                                    // 2x2 Grid of Additional Reload Buttons
                                     Row(
                                         modifier = Modifier.fillMaxWidth(),
                                         horizontalArrangement = Arrangement.spacedBy(8.dp)
                                     ) {
-                                    OutlinedButton(
-                                        onClick = { purchaseCreditPack(10) },
-                                        modifier = Modifier.weight(1f),
-                                        shape = RoundedCornerShape(10.dp)
-                                    ) {
-                                        Column(horizontalAlignment = Alignment.CenterHorizontally) {
-                                            Text("$10 Starter", fontWeight = FontWeight.Bold, fontSize = 12.sp)
-                                            Text("40 mins ($0.25/m)", fontSize = 10.sp, color = MaterialTheme.colorScheme.onSurfaceVariant)
+                                        OutlinedButton(
+                                            onClick = { oneTapChargeSavedCard(25) },
+                                            modifier = Modifier.weight(1f),
+                                            shape = RoundedCornerShape(10.dp),
+                                            enabled = !isChargingOneTap
+                                        ) {
+                                            Column(horizontalAlignment = Alignment.CenterHorizontally) {
+                                                Text("$25 Growth", fontWeight = FontWeight.Bold, fontSize = 12.sp)
+                                                Text("115 mins (+15 free)", fontSize = 10.sp, color = Color(0xFF10B981))
+                                            }
+                                        }
+
+                                        OutlinedButton(
+                                            onClick = { oneTapChargeSavedCard(50) },
+                                            modifier = Modifier.weight(1f),
+                                            shape = RoundedCornerShape(10.dp),
+                                            enabled = !isChargingOneTap
+                                        ) {
+                                            Column(horizontalAlignment = Alignment.CenterHorizontally) {
+                                                Text("$50 Pro", fontWeight = FontWeight.Bold, fontSize = 12.sp)
+                                                Text("250 mins (+50 free)", fontSize = 10.sp, color = Color(0xFF10B981))
+                                            }
                                         }
                                     }
 
-                                    Button(
-                                        onClick = { purchaseCreditPack(25) },
-                                        modifier = Modifier.weight(1f),
-                                        colors = ButtonDefaults.buttonColors(containerColor = Color(0xFF00E676)),
-                                        shape = RoundedCornerShape(10.dp)
+                                    Spacer(modifier = Modifier.height(8.dp))
+
+                                    Row(
+                                        modifier = Modifier.fillMaxWidth(),
+                                        horizontalArrangement = Arrangement.spacedBy(8.dp)
                                     ) {
-                                        Column(horizontalAlignment = Alignment.CenterHorizontally) {
-                                            Text("$25 Growth", fontWeight = FontWeight.Black, fontSize = 12.sp, color = Color.Black)
-                                            Text("115 mins (+15 free)", fontSize = 10.sp, color = Color.Black.copy(alpha = 0.8f))
+                                        OutlinedButton(
+                                            onClick = { oneTapChargeSavedCard(100) },
+                                            modifier = Modifier.weight(1f),
+                                            shape = RoundedCornerShape(10.dp),
+                                            enabled = !isChargingOneTap
+                                        ) {
+                                            Column(horizontalAlignment = Alignment.CenterHorizontally) {
+                                                Text("$100 Fleet", fontWeight = FontWeight.Bold, fontSize = 12.sp)
+                                                Text("550 mins (+150 free)", fontSize = 10.sp, color = Color(0xFF10B981))
+                                            }
                                         }
                                     }
-                                }
-
-                                Spacer(modifier = Modifier.height(8.dp))
-
-                                Row(
-                                    modifier = Modifier.fillMaxWidth(),
-                                    horizontalArrangement = Arrangement.spacedBy(8.dp)
-                                ) {
-                                    OutlinedButton(
-                                        onClick = { purchaseCreditPack(50) },
-                                        modifier = Modifier.weight(1f),
-                                        shape = RoundedCornerShape(10.dp)
-                                    ) {
-                                        Column(horizontalAlignment = Alignment.CenterHorizontally) {
-                                            Text("$50 Pro", fontWeight = FontWeight.Bold, fontSize = 12.sp)
-                                            Text("250 mins (+50 free)", fontSize = 10.sp, color = MaterialTheme.colorScheme.onSurfaceVariant)
-                                        }
-                                    }
-
-                                    OutlinedButton(
-                                        onClick = { purchaseCreditPack(100) },
-                                        modifier = Modifier.weight(1f),
-                                        shape = RoundedCornerShape(10.dp)
-                                    ) {
-                                        Column(horizontalAlignment = Alignment.CenterHorizontally) {
-                                            Text("$100 Fleet", fontWeight = FontWeight.Bold, fontSize = 12.sp)
-                                            Text("550 mins (+150 free)", fontSize = 10.sp, color = MaterialTheme.colorScheme.onSurfaceVariant)
-                                        }
-                                    }
-                                }
                                 
                                 Spacer(modifier = Modifier.height(12.dp))
                                 
@@ -1043,14 +1243,14 @@ fun CustomerAccountPortalDialog(
                 Row(verticalAlignment = Alignment.CenterVertically) {
                     Icon(Icons.Default.Warning, contentDescription = null, tint = RedError)
                     Spacer(modifier = Modifier.width(8.dp))
-                    Text("Cancel Voice Pro ($29/mo)")
+                    Text("Cancel AI Voice ($9.99/mo)")
                 }
             },
             text = {
                 val carrier = CarrierForwardingManager.detectCarrier(context)
                 val codes = CarrierForwardingManager.computeCodes(carrier, "")
                 Text(
-                    text = "Are you sure you want to cancel your Voice Pro ($9.99/mo) subscription?\n\n" +
+                    text = "Are you sure you want to cancel your AI Voice ($9.99/mo) subscription?\n\n" +
                             "1. Your Stripe billing will immediately be cancelled ($0 renewal).\n" +
                             "2. The app will automatically launch your phone dialer with your carrier deactivation code (${codes.deactivateCode}). Simply tap Call to stop forwarding calls to AI."
                 )
@@ -1067,9 +1267,9 @@ fun CustomerAccountPortalDialog(
                             withContext(Dispatchers.IO) {
                                 try {
                                     val endpoint = if (settings.remoteUpdateUrl.contains("localhost") || settings.remoteUpdateUrl.contains("10.0.")) {
-                                        "http://10.0.2.2:8000/api/vapi/cancel-subscription"
+                                        "http://10.0.2.2:8000/api/billing/cancel-voice-native"
                                     } else {
-                                        "https://missedcallautosms.com/api/vapi/cancel-subscription"
+                                        "https://missedcallautosms.com/api/billing/cancel-voice-native"
                                     }
                                     val url = URL(endpoint)
                                     val conn = url.openConnection() as HttpURLConnection
@@ -1078,7 +1278,10 @@ fun CustomerAccountPortalDialog(
                                     conn.setRequestProperty("Content-Type", "application/json; charset=utf-8")
                                     conn.connectTimeout = 7000
                                     conn.readTimeout = 7000
-                                    val payload = """{"email":"$email"}"""
+                                    val payload = JSONObject().apply {
+                                        put("licenseKey", settings.licenseKey.trim())
+                                        put("email", email)
+                                    }.toString()
                                     conn.outputStream.use { it.write(payload.toByteArray(StandardCharsets.UTF_8)) }
                                     conn.responseCode
                                 } catch (e: Exception) {

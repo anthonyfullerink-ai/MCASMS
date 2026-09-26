@@ -22,22 +22,30 @@
     <meta property="og:title" content="Missed Call Auto SMS Blog | Turn Missed Calls Into Revenue">
     <meta property="og:description" content="Proven playbooks on speed-to-lead, ad spend recovery, and why dedicated Android hardware appliances beat $297/mo SaaS subscriptions.">
 
+    <meta name="theme-color" content="#080C16">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800;900&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="/assets/css/navbar.css">
+
     <style>
         :root {
-            --bg: #0D1017;
-            --card: #161B22;
-            --border: #303644;
-            --primary: #00E676;
-            --primary-glow: rgba(0, 230, 118, 0.2);
+            --bg: #080C16;
+            --card: #0F172A;
+            --border: #1E293B;
+            --primary: #2563EB;
+            --primary-hover: #1D4ED8;
+            --success: #10B981;
+            --primary-glow: rgba(37, 99, 235, 0.2);
             --text: #FFFFFF;
-            --muted: #8B949E;
-            --accent: #58A6FF;
-            --warning: #FFB300;
+            --muted: #94A3B8;
+            --accent: #38BDF8;
+            --warning: #F59E0B;
         }
 
         * { box-sizing: border-box; }
         body {
-            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+            font-family: 'Plus Jakarta Sans', -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
             background-color: var(--bg);
             color: var(--text);
             margin: 0;
@@ -86,7 +94,7 @@
         .nav-link:hover, .nav-link.active { color: var(--primary); }
         .btn-nav-trial {
             background: var(--primary);
-            color: #000;
+            color: #FFF;
             font-weight: bold;
             padding: 8px 18px;
             border-radius: 20px;
@@ -490,35 +498,90 @@
 </head>
 <body>
 
-    <nav class="nav">
-        <div class="nav-inner">
-            <a href="/" class="nav-logo">
-                <img src="/favicon.svg?v=2" alt="Missed Call Auto SMS Logo" width="24" height="24" style="vertical-align: middle; border-radius: 6px; display: inline-block; margin-right: 8px;"><span>Missed Call Auto SMS</span>
+    <!-- Top Announcement Strip -->
+    <div class="global-announcement-bar">
+        <span>📚 <strong>Knowledge Hub:</strong> Speed-to-Lead Psychology, Local Contractor Guides &amp; Carrier P2P Playbooks</span>
+        <a href="/#pricing">Get Missed Call Auto SMS &rarr;</a>
+    </div>
+
+    <!-- Global Unified Navigation Header -->
+    <header class="global-nav-wrapper">
+        <div class="global-nav-container">
+            <a href="/" class="global-logo">
+                <img src="/assets/logo.svg" alt="Missed Call Auto SMS" width="36" height="36" class="global-logo-img">
+                <div class="global-logo-text">
+                    <span class="global-logo-main">Missed Call</span>
+                    <span class="global-logo-accent">Auto SMS</span>
+                </div>
             </a>
-            <div class="nav-links">
-                <a href="/blog" class="nav-link active">Blog</a>
-                <a href="/#features" class="nav-link">Features</a>
-                <a href="/#pricing" class="nav-link">Pricing</a>
-                <a href="https://buy.stripe.com/5kQ5kDbBI8hkdao8WZ2go0c" class="btn-nav-trial">Free 3-Day Trial</a>
+
+            <nav class="global-nav-links">
+                <a href="/#demo-stage" class="global-nav-link">Overview</a>
+                <a href="/#features" class="global-nav-link">Features</a>
+                <a href="/voice" class="global-nav-link">AI Voice <span class="global-link-badge">*71</span></a>
+                <a href="/pro" class="global-nav-link">Pro Gateway <span class="global-link-badge">API</span></a>
+                <a href="/#pricing" class="global-nav-link">Pricing</a>
+                <a href="/agency" class="global-nav-link">Agency Fleet</a>
+                <a href="/developers" class="global-nav-link">Developers</a>
+                <a href="/blog" class="global-nav-link active">Blog</a>
+                <a href="/support" class="global-nav-link">Support</a>
+            </nav>
+
+            <div class="global-nav-actions">
+                <a href="tel:+17326609121" class="global-nav-phone">
+                    <span class="phone-icon">📞</span>
+                    <span>(732) 660-9121</span>
+                </a>
+                <a href="https://buy.stripe.com/5kQ5kDbBI8hkdao8WZ2go0c" class="global-btn-trial">
+                    3-Day Trial ($0) &rarr;
+                </a>
+                <button id="globalMobileMenuBtn" class="global-mobile-menu-btn" onclick="toggleGlobalMobileMenu()" aria-label="Toggle navigation">
+                    <span></span>
+                    <span></span>
+                    <span></span>
+                </button>
             </div>
-            <button id="mobileMenuBtn" class="mobile-menu-btn" onclick="toggleMobileMenu()" aria-label="Open Navigation Menu">
-                <span></span>
-                <span></span>
-                <span></span>
-            </button>
         </div>
-        <!-- Mobile Drawer -->
-        <div id="mobileNavDrawer" class="mobile-nav-drawer">
-            <a href="/" class="mobile-nav-link">🏠 Home Landing Page <span>&rsaquo;</span></a>
-            <a href="/blog" class="mobile-nav-link" style="color: var(--primary);">📚 Blog Articles & Guides <span>&rsaquo;</span></a>
-            <a href="/#features" class="mobile-nav-link">⚡ Features & Demo <span>&rsaquo;</span></a>
-            <a href="/#comparison" class="mobile-nav-link">🆚 Appliance vs SaaS <span>&rsaquo;</span></a>
-            <a href="/#checkout" class="mobile-nav-link">💰 Pricing ($49.99 Flagship / $99/mo Front Desk / $299 Pro) <span>&rsaquo;</span></a>
-            <div style="margin-top: 10px;">
-                <a href="https://buy.stripe.com/5kQ5kDbBI8hkdao8WZ2go0c" class="btn-nav-trial" style="display: block; text-align: center; width: 100%; padding: 12px; font-size: 15px;">🎁 Start 3-Day Free Trial ($0 Today)</a>
+
+        <!-- Global Mobile Drawer -->
+        <div id="globalMobileDrawer" class="global-mobile-drawer">
+            <a href="/#demo-stage" class="global-mobile-nav-link" onclick="closeGlobalMobileMenu()">
+                <span>⚡ Overview &amp; Interactive Demo</span> <span class="link-arrow">&rsaquo;</span>
+            </a>
+            <a href="/#features" class="global-mobile-nav-link" onclick="closeGlobalMobileMenu()">
+                <span>🛡️ Features &amp; P2P Hardware Engine</span> <span class="link-arrow">&rsaquo;</span>
+            </a>
+            <a href="/voice" class="global-mobile-nav-link" onclick="closeGlobalMobileMenu()">
+                <span>🎙️ 24/7 AI Voice &amp; Conversational SMS</span> <span class="link-arrow">&rsaquo;</span>
+            </a>
+            <a href="/pro" class="global-mobile-nav-link" onclick="closeGlobalMobileMenu()">
+                <span>🛠️ Pro Automation Gateway (Webhooks)</span> <span class="link-arrow">&rsaquo;</span>
+            </a>
+            <a href="/#pricing" class="global-mobile-nav-link" onclick="closeGlobalMobileMenu()">
+                <span>💰 Transparent Pricing ($49.99 / $299.99)</span> <span class="link-arrow">&rsaquo;</span>
+            </a>
+            <a href="/agency" class="global-mobile-nav-link" onclick="closeGlobalMobileMenu()">
+                <span>🏢 Agency &amp; Reseller Fleet</span> <span class="link-arrow">&rsaquo;</span>
+            </a>
+            <a href="/developers" class="global-mobile-nav-link" onclick="closeGlobalMobileMenu()">
+                <span>💻 Developer Webhook API Docs</span> <span class="link-arrow">&rsaquo;</span>
+            </a>
+            <a href="/blog" class="global-mobile-nav-link" onclick="closeGlobalMobileMenu()" style="color: #38BDF8;">
+                <span>📚 Case Studies &amp; Playbooks</span> <span class="link-arrow">&rsaquo;</span>
+            </a>
+            <a href="/support" class="global-mobile-nav-link" onclick="closeGlobalMobileMenu()">
+                <span>🎫 Customer Support Desk</span> <span class="link-arrow">&rsaquo;</span>
+            </a>
+            <div class="global-mobile-drawer-cta">
+                <a href="tel:+17326609121" class="global-nav-phone" style="justify-content: center; width: 100%;">
+                    <span class="phone-icon">📞</span> Call Live Demo: (732) 660-9121
+                </a>
+                <a href="https://buy.stripe.com/5kQ5kDbBI8hkdao8WZ2go0c" class="global-btn-trial" style="width: 100%;">
+                    🎁 Start 3-Day Free Trial ($0.00 Today) &rarr;
+                </a>
             </div>
         </div>
-    </nav>
+    </header>
 
     <header class="hero">
         <div class="hero-badge">📚 Business Growth & Lead Recovery Insights</div>
@@ -637,25 +700,7 @@
         loadPosts();
     </script>
 
-<script>
-function toggleMobileMenu() {
-    const btn = document.getElementById('mobileMenuBtn');
-    const drawer = document.getElementById('mobileNavDrawer');
-    if (!btn || !drawer) return;
-    btn.classList.toggle('active');
-    drawer.classList.toggle('open');
-}
-document.addEventListener('click', function(e) {
-    const btn = document.getElementById('mobileMenuBtn');
-    const drawer = document.getElementById('mobileNavDrawer');
-    if (drawer && drawer.classList.contains('open')) {
-        if (!drawer.contains(e.target) && !btn.contains(e.target)) {
-            btn.classList.remove('active');
-            drawer.classList.remove('open');
-        }
-    }
-});
-</script>
-
+<!-- Global Unified Nav Script -->
+<script src="/assets/js/navbar.js" defer></script>
 </body>
 </html>

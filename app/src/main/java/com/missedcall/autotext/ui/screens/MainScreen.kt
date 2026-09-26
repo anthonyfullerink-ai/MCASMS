@@ -3,6 +3,7 @@ package com.missedcall.autotext.ui.screens
 import android.widget.Toast
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.*
@@ -11,8 +12,10 @@ import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.draw.scale
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.PasswordVisualTransformation
+import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.missedcall.autotext.data.AppSettings
@@ -21,9 +24,7 @@ import com.missedcall.autotext.data.db.VoiceCallEvent
 import com.missedcall.autotext.data.license.DeveloperLicenseRecord
 import com.missedcall.autotext.remote.RemoteUpdateManager
 import com.missedcall.autotext.remote.UpdateInfo
-import com.missedcall.autotext.ui.theme.ActiveGreenContainer
-import com.missedcall.autotext.ui.theme.ActiveGreenText
-import com.missedcall.autotext.ui.theme.GrayPaused
+import com.missedcall.autotext.ui.theme.*
 import kotlinx.coroutines.launch
 
 import androidx.compose.ui.graphics.Color
@@ -256,34 +257,53 @@ fun MainScreen(
             TopAppBar(
                 title = {
                     Column(
-                        modifier = Modifier.clickable { showProfileDialog = true }
+                        modifier = Modifier
+                            .clickable { showProfileDialog = true }
+                            .padding(vertical = 2.dp)
                     ) {
                         Text(
                             text = "Missed Call Auto SMS",
                             fontWeight = FontWeight.Bold,
-                            style = MaterialTheme.typography.titleMedium
+                            fontSize = 15.sp,
+                            maxLines = 1,
+                            softWrap = false,
+                            overflow = TextOverflow.Ellipsis
                         )
-                        Text(
-                            text = if (settings.masterEnabled) "Appliance: ACTIVE" else "Appliance: PAUSED",
-                            style = MaterialTheme.typography.bodySmall,
-                            color = if (settings.masterEnabled) ActiveGreenText else GrayPaused
-                        )
+                        Row(
+                            verticalAlignment = Alignment.CenterVertically,
+                            modifier = Modifier.padding(top = 1.dp)
+                        ) {
+                            Surface(
+                                shape = CircleShape,
+                                color = if (settings.masterEnabled) EmeraldSuccess else GrayPaused,
+                                modifier = Modifier.size(6.dp)
+                            ) {}
+                            Spacer(modifier = Modifier.width(4.dp))
+                            Text(
+                                text = if (settings.masterEnabled) "Appliance: ACTIVE" else "Appliance: PAUSED",
+                                style = MaterialTheme.typography.bodySmall,
+                                fontSize = 10.sp,
+                                fontWeight = FontWeight.SemiBold,
+                                color = if (settings.masterEnabled) EmeraldLight else GrayPaused
+                            )
+                        }
                     }
                 },
                 actions = {
                     // AI Activity Notifications Bell Icon
                     val unreadNotifs = remember(notifications) { notifications.count { !it.isRead } }
                     IconButton(
-                        onClick = { showNotificationsPanel = true }
+                        onClick = { showNotificationsPanel = true },
+                        modifier = Modifier.size(36.dp)
                     ) {
                         BadgedBox(
                             badge = {
                                 if (unreadNotifs > 0) {
                                     Badge(
-                                        containerColor = Color(0xFF00E676),
-                                        contentColor = Color.Black
+                                        containerColor = SapphirePrimary,
+                                        contentColor = Color.White
                                     ) {
-                                        Text("$unreadNotifs", fontSize = 10.sp, fontWeight = FontWeight.Bold)
+                                        Text("$unreadNotifs", fontSize = 9.sp, fontWeight = FontWeight.Bold)
                                     }
                                 }
                             }
@@ -291,86 +311,165 @@ fun MainScreen(
                             Icon(
                                 Icons.Default.Notifications,
                                 contentDescription = "AI Activity Feed",
-                                tint = if (unreadNotifs > 0) Color(0xFF00E676) else MaterialTheme.colorScheme.onSurfaceVariant,
-                                modifier = Modifier.size(24.dp)
+                                tint = if (unreadNotifs > 0) SapphireLight else TextMuted,
+                                modifier = Modifier.size(20.dp)
                             )
                         }
                     }
 
-                    // Profile Dialog Icon
+                    // Profile / Account Dialog Icon
                     IconButton(
-                        onClick = { showProfileDialog = true }
+                        onClick = { showProfileDialog = true },
+                        modifier = Modifier.size(36.dp)
                     ) {
                         Icon(
                             Icons.Default.AccountCircle,
                             contentDescription = "My Profile & Account",
-                            tint = MaterialTheme.colorScheme.primary,
-                            modifier = Modifier.size(26.dp)
-                        )
-                    }
-
-                    // Global Settings (n8n Webhooks, Dual SIM, Battery, OTA)
-                    IconButton(
-                        onClick = { showGlobalSettingsDialog = true }
-                    ) {
-                        Icon(
-                            Icons.Default.Settings,
-                            contentDescription = "Global Settings & n8n",
-                            tint = MaterialTheme.colorScheme.onSurfaceVariant,
-                            modifier = Modifier.size(24.dp)
+                            tint = SapphireLight,
+                            modifier = Modifier.size(22.dp)
                         )
                     }
 
                     // Master Power Toggle
-                    Surface(
-                        shape = RoundedCornerShape(20.dp),
-                        color = if (settings.masterEnabled) ActiveGreenContainer else GrayPaused.copy(alpha = 0.2f),
-                        modifier = Modifier.padding(start = 2.dp, end = 10.dp)
-                    ) {
-                        Row(
-                            verticalAlignment = Alignment.CenterVertically,
-                            modifier = Modifier.padding(horizontal = 6.dp, vertical = 2.dp)
-                        ) {
-                            Icon(
-                                imageVector = Icons.Default.PowerSettingsNew,
-                                contentDescription = "Master Switch",
-                                tint = if (settings.masterEnabled) ActiveGreenText else GrayPaused,
-                                modifier = Modifier.size(18.dp)
-                            )
-                            Spacer(modifier = Modifier.width(4.dp))
-                            Switch(
-                                checked = settings.masterEnabled,
-                                onCheckedChange = { isChecked ->
-                                    onSettingsChanged(settings.copy(masterEnabled = isChecked))
-                                },
-                                colors = SwitchDefaults.colors(
-                                    checkedThumbColor = ActiveGreenText,
-                                    checkedTrackColor = ActiveGreenContainer
-                                )
-                            )
-                        }
-                    }
+                    Switch(
+                        checked = settings.masterEnabled,
+                        onCheckedChange = { isChecked ->
+                            onSettingsChanged(settings.copy(masterEnabled = isChecked))
+                        },
+                        colors = SwitchDefaults.colors(
+                            checkedThumbColor = EmeraldLight,
+                            checkedTrackColor = EmeraldContainer,
+                            uncheckedThumbColor = GrayPaused,
+                            uncheckedTrackColor = DarkSurfaceElevated
+                        ),
+                        modifier = Modifier
+                            .padding(end = 6.dp)
+                            .scale(0.8f)
+                    )
                 },
                 colors = TopAppBarDefaults.topAppBarColors(
                     containerColor = MaterialTheme.colorScheme.surface
                 )
             )
+        },
+        bottomBar = {
+            NavigationBar(
+                containerColor = DarkSurface,
+                tonalElevation = 8.dp
+            ) {
+                // Tab 0: Status Hub
+                NavigationBarItem(
+                    selected = selectedTab == 0,
+                    onClick = { selectedTab = 0 },
+                    icon = {
+                        Icon(
+                            imageVector = Icons.Default.Speed,
+                            contentDescription = "Status Hub"
+                        )
+                    },
+                    label = { Text("Status", fontSize = 11.sp, fontWeight = if (selectedTab == 0) FontWeight.Bold else FontWeight.Normal) },
+                    colors = NavigationBarItemDefaults.colors(
+                        selectedIconColor = SapphireLight,
+                        selectedTextColor = SapphireLight,
+                        indicatorColor = SapphireContainerSubtle,
+                        unselectedIconColor = TextMuted,
+                        unselectedTextColor = TextMuted
+                    )
+                )
+
+                // Tab 1: Auto-SMS
+                NavigationBarItem(
+                    selected = selectedTab == 1,
+                    onClick = { selectedTab = 1 },
+                    icon = {
+                        Icon(
+                            imageVector = Icons.Default.ChatBubble,
+                            contentDescription = "Auto-SMS"
+                        )
+                    },
+                    label = { Text("Auto-SMS", fontSize = 11.sp, fontWeight = if (selectedTab == 1) FontWeight.Bold else FontWeight.Normal) },
+                    colors = NavigationBarItemDefaults.colors(
+                        selectedIconColor = SapphireLight,
+                        selectedTextColor = SapphireLight,
+                        indicatorColor = SapphireContainerSubtle,
+                        unselectedIconColor = TextMuted,
+                        unselectedTextColor = TextMuted
+                    )
+                )
+
+                // Tab 2: Voice AI
+                val unreadVoiceCalls = remember(voiceCalls) { voiceCalls.count { !it.isRead } }
+                NavigationBarItem(
+                    selected = selectedTab == 2,
+                    onClick = { selectedTab = 2 },
+                    icon = {
+                        BadgedBox(
+                            badge = {
+                                if (unreadVoiceCalls > 0) {
+                                    Badge(containerColor = SapphirePrimary, contentColor = Color.White) {
+                                        Text("$unreadVoiceCalls", fontSize = 9.sp)
+                                    }
+                                }
+                            }
+                        ) {
+                            Icon(
+                                imageVector = Icons.Default.RecordVoiceOver,
+                                contentDescription = "Voice AI"
+                            )
+                        }
+                    },
+                    label = { Text("Voice AI", fontSize = 11.sp, fontWeight = if (selectedTab == 2) FontWeight.Bold else FontWeight.Normal) },
+                    colors = NavigationBarItemDefaults.colors(
+                        selectedIconColor = SapphireLight,
+                        selectedTextColor = SapphireLight,
+                        indicatorColor = SapphireContainerSubtle,
+                        unselectedIconColor = TextMuted,
+                        unselectedTextColor = TextMuted
+                    )
+                )
+
+                // Tab 3: Activity Logs
+                NavigationBarItem(
+                    selected = selectedTab == 3,
+                    onClick = { selectedTab = 3 },
+                    icon = {
+                        Icon(
+                            imageVector = Icons.Default.History,
+                            contentDescription = "Activity Logs"
+                        )
+                    },
+                    label = { Text("Logs", fontSize = 11.sp, fontWeight = if (selectedTab == 3) FontWeight.Bold else FontWeight.Normal) },
+                    colors = NavigationBarItemDefaults.colors(
+                        selectedIconColor = SapphireLight,
+                        selectedTextColor = SapphireLight,
+                        indicatorColor = SapphireContainerSubtle,
+                        unselectedIconColor = TextMuted,
+                        unselectedTextColor = TextMuted
+                    )
+                )
+
+                // Tab 4: Central Settings Control Center
+                NavigationBarItem(
+                    selected = selectedTab == 4,
+                    onClick = { selectedTab = 4 },
+                    icon = {
+                        Icon(
+                            imageVector = Icons.Default.Settings,
+                            contentDescription = "Settings"
+                        )
+                    },
+                    label = { Text("Settings", fontSize = 11.sp, fontWeight = if (selectedTab == 4) FontWeight.Bold else FontWeight.Normal) },
+                    colors = NavigationBarItemDefaults.colors(
+                        selectedIconColor = SapphireLight,
+                        selectedTextColor = SapphireLight,
+                        indicatorColor = SapphireContainerSubtle,
+                        unselectedIconColor = TextMuted,
+                        unselectedTextColor = TextMuted
+                    )
+                )
+            }
         }
     ) { innerPadding ->
-        val unreadVoiceCalls = remember(voiceCalls) { voiceCalls.count { !it.isRead } }
-
-        val isPro = remember(settings.licenseKey) {
-            settings.licenseKey.contains("PRO", ignoreCase = true) ||
-            settings.licenseKey.contains("DEV", ignoreCase = true) ||
-            settings.licenseKey.contains("DEMO", ignoreCase = true) ||
-            settings.licenseKey.contains("MASTER", ignoreCase = true) ||
-            com.missedcall.autotext.BuildConfig.IS_PRO_EDITION
-        }
-
-        val isVoiceActive = remember(settings.licenseKey, settings.voiceSubscriptionActive) {
-            isDeveloperKey || settings.voiceSubscriptionActive || settings.licenseKey.contains("VOICE", ignoreCase = true)
-        }
-
         Column(
             modifier = Modifier
                 .fillMaxSize()
@@ -424,53 +523,6 @@ fun MainScreen(
                 }
             }
 
-            ScrollableTabRow(
-                selectedTabIndex = selectedTab,
-                edgePadding = 8.dp,
-                modifier = Modifier.fillMaxWidth()
-            ) {
-                Tab(
-                    selected = selectedTab == 0,
-                    onClick = { selectedTab = 0 },
-                    text = { Text("Dashboard", fontSize = 11.sp, maxLines = 1, fontWeight = if (selectedTab == 0) FontWeight.Bold else FontWeight.Normal) },
-                    icon = { Icon(Icons.Default.Dashboard, contentDescription = null, modifier = Modifier.size(18.dp)) }
-                )
-                Tab(
-                    selected = selectedTab == 1,
-                    onClick = { selectedTab = 1 },
-                    text = { Text("Auto-SMS", fontSize = 11.sp, maxLines = 1, fontWeight = if (selectedTab == 1) FontWeight.Bold else FontWeight.Normal) },
-                    icon = { Icon(Icons.Default.ChatBubble, contentDescription = null, modifier = Modifier.size(18.dp)) }
-                )
-                Tab(
-                    selected = selectedTab == 2,
-                    onClick = { selectedTab = 2 },
-                    text = {
-                        val label = if (isVoiceActive) {
-                            if (unreadVoiceCalls > 0) "Voice ($unreadVoiceCalls)" else "Voice"
-                        } else {
-                            "Voice 🔒"
-                        }
-                        Text(label, fontSize = 11.sp, maxLines = 1, fontWeight = if (selectedTab == 2) FontWeight.Bold else FontWeight.Normal)
-                    },
-                    icon = { Icon(Icons.Default.RecordVoiceOver, contentDescription = null, modifier = Modifier.size(18.dp)) }
-                )
-                Tab(
-                    selected = selectedTab == 3,
-                    onClick = { selectedTab = 3 },
-                    text = {
-                        val label = if (isPro) "Automations" else "Automations 🔒"
-                        Text(label, fontSize = 11.sp, maxLines = 1, fontWeight = if (selectedTab == 3) FontWeight.Bold else FontWeight.Normal)
-                    },
-                    icon = { Icon(Icons.Default.Hub, contentDescription = null, modifier = Modifier.size(18.dp)) }
-                )
-                Tab(
-                    selected = selectedTab == 4,
-                    onClick = { selectedTab = 4 },
-                    text = { Text("Logs", fontSize = 11.sp, maxLines = 1, fontWeight = if (selectedTab == 4) FontWeight.Bold else FontWeight.Normal) },
-                    icon = { Icon(Icons.Default.History, contentDescription = null, modifier = Modifier.size(18.dp)) }
-                )
-            }
-
             when (selectedTab) {
                 0 -> DashboardScreen(
                     settings = settings,
@@ -489,12 +541,15 @@ fun MainScreen(
                     onMarkVoiceCallRead = onMarkVoiceCallRead,
                     onClearVoiceCalls = onClearVoiceCalls
                 )
-                3 -> AutomationsScreen(
-                    settings = settings,
-                    onSettingsChanged = onSettingsChanged
-                )
-                4 -> ActivityLogScreen(
+                3 -> ActivityLogScreen(
                     logs = logs,
+                    onClearLogs = onClearLogs
+                )
+                4 -> SettingsScreen(
+                    settings = settings,
+                    onSettingsChanged = onSettingsChanged,
+                    missingPermissions = missingPermissions,
+                    onRequestPermissions = onRequestPermissions,
                     onClearLogs = onClearLogs
                 )
             }

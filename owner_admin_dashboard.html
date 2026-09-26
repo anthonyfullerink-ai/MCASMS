@@ -11,19 +11,23 @@
     <link rel="icon" type="image/png" sizes="16x16" href="/favicon-16x16.png?v=2">
     <link rel="shortcut icon" href="/favicon.ico?v=2">
     <link rel="apple-touch-icon" sizes="180x180" href="/apple-touch-icon.png?v=2">
-    <meta name="theme-color" content="#090B0E">
+    <meta name="theme-color" content="#080C16">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800;900&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
     <style>
         :root {
-            --bg: #0D1017;
-            --card-bg: #161B22;
-            --card-border: #303644;
-            --primary: #00E676;
-            --primary-hover: #00C853;
+            --bg: #080C16;
+            --card-bg: #0F172A;
+            --card-border: #1E293B;
+            --primary: #2563EB;
+            --primary-hover: #1D4ED8;
+            --success: #10B981;
             --text: #FFFFFF;
-            --muted: #8B949E;
-            --danger: #F85149;
-            --accent: #58A6FF;
-            --warning: #FFB300;
+            --muted: #94A3B8;
+            --danger: #EF4444;
+            --accent: #38BDF8;
+            --warning: #F59E0B;
         }
 
         * { box-sizing: border-box; }
@@ -34,7 +38,7 @@
         }
 
         body {
-            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+            font-family: 'Plus Jakarta Sans', -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
             background-color: var(--bg);
             color: var(--text);
             margin: 0;
@@ -706,7 +710,7 @@
 <!-- 1. Password Protected Login Screen -->
 <div id="loginContainer" class="login-wrapper">
     <div class="login-card">
-        <div class="login-logo">🔒</div>
+        <div class="login-logo" style="margin-bottom: 12px;"><img src="/assets/logo.svg" alt="Missed Call Auto SMS" style="height: 44px; display: inline-block;"></div>
         <div class="login-title">Master Owner Admin Portal</div>
         <div class="login-sub">Restricted Developer Credentials Required</div>
 
@@ -731,10 +735,10 @@
 <!-- 2. Protected Dashboard Content -->
 <div id="dashboardContainer" class="container" style="display: none;">
     <div class="header">
-        <h1><img src="/favicon.svg?v=2" alt="Logo" width="28" height="28" style="vertical-align: middle; border-radius: 6px; display: inline-block;"> MissedCallAutoSMS Master Owner Admin</h1>
+        <h1><img src="/assets/logo.svg" alt="Missed Call Auto SMS" height="34" style="vertical-align: middle; display: inline-block;"> Master Owner Admin</h1>
         <div style="display: flex; align-items: center; gap: 12px; flex-wrap: wrap;">
-            <button class="btn-action btn-primary-action" style="margin: 0; font-size: 12px; padding: 7px 14px; box-shadow: 0 0 10px rgba(0,230,118,0.2);" onclick="switchTab(2); setTimeout(() => runFullSystemSimulation(), 300);">🧪 Run Pre-Flight Test</button>
-            <span style="color: var(--primary); font-size: 13px; font-weight: bold;">🟢 Stripe Live Connected</span>
+            <button class="btn-action btn-primary-action" style="margin: 0; font-size: 12px; padding: 7px 14px; box-shadow: 0 0 10px rgba(37,99,235,0.25);" onclick="switchTab(2); setTimeout(() => runFullSystemSimulation(), 300);">🧪 Run Pre-Flight Test</button>
+            <span style="color: var(--success); font-size: 13px; font-weight: bold;">🟢 Stripe Live Connected</span>
             <button class="btn-logout" onclick="handleLogout()">Logout</button>
         </div>
     </div>
@@ -745,7 +749,7 @@
             <span style="font-size: 11px; text-transform: uppercase; color: var(--muted); font-weight: 800; letter-spacing: 0.5px;">🌐 Global Control Hub:</span>
             <a href="/agency_dashboard.html" target="_blank" class="filter-pill" style="text-decoration: none; border-color: #38BDF8; color: #38BDF8;">🏢 Agency Fleet Portal ↗</a>
             <a href="/content_engine_dashboard.html" target="_blank" class="filter-pill" style="text-decoration: none; border-color: #A855F7; color: #C084FC;">📢 Content Studio ↗</a>
-            <a href="/license_dashboard.html" target="_blank" class="filter-pill" style="text-decoration: none; border-color: #00E676; color: #00E676;">🔑 Customer License Portal ↗</a>
+            <a href="/license_dashboard.html" target="_blank" class="filter-pill" style="text-decoration: none; border-color: #10B981; color: #10B981;">🔑 Customer License Portal ↗</a>
             <a href="/developers.html" target="_blank" class="filter-pill" style="text-decoration: none; border-color: var(--muted); color: #FFF;">📚 Developer API Docs ↗</a>
             <a href="/voice.html" target="_blank" class="filter-pill" style="text-decoration: none; border-color: #22D3EE; color: #22D3EE;">🎙️ Voice Receptionist Demo ↗</a>
             <a href="/index.html" target="_blank" class="filter-pill" style="text-decoration: none; border-color: #FFB300; color: #FFB300;">🛒 Public Storefront ↗</a>
@@ -826,7 +830,7 @@
         <button id="tabBtn6" class="tab-btn" onclick="switchTab(6)">📢 Omnichannel Content Engine (<span id="countTabContent">0</span>)</button>
         <button id="tabBtn7" class="tab-btn" onclick="switchTab(7)" style="border-color: #6366F1; color: #818CF8;">🏢 Agency Fleet Operations (<span id="countTabFleet">0</span>)</button>
         <button id="tabBtn8" class="tab-btn" onclick="switchTab(8)" style="border-color: #10B981; color: #34D399;">🤝 Referral Partners & Rev-Share (<span id="countTabReferrals">0</span>)</button>
-        <button id="tabBtn9" class="tab-btn" onclick="switchTab(9)" style="border-color: #00E676; color: #00E676; font-weight: 800;">💳 Memberships & Subscriptions (<span id="countTabSubs">0</span>)</button>
+        <button id="tabBtn9" class="tab-btn" onclick="switchTab(9)" style="border-color: #10B981; color: #10B981; font-weight: 800;">💳 Memberships & Subscriptions (<span id="countTabSubs">0</span>)</button>
     </div>
 
     <!-- TAB 0: Sales & License Directory -->
@@ -915,7 +919,7 @@
                 </div>
                 <div>
                     <label style="display: flex; align-items: center; gap: 10px; cursor: pointer; color: #FFF; font-weight: 700; margin: 0;">
-                        <input type="checkbox" id="checkIssueVoiceAddon" checked style="width: 18px; height: 18px; accent-color: #00E676;">
+                        <input type="checkbox" id="checkIssueVoiceAddon" checked style="width: 18px; height: 18px; accent-color: #10B981;">
                         <span id="lblVoiceAddon">🎙️ Waive $9.99/mo Voice &amp; Pro Subscription (Free All-Access Waiver)</span>
                     </label>
                     <div id="descVoiceAddon" style="font-size: 11px; color: #CBD5E0; margin-top: 4px; padding-left: 28px;">
@@ -1100,8 +1104,8 @@
                     <input type="text" value="https://buy.stripe.com/6oU9ATbBIeFI8U86OR2go0g" readonly onclick="this.select()" style="width: 100%; background: #090B0E; border: 1px solid #A855F7; color: #D8B4FE; padding: 10px; border-radius: 8px; font-size: 12px; font-family: monospace;">
                 </div>
                 <div>
-                    <label style="font-size: 13px; color: #00E676; display: block; margin-bottom: 6px;">⚡ Front Desk Bundle ($99/mo):</label>
-                    <input type="text" value="https://missedcallautosms.com/#pricing" readonly onclick="this.select()" style="width: 100%; background: #090B0E; border: 1px solid #00E676; color: #00E676; padding: 10px; border-radius: 8px; font-size: 12px; font-family: monospace;">
+                    <label style="font-size: 13px; color: #10B981; display: block; margin-bottom: 6px;">⚡ Front Desk Bundle ($99/mo):</label>
+                    <input type="text" value="https://missedcallautosms.com/#pricing" readonly onclick="this.select()" style="width: 100%; background: #090B0E; border: 1px solid #10B981; color: #10B981; padding: 10px; border-radius: 8px; font-size: 12px; font-family: monospace;">
                 </div>
                 <div>
                     <label style="font-size: 13px; color: var(--primary); display: block; margin-bottom: 6px;">🎙️ Stripe Managed Voice Link ($29/mo Starter):</label>
@@ -1416,8 +1420,8 @@
         <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(210px, 1fr)); gap: 14px; margin-bottom: 20px;">
             <div style="background: #090B0E; border: 1px solid var(--card-border); border-radius: 12px; padding: 16px;">
                 <div style="font-size: 11px; color: var(--muted); font-weight: 700; text-transform: uppercase;">Vapi Cloud API Status</div>
-                <div id="vapiLiveStatusBadge" style="font-size: 16px; font-weight: 900; color: var(--primary); margin-top: 6px; display: flex; align-items: center; gap: 6px;">
-                    <span style="display: inline-block; width: 10px; height: 10px; background: #00E676; border-radius: 50%;"></span>
+                <div id="vapiLiveStatusBadge" style="font-size: 16px; font-weight: 900; color: var(--success); margin-top: 6px; display: flex; align-items: center; gap: 6px;">
+                    <span style="display: inline-block; width: 10px; height: 10px; background: #10B981; border-radius: 50%;"></span>
                     🟢 Connected (Live)
                 </div>
                 <div style="font-size: 12px; color: #CBD5E0; margin-top: 4px;">Assistant: <strong id="vapiAssistantName">Riley</strong></div>
@@ -1443,13 +1447,13 @@
         </div>
 
         <!-- Row 2: Inbound Phone Line & *71 Carrier Forwarding Setup -->
-        <div style="background: rgba(0, 230, 118, 0.06); border: 1px solid rgba(0, 230, 118, 0.3); border-radius: 12px; padding: 18px; margin-bottom: 24px;">
+        <div style="background: rgba(16, 185, 129, 0.06); border: 1px solid rgba(16, 185, 129, 0.3); border-radius: 12px; padding: 18px; margin-bottom: 24px;">
             <div style="display: flex; justify-content: space-between; align-items: flex-start; flex-wrap: wrap; gap: 16px;">
                 <div style="flex: 1; min-width: 300px;">
                     <div style="display: flex; align-items: center; gap: 10px;">
                         <span style="font-size: 20px;">📲</span>
                         <div style="font-size: 15px; font-weight: 800; color: #FFF;">Contractor Telephony Architecture (*71 Conditional Forwarding)</div>
-                        <span id="carrierVerificationBadge" class="badge" style="background: rgba(0,230,118,0.15); color: #00E676; border: 1px solid #00E676; font-size: 11px;">🟢 Active</span>
+                        <span id="carrierVerificationBadge" class="badge" style="background: rgba(16,185,129,0.15); color: #10B981; border: 1px solid #10B981; font-size: 11px;">🟢 Active</span>
                     </div>
                     <p style="font-size: 13px; color: #CBD5E0; line-height: 1.5; margin: 8px 0 0 0;">
                         When a contractor is working on a job and cannot answer their phone, their carrier automatically forwards the call to their AI receptionist after 15 seconds. When the AI hangs up, the phone sends a personalized text directly from their genuine carrier SIM.
@@ -2296,10 +2300,10 @@
             } else {
                 actionButtons = `
                     <div class="action-button-grid">
-                        <button class="btn-action" style="color: #00E676; font-weight: bold;" onclick="openMembershipManageModal('${r.key}')">⚙️ Manage Sub</button>
+                        <button class="btn-action" style="color: #10B981; font-weight: bold;" onclick="openMembershipManageModal('${r.key}')">⚙️ Manage Sub</button>
                         <button class="btn-action" style="color: ${isPro ? '#C084FC' : 'var(--primary)'};" onclick="triggerEmailForKey('${r.key}')">📧 Email APK</button>
                         <button class="btn-action" onclick="resetDevice('${r.key}')" ${isRevoked ? 'disabled' : ''}>Reset Lock</button>
-                        <button class="btn-action" style="color: #00E676;" onclick="promptReloadCredits('${r.key}', '${escapeHtml(r.name)}')">💳 Credit Pack</button>
+                        <button class="btn-action" style="color: #10B981;" onclick="promptReloadCredits('${r.key}', '${escapeHtml(r.name)}')">💳 Credit Pack</button>
                         ${isPro ? `<button class="btn-action" style="color: #38BDF8;" onclick="toggleVoiceForKey('${r.key}')">${r.voiceActive ? 'Pause Voice' : '🎙️ Attach Voice'}</button>` : ''}
                         <button class="btn-action btn-danger" onclick="toggleRevokeKey('${r.key}')">${isRevoked ? 'Reactivate' : 'Revoke'}</button>
                     </div>
@@ -3704,9 +3708,9 @@ ${isVoiceActive ? `🎙️ AI Voice Receptionist Line: ${voiceNumber}\n📲 Acti
         if (statusBanner) {
             if (data.cloudSent) {
                 statusBanner.style.display = 'block';
-                statusBanner.style.background = 'rgba(0, 230, 118, 0.1)';
-                statusBanner.style.borderColor = 'rgba(0, 230, 118, 0.4)';
-                statusBanner.style.color = '#00E676';
+                statusBanner.style.background = 'rgba(16, 185, 129, 0.1)';
+                statusBanner.style.borderColor = 'rgba(16, 185, 129, 0.4)';
+                statusBanner.style.color = '#10B981';
                 statusBanner.innerHTML = `🟢 <strong>Delivered!</strong> ${tierName} email dispatched to <strong>${escapeHtml(email)}</strong> via Cloud Email API.`;
             } else {
                 statusBanner.style.display = 'block';
@@ -4904,8 +4908,8 @@ Return your response STRICTLY as a raw JSON object (no extra commentary) matchin
             const connBadge = document.getElementById('vapiLiveStatusBadge');
             if (connBadge) {
                 if (statusRes && statusRes.connected) {
-                    connBadge.innerHTML = `<span style="display:inline-block;width:10px;height:10px;background:#00E676;border-radius:50%;"></span> 🟢 Connected (Live)`;
-                    connBadge.style.color = 'var(--primary)';
+                    connBadge.innerHTML = `<span style="display:inline-block;width:10px;height:10px;background:#10B981;border-radius:50%;"></span> 🟢 Connected (Live)`;
+                    connBadge.style.color = 'var(--success)';
                 } else {
                     connBadge.innerHTML = `<span style="display:inline-block;width:10px;height:10px;background:#F85149;border-radius:50%;"></span> 🔴 API Offline`;
                     connBadge.style.color = 'var(--danger)';
@@ -5303,14 +5307,14 @@ OPERATIONAL PROTOCOL:
                         </td>
                         <td>
                             <span class="badge badge-agency">${escapeHtml(agency.tier || 'agency_5').toUpperCase()}</span><br>
-                            <small style="color: #00E676; font-weight: bold;">${tierLabel}</small>
+                            <small style="color: #10B981; font-weight: bold;">${tierLabel}</small>
                         </td>
                         <td>
                             <div style="font-size: 13px; font-weight: bold; color: ${clients.length >= (agency.quota || 5) ? 'var(--warning)' : '#FFF'};">
                                 ${clients.length} / ${agency.quota || 5} Seats Used
                             </div>
                             <div style="width: 120px; height: 6px; background: #21262D; border-radius: 3px; margin-top: 4px; overflow: hidden;">
-                                <div style="width: ${Math.min(100, Math.round((clients.length / (agency.quota || 5)) * 100))}%; height: 100%; background: ${clients.length >= (agency.quota || 5) ? '#F59E0B' : '#00E676'}; border-radius: 3px;"></div>
+                                <div style="width: ${Math.min(100, Math.round((clients.length / (agency.quota || 5)) * 100))}%; height: 100%; background: ${clients.length >= (agency.quota || 5) ? '#F59E0B' : '#10B981'}; border-radius: 3px;"></div>
                             </div>
                         </td>
                         <td>
@@ -5320,7 +5324,7 @@ OPERATIONAL PROTOCOL:
                             <span class="badge ${isRevoked ? 'badge-revoked' : 'badge-active'}">${isRevoked ? 'REVOKED' : 'ACTIVE'}</span>
                         </td>
                         <td>
-                            <button class="btn-action" style="color: #00E676;" onclick="quickAddSeats('${agencyKey}', ${agency.quota || 5})">+ Quota</button>
+                            <button class="btn-action" style="color: #10B981;" onclick="quickAddSeats('${agencyKey}', ${agency.quota || 5})">+ Quota</button>
                             <a href="/agency_dashboard.html#key=${agencyKey}" target="_blank" class="btn-action" style="color: #818CF8; text-decoration: none;">🏢 Portal</a>
                             <button class="btn-action btn-danger" onclick="toggleRevokeFleetKey('${agencyKey}')">${isRevoked ? 'Reactivate' : 'Revoke'}</button>
                         </td>
@@ -6177,7 +6181,7 @@ To transfer to a new device at any time, contact your agency administrator.
                     <td>${lineDisplay}</td>
                     <td>${deviceDisplay}</td>
                     <td>
-                        <button class="btn-action" style="color:#00E676; font-weight:bold;" onclick="openMembershipManageModal('${m.key}')">⚙️ Manage</button>
+                        <button class="btn-action" style="color:#10B981; font-weight:bold;" onclick="openMembershipManageModal('${m.key}')">⚙️ Manage</button>
                         <button class="btn-action" style="color:#38BDF8;" onclick="promptReloadCredits('${m.key}', '${escapeHtml(m.name)}')">💳 Credit Pack</button>
                     </td>
                 </tr>

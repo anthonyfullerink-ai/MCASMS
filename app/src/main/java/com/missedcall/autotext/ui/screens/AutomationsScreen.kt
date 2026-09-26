@@ -277,7 +277,7 @@ fun AutomationsScreen(
                                 Icon(
                                     Icons.Default.CheckCircle,
                                     contentDescription = null,
-                                    tint = Color(0xFF00E676),
+                                    tint = Color(0xFF10B981),
                                     modifier = Modifier.size(18.dp).padding(top = 2.dp)
                                 )
                                 Spacer(modifier = Modifier.width(10.dp))
@@ -302,13 +302,13 @@ fun AutomationsScreen(
                             ) {
                                 Column {
                                     Text("Lifetime Hardware License", style = MaterialTheme.typography.labelMedium, color = Color(0xFF94A3B8))
-                                    Text("$249.99 One-Time", style = MaterialTheme.typography.titleLarge, fontWeight = FontWeight.ExtraBold, color = Color(0xFF00E676))
+                                    Text("$249.99 One-Time", style = MaterialTheme.typography.titleLarge, fontWeight = FontWeight.ExtraBold, color = Color(0xFF10B981))
                                 }
                                 Surface(
                                     shape = RoundedCornerShape(6.dp),
-                                    color = Color(0xFF00E676).copy(alpha = 0.15f)
+                                    color = Color(0xFF10B981).copy(alpha = 0.15f)
                                 ) {
-                                    Text("Zero Monthly Fees", color = Color(0xFF00E676), fontWeight = FontWeight.Bold, fontSize = 11.sp, modifier = Modifier.padding(horizontal = 8.dp, vertical = 4.dp))
+                                    Text("Zero Monthly Fees", color = Color(0xFF10B981), fontWeight = FontWeight.Bold, fontSize = 11.sp, modifier = Modifier.padding(horizontal = 8.dp, vertical = 4.dp))
                                 }
                             }
                         }

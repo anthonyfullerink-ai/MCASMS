@@ -12,11 +12,14 @@
     <link rel="canonical" href="https://missedcallautosms.com/voice">
 
     <!-- Favicon & Mobile Icons -->
-    <link rel="icon" type="image/svg+xml" href="/favicon.svg?v=2">
+    <link rel="icon" type="image/svg+xml" href="/favicon.svg?v=3">
     <link rel="icon" type="image/png" sizes="32x32" href="/favicon-32x32.png?v=2">
     <link rel="icon" type="image/png" sizes="16x16" href="/favicon-16x16.png?v=2">
+    <link rel="shortcut icon" href="/favicon.ico?v=2">
     <link rel="apple-touch-icon" sizes="180x180" href="/apple-touch-icon.png?v=2">
-    <meta name="theme-color" content="#090B0E">
+    <link rel="manifest" href="/site.webmanifest">
+    <meta name="theme-color" content="#080C16">
+    <link rel="stylesheet" href="/assets/css/navbar.css">
 
     <!-- Open Graph / Social -->
     <meta property="og:type" content="website">
@@ -31,6 +34,11 @@
     <meta property="twitter:title" content="Autonomous Front Desk ($9.99/mo) | 24/7 AI Voice Receptionist + Conversational AI SMS">
     <meta property="twitter:description" content="Turn unanswered calls into booked revenue. 24/7 AI Voice assistant + 2-way back-and-forth conversational AI SMS from your carrier SIM.">
     <meta property="twitter:image" content="https://missedcallautosms.com/assets/social/ai_voice_receptionist_hero.jpg">
+
+    <!-- Plus Jakarta Sans & JetBrains Mono Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:ital,wght@0,300;0,400;0,500;0,600;0,700;0,800;0,900;1,400&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
 
     <!-- Schema.org Structured Data -->
     <script type="application/ld+json">
@@ -57,1718 +65,1698 @@
 
     <style>
         :root {
-            --bg: #090B0E;
-            --card-bg: #131720;
-            --card-border: #222836;
-            --primary: #00E676;
-            --primary-hover: #00C853;
-            --purple: #7928CA;
-            --purple-light: #A855F7;
-            --cyan: #00B0FF;
-            --text: #FFFFFF;
-            --muted: #949BAE;
-            --danger: #FF5252;
-            --warning: #FFB300;
+            /* Deep Midnight Navy & Slate White Palette (Allo-Grade) */
+            --bg-page: #FFFFFF;
+            --bg-surface: #F8FAFC;
+            --bg-subtle: #F1F5F9;
+            --bg-dark: #080C16;
+            --bg-dark-card: #0F172A;
+            --bg-dark-card-border: rgba(255, 255, 255, 0.08);
+
+            --text-heading: #090E1A;
+            --text-body: #334155;
+            --text-muted: #64748B;
+            --text-light: #94A3B8;
+
+            --navy-deep: #050811;
+            --navy-base: #090E1A;
+            --navy-surface: #0F172A;
+            --navy-card: #131D31;
+            --navy-border: rgba(255, 255, 255, 0.1);
+
+            --primary: #2563EB;
+            --primary-hover: #1D4ED8;
+            --primary-light: #EFF6FF;
+            --primary-glow: rgba(37, 99, 235, 0.25);
+
+            --accent-gold: #F59E0B;
+            --accent-gold-light: #FEF3C7;
+            --accent-emerald: #10B981;
+            --accent-emerald-light: #ECFDF5;
+
+            --line-subtle: rgba(15, 23, 42, 0.08);
+            --line-dark: rgba(255, 255, 255, 0.08);
+
+            --radius-pill: 9999px;
+            --radius-xl: 24px;
+            --radius-lg: 18px;
+            --radius-md: 12px;
+
+            --shadow-subtle: 0 1px 2px rgba(0, 0, 0, 0.04), 0 1px 3px rgba(0, 0, 0, 0.02);
+            --shadow-card: 0 4px 20px -2px rgba(15, 23, 42, 0.06), 0 2px 6px -1px rgba(15, 23, 42, 0.04);
+            --shadow-elevated: 0 20px 40px -4px rgba(15, 23, 42, 0.12), 0 8px 16px -2px rgba(15, 23, 42, 0.04);
+            --shadow-dark: 0 25px 60px -10px rgba(0, 0, 0, 0.6);
         }
 
-        * { box-sizing: border-box; }
-        html, body { overflow-x: hidden; width: 100%; }
-
-        body {
-            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
-            background-color: var(--bg);
-            color: var(--text);
+        * {
+            box-sizing: border-box;
             margin: 0;
             padding: 0;
-            line-height: 1.6;
             -webkit-font-smoothing: antialiased;
         }
 
-        .container {
-            width: 100%;
-            max-width: 1160px;
-            margin: 0 auto;
-            padding: 0 20px;
+        body {
+            font-family: 'Plus Jakarta Sans', -apple-system, BlinkMacSystemFont, sans-serif;
+            background-color: var(--bg-page);
+            color: var(--text-body);
+            line-height: 1.6;
+            font-size: 16px;
+            overflow-x: hidden;
         }
 
-        /* Top Announcement Bar */
-        .top-banner {
-            background: linear-gradient(90deg, #1E1B4B, #0F172A, #064E3B);
-            border-bottom: 1px solid rgba(0, 230, 118, 0.25);
-            text-align: center;
+        a {
+            color: inherit;
+            text-decoration: none;
+        }
+
+        /* Architectural Blueprint Symmetry Lines */
+        .grid-line-x {
+            width: 100%;
+            height: 1px;
+            background: var(--line-subtle);
+            position: relative;
+        }
+        .grid-line-x::after {
+            content: '+';
+            position: absolute;
+            left: 50%;
+            top: -7px;
+            transform: translateX(-50%);
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 11px;
+            color: var(--text-light);
+            background: #FFFFFF;
+            padding: 0 6px;
+            line-height: 1;
+        }
+
+        /* Top Announcement Strip */
+        .announcement-bar {
+            background: var(--navy-base);
+            color: #E2E8F0;
             padding: 10px 16px;
             font-size: 13px;
-            font-weight: 600;
-            color: #E2E8F0;
-        }
-        .top-banner strong { color: var(--primary); }
-
-        /* Navigation */
-        nav {
+            font-weight: 500;
+            text-align: center;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.06);
             display: flex;
-            justify-content: space-between;
             align-items: center;
-            padding: 16px 0;
-            border-bottom: 1px solid var(--card-border);
+            justify-content: center;
+            gap: 8px;
+        }
+        .announcement-bar strong {
+            color: #FFFFFF;
+            font-weight: 700;
+        }
+        .announcement-bar a {
+            color: #93C5FD;
+            font-weight: 700;
+            display: inline-flex;
+            align-items: center;
+            gap: 4px;
+            transition: color 0.2s;
+        }
+        .announcement-bar a:hover {
+            color: #FFFFFF;
+        }
+
+        /* Header Navigation */
+        .nav-wrapper {
             position: sticky;
             top: 0;
-            background: rgba(9, 11, 14, 0.95);
-            backdrop-filter: blur(12px);
             z-index: 1000;
+            background: rgba(255, 255, 255, 0.88);
+            backdrop-filter: blur(16px);
+            -webkit-backdrop-filter: blur(16px);
+            border-bottom: 1px solid var(--line-subtle);
+            transition: all 0.25s ease;
         }
-
+        .nav-container {
+            max-width: 1240px;
+            margin: 0 auto;
+            padding: 16px 24px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+        }
         .logo {
-            font-size: 20px;
-            font-weight: 900;
-            color: #FFF;
+            display: flex;
+            align-items: center;
+            gap: 12px;
             text-decoration: none;
-            letter-spacing: -0.5px;
-            white-space: nowrap;
         }
-        .logo span {
-            background: linear-gradient(135deg, #FFF, var(--primary));
+        .logo-image {
+            width: 38px;
+            height: 38px;
+            border-radius: 10px;
+            filter: drop-shadow(0 4px 10px rgba(0, 0, 0, 0.2));
+            transition: transform 0.25s cubic-bezier(0.16, 1, 0.3, 1), filter 0.25s ease;
+        }
+        .logo:hover .logo-image {
+            transform: scale(1.08) rotate(-2deg);
+            filter: drop-shadow(0 6px 14px rgba(37, 99, 235, 0.35));
+        }
+        .logo-text {
+            display: flex;
+            align-items: baseline;
+            gap: 6px;
+            font-weight: 800;
+            font-size: 19px;
+            letter-spacing: -0.6px;
+            line-height: 1;
+        }
+        .logo-main {
+            color: var(--text-heading);
+            font-weight: 800;
+        }
+        .logo-accent {
+            background: linear-gradient(135deg, #2563EB 0%, #1D4ED8 100%);
             -webkit-background-clip: text;
             -webkit-text-fill-color: transparent;
+            font-weight: 900;
         }
-
         .nav-links {
             display: flex;
-            gap: 22px;
             align-items: center;
-        }
-        .nav-links a {
-            color: var(--muted);
-            text-decoration: none;
+            gap: 28px;
             font-size: 14px;
             font-weight: 600;
+            color: var(--text-body);
+        }
+        .nav-links a {
             transition: color 0.2s;
-            white-space: nowrap;
+            position: relative;
         }
         .nav-links a:hover, .nav-links a.active {
             color: var(--primary);
         }
-        .nav-link-demo {
-            color: var(--primary) !important;
-            font-weight: 700 !important;
+        .nav-actions {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+
+        /* Allo-Grade Phone Jiggle Animation */
+        @keyframes phone-shake {
+            0%, 100% { transform: rotate(0deg); }
+            20% { transform: rotate(14deg); }
+            40% { transform: rotate(-12deg); }
+            60% { transform: rotate(8deg); }
+            80% { transform: rotate(-6deg); }
+        }
+        .nav-phone-pill {
+            background: rgba(15, 23, 42, 0.04);
+            border: 1px solid var(--line-subtle);
+            padding: 8px 16px;
+            border-radius: var(--radius-pill);
+            font-size: 13px;
+            font-weight: 700;
+            color: var(--text-heading);
             display: inline-flex;
             align-items: center;
-            gap: 4px;
+            gap: 8px;
+            transition: all 0.2s ease;
+        }
+        .nav-phone-pill:hover {
+            background: rgba(15, 23, 42, 0.08);
+            border-color: #CBD5E1;
+        }
+        .nav-phone-pill:hover .phone-icon {
+            animation: phone-shake 0.5s ease-in-out;
         }
 
-        .nav-cta {
-            display: flex;
-            gap: 10px;
+        /* Allo-Grade Super CTA Button with Periodic Shimmer Sheen */
+        @keyframes sheen {
+            0% { transform: translateX(-150%) skewX(-20deg); }
+            40%, 100% { transform: translateX(250%) skewX(-20deg); }
+        }
+        .btn-super-cta {
+            position: relative;
+            overflow: hidden;
+            background: linear-gradient(135deg, #1D4ED8 0%, #2563EB 50%, #3B82F6 100%);
+            color: #FFFFFF;
+            padding: 12px 24px;
+            border-radius: var(--radius-pill);
+            font-size: 14px;
+            font-weight: 700;
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            cursor: pointer;
+            display: inline-flex;
             align-items: center;
+            gap: 8px;
+            box-shadow: 0 4px 18px rgba(37, 99, 235, 0.35);
+            transition: all 0.25s cubic-bezier(0.16, 1, 0.3, 1);
+        }
+        .btn-super-cta::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            bottom: 0;
+            left: 0;
+            width: 50%;
+            background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.45), transparent);
+            animation: sheen 4s infinite ease-in-out;
+            pointer-events: none;
+        }
+        .btn-super-cta:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 26px rgba(37, 99, 235, 0.45);
         }
 
-        .btn-buy-nav {
-            background: linear-gradient(135deg, var(--primary), var(--cyan));
-            color: #000;
-            padding: 9px 20px;
-            border-radius: 8px;
-            font-size: 13px;
-            font-weight: 800;
-            text-decoration: none;
-            box-shadow: 0 2px 10px rgba(0, 230, 118, 0.3);
-            transition: all 0.2s;
-            white-space: nowrap;
+        .btn-outline {
+            background: #FFFFFF;
+            color: var(--text-heading);
+            padding: 12px 22px;
+            border-radius: var(--radius-pill);
+            font-size: 14px;
+            font-weight: 700;
+            border: 1px solid var(--line-subtle);
+            cursor: pointer;
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            transition: all 0.2s ease;
+            box-shadow: var(--shadow-subtle);
         }
-        .btn-buy-nav:hover {
+        .btn-outline:hover {
+            background: var(--bg-surface);
+            border-color: #CBD5E1;
             transform: translateY(-1px);
-            box-shadow: 0 4px 16px rgba(0, 230, 118, 0.5);
+        }
+
+        /* Container */
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 0 24px;
         }
 
         /* Hero Section */
         .hero {
-            padding: 50px 0 30px;
+            padding: 80px 0 40px;
             text-align: center;
             position: relative;
         }
-
-        .hero-pill {
+        .hero-badge {
             display: inline-flex;
             align-items: center;
             gap: 8px;
+            background: #FFFFFF;
+            border: 1px solid var(--line-subtle);
             padding: 6px 16px;
-            background: rgba(121, 40, 202, 0.2);
-            border: 1px solid rgba(168, 85, 247, 0.4);
-            border-radius: 30px;
-            color: var(--purple-light);
-            font-size: 12px;
+            border-radius: var(--radius-pill);
+            font-size: 13px;
+            font-weight: 600;
+            color: var(--text-heading);
+            box-shadow: var(--shadow-subtle);
+            margin-bottom: 24px;
+            transition: transform 0.2s;
+        }
+        .hero-badge:hover {
+            transform: translateY(-1px);
+        }
+        .hero-badge .voice-pill {
+            background: rgba(37, 99, 235, 0.1);
+            color: var(--primary);
+            font-size: 11px;
             font-weight: 800;
-            text-transform: uppercase;
-            letter-spacing: 0.8px;
-            margin-bottom: 20px;
+            padding: 2px 8px;
+            border-radius: 4px;
         }
-
-        .hero h1 {
-            font-size: clamp(32px, 5vw, 54px);
+        .hero-title {
+            font-size: clamp(38px, 5.5vw, 64px);
             font-weight: 900;
+            color: var(--text-heading);
             line-height: 1.15;
-            letter-spacing: -1.2px;
-            margin: 0 auto 20px;
+            letter-spacing: -2px;
             max-width: 960px;
+            margin: 0 auto 20px;
         }
-        .hero h1 span.gradient {
-            background: linear-gradient(135deg, #FFF 30%, var(--primary) 70%, var(--cyan) 100%);
+        .hero-title span.accent-ink {
+            background: linear-gradient(135deg, #090E1A 20%, #2563EB 80%);
             -webkit-background-clip: text;
             -webkit-text-fill-color: transparent;
         }
-
-        .hero-sub {
-            font-size: clamp(16px, 2.2vw, 20px);
-            color: var(--muted);
-            max-width: 820px;
+        .hero-subtitle {
+            font-size: clamp(17px, 2vw, 20px);
+            color: var(--text-muted);
+            line-height: 1.6;
+            max-width: 760px;
             margin: 0 auto 36px;
             font-weight: 400;
         }
-        .hero-sub strong { color: #FFF; }
-
-        .hero-cta-group {
+        .hero-actions {
             display: flex;
+            align-items: center;
             justify-content: center;
             gap: 16px;
             flex-wrap: wrap;
-            margin-bottom: 30px;
-        }
-
-        .btn-primary-lg {
-            background: linear-gradient(135deg, var(--primary), var(--cyan));
-            color: #000;
-            font-size: 17px;
-            font-weight: 900;
-            padding: 16px 36px;
-            border-radius: 12px;
-            text-decoration: none;
-            display: inline-flex;
-            align-items: center;
-            gap: 10px;
-            box-shadow: 0 8px 30px rgba(0, 230, 118, 0.35);
-            transition: all 0.2s;
-            cursor: pointer;
-            border: none;
-        }
-        .btn-primary-lg:hover {
-            transform: translateY(-2px);
-            box-shadow: 0 12px 36px rgba(0, 230, 118, 0.5);
-        }
-
-        .btn-secondary-lg {
-            background: rgba(255, 255, 255, 0.05);
-            color: #FFF;
-            border: 1px solid var(--card-border);
-            font-size: 16px;
-            font-weight: 700;
-            padding: 16px 28px;
-            border-radius: 12px;
-            text-decoration: none;
-            display: inline-flex;
-            align-items: center;
-            gap: 8px;
-            transition: all 0.2s;
-            cursor: pointer;
-        }
-        .btn-secondary-lg:hover {
-            background: rgba(255, 255, 255, 0.1);
-            border-color: #4B5563;
-        }
-
-        .hero-guarantee {
-            font-size: 13px;
-            color: var(--muted);
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            gap: 18px;
-            flex-wrap: wrap;
-        }
-        .hero-guarantee span {
-            display: flex;
-            align-items: center;
-            gap: 6px;
-        }
-
-        /* Hero Visual Media Banner */
-        .hero-media-wrapper {
-            margin: 40px auto 20px;
-            max-width: 1040px;
-            position: relative;
-            border-radius: 20px;
-            overflow: hidden;
-            border: 1px solid var(--card-border);
-            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.8), 0 0 40px rgba(0, 230, 118, 0.15);
-        }
-        .hero-media-wrapper img {
-            width: 100%;
-            height: auto;
-            display: block;
-        }
-        .floating-call-badge {
-            position: absolute;
-            bottom: 24px;
-            left: 24px;
-            background: rgba(19, 23, 32, 0.92);
-            backdrop-filter: blur(12px);
-            border: 1px solid rgba(0, 230, 118, 0.3);
-            border-radius: 12px;
-            padding: 14px 20px;
-            text-align: left;
-            box-shadow: 0 10px 30px rgba(0,0,0,0.5);
-            max-width: 440px;
-        }
-        .floating-badge-top {
-            display: flex;
-            align-items: center;
-            justify-content: space-between;
-            margin-bottom: 6px;
-        }
-        .badge-live-indicator {
-            display: flex;
-            align-items: center;
-            gap: 6px;
-            color: var(--primary);
-            font-size: 11px;
-            font-weight: 800;
-            text-transform: uppercase;
-            letter-spacing: 0.5px;
-        }
-        .live-dot {
-            width: 8px;
-            height: 8px;
-            border-radius: 50%;
-            background: var(--primary);
-            box-shadow: 0 0 10px var(--primary);
-            animation: pulse 1.5s infinite;
-        }
-        @keyframes pulse {
-            0%, 100% { opacity: 1; transform: scale(1); }
-            50% { opacity: 0.4; transform: scale(0.8); }
-        }
-        .badge-quote {
-            font-size: 13px;
-            color: #E2E8F0;
-            font-style: italic;
-            line-height: 1.4;
-            margin: 0;
-        }
-
-        /* Value Bar / Metric Strip */
-        .metric-strip {
-            display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
-            gap: 16px;
-            margin: 60px auto 40px;
-        }
-        .metric-card {
-            background: var(--card-bg);
-            border: 1px solid var(--card-border);
-            border-radius: 14px;
-            padding: 24px 20px;
-            text-align: center;
-        }
-        .metric-num {
-            font-size: 32px;
-            font-weight: 900;
-            color: var(--primary);
-            margin-bottom: 4px;
-        }
-        .metric-label {
-            font-size: 13px;
-            color: var(--muted);
-            font-weight: 600;
-        }
-
-        /* Section Styling */
-        section {
-            padding: 70px 0;
-            border-top: 1px solid var(--card-border);
-        }
-        .section-header {
-            text-align: center;
-            max-width: 780px;
-            margin: 0 auto 50px;
-        }
-        .section-tag {
-            font-size: 12px;
-            font-weight: 800;
-            color: var(--primary);
-            text-transform: uppercase;
-            letter-spacing: 1px;
-            margin-bottom: 12px;
-            display: inline-block;
-        }
-        .section-header h2 {
-            font-size: clamp(28px, 4vw, 42px);
-            font-weight: 900;
-            letter-spacing: -0.8px;
-            margin: 0 0 16px;
-            line-height: 1.2;
-        }
-        .section-header p {
-            color: var(--muted);
-            font-size: 16px;
-            margin: 0;
-        }
-
-        /* Lifecycle Steps (End-to-End Transparency) */
-        .lifecycle-grid {
-            display: flex;
-            flex-direction: column;
-            gap: 24px;
-            max-width: 900px;
-            margin: 0 auto;
-        }
-        .lifecycle-step {
-            background: var(--card-bg);
-            border: 1px solid var(--card-border);
-            border-radius: 16px;
-            padding: 32px;
-            display: flex;
-            gap: 24px;
-            position: relative;
-            transition: border-color 0.2s;
-        }
-        .lifecycle-step:hover {
-            border-color: rgba(0, 230, 118, 0.4);
-        }
-        .step-badge {
-            flex-shrink: 0;
-            width: 54px;
-            height: 54px;
-            border-radius: 14px;
-            background: rgba(0, 230, 118, 0.1);
-            border: 1px solid rgba(0, 230, 118, 0.3);
-            color: var(--primary);
-            font-size: 20px;
-            font-weight: 900;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-        }
-        .step-body {
-            flex: 1;
-        }
-        .step-phase {
-            font-size: 11px;
-            font-weight: 800;
-            color: var(--cyan);
-            text-transform: uppercase;
-            letter-spacing: 0.6px;
-            margin-bottom: 4px;
-        }
-        .step-title {
-            font-size: 20px;
-            font-weight: 800;
-            color: #FFF;
-            margin: 0 0 10px;
-        }
-        .step-desc {
-            color: var(--muted);
-            font-size: 15px;
-            line-height: 1.6;
-            margin: 0 0 14px;
-        }
-        .step-highlight-box {
-            background: rgba(9, 11, 14, 0.8);
-            border: 1px solid var(--card-border);
-            border-radius: 10px;
-            padding: 14px 18px;
-            font-size: 13px;
-            color: #CBD5E1;
-        }
-        .step-highlight-box code {
-            background: rgba(0, 230, 118, 0.15);
-            color: var(--primary);
-            padding: 2px 6px;
-            border-radius: 4px;
-            font-family: monospace;
-            font-weight: bold;
-        }
-
-        /* Features Matrix */
-        .features-grid {
-            display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));
-            gap: 24px;
-        }
-        .feature-card {
-            background: var(--card-bg);
-            border: 1px solid var(--card-border);
-            border-radius: 16px;
-            padding: 30px;
-            transition: all 0.2s;
-        }
-        .feature-card:hover {
-            transform: translateY(-3px);
-            border-color: rgba(0, 230, 118, 0.3);
-        }
-        .feature-icon {
-            font-size: 32px;
-            margin-bottom: 16px;
-            display: inline-block;
-        }
-        .feature-card h3 {
-            font-size: 19px;
-            font-weight: 800;
-            color: #FFF;
-            margin: 0 0 10px;
-        }
-        .feature-card p {
-            font-size: 14px;
-            color: var(--muted);
-            margin: 0;
-            line-height: 1.6;
-        }
-
-        /* Live Interactive Vapi WebRTC Widget */
-        .call-demo-container {
-            background: linear-gradient(180deg, #131720, #0B0E14);
-            border: 1px solid var(--card-border);
-            border-radius: 20px;
-            padding: 36px;
-            max-width: 880px;
-            margin: 0 auto;
-            box-shadow: 0 16px 50px rgba(0,0,0,0.6);
-            position: relative;
-        }
-        .call-demo-header {
-            text-align: center;
             margin-bottom: 24px;
         }
-        .call-demo-header h3 {
-            font-size: 22px;
-            font-weight: 800;
-            color: #FFF;
-            margin: 0 0 8px;
+        .hero-reassurances {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 28px;
+            font-size: 13px;
+            color: var(--text-muted);
+            font-weight: 600;
+            flex-wrap: wrap;
         }
-        .call-demo-header p {
-            font-size: 14px;
-            color: var(--muted);
-            margin: 0;
+        .hero-reassurances span {
+            display: flex;
+            align-items: center;
+            gap: 6px;
+        }
+        .hero-reassurances svg {
+            width: 16px;
+            height: 16px;
+            color: var(--accent-emerald);
         }
 
-        /* Industry Prompt Chips */
+        /* ─── LIVE WEBRTC CALL STAGE (ALLO MIDNIGHT GRADE) ─── */
+        .call-demo-container {
+            margin: 50px auto 40px;
+            max-width: 1040px;
+            background: var(--navy-base);
+            border-radius: var(--radius-xl);
+            border: 1px solid var(--navy-border);
+            padding: 36px 32px;
+            box-shadow: var(--shadow-dark);
+            position: relative;
+            overflow: hidden;
+            text-align: left;
+        }
+        .call-demo-container::before {
+            content: '';
+            position: absolute;
+            top: -200px;
+            right: -200px;
+            width: 500px;
+            height: 500px;
+            background: radial-gradient(circle, rgba(37, 99, 235, 0.22) 0%, transparent 70%);
+            border-radius: 50%;
+            pointer-events: none;
+        }
+
         .prompt-chips-title {
-            font-size: 12px;
-            font-weight: 800;
-            text-transform: uppercase;
-            letter-spacing: 0.6px;
-            color: var(--muted);
+            font-size: 13px;
+            font-weight: 700;
+            color: #94A3B8;
             margin-bottom: 12px;
-            text-align: center;
+            display: flex;
+            align-items: center;
+            gap: 6px;
         }
         .prompt-chips-grid {
-            display: flex;
-            flex-wrap: wrap;
-            gap: 8px;
-            justify-content: center;
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+            gap: 10px;
             margin-bottom: 28px;
         }
         .prompt-chip {
             background: rgba(255, 255, 255, 0.04);
-            border: 1px solid var(--card-border);
-            border-radius: 20px;
-            padding: 6px 14px;
-            font-size: 12px;
-            font-weight: 600;
+            border: 1px solid rgba(255, 255, 255, 0.08);
+            border-radius: var(--radius-md);
+            padding: 10px 14px;
+            font-size: 13px;
             color: #CBD5E1;
             cursor: pointer;
-            transition: all 0.2s;
             display: flex;
             align-items: center;
-            gap: 6px;
+            gap: 10px;
+            transition: all 0.2s ease;
         }
         .prompt-chip:hover {
-            background: rgba(0, 230, 118, 0.1);
-            border-color: rgba(0, 230, 118, 0.4);
-            color: #FFF;
+            background: rgba(37, 99, 235, 0.15);
+            border-color: rgba(37, 99, 235, 0.4);
+            color: #FFFFFF;
             transform: translateY(-1px);
         }
+        .prompt-chip span {
+            font-weight: 600;
+        }
 
-        /* Live Call Stage */
         .call-stage {
-            background: rgba(9, 11, 14, 0.95);
-            border: 1px solid var(--card-border);
-            border-radius: 16px;
-            padding: 28px;
+            background: #0B101E;
+            border: 1px solid rgba(255, 255, 255, 0.08);
+            border-radius: var(--radius-lg);
+            padding: 32px 24px;
             text-align: center;
             position: relative;
         }
+
         .call-avatar-wrapper {
             position: relative;
-            width: 88px;
-            height: 88px;
+            width: 80px;
+            height: 80px;
             margin: 0 auto 16px;
-        }
-        .call-avatar {
-            width: 88px;
-            height: 88px;
-            border-radius: 50%;
-            background: linear-gradient(135deg, rgba(0,230,118,0.2), rgba(121,40,202,0.3));
-            border: 2px solid var(--primary);
             display: flex;
             align-items: center;
             justify-content: center;
-            font-size: 38px;
+        }
+        .call-avatar {
+            width: 72px;
+            height: 72px;
+            border-radius: 50%;
+            background: linear-gradient(135deg, #1E293B, #0F172A);
+            border: 2px solid rgba(37, 99, 235, 0.4);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 32px;
+            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.5);
             position: relative;
             z-index: 2;
         }
         .call-pulse-ring {
             position: absolute;
-            top: -6px;
-            left: -6px;
-            right: -6px;
-            bottom: -6px;
+            width: 100%;
+            height: 100%;
             border-radius: 50%;
-            border: 2px solid var(--primary);
-            opacity: 0;
-            z-index: 1;
+            border: 2px solid rgba(37, 99, 235, 0.4);
+            animation: pulse-ring 2.4s infinite cubic-bezier(0.215, 0.61, 0.355, 1);
         }
-        .call-stage.speaking .call-pulse-ring {
-            animation: pulseWave 1.4s infinite cubic-bezier(0.25, 1, 0.5, 1);
-        }
-        @keyframes pulseWave {
-            0% { transform: scale(0.95); opacity: 0.8; }
-            100% { transform: scale(1.35); opacity: 0; }
+        @keyframes pulse-ring {
+            0% { transform: scale(0.9); opacity: 0.8; }
+            50% { transform: scale(1.4); opacity: 0.2; }
+            100% { transform: scale(1.8); opacity: 0; }
         }
 
         .call-status-badge {
             display: inline-flex;
             align-items: center;
-            gap: 6px;
-            padding: 4px 12px;
-            border-radius: 20px;
+            gap: 8px;
+            padding: 4px 14px;
+            border-radius: var(--radius-pill);
+            background: rgba(255, 255, 255, 0.06);
+            border: 1px solid rgba(255, 255, 255, 0.1);
             font-size: 12px;
             font-weight: 700;
-            margin-bottom: 8px;
-            background: rgba(255,255,255,0.05);
-            color: var(--muted);
+            color: #94A3B8;
+            margin-bottom: 12px;
         }
         .call-status-badge.live {
-            background: rgba(0, 230, 118, 0.15);
-            color: var(--primary);
-            border: 1px solid rgba(0, 230, 118, 0.4);
-        }
-        .call-status-badge.live .live-dot {
-            width: 8px;
-            height: 8px;
-            border-radius: 50%;
-            background: var(--primary);
-            display: inline-block;
-            box-shadow: 0 0 8px var(--primary);
-            animation: blink 1s infinite alternate;
+            background: rgba(16, 185, 129, 0.15);
+            border-color: rgba(16, 185, 129, 0.4);
+            color: #34D399;
         }
         .call-status-badge.connecting {
-            background: rgba(234, 179, 8, 0.15);
-            color: #EAB308;
-            border: 1px solid rgba(234, 179, 8, 0.4);
+            background: rgba(245, 158, 11, 0.15);
+            border-color: rgba(245, 158, 11, 0.4);
+            color: #FBBF24;
+        }
+        .live-dot {
+            width: 8px;
+            height: 8px;
+            background: #10B981;
+            border-radius: 50%;
+            display: inline-block;
+            box-shadow: 0 0 10px #10B981;
         }
 
         .call-agent-name {
-            font-size: 18px;
+            font-size: 20px;
             font-weight: 800;
-            color: #FFF;
+            color: #FFFFFF;
             margin-bottom: 4px;
+            letter-spacing: -0.4px;
         }
         .call-agent-subtitle {
             font-size: 13px;
-            color: var(--muted);
-            margin-bottom: 20px;
+            color: #94A3B8;
+            margin-bottom: 24px;
         }
 
-        .call-timer-display {
-            font-size: 14px;
-            font-weight: 800;
-            color: var(--cyan);
-            margin-bottom: 16px;
-        }
-
-        /* Interactive Call Buttons */
         .btn-call-start {
-            background: linear-gradient(135deg, var(--primary), var(--cyan));
-            color: #000;
-            border: none;
-            padding: 14px 32px;
-            border-radius: 30px;
-            font-size: 16px;
+            background: linear-gradient(135deg, #1D4ED8 0%, #2563EB 50%, #3B82F6 100%);
+            color: #FFFFFF;
+            padding: 14px 28px;
+            border-radius: var(--radius-pill);
+            font-size: 15px;
             font-weight: 800;
+            border: 1px solid rgba(255, 255, 255, 0.25);
             cursor: pointer;
             display: inline-flex;
             align-items: center;
             gap: 10px;
-            box-shadow: 0 4px 20px rgba(0, 230, 118, 0.4);
-            transition: all 0.2s;
+            box-shadow: 0 4px 20px rgba(37, 99, 235, 0.4);
+            transition: all 0.25s ease;
         }
         .btn-call-start:hover {
-            transform: scale(1.04);
-            box-shadow: 0 6px 28px rgba(0, 230, 118, 0.6);
+            transform: translateY(-2px);
+            box-shadow: 0 8px 28px rgba(37, 99, 235, 0.55);
         }
 
+        .call-footer-note {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 20px;
+            font-size: 12px;
+            color: #64748B;
+            margin-top: 16px;
+            flex-wrap: wrap;
+        }
+
+        /* Active Audio Visualizer & Wave Bars */
+        .call-timer-display {
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 14px;
+            font-weight: 700;
+            color: #60A5FA;
+            margin-bottom: 16px;
+        }
+        .call-wave-visualizer {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 4px;
+            height: 44px;
+            margin-bottom: 20px;
+        }
+        .call-wave-bar {
+            width: 4px;
+            height: 8px;
+            background: #2563EB;
+            border-radius: 2px;
+            transition: height 0.08s ease;
+        }
         .call-active-controls {
             display: flex;
-            gap: 12px;
-            justify-content: center;
             align-items: center;
-            margin-bottom: 20px;
+            justify-content: center;
+            gap: 12px;
         }
         .btn-call-mute {
             background: rgba(255, 255, 255, 0.08);
-            border: 1px solid var(--card-border);
-            color: #FFF;
+            border: 1px solid rgba(255, 255, 255, 0.15);
+            color: #FFFFFF;
             padding: 10px 20px;
-            border-radius: 20px;
+            border-radius: var(--radius-pill);
             font-size: 13px;
             font-weight: 700;
             cursor: pointer;
             display: inline-flex;
             align-items: center;
-            gap: 6px;
+            gap: 8px;
             transition: all 0.2s;
         }
         .btn-call-mute:hover {
-            background: rgba(255, 255, 255, 0.15);
+            background: rgba(255, 255, 255, 0.14);
         }
         .btn-call-mute.muted {
             background: rgba(239, 68, 68, 0.2);
             border-color: #EF4444;
-            color: #EF4444;
+            color: #FCA5A5;
         }
         .btn-call-end {
-            background: #EF4444;
-            border: none;
-            color: #FFF;
+            background: #DC2626;
+            color: #FFFFFF;
+            border: 1px solid rgba(255, 255, 255, 0.2);
             padding: 10px 22px;
-            border-radius: 20px;
+            border-radius: var(--radius-pill);
             font-size: 13px;
-            font-weight: 800;
+            font-weight: 700;
             cursor: pointer;
             display: inline-flex;
             align-items: center;
-            gap: 6px;
-            box-shadow: 0 2px 12px rgba(239, 68, 68, 0.4);
+            gap: 8px;
             transition: all 0.2s;
         }
         .btn-call-end:hover {
-            background: #DC2626;
-            transform: scale(1.04);
-        }
-
-        /* Live Sound Wave in Active Call */
-        .call-wave-visualizer {
-            height: 36px;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            gap: 4px;
-            margin: 16px 0 20px;
-        }
-        .call-wave-bar {
-            width: 4px;
-            height: 8px;
-            border-radius: 2px;
-            background: var(--primary);
-            transition: height 0.1s ease;
+            background: #B91C1C;
         }
 
         /* Realtime Transcript Stream */
         .call-transcript-stream {
-            background: rgba(0, 0, 0, 0.5);
-            border: 1px solid var(--card-border);
-            border-radius: 12px;
-            padding: 16px;
-            max-height: 200px;
+            background: rgba(0, 0, 0, 0.4);
+            border: 1px solid rgba(255, 255, 255, 0.06);
+            border-radius: var(--radius-md);
+            padding: 14px;
+            max-height: 180px;
             overflow-y: auto;
             text-align: left;
+            margin-top: 24px;
             font-size: 13px;
-            line-height: 1.6;
+            line-height: 1.5;
             color: #CBD5E1;
-            margin-top: 16px;
         }
         .transcript-msg {
             margin-bottom: 8px;
-            padding-bottom: 8px;
-            border-bottom: 1px solid rgba(255,255,255,0.04);
-        }
-        .transcript-msg:last-child {
-            margin-bottom: 0;
-            padding-bottom: 0;
-            border-bottom: none;
         }
         .speaker-tag {
             font-weight: 800;
             margin-right: 6px;
         }
-        .speaker-caller { color: var(--cyan); }
-        .speaker-ai { color: var(--primary); }
-        .speaker-system { color: #EAB308; font-style: italic; }
+        .speaker-ai { color: #60A5FA; }
+        .speaker-caller { color: #34D399; }
+        .speaker-system { color: #94A3B8; font-style: italic; }
 
-        .call-footer-note {
+        /* Metric Bar */
+        .metric-strip {
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            gap: 16px;
+            margin: 40px auto 0;
+            max-width: 1040px;
+        }
+        .metric-card {
+            background: #FFFFFF;
+            border: 1px solid var(--line-subtle);
+            border-radius: var(--radius-lg);
+            padding: 20px 16px;
+            text-align: center;
+            box-shadow: var(--shadow-subtle);
+        }
+        .metric-num {
+            font-size: 28px;
+            font-weight: 900;
+            color: var(--text-heading);
+            letter-spacing: -0.5px;
+            margin-bottom: 4px;
+        }
+        .metric-label {
             font-size: 12px;
-            color: var(--muted);
-            margin-top: 14px;
+            font-weight: 600;
+            color: var(--text-muted);
+        }
+
+        /* Infinite Scrolling Marquee Ticker */
+        .ticker-section {
+            width: 100vw;
+            margin-left: calc(-50vw + 50%);
+            background: var(--bg-surface);
+            border-top: 1px solid var(--line-subtle);
+            border-bottom: 1px solid var(--line-subtle);
+            padding: 18px 0;
+            overflow: hidden;
+            white-space: nowrap;
+        }
+        .ticker-track {
+            display: inline-flex;
+            animation: marquee 35s linear infinite;
+        }
+        .ticker-track:hover {
+            animation-play-state: paused;
+        }
+        @keyframes marquee {
+            0% { transform: translateX(0); }
+            100% { transform: translateX(-50%); }
+        }
+        .ticker-item {
+            display: inline-flex;
+            align-items: center;
+            gap: 10px;
+            padding: 0 32px;
+            font-size: 14px;
+            font-weight: 600;
+            color: var(--text-heading);
+        }
+        .ticker-rating {
+            color: #F59E0B;
+            font-size: 13px;
+        }
+
+        /* Section Headings */
+        .section-padding {
+            padding: 88px 0;
+        }
+        .section-header {
+            text-align: center;
+            max-width: 680px;
+            margin: 0 auto 56px;
+        }
+        .eyebrow {
+            color: var(--primary);
+            font-size: 12px;
+            font-weight: 800;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            margin-bottom: 10px;
+            display: block;
+        }
+        .section-title {
+            font-size: clamp(30px, 3.8vw, 44px);
+            font-weight: 900;
+            color: var(--text-heading);
+            letter-spacing: -1px;
+            line-height: 1.2;
+            margin-bottom: 16px;
+        }
+        .section-desc {
+            font-size: 16px;
+            color: var(--text-muted);
+            line-height: 1.6;
+        }
+
+        /* 4-Step Stepper */
+        .stepper-box {
+            background: #FFFFFF;
+            border: 1px solid var(--line-subtle);
+            border-radius: var(--radius-xl);
+            padding: 40px;
+            box-shadow: var(--shadow-card);
+            position: relative;
+        }
+        .stepper-grid {
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            gap: 24px;
+            position: relative;
+        }
+        .stepper-item {
+            position: relative;
+        }
+        .step-index-badge {
+            width: 38px;
+            height: 38px;
+            border-radius: 12px;
+            background: var(--navy-base);
+            color: #FFFFFF;
             display: flex;
             align-items: center;
             justify-content: center;
-            gap: 16px;
-            flex-wrap: wrap;
-        }
-
-        /* Cost Comparison Table */
-        .comparison-table-wrapper {
-            overflow-x: auto;
-            margin: 40px 0;
-            border: 1px solid var(--card-border);
-            border-radius: 16px;
-            background: var(--card-bg);
-        }
-        table.comp-table {
-            width: 100%;
-            border-collapse: collapse;
-            text-align: left;
-            font-size: 14px;
-        }
-        table.comp-table th, table.comp-table td {
-            padding: 18px 22px;
-            border-bottom: 1px solid var(--card-border);
-        }
-        table.comp-table th {
-            background: rgba(9, 11, 14, 0.8);
-            font-size: 13px;
             font-weight: 800;
-            text-transform: uppercase;
-            letter-spacing: 0.5px;
-            color: var(--muted);
+            font-size: 15px;
+            margin-bottom: 16px;
+            box-shadow: 0 4px 10px rgba(0, 0, 0, 0.15);
         }
-        table.comp-table th.highlight-col {
-            background: rgba(0, 230, 118, 0.12);
-            color: var(--primary);
-            border-left: 2px solid var(--primary);
-            border-right: 2px solid var(--primary);
+        .stepper-item h4 {
+            font-size: 17px;
+            font-weight: 800;
+            color: var(--text-heading);
+            margin-bottom: 8px;
+            letter-spacing: -0.3px;
         }
-        table.comp-table td.highlight-col {
-            background: rgba(0, 230, 118, 0.05);
-            border-left: 2px solid var(--primary);
-            border-right: 2px solid var(--primary);
-            font-weight: 700;
-            color: #FFF;
+        .stepper-item p {
+            font-size: 14px;
+            color: var(--text-muted);
+            line-height: 1.55;
         }
 
-        /* Tier Clarification Cards */
-        .tiers-grid {
+        /* Bento Grid */
+        .bento-grid {
             display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            grid-template-columns: repeat(3, 1fr);
             gap: 24px;
-            margin: 40px auto;
         }
-        .tier-card {
-            background: var(--card-bg);
-            border: 1px solid var(--card-border);
-            border-radius: 16px;
-            padding: 32px 26px;
-            position: relative;
+        .bento-box {
+            background: #FFFFFF;
+            border: 1px solid var(--line-subtle);
+            border-radius: var(--radius-xl);
+            padding: 36px;
+            box-shadow: var(--shadow-card);
             display: flex;
             flex-direction: column;
+            justify-content: space-between;
+            position: relative;
+            transition: all 0.25s ease;
         }
-        .tier-card.featured {
-            border-color: var(--primary);
-            box-shadow: 0 0 30px rgba(0, 230, 118, 0.15);
-            background: linear-gradient(180deg, #161D27, #131720);
+        .bento-box:hover {
+            transform: translateY(-4px);
+            box-shadow: var(--shadow-elevated);
         }
-        .tier-badge {
+        .corner-cross {
             position: absolute;
-            top: -12px;
+            top: 14px;
+            right: 14px;
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 13px;
+            color: var(--text-light);
+        }
+        .bento-icon-box {
+            width: 48px;
+            height: 48px;
+            border-radius: 14px;
+            background: var(--bg-surface);
+            border: 1px solid var(--line-subtle);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 22px;
+            margin-bottom: 20px;
+        }
+        .bento-box h3 {
+            font-size: 20px;
+            font-weight: 800;
+            color: var(--text-heading);
+            margin-bottom: 12px;
+            letter-spacing: -0.4px;
+        }
+        .bento-box p {
+            font-size: 14px;
+            color: var(--text-body);
+            line-height: 1.6;
+            margin-bottom: 24px;
+        }
+        .bento-badge-pill {
+            display: inline-flex;
+            background: var(--primary-light);
+            color: var(--primary);
+            font-size: 11px;
+            font-weight: 800;
+            padding: 4px 10px;
+            border-radius: var(--radius-pill);
+        }
+
+        /* Pricing Grid */
+        .pricing-grid {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 32px;
+            max-width: 900px;
+            margin: 0 auto;
+        }
+        .pricing-card {
+            background: #FFFFFF;
+            border: 1px solid var(--line-subtle);
+            border-radius: var(--radius-xl);
+            padding: 40px;
+            box-shadow: var(--shadow-card);
+            display: flex;
+            flex-direction: column;
+            justify-content: space-between;
+            position: relative;
+        }
+        .pricing-card.featured {
+            border: 2px solid var(--primary);
+            box-shadow: var(--shadow-elevated);
+        }
+        .pricing-top-pill {
+            position: absolute;
+            top: -14px;
             left: 50%;
             transform: translateX(-50%);
             background: var(--primary);
-            color: #000;
+            color: #FFFFFF;
             font-size: 11px;
-            font-weight: 900;
-            padding: 3px 14px;
-            border-radius: 20px;
+            font-weight: 800;
+            padding: 4px 14px;
+            border-radius: var(--radius-pill);
             text-transform: uppercase;
+            letter-spacing: 0.5px;
         }
         .tier-name {
             font-size: 22px;
-            font-weight: 900;
-            color: #FFF;
-            margin: 0 0 8px;
+            font-weight: 800;
+            color: var(--text-heading);
+            margin-bottom: 6px;
         }
-        .tier-price {
-            font-size: 38px;
-            font-weight: 900;
-            color: #FFF;
-            margin: 0 0 4px;
-        }
-        .tier-price span {
+        .tier-desc {
             font-size: 14px;
-            color: var(--muted);
+            color: var(--text-muted);
+            margin-bottom: 20px;
+        }
+        .tier-cost {
+            font-size: 42px;
+            font-weight: 900;
+            color: var(--text-heading);
+            margin-bottom: 24px;
+            letter-spacing: -1.5px;
+        }
+        .tier-cost .freq {
+            font-size: 15px;
+            color: var(--text-muted);
             font-weight: 600;
         }
-        .tier-subtitle {
-            font-size: 13px;
-            color: var(--muted);
-            margin-bottom: 24px;
-            min-height: 38px;
-        }
-        .tier-features-list {
+        .tier-features {
             list-style: none;
-            padding: 0;
-            margin: 0 0 30px;
-            flex: 1;
-        }
-        .tier-features-list li {
-            padding: 8px 0;
-            font-size: 14px;
-            color: #CBD5E1;
             display: flex;
-            align-items: flex-start;
+            flex-direction: column;
+            gap: 12px;
+            margin-bottom: 32px;
+            font-size: 14px;
+            color: var(--text-body);
+        }
+        .tier-features li {
+            display: flex;
+            align-items: center;
             gap: 10px;
         }
-        .tier-features-list li::before {
-            content: "✓";
-            color: var(--primary);
-            font-weight: bold;
+        .tier-features svg {
+            width: 16px;
+            height: 16px;
+            color: var(--accent-emerald);
+            flex-shrink: 0;
         }
 
         /* FAQ Accordion */
         .faq-list {
-            max-width: 860px;
+            max-width: 800px;
             margin: 0 auto;
             display: flex;
             flex-direction: column;
-            gap: 16px;
+            gap: 14px;
         }
         .faq-item {
-            background: var(--card-bg);
-            border: 1px solid var(--card-border);
-            border-radius: 12px;
-            overflow: hidden;
-        }
-        .faq-q {
+            background: #FFFFFF;
+            border: 1px solid var(--line-subtle);
+            border-radius: var(--radius-md);
             padding: 20px 24px;
-            font-size: 16px;
-            font-weight: 800;
             cursor: pointer;
+            transition: all 0.2s;
+        }
+        .faq-item.active {
+            border-color: #CBD5E1;
+            box-shadow: var(--shadow-subtle);
+        }
+        .faq-header {
             display: flex;
             justify-content: space-between;
             align-items: center;
-            user-select: none;
+            font-weight: 700;
+            font-size: 16px;
+            color: var(--text-heading);
         }
-        .faq-q:hover { color: var(--primary); }
-        .faq-a {
-            padding: 0 24px 20px;
-            color: var(--muted);
-            font-size: 14px;
-            line-height: 1.6;
+        .faq-header .chevron-icon {
+            font-size: 12px;
+            color: var(--text-muted);
+            transition: transform 0.2s;
+        }
+        .faq-item.active .chevron-icon {
+            transform: rotate(180deg);
+        }
+        .faq-body {
             display: none;
+            padding-top: 14px;
+            font-size: 14px;
+            color: var(--text-body);
+            line-height: 1.6;
         }
-        .faq-item.open .faq-a { display: block; }
-        .faq-item.open .faq-arrow { transform: rotate(180deg); }
-        .faq-arrow { transition: transform 0.2s; }
+        .faq-item.active .faq-body {
+            display: block;
+        }
 
-        /* Final CTA Box */
-        .final-cta-box {
-            background: linear-gradient(135deg, rgba(121, 40, 202, 0.25), rgba(0, 230, 118, 0.2));
-            border: 1px solid rgba(0, 230, 118, 0.3);
-            border-radius: 24px;
-            padding: 50px 30px;
+        /* Final CTA */
+        .final-cta {
+            background: var(--navy-base);
+            border-radius: var(--radius-xl);
+            padding: 64px 32px;
             text-align: center;
-            max-width: 900px;
-            margin: 60px auto 40px;
-            box-shadow: 0 20px 60px rgba(0,0,0,0.6);
+            color: #FFFFFF;
+            margin-top: 40px;
+            position: relative;
+            overflow: hidden;
+            box-shadow: var(--shadow-dark);
+        }
+        .final-cta h2 {
+            font-size: clamp(28px, 3.8vw, 44px);
+            font-weight: 900;
+            letter-spacing: -1px;
+            margin-bottom: 16px;
+        }
+        .final-cta p {
+            font-size: 16px;
+            color: #94A3B8;
+            max-width: 580px;
+            margin: 0 auto 32px;
         }
 
         /* Footer */
-        footer {
-            padding: 40px 0;
-            border-top: 1px solid var(--card-border);
-            font-size: 13px;
-            color: var(--muted);
-            text-align: center;
+        .footer {
+            background: var(--navy-deep);
+            color: #FFFFFF;
+            padding: 64px 0 32px;
+            border-top: 1px solid rgba(255, 255, 255, 0.08);
         }
-        footer a { color: var(--muted); text-decoration: none; margin: 0 10px; }
-        footer a:hover { color: var(--primary); }
+        .footer-grid {
+            display: grid;
+            grid-template-columns: 2fr 1fr 1fr 1fr;
+            gap: 40px;
+            margin-bottom: 48px;
+        }
+        .footer-col h5 {
+            font-size: 14px;
+            font-weight: 800;
+            margin-bottom: 16px;
+            color: #FFFFFF;
+            letter-spacing: -0.2px;
+        }
+        .footer-col ul {
+            list-style: none;
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+            font-size: 14px;
+            color: #94A3B8;
+        }
+        .footer-col a:hover {
+            color: #FFFFFF;
+        }
+        .footer-bottom {
+            border-top: 1px solid rgba(255, 255, 255, 0.08);
+            padding-top: 24px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            font-size: 13px;
+            color: #64748B;
+            flex-wrap: wrap;
+            gap: 12px;
+        }
 
-        /* Responsive */
-        @media (max-width: 992px) {
-            .nav-links { display: none; }
+        /* Mobile Sticky Conversion Bar */
+        .mobile-sticky-bar {
+            display: none;
+            position: fixed;
+            bottom: 0;
+            left: 0;
+            right: 0;
+            z-index: 9999;
+            background: rgba(8, 12, 22, 0.96);
+            backdrop-filter: blur(16px);
+            -webkit-backdrop-filter: blur(16px);
+            border-top: 1px solid rgba(255, 255, 255, 0.1);
+            padding: 10px 14px;
+            gap: 8px;
+            align-items: center;
+            box-shadow: 0 -8px 24px rgba(0, 0, 0, 0.35);
         }
         @media (max-width: 768px) {
-            .lifecycle-step { flex-direction: column; gap: 14px; padding: 22px; }
-            .floating-call-badge { position: relative; bottom: 0; left: 0; max-width: 100%; margin: 12px; }
-            .hero-media-wrapper { border-radius: 12px; }
-            .call-demo-container { padding: 20px 16px; }
-            .prompt-chips-grid { gap: 6px; }
-            .prompt-chip { font-size: 11px; padding: 5px 10px; }
+            .mobile-sticky-bar {
+                display: flex;
+            }
+            body {
+                padding-bottom: 74px;
+            }
+            .stepper-grid, .bento-grid, .pricing-grid, .metric-strip, .footer-grid {
+                grid-template-columns: 1fr;
+            }
+            .nav-links, .nav-phone-pill {
+                display: none;
+            }
+        }
+        .mobile-sticky-btn {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            padding: 8px 6px;
+            border-radius: var(--radius-md);
+            font-family: inherit;
+            border: none;
+            cursor: pointer;
+            text-align: center;
+            text-decoration: none;
+            line-height: 1.2;
+            transition: transform 0.15s ease;
+        }
+        .mobile-sticky-btn:active {
+            transform: scale(0.97);
+        }
+        .mobile-sticky-btn .btn-sub {
+            font-size: 10px;
+            font-weight: 700;
+            text-transform: uppercase;
+            letter-spacing: 0.3px;
+            opacity: 0.85;
+        }
+        .mobile-sticky-btn .btn-main {
+            font-size: 13px;
+            font-weight: 800;
+        }
+        .mobile-sticky-btn.btn-trial {
+            background: linear-gradient(135deg, #1D4ED8 0%, #2563EB 100%);
+            color: #FFFFFF;
+            box-shadow: 0 2px 10px rgba(37, 99, 235, 0.4);
+        }
+        .mobile-sticky-btn.btn-buy {
+            background: #FFFFFF;
+            color: var(--text-heading);
+            border: 1px solid var(--line-subtle);
+        }
+        .mobile-sticky-btn.btn-pro {
+            background: linear-gradient(135deg, #7E22CE 0%, #9333EA 100%);
+            color: #FFFFFF;
         }
     </style>
 </head>
 <body>
 
-    <!-- Top Announcement Bar -->
-    <div class="top-banner">
-        🎙️ <strong>24/7 AI Voice Receptionist + Conversational AI SMS ($9.99/mo) is Live!</strong> 2-Way Back-and-Forth AI Texting + 15 Free Test Minutes + 1-Tap *71 Forwarding.
+    <!-- Top Announcement Strip -->
+    <div class="global-announcement-bar">
+        <span>⚡ <strong>NEW:</strong> 2-Way Conversational AI SMS &amp; AI Voice Receptionist (*71)</span>
+        <a href="/voice">Explore Voice Hub &rarr;</a>
     </div>
 
-    <!-- Navigation Header -->
-    <header>
-        <div class="container">
-            <nav>
-                <a href="/" class="logo">
-                    <span>MissedCallAutoSMS</span>
-                </a>
-                <div class="nav-links">
-                    <a href="/">📱 Flagship Appliance</a>
-                    <a href="/pro" style="color: #C084FC; font-weight: 700;">⚡ Pro Automations</a>
-                    <a href="#demo" class="nav-link-demo">🎙️ Live Voice Demo</a>
-                    <a href="#pricing">Pricing & Tiers</a>
-                    <a href="/agency">Agency Fleet</a>
+    <!-- Global Unified Navigation Header -->
+    <header class="global-nav-wrapper">
+        <div class="global-nav-container">
+            <a href="/" class="global-logo">
+                <img src="/assets/logo.svg" alt="Missed Call Auto SMS" width="36" height="36" class="global-logo-img">
+                <div class="global-logo-text">
+                    <span class="global-logo-main">Missed Call</span>
+                    <span class="global-logo-accent">Auto SMS</span>
                 </div>
-                <div class="nav-cta">
-                    <a href="https://buy.stripe.com/5kQ5kDbBI8hkdao8WZ2go0c" class="btn-buy-nav">Free 3-Day Trial</a>
-                </div>
+            </a>
+
+            <nav class="global-nav-links">
+                <a href="/#demo-stage" class="global-nav-link">Overview</a>
+                <a href="/#features" class="global-nav-link">Features</a>
+                <a href="/voice" class="global-nav-link active">AI Voice <span class="global-link-badge">*71</span></a>
+                <a href="/pro" class="global-nav-link">Pro Gateway <span class="global-link-badge">API</span></a>
+                <a href="/#pricing" class="global-nav-link">Pricing</a>
+                <a href="/agency" class="global-nav-link">Agency Fleet</a>
+                <a href="/developers" class="global-nav-link">Developers</a>
+                <a href="/blog" class="global-nav-link">Blog</a>
+                <a href="/support" class="global-nav-link">Support</a>
             </nav>
+
+            <div class="global-nav-actions">
+                <a href="tel:+17326609121" class="global-nav-phone">
+                    <span class="phone-icon">📞</span>
+                    <span>(732) 660-9121</span>
+                </a>
+                <a href="https://buy.stripe.com/5kQ5kDbBI8hkdao8WZ2go0c" class="global-btn-trial">
+                    3-Day Trial ($0) &rarr;
+                </a>
+                <button id="globalMobileMenuBtn" class="global-mobile-menu-btn" onclick="toggleGlobalMobileMenu()" aria-label="Toggle navigation">
+                    <span></span>
+                    <span></span>
+                    <span></span>
+                </button>
+            </div>
+        </div>
+
+        <!-- Global Mobile Drawer -->
+        <div id="globalMobileDrawer" class="global-mobile-drawer">
+            <a href="/#demo-stage" class="global-mobile-nav-link" onclick="closeGlobalMobileMenu()">
+                <span>⚡ Overview &amp; Interactive Demo</span> <span class="link-arrow">&rsaquo;</span>
+            </a>
+            <a href="/#features" class="global-mobile-nav-link" onclick="closeGlobalMobileMenu()">
+                <span>🛡️ Features &amp; P2P Hardware Engine</span> <span class="link-arrow">&rsaquo;</span>
+            </a>
+            <a href="/voice" class="global-mobile-nav-link" onclick="closeGlobalMobileMenu()" style="color: #38BDF8;">
+                <span>🎙️ 24/7 AI Voice &amp; Conversational SMS</span> <span class="link-arrow">&rsaquo;</span>
+            </a>
+            <a href="/pro" class="global-mobile-nav-link" onclick="closeGlobalMobileMenu()">
+                <span>🛠️ Pro Automation Gateway (Webhooks)</span> <span class="link-arrow">&rsaquo;</span>
+            </a>
+            <a href="/#pricing" class="global-mobile-nav-link" onclick="closeGlobalMobileMenu()">
+                <span>💰 Transparent Pricing ($49.99 / $299.99)</span> <span class="link-arrow">&rsaquo;</span>
+            </a>
+            <a href="/agency" class="global-mobile-nav-link" onclick="closeGlobalMobileMenu()">
+                <span>🏢 Agency &amp; Reseller Fleet</span> <span class="link-arrow">&rsaquo;</span>
+            </a>
+            <a href="/developers" class="global-mobile-nav-link" onclick="closeGlobalMobileMenu()">
+                <span>💻 Developer Webhook API Docs</span> <span class="link-arrow">&rsaquo;</span>
+            </a>
+            <a href="/blog" class="global-mobile-nav-link" onclick="closeGlobalMobileMenu()">
+                <span>📚 Case Studies &amp; Playbooks</span> <span class="link-arrow">&rsaquo;</span>
+            </a>
+            <a href="/support" class="global-mobile-nav-link" onclick="closeGlobalMobileMenu()">
+                <span>🎫 Customer Support Desk</span> <span class="link-arrow">&rsaquo;</span>
+            </a>
+            <div class="global-mobile-drawer-cta">
+                <a href="tel:+17326609121" class="global-nav-phone" style="justify-content: center; width: 100%;">
+                    <span class="phone-icon">📞</span> Call Live Demo: (732) 660-9121
+                </a>
+                <a href="https://buy.stripe.com/5kQ5kDbBI8hkdao8WZ2go0c" class="global-btn-trial" style="width: 100%;">
+                    🎁 Start 3-Day Free Trial ($0.00 Today) &rarr;
+                </a>
+            </div>
         </div>
     </header>
 
-    <!-- Main Content -->
-    <main>
+    <!-- Main Hero -->
+    <section class="hero container" id="demo">
+        <div class="hero-badge">
+            <span class="voice-pill">🎙️ IN-APP ADD-ON • 24/7 AI TELEPHONY RECEPTIONIST</span>
+            <span>Requires Missed Call Auto SMS Android App</span>
+        </div>
 
-        <!-- Hero Section with Integrated Live Vapi WebRTC Stage -->
-        <section class="hero" id="demo">
-            <div class="container">
-                <div class="hero-pill">
-                    🎙️ 24/7 AI TELEPHONY + NATIVE SIM APPLIANCE
+        <h1 class="hero-title">
+            Never Miss Another $1,500 Job.<br>
+            <span class="accent-ink">Your 24/7 Autonomous AI Voice Receptionist.</span>
+        </h1>
+
+        <p class="hero-subtitle">
+            An in-app add-on for the Missed Call Auto SMS Android appliance. Answers in 15 seconds via carrier <code>*71</code> forwarding, triages customer emergencies, and <strong>holds natural 2-way Conversational AI SMS text dialogues straight from your real carrier SIM card</strong>. Zero Twilio 10DLC bans. Zero VoIP software lock-in.
+        </p>
+
+        <div class="hero-actions">
+            <a href="https://buy.stripe.com/5kQ5kDbBI8hkdao8WZ2go0c" class="btn-super-cta" style="padding: 16px 36px; font-size: 16px;">
+                🎁 Start 3-Day Free Trial ($0.00 Today)
+            </a>
+            <button onclick="startVapiCall()" class="btn-outline" style="padding: 16px 30px; font-size: 16px;">
+                🎙️ Speak With Live Demonstration Agent
+            </button>
+        </div>
+
+        <div class="hero-reassurances">
+            <span>
+                <svg fill="currentColor" viewBox="0 0 20 20"><path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clip-rule="evenodd"/></svg>
+                15 Free Test Minutes on Signup
+            </span>
+            <span>
+                <svg fill="currentColor" viewBox="0 0 20 20"><path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clip-rule="evenodd"/></svg>
+                1-Tap Carrier Forwarding (*71)
+            </span>
+            <span>
+                <svg fill="currentColor" viewBox="0 0 20 20"><path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clip-rule="evenodd"/></svg>
+                Cancel Anytime (Dial *73)
+            </span>
+            <span>
+                <svg fill="currentColor" viewBox="0 0 20 20"><path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clip-rule="evenodd"/></svg>
+                100% Real Carrier SIM Deliverability
+            </span>
+        </div>
+
+        <!-- Integrated Live Vapi WebRTC Call Widget -->
+        <div class="call-demo-container">
+            <div class="prompt-chips-title">💡 Speak Your Niche &amp; Business Name Or Click Any Example Below:</div>
+            <div class="prompt-chips-grid">
+                <div class="prompt-chip" onclick="copyPrompt('I run Apex Plumbing, a full-service residential plumbing repair company in Denver.')">
+                    🔧 <span>"Apex Plumbing (Plumbing &amp; Drains)"</span>
                 </div>
-                <h1>
-                    Never Miss Another $1,500 Trade Job.<br>
-                    <span class="gradient">Your 24/7 Autonomous AI Voice Receptionist.</span>
-                </h1>
-                <p class="hero-sub">
-                    Answers in 15 seconds, triages customer emergencies, books calendar appointments, and <strong>holds natural 2-way Conversational AI SMS text dialogues straight from your real phone's SIM card</strong>. Zero Twilio 10DLC bans. Zero VoIP software lock-in.
-                </p>
-
-                <!-- Integrated Live Vapi WebRTC Call Widget -->
-                <div class="call-demo-container">
-                    <div class="prompt-chips-title">💡 Speak Your Niche & Business Name Or Click Any Example Below:</div>
-                    <div class="prompt-chips-grid">
-                        <div class="prompt-chip" onclick="copyPrompt('I run Apex Plumbing, a full-service residential plumbing repair company in Denver.')">
-                            🔧 <span>"Apex Plumbing (Plumbing & Drains)"</span>
-                        </div>
-                        <div class="prompt-chip" onclick="copyPrompt('We are Horizon Air, an HVAC heating and air conditioning company in Dallas.')">
-                            ❄️ <span>"Horizon Air (HVAC & Heating)"</span>
-                        </div>
-                        <div class="prompt-chip" onclick="copyPrompt('I own Diamond Detailing, a mobile auto detailing and ceramic coating business.')">
-                            🚗 <span>"Diamond Detailing (Mobile Auto)"</span>
-                        </div>
-                        <div class="prompt-chip" onclick="copyPrompt('We are Summit Roofing, residential and commercial roofing specialists.')">
-                            🏠 <span>"Summit Roofing (Roofing & Gutters)"</span>
-                        </div>
-                        <div class="prompt-chip" onclick="copyPrompt('I operate Classic Barbers, a busy barbershop booking fades, trims, and cuts.')">
-                            💈 <span>"Classic Barbers (Barbershop/Salon)"</span>
-                        </div>
-                        <div class="prompt-chip" onclick="copyPrompt('We are Vantage Law Group, a personal injury and legal intake practice.')">
-                            ⚖️ <span>"Vantage Law (Legal Intake)"</span>
-                        </div>
-                    </div>
-
-                    <!-- Call Stage Container -->
-                    <div class="call-stage" id="callStage">
-                        <div class="call-avatar-wrapper">
-                            <div class="call-pulse-ring"></div>
-                            <div class="call-avatar" id="callAvatar">🎙️</div>
-                        </div>
-
-                        <div class="call-status-badge" id="callStatusBadge">
-                            <span>Ready to Connect</span>
-                        </div>
-
-                        <div class="call-agent-name">Missed Call Auto SMS • Live Demonstration Agent</div>
-                        <div class="call-agent-subtitle" id="callSubtitle">
-                            1-Tap Live Roleplay Demo • Test Any Niche / Profession • Real-Time Voice Answering
-                        </div>
-
-                        <!-- Idle State -->
-                        <div id="callIdleControls">
-                            <button class="btn-call-start" id="startCallBtn" onclick="startVapiCall()">
-                                <span>📞</span>
-                                <span>Start 1-Tap Live Demo Call (Speak With Demonstration Agent)</span>
-                            </button>
-                            <div class="call-footer-note">
-                                <span>🔒 100% In-Browser Audio (WebRTC)</span>
-                                <span>⏱️ 4-Minute Interactive Demo</span>
-                                <span>🎙️ Requires Mic Permission</span>
-                            </div>
-                        </div>
-
-                        <!-- Connecting State -->
-                        <div id="callConnectingControls" style="display: none;">
-                            <p style="color: #EAB308; font-weight: 700; margin: 10px 0;">
-                                ⏳ Connecting to Demonstration Agent via Vapi WebRTC...
-                            </p>
-                        </div>
-
-                        <!-- Active Call State -->
-                        <div id="callActiveControls" style="display: none;">
-                            <div class="call-timer-display" id="callTimer">Call Time: 0:00 / 4:00</div>
-
-                            <div class="call-wave-visualizer" id="liveWaveVisual">
-                                <!-- Generated wave bars -->
-                            </div>
-
-                            <div class="call-active-controls">
-                                <button class="btn-call-mute" id="muteBtn" onclick="toggleMute()">
-                                    <span id="muteIcon">🎙️</span>
-                                    <span id="muteText">Mute Mic</span>
-                                </button>
-                                <button class="btn-call-end" onclick="endVapiCall()">
-                                    <span>🔴</span>
-                                    <span>End Call</span>
-                                </button>
-                            </div>
-                        </div>
-
-                        <!-- Completed Call State -->
-                        <div id="callEndedControls" style="display: none;">
-                            <p style="color: var(--primary); font-weight: 800; font-size: 16px; margin: 10px 0 16px;">
-                                ✅ Demonstration Completed!
-                            </p>
-                            <div style="display: flex; gap: 12px; justify-content: center; flex-wrap: wrap;">
-                                <button class="btn-call-mute" onclick="resetCallState()">
-                                    <span>🔄</span>
-                                    <span>Test Another Niche</span>
-                                </button>
-                                <button onclick="proceedToFlagshipVoiceCheckout()" class="btn-call-start" style="border: none; cursor: pointer; text-decoration: none; padding: 10px 22px; font-size: 14px; background: #00E676; color: #000; font-weight: 800;">
-                                    <span>⚡</span>
-                                    <span>Get Flagship + AI Voice Bundle ($59.98 Today, then $9.99/mo) ➔</span>
-                                </button>
-                            </div>
-                            <div style="margin-top: 14px; text-align: center;">
-                                <a href="https://buy.stripe.com/5kQ5kDbBI8hkdao8WZ2go0c" style="color: #94A3B8; font-size: 13px; text-decoration: underline;">
-                                    Or Start 3-Day Free Trial ($0.00 Today)
-                                </a>
-                            </div>
-                        </div>
-
-                        <!-- Realtime Transcript Stream -->
-                        <div class="call-transcript-stream" id="transcriptStream">
-                            <div class="transcript-msg">
-                                <span class="speaker-tag speaker-system">System:</span> Click "Start 1-Tap Live Demo Call" above to speak with our Demonstration Agent in real-time. Speak your industry and business name!
-                            </div>
-                        </div>
-                    </div>
+                <div class="prompt-chip" onclick="copyPrompt('We are Horizon Air, an HVAC heating and air conditioning company in Dallas.')">
+                    ❄️ <span>"Horizon Air (HVAC &amp; Heating)"</span>
                 </div>
-
-                <div class="hero-cta-group" style="margin-top: 36px;">
-                    <a href="https://buy.stripe.com/5kQ5kDbBI8hkdao8WZ2go0c" class="btn-primary-lg">
-                        ⚡ Start 3-Day Free Trial ($0.00 Today) ➔
-                    </a>
-                    <a href="https://buy.stripe.com/6oU9ATbBIeFI8U86OR2go0g" class="btn-secondary-lg">
-                        ⚡ Get Pro Gateway ($299.99)
-                    </a>
+                <div class="prompt-chip" onclick="copyPrompt('I own Diamond Detailing, a mobile auto detailing and ceramic coating business.')">
+                    🚗 <span>"Diamond Detailing (Mobile Auto)"</span>
                 </div>
-
-                <div class="hero-guarantee">
-                    <span>🔒 No Setup Fees</span>
-                    <span>⚡ 1-Tap Carrier Forwarding (*71)</span>
-                    <span>🛑 Cancel Anytime (Dial *73)</span>
-                    <span>📱 100% Native SIM SMS Delivery</span>
+                <div class="prompt-chip" onclick="copyPrompt('We are Summit Roofing, residential and commercial roofing specialists.')">
+                    🏠 <span>"Summit Roofing (Roofing &amp; Gutters)"</span>
                 </div>
-
-                <!-- Hero Visual Media Banner -->
-                <div class="hero-media-wrapper">
-                    <img src="/assets/social/ai_voice_receptionist_hero.jpg" alt="Autonomous AI Voice Receptionist Appliance Setup" width="1040" height="585">
-                    <div class="floating-call-badge">
-                        <div class="floating-badge-top">
-                            <div class="badge-live-indicator">
-                                <span class="live-dot"></span> Inbound Call Active (0:18s)
-                            </div>
-                            <span style="font-size: 11px; color: var(--muted);">SIM Line: +1 (404) 555-8321</span>
-                        </div>
-                        <p class="badge-quote">
-                            "Hi, thanks for calling Apex Plumbing! I can dispatch our senior technician tomorrow at 9:00 AM. I just texted confirmation details to your cell phone from our main office line."
-                        </p>
-                    </div>
+                <div class="prompt-chip" onclick="copyPrompt('I operate Classic Barbers, a busy barbershop booking fades, trims, and cuts.')">
+                    💈 <span>"Classic Barbers (Barbershop/Salon)"</span>
                 </div>
-
-                <!-- Metric Strip -->
-                <div class="metric-strip">
-                    <div class="metric-card">
-                        <div class="metric-num">15s</div>
-                        <div class="metric-label">Average Call Pickup Time</div>
-                    </div>
-                    <div class="metric-card">
-                        <div class="metric-num">15 Min</div>
-                        <div class="metric-label">Free Test Minutes on Signup</div>
-                    </div>
-                    <div class="metric-card">
-                        <div class="metric-num">100%</div>
-                        <div class="metric-label">Carrier SIM SMS Delivery Rate</div>
-                    </div>
-                    <div class="metric-card">
-                        <div class="metric-num">$3,400/mo</div>
-                        <div class="metric-label">Average Payroll Savings vs Staff</div>
-                    </div>
-                </div>
-
-            </div>
-        </section>
-
-
-        <!-- Complete Lifecycle: Sign-Up to Implementation to Cancellation -->
-        <section id="lifecycle">
-            <div class="container">
-                <div class="section-header">
-                    <span class="section-tag">End-to-End Transparency</span>
-                    <h2>What to Expect: From Setup to Cancellation</h2>
-                    <p>We built Missed Call Auto SMS with zero friction, zero hidden contracts, and absolute clarity at every stage.</p>
-                </div>
-
-                <div class="lifecycle-grid">
-
-                    <!-- Step 1 -->
-                    <div class="lifecycle-step">
-                        <div class="step-badge">1</div>
-                        <div class="step-body">
-                            <div class="step-phase">Onboarding & Provisioning (60 Seconds)</div>
-                            <h3 class="step-title">Instant Automated Voice Assistant & Number Setup</h3>
-                            <p class="step-desc">
-                                When you complete checkout, our cloud provisioning engine automatically builds your dedicated AI Receptionist assistant on Vapi and assigns a dedicated routing telephone line. You instantly receive your Pro License Key, setup instructions, and APK download link via email.
-                            </p>
-                            <div class="step-highlight-box">
-                                <strong>What you receive:</strong> Instant <code>MCAS-PRO-...</code> Key + Dedicated Forwarding Phone Number + Pro Android APK.
-                            </div>
-                        </div>
-                    </div>
-
-                    <!-- Step 2 -->
-                    <div class="lifecycle-step">
-                        <div class="step-badge">2</div>
-                        <div class="step-body">
-                            <div class="step-phase">Zero-Friction Phone Setup (2 Minutes)</div>
-                            <h3 class="step-title">1-Tap Carrier Conditional Call Forwarding (*71)</h3>
-                            <p class="step-desc">
-                                You never have to port your phone number or switch carriers. Open your phone dialer and dial <code>*71</code> followed by your assigned receptionist number. Whenever your phone rings for 15 seconds unanswered, your carrier automatically routes the caller to your AI assistant.
-                            </p>
-                            <div class="step-highlight-box">
-                                <strong>Setup Command:</strong> Dial <code>*71[AssignedNumber]</code> from Verizon, AT&T, T-Mobile, or any US carrier.
-                            </div>
-                        </div>
-                    </div>
-
-                    <!-- Step 3 -->
-                    <div class="lifecycle-step">
-                        <div class="step-badge">3</div>
-                        <div class="step-body">
-                            <div class="step-phase">Live Autonomous Operation</div>
-                            <h3 class="step-title">Conversational AI Answers & Books Appointments</h3>
-                            <p class="step-desc">
-                                While you're on a ladder, under a sink, or asleep, your AI voice assistant answers naturally, handles customer FAQs, asks qualifying questions, checks emergency urgency, and schedules calendar appointments.
-                            </p>
-                            <div class="step-highlight-box">
-                                <strong>Transparent Usage:</strong> 15 Free Test Minutes on signup. Ongoing usage billed at just $0.25/min via automatic $10 reload packs (40 mins each) with balance auto-pause safeguard.
-                            </div>
-                        </div>
-                    </div>
-
-                    <!-- Step 4 -->
-                    <div class="lifecycle-step">
-                        <div class="step-badge">4</div>
-                        <div class="step-body">
-                            <div class="step-phase">The Secret Sauce: 24/7 Conversational AI SMS Engine</div>
-                            <h3 class="step-title">2-Way Natural AI SMS Dispatched from Your Carrier SIM</h3>
-                            <p class="step-desc">
-                                While static auto-responders only send a single canned template, our <strong>Conversational AI SMS Engine</strong> engages callers in an authentic, multi-turn text dialogue directly from your phone's real carrier SIM. It answers questions, collects job details, quotes estimates, and shares booking links. Plus, with our built-in <strong>Human Takeover Safeguard</strong>, the moment you text back manually, the AI automatically pauses for 30 minutes so you take complete control.
-                            </p>
-                            <div class="step-highlight-box">
-                                <strong>100% P2P Carrier Deliverability:</strong> Real SIM dispatch means 0% spam filtering, zero Twilio 10DLC registration, and true 2-way conversation.
-                            </div>
-                        </div>
-                    </div>
-
-                    <!-- Step 5 -->
-                    <div class="lifecycle-step">
-                        <div class="step-badge">5</div>
-                        <div class="step-body">
-                            <div class="step-phase">Cancellation & Reactivation Policy</div>
-                            <h3 class="step-title">1-Click Cancellation, Unforwarding, & Instant Reactivation</h3>
-                            <p class="step-desc">
-                                If you ever want to pause or cancel your subscription, simply click "Cancel" in your self-serve customer billing portal. To stop forwarding calls, dial <code>*73</code> on your phone to restore normal carrier ringing.
-                            </p>
-                            <div class="step-highlight-box">
-                                <strong>App Ownership & API Gating:</strong> Your phone retains the Missed Call Auto SMS app to auto-text missed calls locally. Cloud Relay API integrations pause upon cancellation, and you can reactivate your AI voice line anytime in 1 click without setup fees.
-                            </div>
-                        </div>
-                    </div>
-
+                <div class="prompt-chip" onclick="copyPrompt('We are Vantage Law Group, a personal injury and legal intake practice.')">
+                    ⚖️ <span>"Vantage Law (Legal Intake)"</span>
                 </div>
             </div>
-        </section>
 
-        <!-- Feature Grid -->
-        <section id="features">
-            <div class="container">
-                <div class="section-header">
-                    <span class="section-tag">Enterprise Architecture</span>
-                    <h2>Engineered for High-Converting Service Businesses</h2>
-                    <p>Everything you need to replace expensive call centers with an autonomous digital appliance.</p>
+            <!-- Call Stage Container -->
+            <div class="call-stage" id="callStage">
+                <div class="call-avatar-wrapper">
+                    <div class="call-pulse-ring"></div>
+                    <div class="call-avatar" id="callAvatar">🎙️</div>
                 </div>
 
-                <div class="features-grid">
-                    <div class="feature-card">
-                        <div class="feature-icon">🤖</div>
-                        <h3>Ultra-Low Latency GPT-4o-mini</h3>
-                        <p>Powered by fine-tuned prompt logic and 0.30 temperature for fast, natural human conversations with zero awkward robotic pauses.</p>
-                    </div>
-
-                    <div class="feature-card">
-                        <div class="feature-icon">🚨</div>
-                        <h3>Emergency Keyword Triage</h3>
-                        <p>Instantly flags urgent keywords ("leak", "smoke", "burst pipe", "emergency") and triggers high-priority sound alerts and owner SMS notifications.</p>
-                    </div>
-
-                    <div class="feature-card">
-                        <div class="feature-icon">📱</div>
-                        <h3>Dual-SIM Carrier Control</h3>
-                        <p>Keep your personal SIM and business SIM on one device. Select which SIM card sends the follow-up text with 1 tap.</p>
-                    </div>
-
-                    <div class="feature-card">
-                        <div class="feature-icon">📅</div>
-                        <h3>Live Calendar & CRM Sync</h3>
-                        <p>Syncs booked appointments straight into Google Calendar, GoHighLevel, n8n, Make.com, or your custom CRM webhook endpoint.</p>
-                    </div>
-
-                    <div class="feature-card">
-                        <div class="feature-icon">📊</div>
-                        <h3>Call Logs & Full Transcripts</h3>
-                        <p>Every call is transcribed and summarized. Get caller sentiment, customer name, address, and audio recordings delivered immediately.</p>
-                    </div>
-
-                    <div class="feature-card" style="border-color: rgba(0, 230, 118, 0.4); background: rgba(0, 230, 118, 0.03);">
-                        <div class="feature-icon">💬</div>
-                        <h3 style="color: var(--primary);">2-Way Conversational AI SMS</h3>
-                        <p>Multi-turn natural text dialogues sent directly from your carrier SIM. Handles customer inquiries, job quotes, and scheduling with an automatic 30-minute Human Takeover Safeguard.</p>
-                    </div>
-
-                    <div class="feature-card">
-                        <div class="feature-icon">🔑</div>
-                        <h3>Free BYOK (Bring Your Own Keys)</h3>
-                        <p>Want 100% cost control? Connect your own Vapi/OpenAI API keys in the app settings to run unlimited voice minutes for $0/mo platform fee.</p>
-                    </div>
-                </div>
-            </div>
-        </section>
-
-        <!-- Conversational AI SMS Spotlight Section -->
-        <section id="ai-sms" style="background: radial-gradient(circle at 50% 0%, rgba(0, 230, 118, 0.08) 0%, transparent 70%); border-top: 1px solid var(--card-border);">
-            <div class="container">
-                <div class="section-header">
-                    <span class="section-tag" style="background: rgba(0, 230, 118, 0.15); border-color: rgba(0, 230, 118, 0.3); color: var(--primary);">
-                        ⚡ INCLUDED IN THE $9.99/MO BUNDLE
-                    </span>
-                    <h2>2-Way Conversational AI SMS Engine</h2>
-                    <p>When callers hang up or prefer texting, your phone instantly shifts to an authentic multi-turn SMS conversation—powered by GPT-4o-mini and sent from your real carrier SIM.</p>
+                <div class="call-status-badge" id="callStatusBadge">
+                    <span>Ready to Connect</span>
                 </div>
 
-                <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(320px, 1fr)); gap: 40px; align-items: center; margin-top: 40px;">
-                    <div>
-                        <div style="border-radius: 16px; overflow: hidden; border: 1px solid var(--card-border); box-shadow: 0 20px 50px rgba(0,0,0,0.6), 0 0 30px rgba(0,230,118,0.15);">
-                            <img src="/assets/social/conversational_ai_sms_feature.jpg" alt="Conversational AI SMS Engine in Action" style="width: 100%; height: auto; display: block; object-fit: cover;" loading="lazy">
-                        </div>
-                    </div>
-                    <div>
-                        <div style="margin-bottom: 24px;">
-                            <div style="font-size: 20px; font-weight: 800; color: #FFF; margin-bottom: 8px; display: flex; align-items: center; gap: 10px;">
-                                💬 Natural Multi-Turn Conversations
-                            </div>
-                            <p style="color: var(--muted); font-size: 15px; line-height: 1.6; margin: 0;">
-                                Unlike dumb static auto-responders that send one canned message and quit, our AI maintains context across multiple text replies. It answers service questions, collects job addresses, qualifies emergencies, and books estimates.
-                            </p>
-                        </div>
-
-                        <div style="margin-bottom: 24px;">
-                            <div style="font-size: 20px; font-weight: 800; color: #00E676; margin-bottom: 8px; display: flex; align-items: center; gap: 10px;">
-                                🛡️ Human Takeover Safeguard
-                            </div>
-                            <p style="color: var(--muted); font-size: 15px; line-height: 1.6; margin: 0;">
-                                You always stay in control. The second you manually reply to a customer from your phone, our intelligent safeguard auto-pauses the AI for 30 minutes, preventing awkward robotic overlap while you close the deal.
-                            </p>
-                        </div>
-
-                        <div style="margin-bottom: 24px;">
-                            <div style="font-size: 20px; font-weight: 800; color: #38BDF8; margin-bottom: 8px; display: flex; align-items: center; gap: 10px;">
-                                📱 Real SIM Deliverability (Zero 10DLC Bans)
-                            </div>
-                            <p style="color: var(--muted); font-size: 15px; line-height: 1.6; margin: 0;">
-                                Every message is transmitted directly through your Android phone's real carrier SIM card (Verizon, AT&amp;T, T-Mobile). 100% P2P deliverability, zero $200+ Twilio registration fees, and zero spam filtering.
-                            </p>
-                        </div>
-
-                        <div style="background: rgba(0, 230, 118, 0.08); border: 1px solid rgba(0, 230, 118, 0.25); border-radius: 12px; padding: 16px 20px; font-size: 14px; color: #A7F3D0; line-height: 1.5;">
-                            🔥 <strong>Zero Extra Monthly Cost:</strong> Full 2-way Conversational AI SMS is included at no extra charge in the <strong>$9.99/mo Autonomous Front Desk</strong> package alongside your 24/7 AI Voice Receptionist.
-                        </div>
-                    </div>
-                </div>
-            </div>
-        </section>
-
-        <!-- Cost Comparison Table -->
-        <section>
-            <div class="container">
-                <div class="section-header">
-                    <span class="section-tag">Financial Comparison</span>
-                    <h2>Why Businesses Are Replacing Call Centers</h2>
-                    <p>Compare the true cost of human staff vs legacy answering services vs Autonomous Front Desk.</p>
+                <div class="call-agent-name">Missed Call Auto SMS • Live Demonstration Agent</div>
+                <div class="call-agent-subtitle" id="callSubtitle">
+                    1-Tap Live Roleplay Demo • Test Any Niche / Profession • Real-Time Voice Answering
                 </div>
 
-                <div class="comparison-table-wrapper">
-                    <table class="comp-table">
-                        <thead>
-                            <tr>
-                                <th>Feature / Metric</th>
-                                <th>Full-Time Receptionist</th>
-                                <th>Legacy Answering Service</th>
-                                <th class="highlight-col">Autonomous Front Desk</th>
-                            </tr>
-                        </thead>
-                        <tbody>
-                            <tr>
-                                <td><strong>Monthly Cost</strong></td>
-                                <td>$3,500 - $4,500/mo</td>
-                                <td>$350 - $800/mo + per min</td>
-                                <td class="highlight-col"><strong>$9.99 / mo + usage</strong></td>
-                            </tr>
-                            <tr>
-                                <td><strong>Availability</strong></td>
-                                <td>40 hrs/wk (Mon-Fri 9-5)</td>
-                                <td>24/7 (Wait times vary)</td>
-                                <td class="highlight-col"><strong>24/7/365 Instant Pickup</strong></td>
-                            </tr>
-                            <tr>
-                                <td><strong>Pickup Latency</strong></td>
-                                <td>20 - 45 seconds</td>
-                                <td>30 - 90 seconds</td>
-                                <td class="highlight-col"><strong>15 seconds (Carrier *71)</strong></td>
-                            </tr>
-                            <tr>
-                                <td><strong>SMS Follow-Up</strong></td>
-                                <td>Manual / Forgotten</td>
-                                <td>Robotic 800 Number</td>
-                                <td class="highlight-col"><strong>Real SIM Business Number</strong></td>
-                            </tr>
-                            <tr>
-                                <td><strong>Twilio 10DLC Registration</strong></td>
-                                <td>N/A</td>
-                                <td>Required ($200+ & bans)</td>
-                                <td class="highlight-col"><strong>100% Exempt (Native SIM)</strong></td>
-                            </tr>
-                            <tr>
-                                <td><strong>Calendar Booking</strong></td>
-                                <td>Yes</td>
-                                <td>Basic Message Taking</td>
-                                <td class="highlight-col"><strong>Automated Direct Booking</strong></td>
-                            </tr>
-                            <tr>
-                                <td><strong>Cancellation Contract</strong></td>
-                                <td>Severance / Unemployment</td>
-                                <td>12-Month Lock-In</td>
-                                <td class="highlight-col"><strong>Cancel Anytime (Dial *73)</strong></td>
-                            </tr>
-                        </tbody>
-                    </table>
-                </div>
-            </div>
-        </section>
-
-        <!-- Transparent Tier Comparison -->
-        <section id="pricing">
-            <div class="container">
-                <div class="section-header">
-                    <span class="section-tag">Clear Licensing Structure</span>
-                    <h2>Choose Your Appliance Edition</h2>
-                    <p>Clear, transparent pricing designed to fit solo trades, busy contractors, and automation power users.</p>
-                </div>
-
-                <div class="tiers-grid">
-
-                    <!-- Tier 1: Founder Flagship Base Appliance -->
-                    <div class="tier-card">
-                        <div class="tier-name">Base Appliance</div>
-                        <div class="tier-price">$49.99 <span>/ lifetime</span></div>
-                        <div class="tier-subtitle">Standalone native Android missed-call recovery appliance.</div>
-                        <ul class="tier-features-list">
-                            <li>Lifetime Android License (1 Phone)</li>
-                            <li>Instant Carrier SIM Auto-Reply SMS</li>
-                            <li>Zero Monthly Subscriptions or Per-Text Fees</li>
-                            <li>100% P2P Carrier A2P 10DLC Exempt</li>
-                            <li>Dual-SIM Slot Selection</li>
-                            <li>Custom Business Hours & Keyword Rules</li>
-                            <li>Eligible for 1-Click Voice & Pro Add-ons</li>
-                        </ul>
-                        <a href="https://buy.stripe.com/3cI9AT49g2X07Q41ux2go0a" class="btn-secondary-lg" style="justify-content:center;">
-                            Buy Base Appliance ($49.99)
-                        </a>
-                    </div>
-
-                    <!-- Tier 2: AI Voice Front Desk Add-On -->
-                    <div class="tier-card featured">
-                        <div class="tier-badge">IN-APP ADD-ON • VOICE + CONVERSATIONAL AI SMS</div>
-                        <div class="tier-name">Autonomous Front Desk Bundle</div>
-                        <div class="tier-price">$9.99 <span>/ month + usage</span></div>
-                        <div class="tier-subtitle">24/7 AI Voice Receptionist + 2-Way Conversational AI SMS.</div>
-                        <ul class="tier-features-list">
-                            <li><strong>In-App Add-On:</strong> Requires Base Android Appliance ($49.99)</li>
-                            <li><strong>15 FREE Minutes Included</strong> on Signup</li>
-                            <li><strong>24/7 AI Voice Receptionist:</strong> Answers calls via *71 forwarding</li>
-                            <li><strong>NEW: 2-Way Conversational AI SMS:</strong> Back-and-forth AI texting via real SIM</li>
-                            <li><strong>Human Takeover Safeguard:</strong> Auto-pauses AI for 30m when you text</li>
-                            <li><strong>Low Entry: Just $9.99/mo</strong> Platform Fee</li>
-                            <li><strong>Transparent Voice Usage: $0.25/min</strong> with Volume Pack Discounts</li>
-                            <li>Auto-Recharge Toggle (Safe Auto-Pause at 0 mins)</li>
-                            <li>Full Call Transcripts, Audio Recordings, & SMS Logs</li>
-                            <li>Cancel Anytime (Dial *73 to Revert Carrier)</li>
-                        </ul>
-                        <a href="/#checkout" class="btn-primary-lg" style="justify-content:center;">
-                            📱 Get Appliance + AI Front Desk ($49.99) ➔
-                        </a>
-                        <a href="https://buy.stripe.com/4gMeVdcFMaps6M0b572go0f" style="display: block; font-size: 12px; color: #00E676; font-weight: 800; margin-top: 10px; text-align: center; text-decoration: underline;">
-                            Already have an appliance? Subscribe to Voice & AI SMS Pro ($9.99/mo) ➔
-                        </a>
-                        <div style="font-size: 11px; color: #A7F3D0; margin-top: 6px; text-align: center;">⚡ Or activate the $9.99/mo add-on directly inside your app</div>
-                    </div>
-
-                    <!-- Tier 3: Perpetual Pro Automation Gateway -->
-                    <div class="tier-card">
-                        <div class="tier-name">Pro Automation Gateway</div>
-                        <div class="tier-price">$299.99 <span>/ lifetime</span></div>
-                        <div class="tier-subtitle">Unmetered Cloud Relay API & Webhooks ($249.99 upgrade for Base owners).</div>
-                        <ul class="tier-features-list">
-                            <li>Perpetual Pro Gateway License (Lifetime)</li>
-                            <li><strong>$249.99 Upgrade</strong> for Existing $49.99 Owners</li>
-                            <li>Unmetered Cloud Relay API Access</li>
-                            <li>Unlimited n8n / Make.com / Zapier Webhooks</li>
-                            <li>Zero Ongoing Cloud Relay Platform Fees</li>
-                            <li>Dual-SIM Advanced Programmatic Dispatch</li>
-                            <li>Free BYOK (Bring-Your-Own-Key) AI Integration</li>
-                            <li>Full CRM & Lead Distribution Webhooks</li>
-                        </ul>
-                        <a href="https://buy.stripe.com/6oU9ATbBIeFI8U86OR2go0g" class="btn-secondary-lg" style="justify-content:center;">
-                            Get Pro Gateway ($299.99)
-                        </a>
-                        <div style="font-size: 11px; color: var(--muted); margin-top: 8px; text-align: center;">$249.99 in-app upgrade for existing appliance owners</div>
-                    </div>
-
-                </div>
-
-                <!-- Multi-Tier Credit Packs Showcase -->
-                <div style="margin-top: 40px; background: rgba(13, 16, 22, 0.7); border: 1px solid rgba(0, 230, 118, 0.25); border-radius: 16px; padding: 30px; text-align: left;">
-                    <div style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 16px; margin-bottom: 20px;">
-                        <div>
-                            <div style="font-size: 11px; font-weight: 900; color: #00E676; text-transform: uppercase; letter-spacing: 0.5px;">STAGE 2 • IN-APP USAGE RELOADS &amp; TELEPHONY ACTIVATION</div>
-                            <h3 style="font-size: 24px; font-weight: 900; color: #FFF; margin: 6px 0 4px 0;">Flexible Reload Packs Managed 100% In-App</h3>
-                            <p style="font-size: 13px; color: var(--muted); margin: 0; max-width: 650px;">
-                                Minutes are loaded seamlessly inside the Android Appliance with 1-tap in-app checkout. Loading your first credit pack instantly activates your dedicated telephony number and *71 carrier code.
-                            </p>
-                        </div>
-                        <div style="font-size: 12px; color: #A7F3D0; background: rgba(0, 230, 118, 0.1); border: 1px solid rgba(0, 230, 118, 0.3); padding: 8px 16px; border-radius: 20px; font-weight: 700;">
-                            🛡️ 100% In-App Purchase • Zero Bill Shock
-                        </div>
-                    </div>
-
-                    <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(230px, 1fr)); gap: 16px;">
-                        <!-- Pack 10 -->
-                        <div style="background: rgba(255,255,255,0.02); border: 1px solid rgba(255,255,255,0.08); border-radius: 12px; padding: 20px; text-align: center; display: flex; flex-direction: column;">
-                            <div style="font-size: 11px; font-weight: 800; color: var(--muted); text-transform: uppercase;">STARTER</div>
-                            <div style="font-size: 26px; font-weight: 900; color: #FFF; margin: 6px 0 2px 0;">$10.00</div>
-                            <div style="font-size: 13px; font-weight: 800; color: #38BDF8; margin-bottom: 12px;">40 Minutes ($0.250/m)</div>
-                            <div style="font-size: 11.5px; color: var(--muted); margin-bottom: 16px; flex-grow: 1;">
-                                Standard starter reload pack. Perfect for testing and light volume.
-                            </div>
-                            <div style="background: rgba(255,255,255,0.06); border-radius: 8px; padding: 8px; font-size: 12px; font-weight: 800; color: #CBD5E0;">
-                                📲 In-App 1-Tap Reload
-                            </div>
-                        </div>
-
-                        <!-- Pack 25 -->
-                        <div style="background: rgba(56, 189, 248, 0.05); border: 1px solid rgba(56, 189, 248, 0.3); border-radius: 12px; padding: 20px; text-align: center; display: flex; flex-direction: column; position: relative;">
-                            <div style="position: absolute; top: -10px; left: 50%; transform: translateX(-50%); background: #0284C7; color: #FFF; font-size: 10px; font-weight: 900; padding: 2px 10px; border-radius: 10px; text-transform: uppercase; white-space: nowrap;">+15 BONUS MINS</div>
-                            <div style="font-size: 11px; font-weight: 800; color: #38BDF8; text-transform: uppercase;">GROWTH</div>
-                            <div style="font-size: 26px; font-weight: 900; color: #FFF; margin: 6px 0 2px 0;">$25.00</div>
-                            <div style="font-size: 13px; font-weight: 800; color: #00E676; margin-bottom: 12px;">115 Minutes (~$0.217/m)</div>
-                            <div style="font-size: 11.5px; color: #CBD5E0; margin-bottom: 16px; flex-grow: 1;">
-                                Save 13% with 15 free bonus minutes for growing service businesses.
-                            </div>
-                            <div style="background: rgba(56, 189, 248, 0.15); border-radius: 8px; padding: 8px; font-size: 12px; font-weight: 800; color: #38BDF8;">
-                                📲 In-App 1-Tap Reload
-                            </div>
-                        </div>
-
-                        <!-- Pack 50 -->
-                        <div style="background: rgba(0, 230, 118, 0.06); border: 2px solid #00E676; border-radius: 12px; padding: 20px; text-align: center; display: flex; flex-direction: column; position: relative; box-shadow: 0 4px 20px rgba(0,230,118,0.15);">
-                            <div style="position: absolute; top: -10px; left: 50%; transform: translateX(-50%); background: #00E676; color: #000; font-size: 10px; font-weight: 900; padding: 2px 10px; border-radius: 10px; text-transform: uppercase; white-space: nowrap;">+50 BONUS MINS • 20% OFF</div>
-                            <div style="font-size: 11px; font-weight: 800; color: #00E676; text-transform: uppercase;">PRO CONTRACTOR</div>
-                            <div style="font-size: 26px; font-weight: 900; color: #FFF; margin: 6px 0 2px 0;">$50.00</div>
-                            <div style="font-size: 13px; font-weight: 800; color: #00E676; margin-bottom: 12px;">250 Minutes ($0.200/m)</div>
-                            <div style="font-size: 11.5px; color: #E2E8F0; margin-bottom: 16px; flex-grow: 1;">
-                                Save 20% with 50 free bonus minutes. Most popular for high call volume trades.
-                            </div>
-                            <div style="background: rgba(0, 230, 118, 0.15); border-radius: 8px; padding: 8px; font-size: 12px; font-weight: 900; color: #00E676;">
-                                📲 In-App 1-Tap Reload
-                            </div>
-                        </div>
-
-                        <!-- Pack 100 -->
-                        <div style="background: rgba(168, 85, 247, 0.06); border: 1px solid rgba(168, 85, 247, 0.3); border-radius: 12px; padding: 20px; text-align: center; display: flex; flex-direction: column; position: relative;">
-                            <div style="position: absolute; top: -10px; left: 50%; transform: translateX(-50%); background: #9333EA; color: #FFF; font-size: 10px; font-weight: 900; padding: 2px 10px; border-radius: 10px; text-transform: uppercase; white-space: nowrap;">+150 BONUS MINS • 28% OFF</div>
-                            <div style="font-size: 11px; font-weight: 800; color: #C084FC; text-transform: uppercase;">FLEET VOLUME</div>
-                            <div style="font-size: 26px; font-weight: 900; color: #FFF; margin: 6px 0 2px 0;">$100.00</div>
-                            <div style="font-size: 13px; font-weight: 800; color: #D8B4FE; margin-bottom: 12px;">550 Minutes (~$0.181/m)</div>
-                            <div style="font-size: 11.5px; color: #CBD5E0; margin-bottom: 16px; flex-grow: 1;">
-                                Maximum discount (28% off) with 150 bonus minutes for multi-tech fleets and agencies.
-                            </div>
-                            <div style="background: rgba(168, 85, 247, 0.15); border-radius: 8px; padding: 8px; font-size: 12px; font-weight: 800; color: #D8B4FE;">
-                                📲 In-App 1-Tap Reload
-                            </div>
-                        </div>
+                <!-- Idle State -->
+                <div id="callIdleControls">
+                    <button class="btn-call-start" id="startCallBtn" onclick="startVapiCall()">
+                        <span>📞</span>
+                        <span>Start 1-Tap Live Demo Call (Speak With Demonstration Agent)</span>
+                    </button>
+                    <div class="call-footer-note">
+                        <span>🔒 100% In-Browser Audio (WebRTC)</span>
+                        <span>⏱️ 4-Minute Interactive Demo</span>
+                        <span>🎙️ Requires Mic Permission</span>
                     </div>
                 </div>
-            </div>
-        </section>
 
-        <!-- Comprehensive FAQ -->
-        <section id="faq">
-            <div class="container">
-                <div class="section-header">
-                    <span class="section-tag">Frequently Asked Questions</span>
-                    <h2>Everything You Need to Know</h2>
-                    <p>Clear answers to common questions about call forwarding, usage billing, and cancellations.</p>
-                </div>
-
-                <div class="faq-list">
-
-                    <div class="faq-item">
-                        <div class="faq-q" onclick="toggleFaq(this)">
-                            <span>How does call forwarding work with my carrier?</span>
-                            <span class="faq-arrow">▼</span>
-                        </div>
-                        <div class="faq-a">
-                            We utilize native telecom Conditional Call Forwarding (<code>*71</code>). When a customer calls your business number, your phone rings normally. If you answer, the call is yours. If you don't answer within 15 seconds (or if you're on another line), your carrier automatically forwards the caller to your assigned AI receptionist number.
-                        </div>
-                    </div>
-
-                    <div class="faq-item">
-                        <div class="faq-q" onclick="toggleFaq(this)">
-                            <span>How does usage billing and the $10 credit pack work?</span>
-                            <span class="faq-arrow">▼</span>
-                        </div>
-                        <div class="faq-a">
-                            You get <strong>15 free test minutes</strong> upon activating your $9.99/mo voice receptionist. Ongoing call time is billed at a flat rate of <strong>$0.25 per minute</strong> in automatic $10 reload packs (40 minutes each). You have complete control: you can toggle auto-rebill ON or OFF anytime in your dashboard. If turned OFF and credits hit 0, your AI receptionist gracefully pauses while your phone returns to standard ringing, and local Android SIM missed-call SMS continues running uninterrupted.
-                        </div>
-                    </div>
-
-                    <div class="faq-item">
-                        <div class="faq-q" onclick="toggleFaq(this)">
-                            <span>What happens if I cancel my $9.99/mo AI Voice subscription?</span>
-                            <span class="faq-arrow">▼</span>
-                        </div>
-                        <div class="faq-a">
-                            You have total freedom and zero lock-in. To cancel, click cancel in your self-serve billing portal. Your AI voice line is safely deactivated, and you dial <code>*73</code> on your phone to restore standard ringing. Your Android appliance will continue running local missed-call text replies with zero monthly fees.
-                        </div>
-                    </div>
-
-                    <div class="faq-item">
-                        <div class="faq-q" onclick="toggleFaq(this)">
-                            <span>Can I upgrade from the Base Appliance to the Perpetual Pro Gateway?</span>
-                            <span class="faq-arrow">▼</span>
-                        </div>
-                        <div class="faq-a">
-                            Yes! If you purchased the Base Appliance for $49.99, you can upgrade to the Perpetual Pro Gateway at any time for just <strong>$249.99</strong> (giving you the exact same $299.99 total cost). Pro unlocks unmetered Cloud Relay API access and bi-directional n8n/Make webhook triggers.
-                        </div>
-                    </div>
-
-                    <div class="faq-item">
-                        <div class="faq-q" onclick="toggleFaq(this)">
-                            <span>How is this 100% exempt from Twilio A2P 10DLC bans?</span>
-                            <span class="faq-arrow">▼</span>
-                        </div>
-                        <div class="faq-a">
-                            Twilio and cloud SMS gateways route messages through virtual VoIP numbers, which carriers heavily filter, block, and tax under A2P 10DLC regulations. Missed Call Auto SMS sends SMS directly through your physical Android SIM card via native Android telephony APIs. Carriers see it as an authentic person-to-person (P2P) text from your real phone.
-                        </div>
-                    </div>
-
-                    <div class="faq-item">
-                        <div class="faq-q" onclick="toggleFaq(this)">
-                            <span>What is Conversational AI SMS and is it included in the $9.99/mo bundle?</span>
-                            <span class="faq-arrow">▼</span>
-                        </div>
-                        <div class="faq-a">
-                            Yes, it is 100% included in the $9.99/mo bundle at no extra monthly fee! While traditional auto-replies only blast a single static text template, our <strong>Conversational AI SMS Engine</strong> holds a real, two-way multi-turn back-and-forth dialogue with your callers. It qualifies job needs, answers FAQs, provides estimates, and shares booking links directly via your phone's real carrier SIM card.
-                        </div>
-                    </div>
-
-                    <div class="faq-item">
-                        <div class="faq-q" onclick="toggleFaq(this)">
-                            <span>How does the Human Takeover Safeguard work?</span>
-                            <span class="faq-arrow">▼</span>
-                        </div>
-                        <div class="faq-a">
-                            You are always in total control. Whenever you manually send an SMS to that customer from your phone or texting app, Missed Call Auto SMS immediately detects your response and activates the <strong>Human Takeover Safeguard</strong>. The AI instantly pauses for 30 minutes, guaranteeing the robot will never interrupt or contradict you while you are talking directly with the client.
-                        </div>
-                    </div>
-
-                    <div class="faq-item">
-                        <div class="faq-q" onclick="toggleFaq(this)">
-                            <span>Can I use my own Vapi / OpenAI keys (BYOK)?</span>
-                            <span class="faq-arrow">▼</span>
-                        </div>
-                        <div class="faq-a">
-                            Yes! If you prefer to manage your own Vapi account and telephony numbers, Missed Call Auto SMS features a 100% Free Bring-Your-Own-Keys (BYOK) mode. Simply paste your Vapi Assistant ID and API keys in the Voice Hub settings.
-                        </div>
-                    </div>
-
-                </div>
-            </div>
-        </section>
-
-        <!-- Final CTA Banner -->
-        <section style="border-top: none; padding-top: 0;">
-            <div class="container">
-                <div class="final-cta-box">
-                    <h2 style="font-size: clamp(28px, 4vw, 44px); font-weight: 900; margin: 0 0 16px;">
-                        Ready for a 24/7 Front Desk That Never Misses a Job?
-                    </h2>
-                    <p style="color: #CBD5E1; font-size: 16px; max-width: 640px; margin: 0 auto 30px;">
-                        Join hundreds of contractors, plumbers, electricians, and service businesses capturing revenue on every missed call.
+                <!-- Connecting State -->
+                <div id="callConnectingControls" style="display: none;">
+                    <p style="color: #FBBF24; font-weight: 700; margin: 10px 0;">
+                        ⏳ Connecting to Demonstration Agent via Vapi WebRTC...
                     </p>
-                    <div style="display: flex; justify-content: center; gap: 16px; flex-wrap: wrap;">
-                        <a href="https://buy.stripe.com/5kQ5kDbBI8hkdao8WZ2go0c" class="btn-primary-lg">
-                            ⚡ Start 3-Day Free Trial ($0.00 Today) ➔
-                        </a>
-                        <a href="https://buy.stripe.com/3cI9AT49g2X07Q41ux2go0a" class="btn-secondary-lg">
-                            Buy Base Appliance ($49.99)
+                </div>
+
+                <!-- Active Call State -->
+                <div id="callActiveControls" style="display: none;">
+                    <div class="call-timer-display" id="callTimer">Call Time: 0:00 / 4:00</div>
+
+                    <div class="call-wave-visualizer" id="liveWaveVisual">
+                        <!-- Generated wave bars -->
+                    </div>
+
+                    <div class="call-active-controls">
+                        <button class="btn-call-mute" id="muteBtn" onclick="toggleMute()">
+                            <span id="muteIcon">🎙️</span>
+                            <span id="muteText">Mute Mic</span>
+                        </button>
+                        <button class="btn-call-end" onclick="endVapiCall()">
+                            <span>🔴</span>
+                            <span>End Call</span>
+                        </button>
+                    </div>
+                </div>
+
+                <!-- Completed Call State -->
+                <div id="callEndedControls" style="display: none;">
+                    <p style="color: var(--accent-emerald); font-weight: 800; font-size: 16px; margin: 10px 0 16px;">
+                        ✅ Demonstration Completed!
+                    </p>
+                    <div style="display: flex; gap: 12px; justify-content: center; flex-wrap: wrap;">
+                        <button class="btn-call-mute" onclick="resetCallState()">
+                            <span>🔄</span>
+                            <span>Test Another Niche</span>
+                        </button>
+                        <button onclick="proceedToFlagshipVoiceCheckout()" class="btn-call-start">
+                            <span>⚡</span>
+                            <span>Get Flagship + AI Voice Bundle ($59.98 Today, then $9.99/mo) &rarr;</span>
+                        </button>
+                    </div>
+                    <div style="margin-top: 14px; text-align: center;">
+                        <a href="https://buy.stripe.com/5kQ5kDbBI8hkdao8WZ2go0c" style="color: #94A3B8; font-size: 13px; text-decoration: underline;">
+                            Or Start 3-Day Free Trial ($0.00 Today)
                         </a>
                     </div>
                 </div>
-            </div>
-        </section>
 
-    </main>
+                <!-- Realtime Transcript Stream -->
+                <div class="call-transcript-stream" id="transcriptStream">
+                    <div class="transcript-msg">
+                        <span class="speaker-tag speaker-system">System:</span> Click "Start 1-Tap Live Demo Call" above to speak with our Demonstration Agent in real-time. Speak your industry and business name!
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Metric Strip -->
+        <div class="metric-strip">
+            <div class="metric-card">
+                <div class="metric-num">15s</div>
+                <div class="metric-label">Average Call Pickup Time</div>
+            </div>
+            <div class="metric-card">
+                <div class="metric-num">15 Min</div>
+                <div class="metric-label">Free Test Minutes on Signup</div>
+            </div>
+            <div class="metric-card">
+                <div class="metric-num">100%</div>
+                <div class="metric-label">Carrier SIM SMS Delivery Rate</div>
+            </div>
+            <div class="metric-card">
+                <div class="metric-num">$3,400/mo</div>
+                <div class="metric-label">Average Payroll Savings vs Staff</div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Infinite Scrolling Marquee Ticker -->
+    <section class="ticker-section">
+        <div class="ticker-track">
+            <div class="ticker-item">🔧 <strong>Apex Plumbing:</strong> "Recovered a $2,400 water heater replacement while on another job." <span class="ticker-rating">★★★★★</span></div>
+            <div class="ticker-item">❄️ <strong>ClimatePro HVAC:</strong> "Customers swear they are speaking with our receptionist." <span class="ticker-rating">★★★★★</span></div>
+            <div class="ticker-item">⚡ <strong>VoltSafe Electric:</strong> "30-minute Human Takeover auto-pause prevents any message overlap." <span class="ticker-rating">★★★★★</span></div>
+            <div class="ticker-item">🏠 <strong>Summit Roofing:</strong> "Zero Twilio 10DLC registration headaches. 100% real SIM texts." <span class="ticker-rating">★★★★★</span></div>
+            <div class="ticker-item">🚗 <strong>Diamond Detailing:</strong> "Booked 6 mobile jobs over the weekend without picking up my phone." <span class="ticker-rating">★★★★★</span></div>
+
+            <!-- Loop set -->
+            <div class="ticker-item">🔧 <strong>Apex Plumbing:</strong> "Recovered a $2,400 water heater replacement while on another job." <span class="ticker-rating">★★★★★</span></div>
+            <div class="ticker-item">❄️ <strong>ClimatePro HVAC:</strong> "Customers swear they are speaking with our receptionist." <span class="ticker-rating">★★★★★</span></div>
+            <div class="ticker-item">⚡ <strong>VoltSafe Electric:</strong> "30-minute Human Takeover auto-pause prevents any message overlap." <span class="ticker-rating">★★★★★</span></div>
+            <div class="ticker-item">🏠 <strong>Summit Roofing:</strong> "Zero Twilio 10DLC registration headaches. 100% real SIM texts." <span class="ticker-rating">★★★★★</span></div>
+            <div class="ticker-item">🚗 <strong>Diamond Detailing:</strong> "Booked 6 mobile jobs over the weekend without picking up my phone." <span class="ticker-rating">★★★★★</span></div>
+        </div>
+    </section>
+
+    <!-- 4-Step Lifecycle Stepper -->
+    <section id="lifecycle" class="section-padding" style="background: var(--bg-surface); border-top: 1px solid var(--line-subtle); border-bottom: 1px solid var(--line-subtle);">
+        <div class="container">
+            <div class="section-header">
+                <span class="eyebrow">End-to-End Transparency</span>
+                <h2 class="section-title">What to Expect: From Setup to Cancellation</h2>
+                <p class="section-desc">We built Missed Call Auto SMS with zero friction, zero lock-in contracts, and absolute clarity at every stage.</p>
+            </div>
+
+            <div class="stepper-box">
+                <div class="stepper-grid">
+                    <div class="stepper-item">
+                        <div class="step-index-badge">1</div>
+                        <h4>Instant Line Provisioning</h4>
+                        <p>When you subscribe, our cloud engine automatically provisions your dedicated AI phone number and loads your 15 free test minutes.</p>
+                    </div>
+
+                    <div class="stepper-item">
+                        <div class="step-index-badge">2</div>
+                        <h4>1-Tap *71 Forwarding</h4>
+                        <p>Dial <code>*71[AI-Number]</code> once from your Android dialer. Your cell rings normally for 15s. If you miss it, your carrier forwards the caller.</p>
+                    </div>
+
+                    <div class="stepper-item">
+                        <div class="step-index-badge">3</div>
+                        <h4>Voice Triage + SIM SMS</h4>
+                        <p>AI answers with natural speech, asks triage questions, books calendar appointments, and fires text confirmations from your real SIM.</p>
+                    </div>
+
+                    <div class="stepper-item">
+                        <div class="step-index-badge">4</div>
+                        <h4>Instant Cancel Anytime</h4>
+                        <p>No cancellation calls or hoops. Simply dial <code>*73</code> to disable carrier forwarding immediately, and cancel in your self-serve portal.</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Bento Grid Features -->
+    <section id="features" class="section-padding">
+        <div class="container">
+            <div class="section-header">
+                <span class="eyebrow">Enterprise Telephony Architecture</span>
+                <h2 class="section-title">Engineered Specifically For High-Value Trades</h2>
+                <p class="section-desc">Traditional SaaS routes messages through virtual VoIP servers that get blocked. We convert your phone into an autonomous hardware gateway.</p>
+            </div>
+
+            <div class="bento-grid">
+                <div class="bento-box">
+                    <span class="corner-cross">+</span>
+                    <div class="bento-icon-box">🎙️</div>
+                    <h3>Conditional *71 Telecom Routing</h3>
+                    <p>Unlike VoIP apps that hijack your inbound line, standard carrier <code>*71</code> conditional call forwarding rings your phone normally first. You keep total control when you're free.</p>
+                    <div><span class="bento-badge-pill">Rings You First (15s)</span></div>
+                </div>
+
+                <div class="bento-box">
+                    <span class="corner-cross">+</span>
+                    <div class="bento-icon-box">💬</div>
+                    <h3>2-Way Conversational AI SMS</h3>
+                    <p>Not just a one-line auto-reply. The AI maintains conversational context across multiple text replies from your real carrier SIM, asking qualifying questions and collecting job addresses.</p>
+                    <div><span class="bento-badge-pill">Multi-Turn Context</span></div>
+                </div>
+
+                <div class="bento-box">
+                    <span class="corner-cross">+</span>
+                    <div class="bento-icon-box">🛡️</div>
+                    <h3>30-Minute Human Takeover</h3>
+                    <p>The instant you manually text back from your phone, our intelligent listener detects your reply and automatically pauses the AI for 30 minutes on that thread, preventing robot collision.</p>
+                    <div><span class="bento-badge-pill">Auto-Pauses on Reply</span></div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Transparent Pricing Section -->
+    <section id="pricing" class="section-padding" style="background: var(--bg-surface);">
+        <div class="container">
+            <div class="section-header">
+                <span class="eyebrow">Clear Licensing Structure</span>
+                <h2 class="section-title">Simple, Transparent Pricing</h2>
+                <p class="section-desc">Select your edition. Includes 15 free test minutes on signup. Cancel anytime with 1 click.</p>
+            </div>
+
+            <div class="pricing-grid">
+                <!-- Card 1: Appliance + Voice Bundle -->
+                <div class="pricing-card featured">
+                    <div class="pricing-top-pill">⭐ Recommended Bundle</div>
+                    <div class="tier-name">Appliance + Voice Bundle</div>
+                    <div class="tier-desc">Android Lifetime Appliance License + In-App AI Voice &amp; Conversational SMS.</div>
+                    <div class="tier-cost">$59.98 <span class="freq">today, then $9.99/mo</span></div>
+                    <ul class="tier-features">
+                        <li><svg fill="currentColor" viewBox="0 0 20 20"><path fill-rule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clip-rule="evenodd"/></svg> <strong>1 Android Device Lifetime License</strong> ($49.99 Value)</li>
+                        <li><svg fill="currentColor" viewBox="0 0 20 20"><path fill-rule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clip-rule="evenodd"/></svg> <strong>1st Month of AI Voice &amp; SMS Add-On</strong> ($9.99/mo)</li>
+                        <li><svg fill="currentColor" viewBox="0 0 20 20"><path fill-rule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clip-rule="evenodd"/></svg> <strong>15 Free Minutes Included</strong> on Activation</li>
+                        <li><svg fill="currentColor" viewBox="0 0 20 20"><path fill-rule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clip-rule="evenodd"/></svg> <strong>24/7 AI Voice Receptionist (*71 Forwarding)</strong></li>
+                        <li><svg fill="currentColor" viewBox="0 0 20 20"><path fill-rule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clip-rule="evenodd"/></svg> <strong>2-Way Conversational AI SMS</strong> via Real Carrier SIM</li>
+                        <li><svg fill="currentColor" viewBox="0 0 20 20"><path fill-rule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clip-rule="evenodd"/></svg> <strong>Human Takeover Safeguard</strong> (Auto-Pause 30m)</li>
+                    </ul>
+                    <button onclick="proceedToFlagshipVoiceCheckout()" class="btn-super-cta" style="width: 100%; justify-content: center;">
+                        Get Appliance + Voice Bundle ($59.98) &rarr;
+                    </button>
+                </div>
+
+                <!-- Card 2: Existing App Owners -->
+                <div class="pricing-card">
+                    <div class="tier-name">Existing App Owners</div>
+                    <div class="tier-desc">Already own Missed Call Auto SMS? Activate inside the app.</div>
+                    <div class="tier-cost">$9.99 <span class="freq">/ month in-app</span></div>
+                    <ul class="tier-features">
+                        <li><svg fill="currentColor" viewBox="0 0 20 20"><path fill-rule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clip-rule="evenodd"/></svg> <strong>1-Tap Activation:</strong> Inside your installed Voice Hub tab</li>
+                        <li><svg fill="currentColor" viewBox="0 0 20 20"><path fill-rule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clip-rule="evenodd"/></svg> <strong>15 Free Minutes:</strong> Automatically credited on activation</li>
+                        <li><svg fill="currentColor" viewBox="0 0 20 20"><path fill-rule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clip-rule="evenodd"/></svg> <strong>Saved Card Reloads:</strong> 1-Tap $10 minute packs (+40 mins)</li>
+                        <li><svg fill="currentColor" viewBox="0 0 20 20"><path fill-rule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clip-rule="evenodd"/></svg> <strong>Auto-Refill Toggle:</strong> Background recharges when low</li>
+                        <li><svg fill="currentColor" viewBox="0 0 20 20"><path fill-rule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clip-rule="evenodd"/></svg> <strong>Cancel Anytime:</strong> Direct 1-tap in-app cancellation</li>
+                    </ul>
+                    <a href="/MissedCallAutoSMS.apk" class="btn-outline" style="width: 100%; justify-content: center; text-decoration: none;">
+                        Open App to Activate &rarr;
+                    </a>
+                </div>
+            </div>
+
+            <!-- In-App Architecture Notice -->
+            <div style="margin-top: 36px; background: rgba(37, 99, 235, 0.05); border: 1px solid rgba(37, 99, 235, 0.2); border-radius: 14px; padding: 20px 24px; text-align: center; max-width: 880px; margin-left: auto; margin-right: auto;">
+                <div style="font-weight: 800; color: var(--text-heading); font-size: 15px; margin-bottom: 6px;">
+                    📱 In-App Add-On Architecture Notice
+                </div>
+                <div style="font-size: 13px; color: var(--text-muted); line-height: 1.6;">
+                    The <strong>$9.99/month AI Voice Receptionist &amp; Conversational AI SMS</strong> is an in-app add-on built specifically for your Android appliance hardware. It requires the Missed Call Auto SMS application installed on an active Android phone with a carrier SIM. Existing app license owners do not need to sign up via the web—simply open the app, navigate to the <strong>Voice Hub</strong> tab, and activate your add-on with 15 free test minutes directly on your saved card.
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- FAQ Accordion -->
+    <section id="faq" class="section-padding">
+        <div class="container">
+            <div class="section-header">
+                <span class="eyebrow">Got Questions?</span>
+                <h2 class="section-title">Frequently Asked Questions</h2>
+                <p class="section-desc">Clear answers on call forwarding, real SIM routing, and trials.</p>
+            </div>
+
+            <div class="faq-list">
+                <div class="faq-item" onclick="toggleFaq(this)">
+                    <div class="faq-header">
+                        <span>How does call forwarding work with my carrier?</span>
+                        <span class="chevron-icon">▼</span>
+                    </div>
+                    <div class="faq-body">
+                        We use standard telecom Conditional Call Forwarding (<code>*71</code>). When someone calls your business number, your phone rings normally for 15 seconds. If you answer, the call is yours. If you don't answer, your carrier automatically forwards the caller to your assigned AI receptionist number. You can cancel forwarding anytime by dialing <code>*73</code>.
+                    </div>
+                </div>
+
+                <div class="faq-item" onclick="toggleFaq(this)">
+                    <div class="faq-header">
+                        <span>Do I get free minutes on signup?</span>
+                        <span class="chevron-icon">▼</span>
+                    </div>
+                    <div class="faq-body">
+                        Yes! Every new Autonomous Front Desk ($9.99/mo) activation includes 15 free test minutes automatically credited to your account so you can test calls, configure your prompts, and verify your workflows with zero out-of-pocket minute costs.
+                    </div>
+                </div>
+
+                <div class="faq-item" onclick="toggleFaq(this)">
+                    <div class="faq-header">
+                        <span>What happens when my minutes run out?</span>
+                        <span class="chevron-icon">▼</span>
+                    </div>
+                    <div class="faq-body">
+                        If your minute balance reaches 0.0, our auto-pause safeguard safely disables incoming call forwarding to protect you from unexpected overages. Your native SIM auto-SMS continues firing 100% normally. You can reload minutes inside the app with 1 tap at $0.25/min.
+                    </div>
+                </div>
+
+                <div class="faq-item" onclick="toggleFaq(this)">
+                    <div class="faq-header">
+                        <span>How does the Human Takeover Safeguard work?</span>
+                        <span class="chevron-icon">▼</span>
+                    </div>
+                    <div class="faq-body">
+                        You are always in total control. The second you manually reply to a customer from your Android phone, our intelligent listener detects your message and pauses the AI for 30 minutes, preventing robotic collision while you close the deal.
+                    </div>
+                </div>
+
+                <div class="faq-item" onclick="toggleFaq(this)">
+                    <div class="faq-header">
+                        <span>Can I use my own Vapi / OpenAI keys (BYOK)?</span>
+                        <span class="chevron-icon">▼</span>
+                    </div>
+                    <div class="faq-body">
+                        Yes! If you prefer to manage your own Vapi account and telephony numbers, Missed Call Auto SMS supports Bring-Your-Own-Key (BYOK) mode. You can enter your own credentials directly inside the app settings with zero platform surcharges.
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Final High-Impact CTA -->
+    <section class="container" style="padding-bottom: 96px;">
+        <div class="final-cta">
+            <h2>Ready to Never Miss Another Job?</h2>
+            <p>Join hundreds of plumbers, electricians, and contractors capturing revenue on every missed call with zero monthly SaaS bills.</p>
+            <div style="display: flex; gap: 16px; justify-content: center; flex-wrap: wrap;">
+                <a href="https://buy.stripe.com/5kQ5kDbBI8hkdao8WZ2go0c" class="btn-super-cta" style="padding: 16px 38px; font-size: 16px;">
+                    Start 3-Day Free Trial ($0 Today) &rarr;
+                </a>
+                <button onclick="proceedToFlagshipVoiceCheckout()" class="btn-outline" style="background: rgba(255,255,255,0.08); color: #FFF; border-color: rgba(255,255,255,0.2); padding: 16px 30px;">
+                    Buy Base + Voice Bundle ($59.98)
+                </button>
+            </div>
+        </div>
+    </section>
 
     <!-- Footer -->
-    <footer>
+    <footer class="footer">
         <div class="container">
-            <p>© 2026 Missed Call Auto SMS • Built for Independent Service Pros & Small Businesses.</p>
-            <div style="margin-top: 10px;">
-                <a href="/">Home</a>
-                <a href="/voice">AI Receptionist</a>
-                <a href="/developers.html">Developer API</a>
-                <a href="/agency.html">Agency Fleet</a>
-                <a href="/terms.html">Terms</a>
-                <a href="/support.html">Support</a>
+            <div class="footer-grid">
+                <div class="footer-col">
+                    <div class="logo" style="margin-bottom: 16px;">
+                        <img src="/assets/logo.svg" alt="Missed Call Auto SMS" class="logo-image" width="38" height="38">
+                        <div class="logo-text">
+                            <span class="logo-main" style="color: #FFFFFF;">Missed Call</span>
+                            <span class="logo-accent" style="background: linear-gradient(135deg, #60A5FA 0%, #38BDF8 100%); -webkit-background-clip: text; -webkit-text-fill-color: transparent;">Auto SMS</span>
+                        </div>
+                    </div>
+                    <p style="color: #94A3B8; font-size: 14px; line-height: 1.6; max-width: 320px;">
+                        The autonomous Android telephony appliance built for local service pros. Zero SaaS subscriptions. Real carrier SIM routing.
+                    </p>
+                </div>
+                <div class="footer-col">
+                    <h5>Product</h5>
+                    <ul>
+                        <li><a href="/#features">Features</a></li>
+                        <li><a href="/voice">AI Voice Receptionist</a></li>
+                        <li><a href="/pro">Pro Automation Gateway</a></li>
+                        <li><a href="/#pricing">Pricing Plans</a></li>
+                    </ul>
+                </div>
+                <div class="footer-col">
+                    <h5>Developers</h5>
+                    <ul>
+                        <li><a href="/developers">Webhook API Docs</a></li>
+                        <li><a href="/developers">n8n / Make Guides</a></li>
+                        <li><a href="/license_dashboard.html">License Portal</a></li>
+                    </ul>
+                </div>
+                <div class="footer-col">
+                    <h5>Company</h5>
+                    <ul>
+                        <li><a href="/blog">Blog &amp; Case Studies</a></li>
+                        <li><a href="/support">Customer Support</a></li>
+                        <li><a href="/terms">Terms of Service</a></li>
+                        <li><a href="/privacy">Privacy Policy</a></li>
+                    </ul>
+                </div>
+            </div>
+
+            <div class="footer-bottom">
+                <div>&copy; 2026 Missed Call Auto SMS. All rights reserved.</div>
+                <div style="display: flex; align-items: center; gap: 8px; color: #10B981; font-weight: 600; font-size: 13px;">
+                    <span style="width: 8px; height: 8px; background: #10B981; border-radius: 50%; display: inline-block;"></span>
+                    All Telephony Systems Operational
+                </div>
             </div>
         </div>
     </footer>
+
+    <!-- Sticky Mobile Conversion Bar -->
+    <div class="mobile-sticky-bar">
+        <a class="mobile-sticky-btn btn-trial" href="https://buy.stripe.com/5kQ5kDbBI8hkdao8WZ2go0c">
+            <span class="btn-sub">3-Day Trial</span>
+            <span class="btn-main">🎁 $0 Today</span>
+        </a>
+        <button class="mobile-sticky-btn btn-buy" onclick="startVapiCall()">
+            <span class="btn-sub">Voice Demo</span>
+            <span class="btn-main">🎙️ Call Live</span>
+        </button>
+        <button class="mobile-sticky-btn btn-pro" onclick="proceedToFlagshipVoiceCheckout()">
+            <span class="btn-sub">Voice Bundle</span>
+            <span class="btn-main">⚡ $59.98</span>
+        </button>
+    </div>
 
     <!-- Interactive Live Vapi WebRTC Script & FAQ Logic -->
     <script type="module">
@@ -1823,22 +1811,22 @@
             stream.scrollTop = stream.scrollHeight;
         }
 
-        function addCheckoutCard(details) {
+        function addCheckoutCard() {
             const stream = document.getElementById('transcriptStream');
             if (!stream) return;
             const cardDiv = document.createElement('div');
             cardDiv.style.margin = '10px 0';
-            cardDiv.style.padding = '12px 14px';
-            cardDiv.style.background = 'rgba(0, 230, 118, 0.12)';
-            cardDiv.style.border = '1px solid #00E676';
-            cardDiv.style.borderRadius = '8px';
+            cardDiv.style.padding = '14px 16px';
+            cardDiv.style.background = 'rgba(37, 99, 235, 0.15)';
+            cardDiv.style.border = '1px solid #2563EB';
+            cardDiv.style.borderRadius = '12px';
             cardDiv.innerHTML = `
-                <div style="font-weight: 800; color: #00E676; font-size: 13px; margin-bottom: 4px;">🛒 $59.98 BUNDLE SETUP LINK DISPATCHED</div>
+                <div style="font-weight: 800; color: #60A5FA; font-size: 13px; margin-bottom: 4px;">🛒 $59.98 BUNDLE SETUP LINK DISPATCHED</div>
                 <div style="font-size: 12px; color: #CBD5E1; margin-bottom: 10px;">
                     Includes Founder's Flagship Lifetime APK ($49.99) + 24/7 AI Voice Receptionist ($9.99/mo). 100% Native SIM carrier SMS.
                 </div>
-                <button onclick="proceedToFlagshipVoiceCheckout()" style="background: #00E676; color: #000; font-weight: 800; font-size: 12px; padding: 8px 14px; border-radius: 6px; border: none; cursor: pointer;">
-                    Complete Setup ($59.98 Today, then $9.99/mo) ➔
+                <button onclick="proceedToFlagshipVoiceCheckout()" style="background: #2563EB; color: #FFF; font-weight: 800; font-size: 12px; padding: 8px 14px; border-radius: 6px; border: none; cursor: pointer;">
+                    Complete Setup ($59.98 Today, then $9.99/mo) &rarr;
                 </button>
             `;
             stream.appendChild(cardDiv);
@@ -2068,14 +2056,16 @@
         };
 
         window.toggleFaq = function(el) {
-            const item = el.parentElement;
-            item.classList.toggle('open');
+            el.classList.toggle('active');
         };
 
         window.addEventListener('DOMContentLoaded', () => {
             initLiveWaveBars();
         });
     </script>
+
+    <!-- Global Unified Nav Script -->
+    <script src="/assets/js/navbar.js" defer></script>
     <!-- Referral & Rev-Share Partner Tracker -->
     <script src="/assets/js/referral_tracker.js" defer></script>
 </body>

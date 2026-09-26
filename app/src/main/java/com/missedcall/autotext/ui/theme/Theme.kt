@@ -8,27 +8,39 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.graphics.Color
 
 private val DarkColorScheme = darkColorScheme(
-    primary = DarkGreenPrimary,
-    onPrimary = Color.Black,
-    primaryContainer = ActiveGreenContainer,
-    onPrimaryContainer = ActiveGreenText,
-    secondary = AccentBlue,
+    primary = SapphirePrimary,
+    onPrimary = Color.White,
+    primaryContainer = SapphireContainerSubtle,
+    onPrimaryContainer = SapphireLight,
+    secondary = PurplePrimary,
+    onSecondary = Color.White,
+    tertiary = EmeraldSuccess,
+    onTertiary = Color.White,
     background = DarkBackground,
     surface = DarkSurface,
-    onBackground = Color.White,
-    onSurface = Color.White
+    onBackground = TextHeading,
+    onSurface = TextHeading,
+    surfaceVariant = DarkSurfaceElevated,
+    onSurfaceVariant = TextBody,
+    outline = DarkCardBorder
 )
 
 private val LightColorScheme = lightColorScheme(
-    primary = Color(0xFF2E7D32),
+    primary = SapphirePrimary,
     onPrimary = Color.White,
-    primaryContainer = Color(0xFFA5D6A7),
-    onPrimaryContainer = Color(0xFF1B5E20),
-    secondary = Color(0xFF0288D1),
-    background = Color(0xFFF5F7FA),
+    primaryContainer = Color(0xFFEFF6FF),
+    onPrimaryContainer = SapphireHover,
+    secondary = PurplePrimary,
+    onSecondary = Color.White,
+    tertiary = EmeraldSuccess,
+    onTertiary = Color.White,
+    background = Color(0xFFF8FAFC),
     surface = Color.White,
-    onBackground = Color(0xFF1C1B1F),
-    onSurface = Color(0xFF1C1B1F)
+    onBackground = Color(0xFF090E1A),
+    onSurface = Color(0xFF090E1A),
+    surfaceVariant = Color(0xFFF1F5F9),
+    onSurfaceVariant = Color(0xFF334155),
+    outline = Color(0xFFE2E8F0)
 )
 
 @Composable

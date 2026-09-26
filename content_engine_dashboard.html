@@ -5,25 +5,29 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Missed Call Auto SMS | Marketing & Content Engine</title>
   <link rel="icon" type="image/svg+xml" href="/favicon.svg?v=2">
-  <meta name="theme-color" content="#090B0E">
+  <meta name="theme-color" content="#080C16">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800;900&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
   <style>
     :root {
-      --bg: #090B0E;
-      --card-bg: #12161F;
-      --card-hover: #19202C;
-      --card-border: #232B3B;
-      --primary: #00E676;
-      --primary-glow: rgba(0, 230, 118, 0.2);
-      --primary-hover: #00C853;
-      --text: #F0F6FC;
-      --muted: #8B949E;
-      --accent: #58A6FF;
-      --warning: #FFB300;
-      --danger: #F85149;
+      --bg: #080C16;
+      --card-bg: #0F172A;
+      --card-hover: #1E293B;
+      --card-border: #1E293B;
+      --primary: #2563EB;
+      --primary-glow: rgba(37, 99, 235, 0.2);
+      --primary-hover: #1D4ED8;
+      --success: #10B981;
+      --text: #F8FAFC;
+      --muted: #94A3B8;
+      --accent: #38BDF8;
+      --warning: #F59E0B;
+      --danger: #EF4444;
       --purple: #A855F7;
       --pink: #EC4899;
-      --font-mono: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
-      --font-sans: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+      --font-mono: 'JetBrains Mono', ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+      --font-sans: 'Plus Jakarta Sans', -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
     }
 
     * { box-sizing: border-box; margin: 0; padding: 0; }
@@ -63,7 +67,7 @@
     .header-logo {
       width: 42px;
       height: 42px;
-      background: linear-gradient(135deg, #00E676, #00B0FF);
+      background: linear-gradient(135deg, #2563EB, #38BDF8);
       border-radius: 12px;
       display: flex;
       align-items: center;
@@ -604,12 +608,12 @@
       width: 40px;
       height: 40px;
       border-radius: 50%;
-      background: #00E676;
+      background: var(--primary);
       display: flex;
       align-items: center;
       justify-content: center;
       font-weight: bold;
-      color: #000;
+      color: #FFF;
     }
 
     .fb-name { font-weight: bold; font-size: 14px; color: #FFF; }
@@ -717,7 +721,7 @@
   <!-- 1. Password Protected Login Screen -->
   <div id="loginContainer" class="login-wrapper">
     <div class="login-card">
-      <div class="login-logo">🔒</div>
+      <div class="login-logo" style="margin-bottom: 12px;"><img src="/assets/logo.svg" alt="Missed Call Auto SMS" height="42"></div>
       <div class="login-title">Content & Omnichannel Engine</div>
       <div class="login-sub">Restricted Owner / Developer Credentials Required</div>
 
@@ -749,7 +753,7 @@
     <!-- Header -->
     <header class="header">
       <div class="header-brand">
-        <div class="header-logo">⚡</div>
+        <div class="header-logo" style="background: none; box-shadow: none;"><img src="/assets/logo.svg" alt="Logo" height="36"></div>
         <div class="header-titles">
           <h1>Marketing & Content Engine</h1>
           <p>Autonomous Research Ingestion, Hook Ideation, & Omnichannel Distribution</p>
@@ -1040,7 +1044,7 @@
         <div id="previewInstagram" class="ig-mockup" style="display:none;">
           <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:12px; font-size:12px;">
             <div style="display:flex; align-items:center; gap:8px;">
-              <div style="width:28px; height:28px; border-radius:50%; background:#00E676; color:#000; font-weight:bold; display:flex; align-items:center; justify-content:center; font-size:11px;">MC</div>
+              <div style="width:28px; height:28px; border-radius:50%; background:var(--primary); color:#FFF; font-weight:bold; display:flex; align-items:center; justify-content:center; font-size:11px;">MC</div>
               <span style="font-weight:bold;">missedcallautosms</span>
             </div>
             <span>•••</span>

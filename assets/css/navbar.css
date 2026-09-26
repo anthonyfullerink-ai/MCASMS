@@ -1,0 +1,340 @@
+/* ==========================================================================
+   GLOBAL UNIFIED NAVIGATION BAR - MISSED CALL AUTO SMS
+   Works across all landing pages (index, voice, pro, agency, developers, blog, etc.)
+   ========================================================================== */
+
+/* Top Announcement Strip (Optional on pages) */
+.global-announcement-bar {
+    background: linear-gradient(90deg, #1E3A8A 0%, #2563EB 50%, #1D4ED8 100%);
+    color: #FFFFFF;
+    font-size: 13px;
+    font-weight: 600;
+    padding: 10px 16px;
+    text-align: center;
+    position: relative;
+    z-index: 1002;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 10px;
+    letter-spacing: 0.2px;
+}
+.global-announcement-bar a {
+    color: #FACC15;
+    text-decoration: underline;
+    font-weight: 700;
+    transition: opacity 0.2s;
+}
+.global-announcement-bar a:hover {
+    opacity: 0.85;
+}
+
+/* Main Navigation Header */
+.global-nav-wrapper {
+    position: sticky;
+    top: 0;
+    z-index: 9999;
+    background: rgba(9, 14, 26, 0.94);
+    backdrop-filter: blur(18px);
+    -webkit-backdrop-filter: blur(18px);
+    border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+    transition: background 0.3s ease, border-color 0.3s ease, box-shadow 0.3s ease;
+    width: 100%;
+}
+
+.global-nav-wrapper.scrolled {
+    background: rgba(6, 10, 18, 0.98);
+    box-shadow: 0 10px 30px rgba(0, 0, 0, 0.4);
+    border-bottom-color: rgba(255, 255, 255, 0.12);
+}
+
+.global-nav-container {
+    max-width: 1240px;
+    margin: 0 auto;
+    padding: 0 24px;
+    height: 70px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 16px;
+}
+
+/* Brand Logo */
+.global-logo {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    text-decoration: none;
+    flex-shrink: 0;
+}
+.global-logo-img {
+    width: 36px;
+    height: 36px;
+    border-radius: 9px;
+    filter: drop-shadow(0 4px 10px rgba(37, 99, 235, 0.3));
+    transition: transform 0.25s cubic-bezier(0.16, 1, 0.3, 1);
+}
+.global-logo:hover .global-logo-img {
+    transform: scale(1.08) rotate(-2deg);
+}
+.global-logo-text {
+    display: flex;
+    align-items: baseline;
+    gap: 6px;
+    font-weight: 800;
+    font-size: 18px;
+    letter-spacing: -0.5px;
+    line-height: 1;
+}
+.global-logo-main {
+    color: #FFFFFF;
+    font-weight: 800;
+}
+.global-logo-accent {
+    background: linear-gradient(135deg, #60A5FA 0%, #38BDF8 100%);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    font-weight: 900;
+}
+
+/* Desktop Navigation Links */
+.global-nav-links {
+    display: flex;
+    align-items: center;
+    gap: 20px;
+    list-style: none;
+    margin: 0;
+    padding: 0;
+}
+
+.global-nav-link {
+    color: #94A3B8;
+    text-decoration: none;
+    font-size: 14px;
+    font-weight: 600;
+    padding: 8px 4px;
+    position: relative;
+    transition: color 0.2s ease;
+    white-space: nowrap;
+}
+
+.global-nav-link:hover {
+    color: #FFFFFF;
+}
+
+.global-nav-link.active {
+    color: #FFFFFF;
+}
+
+.global-nav-link.active::after {
+    content: '';
+    position: absolute;
+    bottom: -2px;
+    left: 4px;
+    right: 4px;
+    height: 2px;
+    background: linear-gradient(90deg, #38BDF8, #2563EB);
+    border-radius: 2px;
+}
+
+/* Feature Badge (e.g. for AI Voice or Pro) */
+.global-link-badge {
+    background: rgba(56, 189, 248, 0.15);
+    color: #38BDF8;
+    border: 1px solid rgba(56, 189, 248, 0.35);
+    font-size: 10px;
+    font-weight: 800;
+    padding: 2px 6px;
+    border-radius: 6px;
+    margin-left: 4px;
+    text-transform: uppercase;
+    letter-spacing: 0.3px;
+    vertical-align: middle;
+}
+
+/* Desktop Nav Actions */
+.global-nav-actions {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    flex-shrink: 0;
+}
+
+/* Phone Pill */
+@keyframes global-phone-shake {
+    0%, 100% { transform: rotate(0deg); }
+    20% { transform: rotate(14deg); }
+    40% { transform: rotate(-12deg); }
+    60% { transform: rotate(8deg); }
+    80% { transform: rotate(-6deg); }
+}
+.global-nav-phone {
+    background: rgba(255, 255, 255, 0.06);
+    border: 1px solid rgba(255, 255, 255, 0.12);
+    padding: 8px 14px;
+    border-radius: 9999px;
+    font-size: 13px;
+    font-weight: 700;
+    color: #E2E8F0;
+    text-decoration: none;
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    transition: all 0.2s ease;
+    white-space: nowrap;
+}
+.global-nav-phone:hover {
+    background: rgba(255, 255, 255, 0.1);
+    color: #FFFFFF;
+    border-color: rgba(255, 255, 255, 0.25);
+}
+.global-nav-phone:hover .phone-icon {
+    display: inline-block;
+    animation: global-phone-shake 0.5s ease-in-out;
+}
+
+/* Super CTA Button */
+.global-btn-trial {
+    background: linear-gradient(135deg, #2563EB 0%, #1D4ED8 100%);
+    color: #FFFFFF !important;
+    font-size: 14px;
+    font-weight: 800;
+    padding: 10px 20px;
+    border-radius: 9999px;
+    text-decoration: none;
+    border: 1px solid rgba(255, 255, 255, 0.2);
+    box-shadow: 0 4px 14px rgba(37, 99, 235, 0.4);
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+    transition: transform 0.2s cubic-bezier(0.16, 1, 0.3, 1), box-shadow 0.2s ease;
+    white-space: nowrap;
+    cursor: pointer;
+}
+.global-btn-trial:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 6px 20px rgba(37, 99, 235, 0.6);
+}
+.global-btn-trial:active {
+    transform: translateY(0);
+}
+
+/* Mobile Hamburger Button */
+.global-mobile-menu-btn {
+    display: none;
+    background: rgba(255, 255, 255, 0.06);
+    border: 1px solid rgba(255, 255, 255, 0.12);
+    border-radius: 8px;
+    width: 42px;
+    height: 42px;
+    padding: 10px 8px;
+    cursor: pointer;
+    flex-direction: column;
+    justify-content: space-around;
+    align-items: center;
+    transition: background 0.2s ease;
+}
+.global-mobile-menu-btn:hover {
+    background: rgba(255, 255, 255, 0.12);
+}
+.global-mobile-menu-btn span {
+    display: block;
+    width: 22px;
+    height: 2px;
+    background: #FFFFFF;
+    border-radius: 2px;
+    transition: all 0.25s ease;
+}
+.global-mobile-menu-btn.active span:nth-child(1) {
+    transform: translateY(6px) rotate(45deg);
+}
+.global-mobile-menu-btn.active span:nth-child(2) {
+    opacity: 0;
+    transform: scaleX(0);
+}
+.global-mobile-menu-btn.active span:nth-child(3) {
+    transform: translateY(-6px) rotate(-45deg);
+}
+
+/* Mobile Slide-Out Drawer */
+.global-mobile-drawer {
+    display: none;
+    position: fixed;
+    top: 70px;
+    left: 0;
+    right: 0;
+    background: rgba(6, 10, 18, 0.98);
+    backdrop-filter: blur(20px);
+    -webkit-backdrop-filter: blur(20px);
+    border-bottom: 1px solid rgba(255, 255, 255, 0.12);
+    padding: 20px 24px 28px;
+    box-shadow: 0 20px 40px rgba(0, 0, 0, 0.6);
+    flex-direction: column;
+    gap: 8px;
+    max-height: calc(100vh - 70px);
+    overflow-y: auto;
+    z-index: 9998;
+    transform: translateY(-10px);
+    opacity: 0;
+    transition: transform 0.25s ease, opacity 0.25s ease;
+}
+
+.global-mobile-drawer.open {
+    display: flex;
+    transform: translateY(0);
+    opacity: 1;
+}
+
+.global-mobile-nav-link {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    color: #E2E8F0;
+    text-decoration: none;
+    font-size: 16px;
+    font-weight: 700;
+    padding: 12px 14px;
+    border-radius: 10px;
+    transition: background 0.15s ease, color 0.15s ease;
+}
+
+.global-mobile-nav-link:hover,
+.global-mobile-nav-link:active {
+    background: rgba(255, 255, 255, 0.08);
+    color: #38BDF8;
+}
+
+.global-mobile-nav-link .link-arrow {
+    color: #64748B;
+    font-size: 18px;
+    font-weight: normal;
+}
+
+.global-mobile-drawer-cta {
+    margin-top: 16px;
+    padding-top: 16px;
+    border-top: 1px solid rgba(255, 255, 255, 0.08);
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+}
+
+/* Breakpoint Logic */
+@media (max-width: 1060px) {
+    .global-nav-links {
+        display: none;
+    }
+    .global-mobile-menu-btn {
+        display: flex;
+    }
+}
+
+@media (max-width: 640px) {
+    .global-nav-phone {
+        display: none;
+    }
+    .global-nav-container {
+        padding: 0 16px;
+    }
+}

@@ -28,10 +28,7 @@ import androidx.compose.ui.unit.sp
 import com.missedcall.autotext.App
 import com.missedcall.autotext.data.AppSettings
 import com.missedcall.autotext.data.db.VoiceCallEvent
-import com.missedcall.autotext.ui.theme.ActiveGreenContainer
-import com.missedcall.autotext.ui.theme.ActiveGreenText
-import com.missedcall.autotext.ui.theme.AmberWarning
-import com.missedcall.autotext.ui.theme.RedError
+import com.missedcall.autotext.ui.theme.*
 import com.missedcall.autotext.util.CarrierForwardingManager
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
@@ -73,6 +70,12 @@ fun VoiceHubScreen(
 
     var liveVoiceSubActive by remember { mutableStateOf(settings.voiceSubscriptionActive) }
     var liveVoiceMinutesBalance by remember { mutableDoubleStateOf(0.0) }
+    var hasPaymentMethod by remember { mutableStateOf(false) }
+    var cardBrand by remember { mutableStateOf("") }
+    var cardLast4 by remember { mutableStateOf("") }
+    var autoBillingEnabled by remember { mutableStateOf(true) }
+    var isChargingOneTap by remember { mutableStateOf(false) }
+
     var showInAppPayment by remember { mutableStateOf(false) }
     var inAppPaymentUrl by remember { mutableStateOf("") }
     var inAppPaymentTitle by remember { mutableStateOf("Secure Checkout") }
@@ -112,9 +115,19 @@ fun VoiceHubScreen(
                     val voiceSubActive = json.optBoolean("voiceSubActive", false) || json.optBoolean("voiceEntitlement", false)
                     val minsBal = json.optDouble("voiceMinutesBalance", 0.0)
                     val fwdNum = json.optString("voiceForwardingNumber", "")
+                    val hasPm = json.optBoolean("hasPaymentMethod", false)
+                    val brand = json.optString("cardBrand", "").replaceFirstChar { it.uppercase() }
+                    val last4 = json.optString("cardLast4", "")
+                    val autoBill = json.optBoolean("autoBillingEnabled", true)
+
                     withContext(Dispatchers.Main) {
                         liveVoiceSubActive = voiceSubActive
                         liveVoiceMinutesBalance = minsBal
+                        hasPaymentMethod = hasPm
+                        cardBrand = brand
+                        cardLast4 = last4
+                        autoBillingEnabled = autoBill
+
                         if (fwdNum.isNotBlank() && fwdNum != settings.voiceReceptionistForwardingNumber) {
                             onSettingsChanged(settings.copy(
                                 voiceSubscriptionActive = voiceSubActive,
@@ -127,6 +140,94 @@ fun VoiceHubScreen(
                 }
             } catch (e: Exception) {
             }
+        }
+    }
+
+    fun oneTapChargeSavedCard(packTier: Int, label: String) {
+        val key = settings.licenseKey.trim()
+        if (!hasPaymentMethod) {
+            val email = settings.customerEmail.trim()
+            inAppPaymentTitle = "Add Minutes • $label"
+            inAppPaymentUrl = "https://missedcallautosms.com/api/create-credit-pack-checkout?pack=$packTier&key=${Uri.encode(key)}&email=${Uri.encode(email)}"
+            showInAppPayment = true
+            return
+        }
+        isChargingOneTap = true
+        coroutineScope.launch(Dispatchers.IO) {
+            try {
+                val endpoint = if (settings.remoteUpdateUrl.contains("localhost") || settings.remoteUpdateUrl.contains("10.0.")) {
+                    "http://10.0.2.2:8000/api/billing/charge-saved-card"
+                } else {
+                    "https://missedcallautosms.com/api/billing/charge-saved-card"
+                }
+                val conn = (URL(endpoint).openConnection() as HttpURLConnection).apply {
+                    requestMethod = "POST"
+                    connectTimeout = 8000
+                    readTimeout = 8000
+                    doOutput = true
+                    setRequestProperty("Content-Type", "application/json; charset=utf-8")
+                    val payload = JSONObject().apply {
+                        put("licenseKey", key)
+                        put("pack", packTier.toString())
+                    }.toString()
+                    outputStream.use { it.write(payload.toByteArray(StandardCharsets.UTF_8)) }
+                }
+                val code = conn.responseCode
+                val stream = if (code in 200..299) conn.inputStream else conn.errorStream
+                val resp = stream?.bufferedReader()?.use { it.readText() } ?: "{}"
+                val json = JSONObject(resp)
+                withContext(Dispatchers.Main) {
+                    isChargingOneTap = false
+                    if (json.optBoolean("success", false)) {
+                        val newBal = json.optDouble("newBalance", liveVoiceMinutesBalance)
+                        val added = json.optInt("minutesAdded", 40)
+                        liveVoiceMinutesBalance = newBal
+                        Toast.makeText(context, "⚡ +$added Minutes Added! Charged to $cardBrand •••• $cardLast4", Toast.LENGTH_LONG).show()
+                    } else {
+                        val errMsg = json.optString("message", "Payment failed")
+                        Toast.makeText(context, "❌ $errMsg", Toast.LENGTH_LONG).show()
+                        val email = settings.customerEmail.trim()
+                        inAppPaymentTitle = "Add Minutes • $label"
+                        inAppPaymentUrl = "https://missedcallautosms.com/api/create-credit-pack-checkout?pack=$packTier&key=${Uri.encode(key)}&email=${Uri.encode(email)}"
+                        showInAppPayment = true
+                    }
+                }
+            } catch (e: Exception) {
+                withContext(Dispatchers.Main) {
+                    isChargingOneTap = false
+                    Toast.makeText(context, "Connection error: ${e.message}", Toast.LENGTH_SHORT).show()
+                }
+            }
+        }
+    }
+
+    fun toggleAutoBilling(enabled: Boolean) {
+        val key = settings.licenseKey.trim()
+        autoBillingEnabled = enabled
+        coroutineScope.launch(Dispatchers.IO) {
+            try {
+                val endpoint = if (settings.remoteUpdateUrl.contains("localhost") || settings.remoteUpdateUrl.contains("10.0.")) {
+                    "http://10.0.2.2:8000/api/billing/toggle-auto-billing"
+                } else {
+                    "https://missedcallautosms.com/api/billing/toggle-auto-billing"
+                }
+                val conn = (URL(endpoint).openConnection() as HttpURLConnection).apply {
+                    requestMethod = "POST"
+                    connectTimeout = 5000
+                    readTimeout = 5000
+                    doOutput = true
+                    setRequestProperty("Content-Type", "application/json; charset=utf-8")
+                    val payload = JSONObject().apply {
+                        put("licenseKey", key)
+                        put("enabled", enabled)
+                    }.toString()
+                    outputStream.use { it.write(payload.toByteArray(StandardCharsets.UTF_8)) }
+                }
+                conn.responseCode
+                withContext(Dispatchers.Main) {
+                    Toast.makeText(context, if (enabled) "✅ Auto-refill enabled (reloads 40 mins at <15 mins)" else "⏸️ Auto-refill disabled", Toast.LENGTH_SHORT).show()
+                }
+            } catch (e: Exception) {}
         }
     }
 
@@ -353,7 +454,7 @@ fun VoiceHubScreen(
                                 Icon(
                                     Icons.Default.CheckCircle,
                                     contentDescription = null,
-                                    tint = Color(0xFF00E676),
+                                    tint = Color(0xFF10B981),
                                     modifier = Modifier.size(18.dp).padding(top = 2.dp)
                                 )
                                 Spacer(modifier = Modifier.width(10.dp))
@@ -378,13 +479,13 @@ fun VoiceHubScreen(
                             ) {
                                 Column {
                                     Text("Monthly Subscription", style = MaterialTheme.typography.labelMedium, color = Color(0xFF94A3B8))
-                                    Text("$9.99 / mo", style = MaterialTheme.typography.titleLarge, fontWeight = FontWeight.ExtraBold, color = Color(0xFF00E676))
+                                    Text("$9.99 / mo", style = MaterialTheme.typography.titleLarge, fontWeight = FontWeight.ExtraBold, color = Color(0xFF10B981))
                                 }
                                 Surface(
                                     shape = RoundedCornerShape(6.dp),
-                                    color = Color(0xFF00E676).copy(alpha = 0.15f)
+                                    color = Color(0xFF10B981).copy(alpha = 0.15f)
                                 ) {
-                                    Text("Includes 15 Free Mins", color = Color(0xFF00E676), fontWeight = FontWeight.Bold, fontSize = 11.sp, modifier = Modifier.padding(horizontal = 8.dp, vertical = 4.dp))
+                                    Text("Includes 15 Free Mins", color = Color(0xFF10B981), fontWeight = FontWeight.Bold, fontSize = 11.sp, modifier = Modifier.padding(horizontal = 8.dp, vertical = 4.dp))
                                 }
                             }
                         }
@@ -440,8 +541,8 @@ fun VoiceHubScreen(
             item {
                 if (liveVoiceMinutesBalance <= 0.0) {
                     Card(
-                        colors = CardDefaults.cardColors(containerColor = Color(0xFF450A0A)),
-                        border = BorderStroke(1.5.dp, RedError.copy(alpha = 0.8f)),
+                        colors = CardDefaults.cardColors(containerColor = DarkSurface),
+                        border = BorderStroke(1.dp, AmberWarning.copy(alpha = 0.5f)),
                         shape = RoundedCornerShape(16.dp),
                         modifier = Modifier.fillMaxWidth()
                     ) {
@@ -451,36 +552,56 @@ fun VoiceHubScreen(
                                 horizontalArrangement = Arrangement.SpaceBetween,
                                 verticalAlignment = Alignment.CenterVertically
                             ) {
-                                Row(verticalAlignment = Alignment.CenterVertically) {
-                                    Icon(Icons.Default.Warning, contentDescription = null, tint = RedError, modifier = Modifier.size(24.dp))
-                                    Spacer(modifier = Modifier.width(8.dp))
-                                    Text(
-                                        text = "⚠️ AI Receptionist Paused (0.0 Mins)",
-                                        style = MaterialTheme.typography.titleSmall,
-                                        fontWeight = FontWeight.Bold,
-                                        color = RedError
-                                    )
+                                Row(
+                                    verticalAlignment = Alignment.CenterVertically,
+                                    modifier = Modifier.weight(1f).padding(end = 8.dp)
+                                ) {
+                                    Surface(
+                                        shape = RoundedCornerShape(8.dp),
+                                        color = AmberContainerSubtle,
+                                        modifier = Modifier.size(32.dp)
+                                    ) {
+                                        Box(contentAlignment = Alignment.Center) {
+                                            Icon(Icons.Default.Warning, contentDescription = null, tint = AmberWarning, modifier = Modifier.size(18.dp))
+                                        }
+                                    }
+                                    Spacer(modifier = Modifier.width(10.dp))
+                                    Column {
+                                        Text(
+                                            text = "AI Receptionist Paused",
+                                            style = MaterialTheme.typography.titleSmall,
+                                            fontWeight = FontWeight.Bold,
+                                            color = TextHeading
+                                        )
+                                        Text(
+                                            text = "0.0 Minute Balance Remaining",
+                                            style = MaterialTheme.typography.labelSmall,
+                                            color = AmberWarning
+                                        )
+                                    }
                                 }
                                 Surface(
-                                    shape = RoundedCornerShape(6.dp),
-                                    color = RedError.copy(alpha = 0.2f)
+                                    shape = RoundedCornerShape(20.dp),
+                                    color = RedContainerSubtle
                                 ) {
                                     Text(
                                         text = "PAUSED",
-                                        modifier = Modifier.padding(horizontal = 6.dp, vertical = 2.dp),
+                                        modifier = Modifier.padding(horizontal = 8.dp, vertical = 3.dp),
                                         style = MaterialTheme.typography.labelSmall,
-                                        fontWeight = FontWeight.Bold,
-                                        color = RedError
+                                        fontWeight = FontWeight.ExtraBold,
+                                        color = RedError,
+                                        softWrap = false
                                     )
                                 }
                             }
 
-                            Spacer(modifier = Modifier.height(8.dp))
+                            Spacer(modifier = Modifier.height(10.dp))
 
                             Text(
                                 text = "Your AI Receptionist has auto-paused because your minute balance reached 0.0. To protect your line and prevent unexpected charges, calls will ring your carrier voicemail until minutes are reloaded. Choose a reload pack below to resume instantly:",
                                 style = MaterialTheme.typography.bodySmall,
-                                color = Color(0xFFFCA5A5)
+                                color = TextBody,
+                                lineHeight = 18.sp
                             )
 
                             Spacer(modifier = Modifier.height(14.dp))
@@ -492,27 +613,76 @@ fun VoiceHubScreen(
                                 Triple("100", "$100 (550 Mins)", "+150 Bonus")
                             )
 
+                            if (hasPaymentMethod) {
+                                Surface(
+                                    shape = RoundedCornerShape(10.dp),
+                                    color = DarkBackground,
+                                    border = BorderStroke(1.dp, DarkCardBorder),
+                                    modifier = Modifier.fillMaxWidth()
+                                ) {
+                                    Row(
+                                        modifier = Modifier.padding(horizontal = 12.dp, vertical = 6.dp),
+                                        horizontalArrangement = Arrangement.SpaceBetween,
+                                        verticalAlignment = Alignment.CenterVertically
+                                    ) {
+                                        Row(verticalAlignment = Alignment.CenterVertically) {
+                                            Icon(Icons.Default.CreditCard, contentDescription = null, tint = SapphireLight, modifier = Modifier.size(15.dp))
+                                            Spacer(modifier = Modifier.width(6.dp))
+                                            Text("$cardBrand •••• $cardLast4", fontSize = 12.sp, fontWeight = FontWeight.Bold, color = TextHeading)
+                                        }
+                                        Row(verticalAlignment = Alignment.CenterVertically) {
+                                            Text("Auto-Refill", fontSize = 11.sp, color = TextMuted)
+                                            Spacer(modifier = Modifier.width(6.dp))
+                                            Switch(
+                                                checked = autoBillingEnabled,
+                                                onCheckedChange = { toggleAutoBilling(it) }
+                                            )
+                                        }
+                                    }
+                                }
+
+                                Spacer(modifier = Modifier.height(10.dp))
+
+                                Button(
+                                    onClick = { oneTapChargeSavedCard(10, "$10 (40 Mins)") },
+                                    enabled = !isChargingOneTap,
+                                    colors = ButtonDefaults.buttonColors(containerColor = SapphirePrimary),
+                                    shape = RoundedCornerShape(10.dp),
+                                    modifier = Modifier.fillMaxWidth().height(44.dp)
+                                ) {
+                                    if (isChargingOneTap) {
+                                        CircularProgressIndicator(modifier = Modifier.size(16.dp), color = Color.White, strokeWidth = 2.dp)
+                                        Spacer(modifier = Modifier.width(8.dp))
+                                        Text("Charging Card in Background...", fontSize = 12.sp, fontWeight = FontWeight.Bold)
+                                    } else {
+                                        Icon(Icons.Default.Bolt, contentDescription = null, modifier = Modifier.size(16.dp))
+                                        Spacer(modifier = Modifier.width(6.dp))
+                                        Text("⚡ 1-Tap Add $10 Pack (+40 Mins)", fontWeight = FontWeight.Bold, fontSize = 13.sp)
+                                    }
+                                }
+
+                                Spacer(modifier = Modifier.height(10.dp))
+                            }
+
                             Row(
                                 modifier = Modifier.fillMaxWidth(),
                                 horizontalArrangement = Arrangement.spacedBy(8.dp)
                             ) {
                                 reloadPacks.take(2).forEach { (packTier, label, sub) ->
-                                    Button(
-                                        onClick = {
-                                            val email = settings.customerEmail.trim()
-                                            val key = settings.licenseKey.trim()
-                                            inAppPaymentTitle = "Add Minutes • $label"
-                                            inAppPaymentUrl = "https://missedcallautosms.com/api/create-credit-pack-checkout?pack=$packTier&key=${Uri.encode(key)}&email=${Uri.encode(email)}"
-                                            showInAppPayment = true
-                                        },
-                                        colors = ButtonDefaults.buttonColors(containerColor = Color(0xFFDC2626)),
-                                        shape = RoundedCornerShape(10.dp),
-                                        modifier = Modifier.weight(1f).height(46.dp),
-                                        contentPadding = PaddingValues(horizontal = 4.dp, vertical = 2.dp)
+                                    Surface(
+                                        onClick = { oneTapChargeSavedCard(packTier.toInt(), label) },
+                                        shape = RoundedCornerShape(12.dp),
+                                        color = DarkSurfaceElevated,
+                                        border = BorderStroke(1.dp, DarkCardBorder),
+                                        modifier = Modifier.weight(1f).height(50.dp)
                                     ) {
-                                        Column(horizontalAlignment = Alignment.CenterHorizontally) {
-                                            Text(label, fontWeight = FontWeight.Bold, fontSize = 11.sp, color = Color.White)
-                                            Text(sub, fontSize = 9.sp, color = Color(0xFFFECACA))
+                                        Column(
+                                            horizontalAlignment = Alignment.CenterHorizontally,
+                                            verticalArrangement = Arrangement.Center,
+                                            modifier = Modifier.fillMaxSize().padding(horizontal = 4.dp)
+                                        ) {
+                                            Text(label, fontWeight = FontWeight.Bold, fontSize = 12.sp, color = TextHeading)
+                                            Text(sub, fontSize = 10.sp, color = SapphireLight, fontWeight = FontWeight.SemiBold)
                                         }
                                     }
                                 }
@@ -525,22 +695,20 @@ fun VoiceHubScreen(
                                 horizontalArrangement = Arrangement.spacedBy(8.dp)
                             ) {
                                 reloadPacks.drop(2).forEach { (packTier, label, sub) ->
-                                    Button(
-                                        onClick = {
-                                            val email = settings.customerEmail.trim()
-                                            val key = settings.licenseKey.trim()
-                                            inAppPaymentTitle = "Add Minutes • $label"
-                                            inAppPaymentUrl = "https://missedcallautosms.com/api/create-credit-pack-checkout?pack=$packTier&key=${Uri.encode(key)}&email=${Uri.encode(email)}"
-                                            showInAppPayment = true
-                                        },
-                                        colors = ButtonDefaults.buttonColors(containerColor = Color(0xFFB91C1C)),
-                                        shape = RoundedCornerShape(10.dp),
-                                        modifier = Modifier.weight(1f).height(46.dp),
-                                        contentPadding = PaddingValues(horizontal = 4.dp, vertical = 2.dp)
+                                    Surface(
+                                        onClick = { oneTapChargeSavedCard(packTier.toInt(), label) },
+                                        shape = RoundedCornerShape(12.dp),
+                                        color = DarkSurfaceElevated,
+                                        border = BorderStroke(1.dp, if (packTier == "50") EmeraldSuccess.copy(alpha = 0.5f) else DarkCardBorder),
+                                        modifier = Modifier.weight(1f).height(50.dp)
                                     ) {
-                                        Column(horizontalAlignment = Alignment.CenterHorizontally) {
-                                            Text(label, fontWeight = FontWeight.Bold, fontSize = 11.sp, color = Color.White)
-                                            Text(sub, fontSize = 9.sp, color = Color(0xFFFECACA))
+                                        Column(
+                                            horizontalAlignment = Alignment.CenterHorizontally,
+                                            verticalArrangement = Arrangement.Center,
+                                            modifier = Modifier.fillMaxSize().padding(horizontal = 4.dp)
+                                        ) {
+                                            Text(label, fontWeight = FontWeight.Bold, fontSize = 12.sp, color = TextHeading)
+                                            Text(sub, fontSize = 10.sp, color = EmeraldLight, fontWeight = FontWeight.SemiBold)
                                         }
                                     }
                                 }
@@ -548,18 +716,22 @@ fun VoiceHubScreen(
 
                             Spacer(modifier = Modifier.height(10.dp))
 
-                            Text(
-                                text = "🔒 Instant In-App Stripe Reload • Auto-Resumes Immediately • Credits Never Expire",
-                                style = MaterialTheme.typography.labelSmall,
-                                color = Color(0xFFF87171),
-                                fontSize = 10.sp
-                            )
+                            Row(verticalAlignment = Alignment.CenterVertically) {
+                                Icon(Icons.Default.Lock, contentDescription = null, tint = EmeraldLight, modifier = Modifier.size(13.dp))
+                                Spacer(modifier = Modifier.width(5.dp))
+                                Text(
+                                    text = "Instant In-App Stripe Reload • Resumes Instantly • No Expiry",
+                                    style = MaterialTheme.typography.labelSmall,
+                                    color = TextMuted,
+                                    fontSize = 10.sp
+                                )
+                            }
                         }
                     }
                 } else {
                     Card(
                         colors = CardDefaults.cardColors(containerColor = Color(0xFF064E3B).copy(alpha = 0.35f)),
-                        border = BorderStroke(1.dp, Color(0xFF00E676).copy(alpha = 0.5f)),
+                        border = BorderStroke(1.dp, Color(0xFF10B981).copy(alpha = 0.5f)),
                         shape = RoundedCornerShape(16.dp),
                         modifier = Modifier.fillMaxWidth()
                     ) {
@@ -569,7 +741,7 @@ fun VoiceHubScreen(
                             verticalAlignment = Alignment.CenterVertically
                         ) {
                             Row(verticalAlignment = Alignment.CenterVertically) {
-                                Icon(Icons.Default.CheckCircle, contentDescription = null, tint = Color(0xFF00E676), modifier = Modifier.size(22.dp))
+                                Icon(Icons.Default.CheckCircle, contentDescription = null, tint = Color(0xFF10B981), modifier = Modifier.size(22.dp))
                                 Spacer(modifier = Modifier.width(10.dp))
                                 Column {
                                     Row(verticalAlignment = Alignment.CenterVertically) {
@@ -577,9 +749,9 @@ fun VoiceHubScreen(
                                         Spacer(modifier = Modifier.width(6.dp))
                                         Surface(
                                             shape = RoundedCornerShape(4.dp),
-                                            color = Color(0xFF00E676).copy(alpha = 0.2f)
+                                            color = Color(0xFF10B981).copy(alpha = 0.2f)
                                         ) {
-                                            Text("ONLINE", color = Color(0xFF00E676), fontSize = 9.sp, fontWeight = FontWeight.ExtraBold, modifier = Modifier.padding(horizontal = 6.dp, vertical = 2.dp))
+                                            Text("ONLINE", color = Color(0xFF10B981), fontSize = 9.sp, fontWeight = FontWeight.ExtraBold, modifier = Modifier.padding(horizontal = 6.dp, vertical = 2.dp))
                                         }
                                     }
                                     Text("${"%.1f".format(liveVoiceMinutesBalance)} Mins Remaining", style = MaterialTheme.typography.labelSmall, color = Color(0xFFA7F3D0))
@@ -594,7 +766,7 @@ fun VoiceHubScreen(
                                     inAppPaymentUrl = "https://missedcallautosms.com/api/create-credit-pack-checkout?pack=25&key=${Uri.encode(key)}&email=${Uri.encode(email)}"
                                     showInAppPayment = true
                                 },
-                                colors = ButtonDefaults.buttonColors(containerColor = Color(0xFF00E676)),
+                                colors = ButtonDefaults.buttonColors(containerColor = Color(0xFF10B981)),
                                 shape = RoundedCornerShape(8.dp),
                                 contentPadding = PaddingValues(horizontal = 12.dp, vertical = 6.dp)
                             ) {
@@ -610,10 +782,8 @@ fun VoiceHubScreen(
         // 1. Assigned Inbound Line & 1-Tap Carrier Forwarding (*71 / *73)
         item {
             Card(
-                colors = CardDefaults.cardColors(
-                    containerColor = Color(0xFF673AB7).copy(alpha = 0.12f)
-                ),
-                border = BorderStroke(1.dp, Color(0xFF9C27B0).copy(alpha = 0.4f)),
+                colors = CardDefaults.cardColors(containerColor = DarkSurface),
+                border = BorderStroke(1.dp, DarkCardBorder),
                 shape = RoundedCornerShape(16.dp),
                 modifier = Modifier.fillMaxWidth()
             ) {
@@ -623,21 +793,40 @@ fun VoiceHubScreen(
                         horizontalArrangement = Arrangement.SpaceBetween,
                         verticalAlignment = Alignment.CenterVertically
                     ) {
-                        Row(verticalAlignment = Alignment.CenterVertically) {
-                            Icon(Icons.Default.PhoneCallback, contentDescription = null, tint = Color(0xFFAB47BC), modifier = Modifier.size(22.dp))
-                            Spacer(modifier = Modifier.width(8.dp))
-                            Text("Assigned Inbound AI Line", fontWeight = FontWeight.Bold, style = MaterialTheme.typography.titleSmall)
+                        Row(
+                            verticalAlignment = Alignment.CenterVertically,
+                            modifier = Modifier.weight(1f).padding(end = 8.dp)
+                        ) {
+                            Surface(
+                                shape = RoundedCornerShape(10.dp),
+                                color = SapphireContainerSubtle,
+                                modifier = Modifier.size(36.dp)
+                            ) {
+                                Box(contentAlignment = Alignment.Center) {
+                                    Icon(Icons.Default.PhoneCallback, contentDescription = null, tint = SapphireLight, modifier = Modifier.size(18.dp))
+                                }
+                            }
+                            Spacer(modifier = Modifier.width(10.dp))
+                            Text(
+                                text = "Assigned Inbound AI Line",
+                                fontWeight = FontWeight.Bold,
+                                style = MaterialTheme.typography.titleSmall,
+                                color = TextHeading,
+                                maxLines = 1,
+                                softWrap = false
+                            )
                         }
                         Surface(
                             shape = RoundedCornerShape(8.dp),
-                            color = if (isVoiceActive) Color(0xFF673AB7).copy(alpha = 0.25f) else RedError.copy(alpha = 0.15f)
+                            color = if (isVoiceActive) SapphireContainerSubtle else RedContainerSubtle
                         ) {
                             Text(
-                                text = if (isVoiceActive) "DEDICATED VAPI LINE" else "🔒 LOCKED (SUB REQUIRED)",
+                                text = if (isVoiceActive) "24/7 AI LINE" else "LOCKED",
                                 modifier = Modifier.padding(horizontal = 8.dp, vertical = 3.dp),
                                 style = MaterialTheme.typography.labelSmall,
                                 fontWeight = FontWeight.Bold,
-                                color = if (isVoiceActive) Color(0xFFCE93D8) else RedError
+                                color = if (isVoiceActive) SapphireLight else RedError,
+                                softWrap = false
                             )
                         }
                     }
@@ -646,20 +835,19 @@ fun VoiceHubScreen(
 
                     Text(
                         text = if (isVoiceActive) settings.voiceReceptionistForwardingNumber.ifBlank { "+1 (732) 660-9121" } else "+1 (732) •••-•••• (Locked)",
-                        style = MaterialTheme.typography.titleLarge,
-                        fontFamily = FontFamily.Monospace,
-                        fontWeight = FontWeight.Bold,
-                        color = if (isVoiceActive) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.onSurfaceVariant
+                        style = MaterialTheme.typography.headlineSmall,
+                        fontWeight = FontWeight.ExtraBold,
+                        color = if (isVoiceActive) TextHeading else TextMuted
                     )
 
                     Spacer(modifier = Modifier.height(6.dp))
                     Text(
                         text = "Unanswered calls forward to this line via your carrier (*71). AI answers immediately, captures customer details, and sends you instant alerts.",
                         style = MaterialTheme.typography.bodySmall,
-                        color = MaterialTheme.colorScheme.onSurfaceVariant
+                        color = TextBody
                     )
 
-                    Spacer(modifier = Modifier.height(12.dp))
+                    Spacer(modifier = Modifier.height(14.dp))
 
                     Row(
                         modifier = Modifier.fillMaxWidth(),
@@ -681,15 +869,16 @@ fun VoiceHubScreen(
                                     showAccountPortal = true
                                 }
                             },
-                            colors = if (isVoiceActive) ButtonDefaults.buttonColors(containerColor = Color(0xFF673AB7)) else ButtonDefaults.buttonColors(containerColor = MaterialTheme.colorScheme.surfaceVariant),
+                            colors = if (isVoiceActive) ButtonDefaults.buttonColors(containerColor = SapphirePrimary) else ButtonDefaults.buttonColors(containerColor = DarkCardBorder),
+                            shape = RoundedCornerShape(10.dp),
                             modifier = Modifier.weight(1.2f)
                         ) {
-                            Icon(if (isVoiceActive) Icons.Default.Call else Icons.Default.Lock, contentDescription = null, modifier = Modifier.size(16.dp), tint = if (isVoiceActive) Color.White else MaterialTheme.colorScheme.onSurfaceVariant)
+                            Icon(if (isVoiceActive) Icons.Default.Call else Icons.Default.Lock, contentDescription = null, modifier = Modifier.size(16.dp), tint = if (isVoiceActive) Color.White else TextMuted)
                             Spacer(modifier = Modifier.width(6.dp))
                             Text(
                                 text = if (isVoiceActive) "Dial *71 Activate" else "Dial *71 (Locked)",
                                 fontWeight = FontWeight.Bold,
-                                color = if (isVoiceActive) Color.White else MaterialTheme.colorScheme.onSurfaceVariant
+                                color = if (isVoiceActive) Color.White else TextMuted
                             )
                         }
 
@@ -703,9 +892,11 @@ fun VoiceHubScreen(
                                     Toast.makeText(context, "Could not open dialer", Toast.LENGTH_SHORT).show()
                                 }
                             },
+                            shape = RoundedCornerShape(10.dp),
+                            border = BorderStroke(1.dp, DarkCardBorder),
                             modifier = Modifier.weight(1f)
                         ) {
-                            Text("Revert (*73)")
+                            Text("Revert (*73)", color = TextHeading)
                         }
                     }
 
@@ -713,11 +904,13 @@ fun VoiceHubScreen(
 
                     OutlinedButton(
                         onClick = { showAccountPortal = true },
+                        shape = RoundedCornerShape(10.dp),
+                        border = BorderStroke(1.dp, DarkCardBorder),
                         modifier = Modifier.fillMaxWidth()
                     ) {
-                        Icon(Icons.Default.CreditCard, contentDescription = null, modifier = Modifier.size(16.dp))
+                        Icon(Icons.Default.CreditCard, contentDescription = null, modifier = Modifier.size(16.dp), tint = SapphireLight)
                         Spacer(modifier = Modifier.width(6.dp))
-                        Text("Manage Plan, Quotas & Add Minutes", fontWeight = FontWeight.SemiBold)
+                        Text("Manage Plan, Quotas & Add Minutes", fontWeight = FontWeight.SemiBold, color = TextHeading)
                     }
                 }
             }
@@ -1242,8 +1435,8 @@ fun VoiceHubScreen(
                         // Contacts Exemption Notice Box
                         Surface(
                             shape = RoundedCornerShape(8.dp),
-                            color = Color(0xFF00E676).copy(alpha = 0.08f),
-                            border = BorderStroke(1.dp, Color(0xFF00E676).copy(alpha = 0.3f)),
+                            color = Color(0xFF10B981).copy(alpha = 0.08f),
+                            border = BorderStroke(1.dp, Color(0xFF10B981).copy(alpha = 0.3f)),
                             modifier = Modifier.fillMaxWidth()
                         ) {
                             Row(modifier = Modifier.padding(10.dp), verticalAlignment = Alignment.CenterVertically) {
@@ -1306,7 +1499,7 @@ fun VoiceHubScreen(
                                         ))
                                     },
                                     colors = ButtonDefaults.buttonColors(
-                                        containerColor = if (aiSmsCalendarConnected) Color(0xFF1E293B) else Color(0xFF00E676)
+                                        containerColor = if (aiSmsCalendarConnected) Color(0xFF1E293B) else Color(0xFF10B981)
                                     )
                                 ) {
                                     Text(

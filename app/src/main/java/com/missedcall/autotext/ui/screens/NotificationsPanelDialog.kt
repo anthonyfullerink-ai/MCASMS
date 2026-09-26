@@ -105,12 +105,12 @@ fun NotificationsPanelDialog(
                                 if (unreadCount > 0) {
                                     Spacer(modifier = Modifier.width(8.dp))
                                     Surface(
-                                        color = Color(0xFF00E676),
+                                        color = Color(0xFF2563EB),
                                         shape = RoundedCornerShape(12.dp)
                                     ) {
                                         Text(
                                             "$unreadCount new",
-                                            color = Color.Black,
+                                            color = Color.White,
                                             fontWeight = FontWeight.Bold,
                                             fontSize = 10.sp,
                                             modifier = Modifier.padding(horizontal = 6.dp, vertical = 2.dp)
@@ -277,7 +277,7 @@ private fun NotificationCard(
     onMarkRead: () -> Unit
 ) {
     val accentColor = when (item.type) {
-        "APPOINTMENT_BOOKED" -> Color(0xFF00E676)
+        "APPOINTMENT_BOOKED" -> Color(0xFF10B981)
         "EMERGENCY_ALERT" -> Color(0xFFEF4444)
         "VOICE_CALL_STARTED", "VOICE_CALL_COMPLETED" -> Color(0xFFC084FC)
         "AI_SMS_SENT", "AI_SMS_RECEIVED" -> Color(0xFF38BDF8)

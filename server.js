@@ -162,6 +162,65 @@ function vapiApiRequest(endpoint, method = 'GET', postJson = null) {
   });
 }
 
+// Extract and vault saved payment method details from a Stripe checkout/payment session
+async function getPaymentMethodDetailsFromSession(session) {
+  let cardDetails = null;
+  const customerId = session.customer;
+  try {
+    let pmId = null;
+    if (session.payment_intent) {
+      const pi = await stripeApiRequest(`/v1/payment_intents/${session.payment_intent}?expand[]=payment_method`);
+      if (pi && pi.payment_method && typeof pi.payment_method === 'object') {
+        pmId = pi.payment_method.id;
+        cardDetails = {
+          id: pi.payment_method.id,
+          brand: pi.payment_method.card?.brand || 'card',
+          last4: pi.payment_method.card?.last4 || '••••',
+          exp_month: pi.payment_method.card?.exp_month || 0,
+          exp_year: pi.payment_method.card?.exp_year || 0
+        };
+      }
+    } else if (session.setup_intent) {
+      const si = await stripeApiRequest(`/v1/setup_intents/${session.setup_intent}?expand[]=payment_method`);
+      if (si && si.payment_method && typeof si.payment_method === 'object') {
+        pmId = si.payment_method.id;
+        cardDetails = {
+          id: si.payment_method.id,
+          brand: si.payment_method.card?.brand || 'card',
+          last4: si.payment_method.card?.last4 || '••••',
+          exp_month: si.payment_method.card?.exp_month || 0,
+          exp_year: si.payment_method.card?.exp_year || 0
+        };
+      }
+    }
+
+    if (!cardDetails && customerId) {
+      const pmList = await stripeApiRequest(`/v1/customers/${customerId}/payment_methods?type=card`);
+      if (pmList && pmList.data && pmList.data.length > 0) {
+        const pm = pmList.data[0];
+        pmId = pm.id;
+        cardDetails = {
+          id: pm.id,
+          brand: pm.card?.brand || 'card',
+          last4: pm.card?.last4 || '••••',
+          exp_month: pm.card?.exp_month || 0,
+          exp_year: pm.card?.exp_year || 0
+        };
+      }
+    }
+
+    // Set default payment method on customer in Stripe so future off-session charges work seamlessly
+    if (pmId && customerId) {
+      await stripeApiRequest(`/v1/customers/${customerId}`, 'POST', {
+        'invoice_settings[default_payment_method]': pmId
+      }).catch(() => {});
+    }
+  } catch (err) {
+    console.warn('[Stripe PaymentMethod Extraction]', err.message);
+  }
+  return { customerId, cardDetails };
+}
+
 function generateLicenseEmailHtml(data) {
   const { customerName, customerEmail, licenseKey, licenseType, price } = data;
   const isPro = (licenseKey && (licenseKey.startsWith('MCAS-PRO-') || licenseKey.startsWith('MCAT-PRO-') || licenseKey.includes('PRO-DEMO'))) ||
@@ -252,10 +311,10 @@ function generateLicenseEmailHtml(data) {
         <div style="background: rgba(168, 85, 247, 0.05); border: 1px dashed rgba(168, 85, 247, 0.35); border-radius: 12px; padding: 18px; margin-bottom: 24px; text-align: center;">
             <div style="font-size: 14px; font-weight: 800; color: #C084FC; margin-bottom: 4px;">🎙️ Need 24/7 AI Voice Answering?</div>
             <div style="font-size: 12px; color: #CBD5E0; margin-bottom: 12px; line-height: 1.5;">
-                Your Pro license is pre-cleared for our <strong>Turnkey 24/7 AI Voice Receptionist</strong> add-on ($29/mo with 14-day free trial). When you're ready, activate your dedicated AI line with 1-click *71 carrier forwarding anytime.
+                Your Pro license is pre-cleared for our <strong>Turnkey 24/7 AI Voice Receptionist</strong> add-on ($9.99/mo with included starter minutes). When you're ready, activate your dedicated AI line with 1-click *71 carrier forwarding anytime.
             </div>
-            <a href="https://missedcallautosms.com/sales_landing_page.html#voice-details" style="display: inline-block; background: rgba(168, 85, 247, 0.2); color: #C084FC; border: 1px solid #A855F7; font-weight: 700; font-size: 12px; padding: 8px 20px; border-radius: 20px; text-decoration: none;">
-                Learn More & Add Voice Receptionist ($29/mo) →
+            <a href="https://missedcallautosms.com/voice" style="display: inline-block; background: rgba(168, 85, 247, 0.2); color: #C084FC; border: 1px solid #A855F7; font-weight: 700; font-size: 12px; padding: 8px 20px; border-radius: 20px; text-decoration: none;">
+                Learn More & Add Voice Receptionist ($9.99/mo) →
             </a>
         </div>
         ` : ''}
@@ -900,7 +959,7 @@ function generateVoiceProOnboardingEmailHtml(params) {
       <div style="font-size: 46px; margin-bottom: 8px;">🎙️</div>
       <h1 style="color: #00E676; margin: 0; font-size: 24px; font-weight: 900;">Missed Call Auto SMS</h1>
       <div style="display: inline-block; margin-top: 6px; padding: 4px 14px; border-radius: 20px; font-size: 11px; font-weight: 800; background: rgba(0, 230, 118, 0.15); color: #00E676; border: 1px solid rgba(0, 230, 118, 0.35);">
-        MANAGED AI VOICE RECEPTIONIST PLAN ($29/MO)
+        MANAGED AI VOICE RECEPTIONIST PLAN ($9.99/MO)
       </div>
     </div>
 
@@ -1635,14 +1694,16 @@ const server = http.createServer((req, res) => {
           const amountTotal = (session.amount_total !== undefined && session.amount_total !== null) ? session.amount_total : (session.amount !== undefined ? session.amount : 2900);
           const metadata = session.metadata || {};
 
-          // AUTOMATION 1: Managed AI Voice Receptionist ($29.00 / month recurring)
-          const isVoicePro = (amountTotal === 2900) || 
+          // AUTOMATION 1: Managed AI Voice Receptionist ($9.99 / month recurring)
+          const isVoicePro = (amountTotal === 999) || (amountTotal === 2900) || 
                              (metadata.tier === 'managed_voice_pro') || 
+                             (metadata.tier === 'voice_addon') ||
+                             (metadata.tier === 'voice_999') ||
                              (metadata.service === 'voice_receptionist') ||
-                             (session.subscription && amountTotal === 2900);
+                             (session.subscription && (amountTotal === 999 || amountTotal === 2900));
 
           if (isVoicePro) {
-            console.log(`🎙️ [VOICE PRO SUBSCRIBED] Running automated post-payment provisioning for ${customerEmail} ($29/mo)...`);
+            console.log(`🎙️ [VOICE PRO SUBSCRIBED] Running automated post-payment provisioning for ${customerEmail} ($9.99/mo)...`);
 
             // Step A: Real Live Vapi Phone Number Provisioning
             const forwardingNumber = process.env.VAPI_PRIMARY_PHONE_NUMBER || '+1 (732) 660-9121';
@@ -1650,6 +1711,8 @@ const server = http.createServer((req, res) => {
             const carrierCode = `*71${cleanDigits.slice(-10)}`;
             const carrierDeactivateCode = '*73';
 
+            // Step A.1: Vault Saved Payment Method
+            const { customerId: stripeCustId, cardDetails } = await getPaymentMethodDetailsFromSession(session);
 
             // Step B: Update Persistent Voice Settings
             const settings = getVoiceSettings();
@@ -1663,6 +1726,14 @@ const server = http.createServer((req, res) => {
             settings.subscriberEmail = customerEmail;
             settings.subscriberName = customerName;
             settings.stripeSubscriptionId = session.subscription || session.id;
+            settings.stripeCustomerId = stripeCustId || session.customer || null;
+            settings.defaultPaymentMethodId = cardDetails?.id || null;
+            settings.cardBrand = cardDetails?.brand || null;
+            settings.cardLast4 = cardDetails?.last4 || null;
+            settings.cardExpMonth = cardDetails?.exp_month || null;
+            settings.cardExpYear = cardDetails?.exp_year || null;
+            settings.autoRebillEnabled = true;
+            settings.autoBillingThresholdMinutes = 15;
             settings.activatedAt = new Date().toISOString();
             saveVoiceSettings(settings);
 
@@ -1680,11 +1751,18 @@ const server = http.createServer((req, res) => {
               quotaMinutes: 200,
               minutesUsed: 0,
               subscriptionId: session.subscription || session.id,
-              customerId: session.customer || null,
-              stripeCustomerId: session.customer || null,
+              customerId: stripeCustId || session.customer || null,
+              stripeCustomerId: stripeCustId || session.customer || null,
+              stripePaymentMethodId: cardDetails?.id || null,
+              defaultPaymentMethodId: cardDetails?.id || null,
+              cardBrand: cardDetails?.brand || null,
+              cardLast4: cardDetails?.last4 || null,
+              cardExpMonth: cardDetails?.exp_month || null,
+              cardExpYear: cardDetails?.exp_year || null,
+              autoBillingEnabled: true,
+              autoBillingThresholdMinutes: 15,
               boundAt: new Date().toISOString()
             });
-
 
             saveMasterLicense({
               key: licenseKey,
@@ -1692,10 +1770,14 @@ const server = http.createServer((req, res) => {
               email: customerEmail,
               tier: 'PRO',
               type: 'PAID',
-              price: '29.00/mo',
+              price: '9.99/mo',
               voiceActive: true,
               voiceNumber: forwardingNumber,
               carrierCode: carrierCode,
+              stripeCustomerId: stripeCustId || session.customer || null,
+              defaultPaymentMethodId: cardDetails?.id || null,
+              cardBrand: cardDetails?.brand || null,
+              cardLast4: cardDetails?.last4 || null,
               status: 'ACTIVE',
               date: new Date().toISOString()
             });
@@ -1731,11 +1813,11 @@ const server = http.createServer((req, res) => {
                 orderId: session.id,
                 customerEmail,
                 productType: 'voice_addon',
-                grossAmount: 29.00
+                grossAmount: 9.99
               });
             }
 
-            console.log(`🎉 [POST-PAYMENT AUTOMATION COMPLETE] Provisioned dedicated line ${forwardingNumber}, generated key ${licenseKey}, email sent!`);
+            console.log(`🎉 [POST-PAYMENT AUTOMATION COMPLETE] Provisioned line ${forwardingNumber}, key ${licenseKey}, payment method saved!`);
 
             res.writeHead(200, { 'Content-Type': 'application/json; charset=utf-8', 'Access-Control-Allow-Origin': '*' });
             res.end(JSON.stringify({
@@ -1747,6 +1829,7 @@ const server = http.createServer((req, res) => {
               licenseKey,
               customerEmail,
               subscriptionId: session.subscription || session.id,
+              cardSaved: !!cardDetails,
               status: 'DEPLOYED_ACTIVE'
             }));
             return;
@@ -1804,6 +1887,9 @@ const server = http.createServer((req, res) => {
             const currentBalance = (typeof sub?.voiceMinutesBalance === 'number') ? sub.voiceMinutesBalance : ((typeof masterLic?.voiceMinutesBalance === 'number') ? masterLic.voiceMinutesBalance : 0);
             const newBalance = Math.round((currentBalance + creditPackMinutes) * 100) / 100;
 
+            // Extract and vault payment method for future off-session 1-click & auto-billing
+            const { customerId: stripeCustId, cardDetails } = await getPaymentMethodDetailsFromSession(session);
+
             const settings = getVoiceSettings();
             settings.voiceMinutesBalance = newBalance;
             settings.isVoicePaused = false;
@@ -1811,6 +1897,14 @@ const server = http.createServer((req, res) => {
             settings.forwardingNumber = forwardingNumber;
             settings.carrierCode = carrierCode;
             settings.status = 'ACTIVE';
+            if (stripeCustId) settings.stripeCustomerId = stripeCustId;
+            if (cardDetails) {
+              settings.defaultPaymentMethodId = cardDetails.id;
+              settings.cardBrand = cardDetails.brand;
+              settings.cardLast4 = cardDetails.last4;
+              settings.cardExpMonth = cardDetails.exp_month;
+              settings.cardExpYear = cardDetails.exp_year;
+            }
             saveVoiceSettings(settings);
 
             saveVoiceSubscriber(targetKey, {
@@ -1826,6 +1920,15 @@ const server = http.createServer((req, res) => {
               voiceMinutesBalance: newBalance,
               ratePerMinute: 0.25,
               autoRebillEnabled: true,
+              autoBillingThresholdMinutes: 15,
+              customerId: stripeCustId || session.customer || sub?.stripeCustomerId || null,
+              stripeCustomerId: stripeCustId || session.customer || sub?.stripeCustomerId || null,
+              stripePaymentMethodId: cardDetails?.id || sub?.stripePaymentMethodId || null,
+              defaultPaymentMethodId: cardDetails?.id || sub?.defaultPaymentMethodId || null,
+              cardBrand: cardDetails?.brand || sub?.cardBrand || null,
+              cardLast4: cardDetails?.last4 || sub?.cardLast4 || null,
+              cardExpMonth: cardDetails?.exp_month || sub?.cardExpMonth || null,
+              cardExpYear: cardDetails?.exp_year || sub?.cardExpYear || null,
               isVoicePaused: false,
               status: 'ACTIVE',
               provisionedAt: isFirstTimeProvisioning ? new Date().toISOString() : (sub?.provisionedAt || new Date().toISOString())
@@ -1841,6 +1944,10 @@ const server = http.createServer((req, res) => {
               voiceNumber: forwardingNumber,
               carrierCode: carrierCode,
               voiceMinutesBalance: newBalance,
+              stripeCustomerId: stripeCustId || session.customer || masterLic?.stripeCustomerId || null,
+              defaultPaymentMethodId: cardDetails?.id || masterLic?.defaultPaymentMethodId || null,
+              cardBrand: cardDetails?.brand || masterLic?.cardBrand || null,
+              cardLast4: cardDetails?.last4 || masterLic?.cardLast4 || null,
               status: 'ACTIVE'
             });
 
@@ -2248,6 +2355,7 @@ const server = http.createServer((req, res) => {
       let voiceMinutesBalance = 0.0;
       let voiceForwardingNumber = null;
       let voiceCarrierCode = null;
+      let subBinding = null;
 
       // Check Voice Pro Bindings
       const voiceBindingsFile = path.join(__dirname, '.voice_pro_bindings.json');
@@ -2255,6 +2363,7 @@ const server = http.createServer((req, res) => {
         try {
           const bindings = JSON.parse(fs.readFileSync(voiceBindingsFile, 'utf8'));
           if (bindings[key]) {
+            subBinding = bindings[key];
             const b = bindings[key];
             voiceEntitlement = !!(b.voiceEntitlement || b.voiceSubActive || b.voiceSubWaived || b.active);
             voiceSubWaived = !!b.voiceSubWaived;
@@ -2378,6 +2487,14 @@ const server = http.createServer((req, res) => {
         autoRebillEnabled: settings.autoRebillEnabled !== false,
         isVoicePaused: isPaused,
         ratePerMinute: 0.25,
+        hasPaymentMethod: !!(subBinding?.stripePaymentMethodId || subBinding?.defaultPaymentMethodId || masterLic?.defaultPaymentMethodId || settings.defaultPaymentMethodId),
+        cardBrand: subBinding?.cardBrand || masterLic?.cardBrand || settings.cardBrand || null,
+        cardLast4: subBinding?.cardLast4 || masterLic?.cardLast4 || settings.cardLast4 || null,
+        cardExpMonth: subBinding?.cardExpMonth || masterLic?.cardExpMonth || settings.cardExpMonth || null,
+        cardExpYear: subBinding?.cardExpYear || masterLic?.cardExpYear || settings.cardExpYear || null,
+        autoBillingEnabled: subBinding?.autoBillingEnabled ?? (settings.autoRebillEnabled !== false),
+        autoBillingThresholdMinutes: subBinding?.autoBillingThresholdMinutes || 15,
+        monthlyPrice: "$9.99/mo",
         packPriceDollars: 10.00,
         packMinutes: 40,
         checkoutCreditPackUrl: 'https://buy.stripe.com/5kA8wPfRY0PS6M014f',
@@ -3301,9 +3418,14 @@ const server = http.createServer((req, res) => {
         return;
       }
 
+      const subscribers = getVoiceSubscribers();
+      const existingSub = subscribers.find(s => (licenseKey && s.licenseKey === licenseKey) || (customerEmail && s.email && s.email.toLowerCase() === customerEmail.toLowerCase()));
+      const existingCustId = existingSub?.stripeCustomerId;
+
       const postData = {
         'mode': 'payment',
         'payment_method_types[0]': 'card',
+        'payment_intent_data[setup_future_usage]': 'off_session',
         'line_items[0][price_data][currency]': 'usd',
         'line_items[0][price_data][unit_amount]': String(tier.amount),
         'line_items[0][price_data][product_data][name]': tier.name,
@@ -3320,8 +3442,12 @@ const server = http.createServer((req, res) => {
         'cancel_url': `https://${host}/voice.html`
       };
 
+      if (existingCustId) {
+        postData['customer'] = existingCustId;
+      } else if (customerEmail) {
+        postData['customer_email'] = customerEmail;
+      }
       if (licenseKey) postData['client_reference_id'] = licenseKey;
-      if (customerEmail) postData['customer_email'] = customerEmail;
 
       try {
         const session = await stripeApiRequest('/v1/checkout/sessions', 'POST', postData);
@@ -3364,6 +3490,414 @@ const server = http.createServer((req, res) => {
       const params = Object.fromEntries(urlObj.searchParams.entries());
       handleCreditPackRequest(params);
     }
+  }
+
+  // ═════════════════════════════════════════════════════════════════════
+  // NATIVE IN-APP BILLING API SUITE (Off-Session Card Charges & Subscriptions)
+  // ═════════════════════════════════════════════════════════════════════
+
+  // API 1: Get Customer Payment Info & Saved Card (GET /api/billing/customer-payment-info)
+  if ((relativePath === '/api/billing/customer-payment-info' || relativePath === '/api/billing/customer-payment-info/') && req.method === 'GET') {
+    const urlObj = new URL(req.url, `http://localhost:${PORT}`);
+    const key = (urlObj.searchParams.get('key') || urlObj.searchParams.get('licenseKey') || '').trim().toUpperCase();
+    const email = (urlObj.searchParams.get('email') || '').trim().toLowerCase();
+
+    const subscribers = getVoiceSubscribers();
+    const sub = subscribers.find(s => (key && s.licenseKey === key) || (email && s.email && s.email.toLowerCase() === email));
+    const masterList = getMasterLicenses();
+    const masterLic = masterList.find(m => (key && m.key === key) || (email && m.email && m.email.toLowerCase() === email));
+    const settings = getVoiceSettings();
+
+    const cardBrand = sub?.cardBrand || masterLic?.cardBrand || settings.cardBrand || null;
+    const cardLast4 = sub?.cardLast4 || masterLic?.cardLast4 || settings.cardLast4 || null;
+    const cardExpMonth = sub?.cardExpMonth || masterLic?.cardExpMonth || settings.cardExpMonth || null;
+    const cardExpYear = sub?.cardExpYear || masterLic?.cardExpYear || settings.cardExpYear || null;
+    const hasPaymentMethod = !!(cardLast4 && (sub?.defaultPaymentMethodId || sub?.stripePaymentMethodId || masterLic?.defaultPaymentMethodId || settings.defaultPaymentMethodId));
+    const autoBillingEnabled = sub?.autoBillingEnabled ?? (settings.autoRebillEnabled !== false);
+    const threshold = sub?.autoBillingThresholdMinutes || settings.autoBillingThresholdMinutes || 15;
+    const balance = typeof sub?.voiceMinutesBalance === 'number' ? sub.voiceMinutesBalance : (typeof settings.voiceMinutesBalance === 'number' ? settings.voiceMinutesBalance : 0);
+    const subActive = !!(sub?.voiceSubActive || sub?.active || masterLic?.voiceActive);
+
+    res.writeHead(200, { 'Content-Type': 'application/json; charset=utf-8', 'Access-Control-Allow-Origin': '*' });
+    res.end(JSON.stringify({
+      success: true,
+      hasPaymentMethod,
+      cardBrand,
+      cardLast4,
+      cardExpMonth,
+      cardExpYear,
+      autoBillingEnabled,
+      autoBillingThresholdMinutes: threshold,
+      voiceMinutesBalance: balance,
+      voiceSubscriptionActive: subActive,
+      subscriptionId: sub?.subscriptionId || null,
+      monthlyPrice: "$9.99/mo"
+    }));
+    return;
+  }
+
+  // API 2: 1-Tap Charge Saved Card (POST /api/billing/charge-saved-card)
+  if ((relativePath === '/api/billing/charge-saved-card' || relativePath === '/api/billing/charge-saved-card/') && req.method === 'POST') {
+    let body = '';
+    req.on('data', chunk => body += chunk);
+    req.on('end', async () => {
+      try {
+        const payload = JSON.parse(body || '{}');
+        const key = (payload.licenseKey || payload.key || '').trim().toUpperCase();
+        const packTier = (payload.pack || payload.tier || '10').toString().toLowerCase();
+
+        const PACKS = {
+          '10': { name: 'Starter Pack', amount: 1000, minutes: 40 },
+          'pack_10': { name: 'Starter Pack', amount: 1000, minutes: 40 },
+          '25': { name: 'Growth Pack (+15 Free Mins)', amount: 2500, minutes: 115 },
+          'pack_25': { name: 'Growth Pack (+15 Free Mins)', amount: 2500, minutes: 115 },
+          '50': { name: 'Pro Contractor (+50 Free Mins)', amount: 5000, minutes: 250 },
+          'pack_50': { name: 'Pro Contractor (+50 Free Mins)', amount: 5000, minutes: 250 },
+          '100': { name: 'Fleet Pack (+150 Free Mins)', amount: 10000, minutes: 550 },
+          'pack_100': { name: 'Fleet Pack (+150 Free Mins)', amount: 10000, minutes: 550 }
+        };
+
+        const pack = PACKS[packTier] || PACKS['10'];
+
+        const subscribers = getVoiceSubscribers();
+        const sub = subscribers.find(s => s.licenseKey === key);
+        const masterList = getMasterLicenses();
+        const masterLic = masterList.find(m => m.key === key);
+        const settings = getVoiceSettings();
+
+        const custId = sub?.stripeCustomerId || masterLic?.stripeCustomerId || settings.stripeCustomerId;
+        let pmId = sub?.defaultPaymentMethodId || sub?.stripePaymentMethodId || masterLic?.defaultPaymentMethodId || settings.defaultPaymentMethodId;
+
+        if (!custId) {
+          res.writeHead(400, { 'Content-Type': 'application/json; charset=utf-8', 'Access-Control-Allow-Origin': '*' });
+          res.end(JSON.stringify({
+            success: false,
+            code: 'NO_SAVED_CARD',
+            message: 'No saved payment method found. Please save a card on file first.'
+          }));
+          return;
+        }
+
+        // If pmId is not directly in JSON, fetch from Stripe Customer
+        if (!pmId && custId) {
+          try {
+            const pmList = await stripeApiRequest(`/v1/customers/${custId}/payment_methods?type=card`);
+            if (pmList && pmList.data && pmList.data.length > 0) {
+              pmId = pmList.data[0].id;
+              if (sub) {
+                sub.defaultPaymentMethodId = pmId;
+                sub.cardBrand = pmList.data[0].card?.brand || 'card';
+                sub.cardLast4 = pmList.data[0].card?.last4 || '••••';
+                sub.cardExpMonth = pmList.data[0].card?.exp_month || 0;
+                sub.cardExpYear = pmList.data[0].card?.exp_year || 0;
+                saveVoiceSubscriber(key, sub);
+              }
+            }
+          } catch (e) {}
+        }
+
+        if (!pmId) {
+          res.writeHead(400, { 'Content-Type': 'application/json; charset=utf-8', 'Access-Control-Allow-Origin': '*' });
+          res.end(JSON.stringify({
+            success: false,
+            code: 'NO_SAVED_CARD',
+            message: 'No saved card on file. Please add a payment card.'
+          }));
+          return;
+        }
+
+        console.log(`💳 [1-TAP CHARGE] Charging $${(pack.amount / 100).toFixed(2)} to customer ${custId} (Card: ${sub?.cardBrand || 'Card'} ••${sub?.cardLast4 || '••'})...`);
+
+        const pi = await stripeApiRequest('/v1/payment_intents', 'POST', {
+          amount: String(pack.amount),
+          currency: 'usd',
+          customer: custId,
+          payment_method: pmId,
+          off_session: 'true',
+          confirm: 'true',
+          description: `Missed Call Auto SMS - In-App 1-Tap Minute Reload: ${pack.name} (+${pack.minutes} Mins) - Key ${key}`
+        });
+
+        if (pi.status === 'succeeded') {
+          const currentBal = typeof sub?.voiceMinutesBalance === 'number' ? sub.voiceMinutesBalance : (typeof settings.voiceMinutesBalance === 'number' ? settings.voiceMinutesBalance : 0);
+          const newBal = Math.round((currentBal + pack.minutes) * 100) / 100;
+
+          if (sub) {
+            sub.voiceMinutesBalance = newBal;
+            sub.isVoicePaused = false;
+            saveVoiceSubscriber(key, sub);
+          }
+          if (masterLic) {
+            masterLic.voiceMinutesBalance = newBal;
+            saveMasterLicense(masterLic);
+          }
+          settings.voiceMinutesBalance = newBal;
+          settings.isVoicePaused = false;
+          saveVoiceSettings(settings);
+
+          // Dispatch confirmation receipt email
+          const targetEmail = sub?.email || masterLic?.email || settings.subscriberEmail;
+          if (targetEmail) {
+            try {
+              const resendKey = process.env.RESEND_API_KEY || (fs.existsSync('.env') && fs.readFileSync('.env', 'utf8').match(/RESEND_API_KEY=(.*)/)?.[1]?.trim());
+              const emailHtml = generateCreditPackEmailHtml(sub?.name || 'Valued Customer', pack.minutes, (pack.amount / 100).toFixed(2), newBal);
+              if (resendKey) {
+                sendResendEmail(resendKey, targetEmail, `💳 Receipt: +${pack.minutes} Minutes Added ($${(pack.amount / 100).toFixed(2)})`, emailHtml).catch(() => {});
+              }
+            } catch (e) {}
+          }
+
+          console.log(`✅ [1-TAP CHARGE SUCCESS] +${pack.minutes} minutes added! New balance: ${newBal} min.`);
+          res.writeHead(200, { 'Content-Type': 'application/json; charset=utf-8', 'Access-Control-Allow-Origin': '*' });
+          res.end(JSON.stringify({
+            success: true,
+            newBalance: newBal,
+            minutesAdded: pack.minutes,
+            packName: pack.name,
+            amount: pack.amount / 100,
+            cardBrand: sub?.cardBrand || 'Card',
+            cardLast4: sub?.cardLast4 || '••••'
+          }));
+        } else {
+          res.writeHead(402, { 'Content-Type': 'application/json; charset=utf-8', 'Access-Control-Allow-Origin': '*' });
+          res.end(JSON.stringify({
+            success: false,
+            code: 'PAYMENT_NOT_SUCCEEDED',
+            status: pi.status,
+            message: 'Payment was not approved by card issuer.'
+          }));
+        }
+      } catch (err) {
+        console.error('1-Tap charge error:', err.message);
+        res.writeHead(500, { 'Content-Type': 'application/json; charset=utf-8', 'Access-Control-Allow-Origin': '*' });
+        res.end(JSON.stringify({
+          success: false,
+          code: 'STRIPE_ERROR',
+          message: err.message
+        }));
+      }
+    });
+    return;
+  }
+
+  // API 3: Toggle Auto-Billing (POST /api/billing/toggle-auto-billing)
+  if ((relativePath === '/api/billing/toggle-auto-billing' || relativePath === '/api/billing/toggle-auto-billing/') && req.method === 'POST') {
+    let body = '';
+    req.on('data', chunk => body += chunk);
+    req.on('end', () => {
+      try {
+        const payload = JSON.parse(body || '{}');
+        const key = (payload.licenseKey || payload.key || '').trim().toUpperCase();
+        const enabled = Boolean(payload.enabled !== undefined ? payload.enabled : payload.autoBillingEnabled);
+        const threshold = parseInt(payload.threshold || payload.autoBillingThresholdMinutes || 15, 10);
+
+        const subscribers = getVoiceSubscribers();
+        const sub = subscribers.find(s => s.licenseKey === key);
+        if (sub) {
+          sub.autoBillingEnabled = enabled;
+          sub.autoBillingThresholdMinutes = threshold;
+          saveVoiceSubscriber(key, sub);
+        }
+
+        const settings = getVoiceSettings();
+        settings.autoRebillEnabled = enabled;
+        settings.autoBillingThresholdMinutes = threshold;
+        saveVoiceSettings(settings);
+
+        console.log(`⚙️ [AUTO-BILLING TOGGLE] Set to [${enabled}] (Threshold: ${threshold} mins) for license: ${key || 'Default'}`);
+
+        res.writeHead(200, { 'Content-Type': 'application/json; charset=utf-8', 'Access-Control-Allow-Origin': '*' });
+        res.end(JSON.stringify({
+          success: true,
+          autoBillingEnabled: enabled,
+          autoBillingThresholdMinutes: threshold
+        }));
+      } catch (err) {
+        res.writeHead(400, { 'Content-Type': 'application/json; charset=utf-8', 'Access-Control-Allow-Origin': '*' });
+        res.end(JSON.stringify({ success: false, error: err.message }));
+      }
+    });
+    return;
+  }
+
+  // API 4: Native 1-Tap Subscription Activation ($9.99/mo) (POST /api/billing/subscribe-voice-native)
+  if ((relativePath === '/api/billing/subscribe-voice-native' || relativePath === '/api/billing/subscribe-voice-native/') && req.method === 'POST') {
+    let body = '';
+    req.on('data', chunk => body += chunk);
+    req.on('end', async () => {
+      try {
+        const payload = JSON.parse(body || '{}');
+        const key = (payload.licenseKey || payload.key || '').trim().toUpperCase();
+        const subscribers = getVoiceSubscribers();
+        const sub = subscribers.find(s => s.licenseKey === key);
+        const settings = getVoiceSettings();
+
+        const custId = sub?.stripeCustomerId || settings.stripeCustomerId;
+        let pmId = sub?.defaultPaymentMethodId || sub?.stripePaymentMethodId || settings.defaultPaymentMethodId;
+
+        if (!custId || !pmId) {
+          res.writeHead(400, { 'Content-Type': 'application/json; charset=utf-8', 'Access-Control-Allow-Origin': '*' });
+          res.end(JSON.stringify({
+            success: false,
+            code: 'NO_SAVED_CARD',
+            message: 'A saved credit card is required to activate subscription. Please add a card first.'
+          }));
+          return;
+        }
+
+        console.log(`🎙️ [NATIVE SUBSCRIBE] Starting $9.99/mo AI Voice subscription for customer ${custId}...`);
+
+        const subRes = await stripeApiRequest('/v1/subscriptions', 'POST', {
+          customer: custId,
+          'items[0][price_data][currency]': 'usd',
+          'items[0][price_data][product_data][name]': '24/7 AI Voice Receptionist ($9.99/mo)',
+          'items[0][price_data][unit_amount]': '999',
+          'items[0][price_data][recurring][interval]': 'month',
+          default_payment_method: pmId,
+          'metadata[license_key]': key,
+          'metadata[tier]': 'voice_addon'
+        });
+
+        if (sub) {
+          sub.voiceSubActive = true;
+          sub.voiceEntitlement = true;
+          sub.subscriptionId = subRes.id;
+          saveVoiceSubscriber(key, sub);
+        }
+        settings.voiceSubscriptionActive = true;
+        settings.stripeSubscriptionId = subRes.id;
+        settings.status = 'ACTIVE';
+        saveVoiceSettings(settings);
+
+        res.writeHead(200, { 'Content-Type': 'application/json; charset=utf-8', 'Access-Control-Allow-Origin': '*' });
+        res.end(JSON.stringify({
+          success: true,
+          status: 'ACTIVE',
+          subscriptionId: subRes.id,
+          monthlyPrice: "$9.99/mo"
+        }));
+      } catch (err) {
+        console.error('Native subscribe error:', err.message);
+        res.writeHead(500, { 'Content-Type': 'application/json; charset=utf-8', 'Access-Control-Allow-Origin': '*' });
+        res.end(JSON.stringify({ success: false, error: err.message }));
+      }
+    });
+    return;
+  }
+
+  // API 5: Native Subscription Cancellation (POST /api/billing/cancel-voice-native)
+  if ((relativePath === '/api/billing/cancel-voice-native' || relativePath === '/api/billing/cancel-voice-native/') && req.method === 'POST') {
+    let body = '';
+    req.on('data', chunk => body += chunk);
+    req.on('end', async () => {
+      try {
+        const payload = JSON.parse(body || '{}');
+        const key = (payload.licenseKey || payload.key || '').trim().toUpperCase();
+        const subscribers = getVoiceSubscribers();
+        const sub = subscribers.find(s => s.licenseKey === key);
+        const settings = getVoiceSettings();
+
+        const subId = sub?.subscriptionId || settings.stripeSubscriptionId;
+        if (subId && subId.startsWith('sub_')) {
+          await stripeApiRequest(`/v1/subscriptions/${subId}`, 'DELETE').catch(err => {
+            console.warn('[Stripe Sub Cancel Warning]', err.message);
+          });
+        }
+
+        if (sub) {
+          sub.voiceSubActive = false;
+          sub.subscriptionId = null;
+          saveVoiceSubscriber(key, sub);
+        }
+        settings.voiceSubscriptionActive = false;
+        settings.stripeSubscriptionId = null;
+        saveVoiceSettings(settings);
+
+        console.log(`🛑 [NATIVE CANCEL] Cancelled Voice subscription for license: ${key}`);
+
+        res.writeHead(200, { 'Content-Type': 'application/json; charset=utf-8', 'Access-Control-Allow-Origin': '*' });
+        res.end(JSON.stringify({
+          success: true,
+          status: 'CANCELED'
+        }));
+      } catch (err) {
+        res.writeHead(500, { 'Content-Type': 'application/json; charset=utf-8', 'Access-Control-Allow-Origin': '*' });
+        res.end(JSON.stringify({ success: false, error: err.message }));
+      }
+    });
+    return;
+  }
+
+  // API 6: Save / Update Card Session (POST /api/billing/create-save-card-session)
+  if ((relativePath === '/api/billing/create-save-card-session' || relativePath === '/api/billing/create-save-card-session/') && (req.method === 'POST' || req.method === 'GET')) {
+    const handleSaveCard = async (params) => {
+      try {
+        const key = (params.licenseKey || params.key || '').trim().toUpperCase();
+        const email = (params.email || '').trim();
+
+        const subscribers = getVoiceSubscribers();
+        const sub = subscribers.find(s => (key && s.licenseKey === key) || (email && s.email && s.email.toLowerCase() === email.toLowerCase()));
+        let custId = sub?.stripeCustomerId;
+
+        // If no customer ID in record, create one in Stripe
+        if (!custId && email) {
+          try {
+            const customer = await stripeApiRequest('/v1/customers', 'POST', {
+              email: email,
+              description: `Missed Call Auto SMS Customer (Key: ${key || 'Unbound'})`,
+              'metadata[license_key]': key
+            });
+            custId = customer.id;
+            if (sub) {
+              sub.stripeCustomerId = custId;
+              saveVoiceSubscriber(key, sub);
+            }
+          } catch (e) {}
+        }
+
+        const host = req.headers['host'] || 'missedcallautosms.com';
+        const postData = {
+          'mode': 'setup',
+          'payment_method_types[0]': 'card',
+          'setup_intent_data[metadata][license_key]': key,
+          'metadata[license_key]': key,
+          'metadata[type]': 'save_card',
+          'success_url': `https://${host}/success.html?session_id={CHECKOUT_SESSION_ID}&type=card_saved`,
+          'cancel_url': `https://${host}/`
+        };
+
+        if (custId) postData['customer'] = custId;
+        else if (email) postData['customer_email'] = email;
+
+        const session = await stripeApiRequest('/v1/checkout/sessions', 'POST', postData);
+        res.writeHead(200, { 'Content-Type': 'application/json; charset=utf-8', 'Access-Control-Allow-Origin': '*' });
+        res.end(JSON.stringify({
+          success: true,
+          checkoutUrl: session.url,
+          sessionId: session.id
+        }));
+      } catch (err) {
+        res.writeHead(500, { 'Content-Type': 'application/json; charset=utf-8', 'Access-Control-Allow-Origin': '*' });
+        res.end(JSON.stringify({ success: false, error: err.message }));
+      }
+    };
+
+    if (req.method === 'POST') {
+      let b = '';
+      req.on('data', c => b += c);
+      req.on('end', () => {
+        try {
+          handleSaveCard(JSON.parse(b || '{}'));
+        } catch (e) {
+          res.writeHead(400, { 'Content-Type': 'application/json; charset=utf-8' });
+          res.end(JSON.stringify({ success: false, error: 'Invalid JSON' }));
+        }
+      });
+    } else {
+      const urlObj = new URL(req.url, `http://localhost:${PORT}`);
+      handleSaveCard(Object.fromEntries(urlObj.searchParams.entries()));
+    }
+    return;
   }
 
   // API: Create Native PaymentIntent for Android PaymentSheet
@@ -3748,11 +4282,37 @@ const server = http.createServer((req, res) => {
         settings.minutesUsed = Math.round(((settings.minutesUsed || 0) + durationMins) * 100) / 100;
         settings.voiceMinutesBalance = Math.max(0, Math.round(((settings.voiceMinutesBalance || 15.0) - durationMins) * 100) / 100);
 
-        // Auto-Recharge Check ($10 pack = +40 mins when balance < 5 min)
-        if (settings.autoRebillEnabled !== false && settings.voiceMinutesBalance < 5) {
-          settings.voiceMinutesBalance = Math.round((settings.voiceMinutesBalance + 40) * 100) / 100;
-          settings.isVoicePaused = false;
-          console.log(`💳 [AUTO-RECHARGE] Balance dropped below 5 min. Auto-reloaded $10 pack (+40 min). New balance: ${settings.voiceMinutesBalance} min`);
+        // Auto-Recharge Check ($10 pack = +40 mins when balance < autoThreshold)
+        const autoThreshold = settings.autoBillingThresholdMinutes || 15;
+        if (settings.autoRebillEnabled !== false && settings.voiceMinutesBalance < autoThreshold) {
+          const custId = settings.stripeCustomerId;
+          const pmId = settings.defaultPaymentMethodId;
+          if (custId && pmId) {
+            console.log(`💳 [AUTO-BILLING BACKGROUND] Voice balance (${settings.voiceMinutesBalance} min) < ${autoThreshold} min. Triggering $10 charge via Stripe...`);
+            stripeApiRequest('/v1/payment_intents', 'POST', {
+              amount: '1000',
+              currency: 'usd',
+              customer: custId,
+              payment_method: pmId,
+              off_session: 'true',
+              confirm: 'true',
+              description: 'Missed Call Auto SMS - Background Voice Minute Auto-Refill ($10 for 40 Mins)'
+            }).then(pi => {
+              if (pi && pi.status === 'succeeded') {
+                const refreshed = getVoiceSettings();
+                refreshed.voiceMinutesBalance = Math.round((refreshed.voiceMinutesBalance + 40) * 100) / 100;
+                refreshed.isVoicePaused = false;
+                saveVoiceSettings(refreshed);
+                console.log(`✅ [AUTO-BILLING SUCCESS] Charged $10 to card on file. Balance restored to ${refreshed.voiceMinutesBalance} min.`);
+              }
+            }).catch(err => {
+              console.warn(`⚠️ [AUTO-BILLING CHARGE FAILED]:`, err.message);
+            });
+          } else {
+            settings.voiceMinutesBalance = Math.round((settings.voiceMinutesBalance + 40) * 100) / 100;
+            settings.isVoicePaused = false;
+            console.log(`💳 [AUTO-RECHARGE] Auto-reloaded $10 pack (+40 min). New balance: ${settings.voiceMinutesBalance} min`);
+          }
         } else if (settings.autoRebillEnabled === false && settings.voiceMinutesBalance <= 0) {
           settings.isVoicePaused = true;
           settings.status = 'PAUSED_CREDITS_EXHAUSTED';
@@ -5775,22 +6335,30 @@ const server = http.createServer((req, res) => {
   }
 
   // Clean URL Routing
-  if (relativePath === '/') {
+  if (relativePath === '/' || relativePath === '/sales_landing_page.html' || relativePath === '/prototype_index.html') {
     relativePath = '/index.html';
   } else if (relativePath === '/pro' || relativePath === '/pro/' || relativePath === '/automations' || relativePath === '/automations/') {
     relativePath = '/pro.html';
-  } else if (relativePath === '/flagship' || relativePath === '/flagship/') {
+  } else if (relativePath === '/flagship' || relativePath === '/flagship/' || relativePath === '/pricing' || relativePath === '/pricing/') {
     relativePath = '/index.html';
-  } else if (relativePath === '/owner' || relativePath === '/owner/') {
+  } else if (relativePath === '/owner' || relativePath === '/owner/' || relativePath === '/admin' || relativePath === '/admin/') {
     relativePath = '/owner_admin_dashboard.html';
   } else if (relativePath === '/voice' || relativePath === '/voice/') {
     relativePath = '/voice.html';
   } else if (relativePath === '/agency' || relativePath === '/agency/') {
     relativePath = '/agency.html';
+  } else if (relativePath === '/agency-dashboard' || relativePath === '/agency-dashboard/' || relativePath === '/agency_dashboard' || relativePath === '/agency_dashboard/') {
+    relativePath = '/agency_dashboard.html';
   } else if (relativePath === '/developers' || relativePath === '/developers/' || relativePath === '/docs' || relativePath === '/docs/') {
     relativePath = '/developers.html';
   } else if (relativePath === '/support' || relativePath === '/support/') {
     relativePath = '/support.html';
+  } else if (relativePath === '/terms' || relativePath === '/terms/' || relativePath === '/privacy' || relativePath === '/privacy/') {
+    relativePath = '/terms.html';
+  } else if (relativePath === '/portal' || relativePath === '/portal/' || relativePath === '/license' || relativePath === '/license/' || relativePath === '/license_dashboard' || relativePath === '/license_dashboard/') {
+    relativePath = '/license_dashboard.html';
+  } else if (relativePath === '/success' || relativePath === '/success/') {
+    relativePath = '/success.html';
   } else if (relativePath === '/blog' || relativePath === '/blog/') {
     relativePath = '/blog.html';
   } else if (relativePath === '/content-engine' || relativePath === '/content-engine/' || relativePath === '/marketing' || relativePath === '/marketing/') {
