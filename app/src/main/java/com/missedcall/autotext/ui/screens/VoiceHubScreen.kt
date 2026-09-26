@@ -672,6 +672,7 @@ fun VoiceHubScreen(
                                         val dialCode = carrierCodes.activateCode
                                         val intent = Intent(Intent.ACTION_DIAL, Uri.parse("tel:${Uri.encode(dialCode)}"))
                                         context.startActivity(intent)
+                                        Toast.makeText(context, "📞 Dialer opened with $dialCode. Tap CALL to confirm with your carrier!", Toast.LENGTH_LONG).show()
                                     } catch (e: Exception) {
                                         Toast.makeText(context, "Could not open dialer", Toast.LENGTH_SHORT).show()
                                     }
@@ -994,7 +995,7 @@ fun VoiceHubScreen(
                             selected = selectedVoice.contains("Riley") || selectedVoice.contains("Female"),
                             onClick = {
                                 selectedVoice = "Riley (Natural Female)"
-                                onSettingsChanged(settings.copy(vapiVoiceId = "248be419-c632-4f23-adf1-5324ed7dbf10", vapiVoiceProvider = "cartesia"))
+                                onSettingsChanged(settings.copy(vapiVoiceId = "21m00Tcm4TlvDq8ikWAM", vapiVoiceProvider = "11labs"))
                             },
                             label = { Text("Riley (Female)") },
                             modifier = Modifier.weight(1f)
@@ -1003,7 +1004,7 @@ fun VoiceHubScreen(
                             selected = selectedVoice.contains("Austin") || selectedVoice.contains("Male"),
                             onClick = {
                                 selectedVoice = "Austin (Professional Male)"
-                                onSettingsChanged(settings.copy(vapiVoiceId = "a0e998e3-182d-4f23-adf1-5324ed7dbf11", vapiVoiceProvider = "cartesia"))
+                                onSettingsChanged(settings.copy(vapiVoiceId = "pNInz6obpgDQGcFmaJgB", vapiVoiceProvider = "11labs"))
                             },
                             label = { Text("Austin (Male)") },
                             modifier = Modifier.weight(1f)
@@ -1516,8 +1517,8 @@ fun VoiceHubScreen(
                                     put("systemPrompt", systemPromptInput)
                                     put("model", selectedModel)
                                     put("temperature", temperatureVal)
-                                    put("voiceProvider", "cartesia")
-                                    put("voiceId", if (selectedVoice.contains("Austin")) "a0e998e3-182d-4f23-adf1-5324ed7dbf11" else "248be419-c632-4f23-adf1-5324ed7dbf10")
+                                    put("voiceProvider", "11labs")
+                                    put("voiceId", if (selectedVoice.contains("Austin")) "pNInz6obpgDQGcFmaJgB" else "21m00Tcm4TlvDq8ikWAM")
                                     put("aiSmsMasterEnabled", aiSmsMasterEnabled)
                                     put("aiSmsVoicePostCallEnabled", aiSmsVoicePostCallEnabled)
                                     put("aiSmsInboundAgentEnabled", aiSmsInboundAgentEnabled)

@@ -761,8 +761,8 @@ async function provisionVapiForSubscriber(customerName, businessName = '') {
         ]
       },
       voice: {
-        provider: 'cartesia',
-        voiceId: '248be419-c632-4f23-adf1-5324ed7dbf10'
+        provider: '11labs',
+        voiceId: '21m00Tcm4TlvDq8ikWAM'
       },
       serverUrl: 'https://missedcallautosms.com/api/vapi/webhook'
     };

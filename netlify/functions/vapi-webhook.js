@@ -390,8 +390,10 @@ Key Objectives:
               ]
             },
             voice: {
-              provider: 'cartesia',
-              voiceId: '248be419-c632-4f23-adf1-5324ed7dbf10'
+              provider: (matchedSub?.voiceProvider === 'vapi' || matchedSub?.voiceProvider === '11labs') ? matchedSub.voiceProvider : '11labs',
+              voiceId: (matchedSub?.voiceId && !matchedSub.voiceId.includes('248be419') && !matchedSub.voiceId.includes('a0e998e3'))
+                ? matchedSub.voiceId
+                : ((matchedPulse?.agentName?.toLowerCase().includes('austin') || matchedSub?.voiceAgentName?.toLowerCase().includes('austin')) ? 'pNInz6obpgDQGcFmaJgB' : '21m00Tcm4TlvDq8ikWAM')
             },
             metadata: {
               licenseKey: licenseKey,

@@ -237,8 +237,8 @@ exports.handler = async (event) => {
               systemPrompt: systemMessage,
               model: asstData?.model?.model || 'gpt-4o-mini',
               temperature: asstData?.model?.temperature ?? 0.3,
-              voiceProvider: asstData?.voice?.provider || 'cartesia',
-              voiceId: asstData?.voice?.voiceId || '248be419-c632-4f23-adf1-5324ed7dbf10'
+              voiceProvider: asstData?.voice?.provider || '11labs',
+              voiceId: asstData?.voice?.voiceId || '21m00Tcm4TlvDq8ikWAM'
             },
             aiSms: {
               postCallSmsEnabled: binding?.postCallSmsEnabled ?? true,
@@ -293,8 +293,8 @@ exports.handler = async (event) => {
 
         if (payload.voiceProvider || payload.voiceId) {
           patchPayload.voice = {
-            provider: payload.voiceProvider || 'cartesia',
-            voiceId: payload.voiceId || '248be419-c632-4f23-adf1-5324ed7dbf10'
+            provider: payload.voiceProvider && payload.voiceProvider !== 'cartesia' ? payload.voiceProvider : '11labs',
+            voiceId: payload.voiceId && !payload.voiceId.includes('248be419') && !payload.voiceId.includes('a0e998e3') ? payload.voiceId : '21m00Tcm4TlvDq8ikWAM'
           };
         }
 
