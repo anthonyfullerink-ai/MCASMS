@@ -97,6 +97,30 @@ class IncomingSmsReceiver : BroadcastReceiver() {
                     return@launch
                 }
 
+                // Rule 0A: Automated Shortcode, Non-10-Digit & Alphanumeric Filter
+                if (!com.missedcall.autotext.util.AutomatedSmsFilter.isValidPeerPhoneNumber(senderNumber)) {
+                    val filterReason = com.missedcall.autotext.util.AutomatedSmsFilter.getFilterReason(senderNumber, fullMessage)
+                        ?: "Non-10-digit phone number ($senderNumber)"
+                    Log.i(TAG, "Skipping AI SMS: $senderNumber is not a valid 10-digit peer phone number ($filterReason).")
+                    com.missedcall.autotext.util.AiNotificationManager.notifyAiSmsIgnored(
+                        context = context,
+                        callerPhone = senderNumber,
+                        reason = "Automated Safeguard: Inbound text from $senderNumber was ignored ($filterReason). AI replies are restricted to valid 10-digit numbers."
+                    )
+                    return@launch
+                }
+
+                // Rule 0B: Automated Content, 2FA, OTP & Security Alert Filter
+                if (com.missedcall.autotext.util.AutomatedSmsFilter.isAutomatedMessage(fullMessage)) {
+                    Log.i(TAG, "Skipping AI SMS: Message from $senderNumber detected as an automated notification or OTP.")
+                    com.missedcall.autotext.util.AiNotificationManager.notifyAiSmsIgnored(
+                        context = context,
+                        callerPhone = senderNumber,
+                        reason = "Automated Safeguard: Inbound message from $senderNumber was identified as an automated service, security code, or bank alert. AI conversation suppressed."
+                    )
+                    return@launch
+                }
+
                 // Rule A: Phone Contacts Exemption (Family, Crew & Saved Contacts Shield)
                 val isSavedContact = com.missedcall.autotext.util.ContactUtils.getContactName(context, senderNumber) != null
                 if (isSavedContact) {

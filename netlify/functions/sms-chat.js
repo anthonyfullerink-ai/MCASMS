@@ -280,6 +280,49 @@ exports.handler = async (event) => {
       };
     }
 
+    // Safeguard 1: Validate 10-Digit Peer Phone Number (Reject Shortcodes, Alphanumeric Sender IDs)
+    if (/[a-zA-Z@]/.test(senderPhone)) {
+      console.log(`🛡️ [SAFEGUARD] Rejected alphanumeric / gateway sender ID: ${senderPhone}`);
+      return {
+        statusCode: 200,
+        headers,
+        body: JSON.stringify({ success: true, replied: false, reason: 'alphanumeric_sender_id_filtered' })
+      };
+    }
+
+    const digitsOnly = senderPhone.replace(/[^0-9]/g, '');
+    if (digitsOnly.length < 10) {
+      console.log(`🛡️ [SAFEGUARD] Rejected shortcode or non-10-digit sender: ${senderPhone} (${digitsOnly.length} digits)`);
+      return {
+        statusCode: 200,
+        headers,
+        body: JSON.stringify({ success: true, replied: false, reason: 'shortcode_filtered' })
+      };
+    }
+
+    // Safeguard 2: Automated OTP, 2FA, Bank Alert & Bot Footer Filter
+    const automatedPatterns = [
+      /\b(verification|security|auth|login|access|passcode|one-time|otp|pin)\s+(code|is|number)\b/i,
+      /\bcode\s*[:#]?\s*\d{4,8}\b/i,
+      /\b(your\s+code\s+is|use\s+code)\s+\d{4,8}\b/i,
+      /\b(do\s+not\s+share|valid\s+for\s+\d+\s+min|temporary\s+password|security\s+key)\b/i,
+      /\b(fraud\s+alert|suspicious\s+activity|unrecognized\s+sign-in|card\s+ending\s+in\s+\d{4})\b/i,
+      /\b(account\s+alert|declined\s+transaction|available\s+balance|zelle\s+payment|wire\s+transfer)\b/i,
+      /\b(reply\s+stop\s+to|text\s+stop|stop2end|msg\s*&\s*data\s*rates|rates\s*may\s*apply)\b/i,
+      /\b(this\s+is\s+an\s+automated|auto-generated|do\s+not\s+reply|automated\s+notification|no-reply)\b/i,
+      /\b(reply\s+help\s+for|text\s+help|press\s+1\s+to|invalid\s+keyword|unrecognized\s+command)\b/i,
+      /\b(your\s+order\s+#\d+|package\s+delivered|out\s+for\s+delivery|tracking\s+number|driver\s+is\s+arriving)\b/i
+    ];
+
+    if (automatedPatterns.some(pattern => pattern.test(messageBody))) {
+      console.log(`🛡️ [SAFEGUARD] Detected automated notification/OTP from ${senderPhone}. Suppressing AI reply.`);
+      return {
+        statusCode: 200,
+        headers,
+        body: JSON.stringify({ success: true, replied: false, reason: 'automated_message_filtered' })
+      };
+    }
+
     // Rule 0: Plan Entitlement Gate & Minute Balance Check
     const { db, msg } = initFirebase();
 

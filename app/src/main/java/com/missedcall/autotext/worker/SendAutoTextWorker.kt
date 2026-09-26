@@ -51,6 +51,12 @@ class SendAutoTextWorker(
         val callbackUrl = inputData.getString(KEY_CALLBACK_URL)
         val requestedSimSlot = inputData.getInt(KEY_SIM_SLOT, 0)
 
+        // Safeguard: Filter shortcodes, emergency/carrier numbers, and invalid non-10-digit numbers
+        if (!isRemoteTrigger && !com.missedcall.autotext.util.AutomatedSmsFilter.isValidPeerPhoneNumber(targetNumber)) {
+            Log.w(TAG, "Suppressed auto-text: $targetNumber is not a valid 10-digit peer phone number (shortcode/carrier code).")
+            return Result.success()
+        }
+
         // Deduplication safeguard: Prevent duplicate dispatch if both direct HTTP and FCM trigger
         val dedupKey = "$targetNumber:${overrideMessage?.hashCode() ?: 0}"
         val now = System.currentTimeMillis()
