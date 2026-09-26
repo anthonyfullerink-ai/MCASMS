@@ -236,6 +236,7 @@ fun StatusBadge(status: LogStatus) {
         LogStatus.SKIPPED_COOLDOWN -> Triple("Skipped (Cooldown)", AmberWarning.copy(alpha = 0.2f), AmberWarning)
         LogStatus.SKIPPED_OFF_HOURS -> Triple("Skipped (Off Hours)", GrayPaused.copy(alpha = 0.2f), GrayPaused)
         LogStatus.SKIPPED_UNLICENSED -> Triple("Locked (Unlicensed)", RedError.copy(alpha = 0.2f), RedError)
+        LogStatus.SKIPPED_CALL_ANSWERED -> Triple("Skipped (Answered)", GrayPaused.copy(alpha = 0.2f), GrayPaused)
         LogStatus.FAILED_SIM_ERROR -> Triple("Failed (SIM)", RedError.copy(alpha = 0.2f), RedError)
         LogStatus.REMOTE_SENT -> Triple("n8n Sent", ActiveGreenContainer, ActiveGreenText)
         LogStatus.REMOTE_REJECTED -> Triple("n8n Unauthorized", RedError.copy(alpha = 0.2f), RedError)

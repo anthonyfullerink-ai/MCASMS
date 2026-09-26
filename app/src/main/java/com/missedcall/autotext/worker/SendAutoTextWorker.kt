@@ -232,6 +232,23 @@ class SendAutoTextWorker(
         Log.d(TAG, "Applying pacing delay (${delayMillis / 1000}s) before sending SMS to $targetNumber...")
         delay(delayMillis)
 
+        // Safety Safeguard: Verify call was NOT answered while worker was delayed
+        if (!isRemoteTrigger) {
+            val wasAnswered = isCallAnsweredInCallLog(applicationContext, targetNumber)
+            if (wasAnswered) {
+                Log.w(TAG, "Safety Safeguard Triggered: Call from $targetNumber was confirmed ANSWERED in CallLog. Suppressing SMS dispatch!")
+                dao.insertLog(
+                    CallLogEvent(
+                        phoneNumber = targetNumber,
+                        status = LogStatus.SKIPPED_CALL_ANSWERED,
+                        failureReason = "Call answered by user (verified via CallLog)",
+                        messageSent = null
+                    )
+                )
+                return Result.success()
+            }
+        }
+
         // Carrier Anti-Spam & SIM Burn Safeguard™ (Minimum 3.5s pacing + burst protection)
         com.missedcall.autotext.util.SmsRateLimiter.acquireSendSlot(isRemoteTrigger)
 
@@ -387,5 +404,81 @@ class SendAutoTextWorker(
                 Log.e(TAG, "Failed to send delivery callback for $phoneNumber", e)
             }
         }
+    }
+
+    private fun isCallAnsweredInCallLog(context: Context, targetNumber: String): Boolean {
+        try {
+            if (androidx.core.content.ContextCompat.checkSelfPermission(
+                    context,
+                    android.Manifest.permission.READ_CALL_LOG
+                ) != android.content.pm.PackageManager.PERMISSION_GRANTED
+            ) {
+                return false
+            }
+
+            val cursor = context.contentResolver.query(
+                android.provider.CallLog.Calls.CONTENT_URI,
+                arrayOf(
+                    android.provider.CallLog.Calls.NUMBER,
+                    android.provider.CallLog.Calls.TYPE,
+                    android.provider.CallLog.Calls.DATE,
+                    android.provider.CallLog.Calls.DURATION
+                ),
+                null,
+                null,
+                "${android.provider.CallLog.Calls.DATE} DESC"
+            ) ?: return false
+
+            cursor.use {
+                var count = 0
+                while (it.moveToNext() && count < 10) {
+                    count++
+                    val numberIdx = it.getColumnIndex(android.provider.CallLog.Calls.NUMBER)
+                    val typeIdx = it.getColumnIndex(android.provider.CallLog.Calls.TYPE)
+                    val dateIdx = it.getColumnIndex(android.provider.CallLog.Calls.DATE)
+                    val durationIdx = it.getColumnIndex(android.provider.CallLog.Calls.DURATION)
+
+                    if (numberIdx >= 0 && typeIdx >= 0 && dateIdx >= 0 && durationIdx >= 0) {
+                        val number = it.getString(numberIdx) ?: ""
+                        val type = it.getInt(typeIdx)
+                        val date = it.getLong(dateIdx)
+                        val duration = it.getLong(durationIdx)
+                        val ageMs = System.currentTimeMillis() - date
+
+                        // Check calls within the last 3 minutes
+                        if (ageMs < 180_000L && isSamePhoneNumber(number, targetNumber)) {
+                            Log.d(TAG, "CallLog safety check for $targetNumber: type=$type, duration=${duration}s, age=${ageMs}ms")
+                            if (type == android.provider.CallLog.Calls.INCOMING_TYPE ||
+                                type == android.provider.CallLog.Calls.ANSWERED_EXTERNALLY_TYPE ||
+                                duration > 0L) {
+                                return true
+                            }
+                            if (type == android.provider.CallLog.Calls.MISSED_TYPE ||
+                                type == android.provider.CallLog.Calls.REJECTED_TYPE ||
+                                type == android.provider.CallLog.Calls.BLOCKED_TYPE) {
+                                return false
+                            }
+                        }
+                    }
+                }
+            }
+        } catch (e: Exception) {
+            Log.w(TAG, "CallLog safety check exception: ${e.message}")
+        }
+        return false
+    }
+
+    private fun isSamePhoneNumber(num1: String?, num2: String?): Boolean {
+        if (num1.isNullOrBlank() || num2.isNullOrBlank()) return false
+        val d1 = num1.filter { it.isDigit() }
+        val d2 = num2.filter { it.isDigit() }
+        if (d1.isEmpty() || d2.isEmpty()) return false
+        if (d1 == d2) return true
+        val minLen = minOf(d1.length, d2.length)
+        if (minLen >= 7) {
+            val compareLen = minOf(10, minLen)
+            return d1.takeLast(compareLen) == d2.takeLast(compareLen)
+        }
+        return false
     }
 }
