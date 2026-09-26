@@ -22,6 +22,7 @@
 /api/support/*      /.netlify/functions/support-gateway 200
 /api/support        /.netlify/functions/support-gateway 200
 /api/vapi/webhook   /.netlify/functions/vapi-webhook 200
+/api/vapi/web-token /.netlify/functions/vapi-web-token 200
 /api/vapi/*         /.netlify/functions/vapi-live 200
 /api/licenses       /.netlify/functions/licenses 200
 /api/licenses/*     /.netlify/functions/licenses 200

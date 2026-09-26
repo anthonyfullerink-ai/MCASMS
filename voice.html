@@ -1812,9 +1812,9 @@
                 statusBadge.innerHTML = '<span>Connecting to Demo Agent...</span>';
 
                 // Fetch dynamic scoped JWT from secure backend
-                let tokenRes = await fetch('/api/vapi/web-token').catch(() => null);
+                let tokenRes = await fetch('/.netlify/functions/vapi-web-token').catch(() => null);
                 if (!tokenRes || !tokenRes.ok) {
-                    tokenRes = await fetch('/.netlify/functions/vapi-live?action=web-token');
+                    tokenRes = await fetch('/api/vapi/web-token');
                 }
                 const tokenData = await tokenRes.json();
                 if (!tokenData.success || !tokenData.token) {
@@ -1823,22 +1823,26 @@
 
                 const targetAssistantId = tokenData.assistantId || ASSISTANT_ID;
 
-                if (!vapi) {
-                    vapi = new Vapi(tokenData.token);
+                if (vapi) {
+                    try { vapi.stop(); } catch (e) {}
+                    vapi = null;
+                }
 
-                    vapi.on('call-start', () => {
-                        connectingControls.style.display = 'none';
-                        activeControls.style.display = 'block';
-                        statusBadge.className = 'call-status-badge live';
-                        statusBadge.innerHTML = '<span class="live-dot"></span> Live Demo Call in Progress';
-                        avatar.innerText = '🗣️';
-                        startTimer();
-                        addTranscriptMessage('system', 'Call connected! The Demonstration Agent is listening. State your industry/niche and business name to begin your live roleplay demo!');
-                    });
+                vapi = new Vapi(tokenData.token);
 
-                    vapi.on('call-end', () => {
-                        handleCallFinished();
-                    });
+                vapi.on('call-start', () => {
+                    connectingControls.style.display = 'none';
+                    activeControls.style.display = 'block';
+                    statusBadge.className = 'call-status-badge live';
+                    statusBadge.innerHTML = '<span class="live-dot"></span> Live Demo Call in Progress';
+                    avatar.innerText = '🗣️';
+                    startTimer();
+                    addTranscriptMessage('system', 'Call connected! The Demonstration Agent is listening. State your industry/niche and business name to begin your live roleplay demo!');
+                });
+
+                vapi.on('call-end', () => {
+                    handleCallFinished();
+                });
 
                     vapi.on('speech-start', () => {
                         stage.classList.add('speaking');
