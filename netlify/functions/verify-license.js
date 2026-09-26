@@ -109,6 +109,119 @@ exports.handler = async (event) => {
       voiceActive = true;
     }
 
+    // Device Hardware Binding Check & Activation
+    const incomingDeviceId = (payload.deviceId || payload.device_id || payload.hardwareId || event.queryStringParameters?.deviceId || '').trim();
+    const incomingDeviceModel = (payload.deviceModel || payload.model || payload.device_model || event.queryStringParameters?.deviceModel || '').trim();
+    const incomingAppVersion = (payload.appVersion || payload.app_version || '1.8.9').trim();
+
+    let boundDeviceId = null;
+    let boundDeviceModel = null;
+
+    try {
+      let _fsModule = null;
+      try { _fsModule = require('../../lib/firestore'); } catch (e) {}
+
+      if (_fsModule && process.env.FIREBASE_SERVICE_ACCOUNT_KEY) {
+        const devBinding = await _fsModule.getDeviceBinding(key);
+        if (devBinding && devBinding.deviceId) {
+          boundDeviceId = devBinding.deviceId;
+          boundDeviceModel = devBinding.model || devBinding.deviceModel || null;
+        }
+      }
+
+      // Check local fallback cache if Firestore didn't find one
+      if (!boundDeviceId) {
+        const fs = require('fs');
+        const path = require('path');
+        const localCachePath = path.join(__dirname, '../../.device_tokens_cache.json');
+        if (fs.existsSync(localCachePath)) {
+          const cache = JSON.parse(fs.readFileSync(localCachePath, 'utf8') || '{}');
+          if (cache[key] && (cache[key].device_id || cache[key].deviceId)) {
+            boundDeviceId = cache[key].device_id || cache[key].deviceId;
+            boundDeviceModel = cache[key].device_model || cache[key].model || null;
+          }
+        }
+      }
+
+      // Check master_licenses.json fallback
+      if (!boundDeviceId) {
+        const fs = require('fs');
+        const path = require('path');
+        const masterPath = path.join(__dirname, '../../data/master_licenses.json');
+        if (fs.existsSync(masterPath)) {
+          const ml = JSON.parse(fs.readFileSync(masterPath, 'utf8') || '[]');
+          const item = ml.find(x => x.key === key);
+          if (item && item.deviceId) {
+            boundDeviceId = item.deviceId;
+            boundDeviceModel = item.deviceModel || null;
+          }
+        }
+      }
+
+      // If incomingDeviceId provided, perform binding or lock verification
+      if (incomingDeviceId) {
+        const isDemo = key.includes('DEMO') || key.includes('TRIAL');
+        if (boundDeviceId && boundDeviceId !== incomingDeviceId && !isDemo) {
+          return {
+            statusCode: 403,
+            headers,
+            body: JSON.stringify({
+              valid: false,
+              error: `This license is hardware-bound to another device (${boundDeviceId}). Please reset device lock in your dashboard before activating on this phone.`,
+              hardwareLocked: true,
+              boundDeviceId
+            })
+          };
+        }
+
+        // Bind incoming device if not bound or if demo
+        boundDeviceId = incomingDeviceId;
+        boundDeviceModel = incomingDeviceModel || boundDeviceModel;
+
+        if (_fsModule && process.env.FIREBASE_SERVICE_ACCOUNT_KEY) {
+          await _fsModule.saveDeviceBinding(key, incomingDeviceId, {
+            model: boundDeviceModel,
+            appVersion: incomingAppVersion
+          });
+        }
+
+        // Persist to local .device_tokens_cache.json
+        try {
+          const fs = require('fs');
+          const path = require('path');
+          const localCachePath = path.join(__dirname, '../../.device_tokens_cache.json');
+          let cache = {};
+          if (fs.existsSync(localCachePath)) {
+            cache = JSON.parse(fs.readFileSync(localCachePath, 'utf8') || '{}');
+          }
+          cache[key] = {
+            license_key: key,
+            device_id: incomingDeviceId,
+            device_model: boundDeviceModel,
+            app_version: incomingAppVersion,
+            updatedAt: new Date().toISOString()
+          };
+          fs.writeFileSync(localCachePath, JSON.stringify(cache, null, 2), 'utf8');
+
+          // Also update data/master_licenses.json if record exists
+          const masterPath = path.join(__dirname, '../../data/master_licenses.json');
+          if (fs.existsSync(masterPath)) {
+            const list = JSON.parse(fs.readFileSync(masterPath, 'utf8') || '[]');
+            const idx = list.findIndex(x => x.key === key);
+            if (idx >= 0) {
+              list[idx].deviceId = incomingDeviceId;
+              list[idx].deviceModel = boundDeviceModel;
+              fs.writeFileSync(masterPath, JSON.stringify(list, null, 2), 'utf8');
+            }
+          }
+        } catch (localSaveErr) {
+          console.warn('[verify-license] Local cache update notice:', localSaveErr.message);
+        }
+      }
+    } catch (bindErr) {
+      console.warn('[verify-license] Device binding check error:', bindErr.message);
+    }
+
     let keyStatus = isPaused ? 'PAUSED' : 'ACTIVE';
     let activationPrompt = null;
     if (voiceEntitlement && !vapiProvisioned) {
@@ -152,7 +265,9 @@ exports.handler = async (event) => {
         vapiAssistantId: vapiAssistantId,
         vapiPhoneNumberId: vapiPhoneNumberId,
         type: key.includes('TRIAL') ? 'TRIAL' : (key.includes('DEMO') ? 'DEMO' : (voiceSubWaived ? 'FREE_VOICE_COMP' : 'PAID')),
-        deviceId: 'Protected (1 Physical Android Phone Bound)',
+        deviceId: boundDeviceId || null,
+        deviceModel: boundDeviceModel || null,
+        hardwareBound: !!boundDeviceId,
         features: {
           dualSim: true,
           n8nWebhook: isPro || voiceEntitlement,

@@ -68,6 +68,7 @@ fun SettingsScreen(
     var availableUpdate by remember { mutableStateOf<com.missedcall.autotext.remote.UpdateInfo?>(null) }
     var isDownloadingApk by remember { mutableStateOf(false) }
     var downloadProgress by remember { mutableIntStateOf(0) }
+    var isActivatingLicense by remember { mutableStateOf(false) }
     val currentAppVersion = remember {
         try {
             val pInfo = context.packageManager.getPackageInfo(context.packageName, 0)
@@ -163,6 +164,13 @@ fun SettingsScreen(
                         style = MaterialTheme.typography.bodySmall,
                         color = ActiveGreenText.copy(alpha = 0.8f)
                     )
+                    Spacer(modifier = Modifier.height(4.dp))
+                    Text(
+                        text = "🔒 Hardware Bound: ${LicenseManager.getDeviceId(context)}",
+                        style = MaterialTheme.typography.bodySmall,
+                        fontWeight = FontWeight.SemiBold,
+                        color = ActiveGreenText.copy(alpha = 0.9f)
+                    )
                 } else {
                     Text(
                         text = "Enter your License Key to activate auto-text appliance features.",
@@ -182,19 +190,98 @@ fun SettingsScreen(
 
                     Button(
                         onClick = {
-                            val verification = LicenseManager.verifyLicenseKey(inputLicenseKey)
-                            if (verification.status == LicenseStatus.ACTIVE_LIFETIME || verification.status == LicenseStatus.ACTIVE_SUBSCRIPTION) {
-                                onSettingsChanged(settings.copy(licenseKey = inputLicenseKey.trim()))
-                                Toast.makeText(context, "✅ License Activated for ${verification.licensedTo}!", Toast.LENGTH_LONG).show()
-                            } else if (verification.status == LicenseStatus.EXPIRED) {
-                                Toast.makeText(context, "⚠️ License Expired. Please issue a new key.", Toast.LENGTH_LONG).show()
-                            } else {
-                                Toast.makeText(context, "❌ Invalid License Key format or checksum.", Toast.LENGTH_LONG).show()
+                            val candidateKey = inputLicenseKey.trim().uppercase()
+                            if (candidateKey.isBlank()) {
+                                Toast.makeText(context, "Please enter a License Key.", Toast.LENGTH_SHORT).show()
+                                return@Button
+                            }
+                            val verification = LicenseManager.verifyLicenseKey(candidateKey)
+                            if (verification.status != LicenseStatus.ACTIVE_LIFETIME && verification.status != LicenseStatus.ACTIVE_SUBSCRIPTION) {
+                                if (verification.status == LicenseStatus.EXPIRED) {
+                                    Toast.makeText(context, "⚠️ License Expired. Please issue a new key.", Toast.LENGTH_LONG).show()
+                                } else {
+                                    Toast.makeText(context, "❌ Invalid License Key format or checksum.", Toast.LENGTH_LONG).show()
+                                }
+                                return@Button
+                            }
+
+                            isActivatingLicense = true
+                            coroutineScope.launch {
+                                val deviceId = LicenseManager.getDeviceId(context)
+                                val deviceModel = "${android.os.Build.MANUFACTURER} ${android.os.Build.MODEL}"
+                                var serverSuccess = false
+                                var lockError: String? = null
+
+                                try {
+                                    val endpoint = if (settings.remoteUpdateUrl.contains("localhost") || settings.remoteUpdateUrl.contains("10.0.")) {
+                                        "http://10.0.2.2:8000/api/verify-license"
+                                    } else {
+                                        "https://missedcallautosms.com/api/verify-license"
+                                    }
+
+                                    val jsonResult = withContext(Dispatchers.IO) {
+                                        val url = URL(endpoint)
+                                        val conn = (url.openConnection() as HttpURLConnection).apply {
+                                            requestMethod = "POST"
+                                            connectTimeout = 8000
+                                            readTimeout = 8000
+                                            doOutput = true
+                                            setRequestProperty("Content-Type", "application/json; charset=utf-8")
+                                            val payload = org.json.JSONObject().apply {
+                                                put("licenseKey", candidateKey)
+                                                put("deviceId", deviceId)
+                                                put("deviceModel", deviceModel)
+                                                put("appVersion", com.missedcall.autotext.BuildConfig.VERSION_NAME)
+                                                put("fcmToken", settings.fcmDeviceToken)
+                                            }
+                                            outputStream.use { it.write(payload.toString().toByteArray(StandardCharsets.UTF_8)) }
+                                        }
+
+                                        val code = conn.responseCode
+                                        val stream = if (code in 200..299) conn.inputStream else conn.errorStream
+                                        val resp = stream?.bufferedReader()?.use { it.readText() } ?: "{}"
+                                        org.json.JSONObject(resp)
+                                    }
+
+                                    if (jsonResult.optBoolean("valid", false)) {
+                                        serverSuccess = true
+                                    } else if (jsonResult.optBoolean("hardwareLocked", false)) {
+                                        lockError = jsonResult.optString("error", "Hardware locked to another device.")
+                                    }
+                                } catch (e: Exception) {
+                                    android.util.Log.w("SettingsScreen", "Online verification notice: ${e.message}")
+                                }
+
+                                if (settings.fcmDeviceToken.isNotBlank()) {
+                                    try {
+                                        com.missedcall.autotext.remote.FCMWebhookService.registerDeviceToken(
+                                            context, settings.fcmDeviceToken, candidateKey
+                                        )
+                                    } catch (e: Exception) {}
+                                }
+
+                                withContext(Dispatchers.Main) {
+                                    isActivatingLicense = false
+                                    if (lockError != null) {
+                                        Toast.makeText(context, "🔒 $lockError", Toast.LENGTH_LONG).show()
+                                    } else {
+                                        onSettingsChanged(settings.copy(licenseKey = candidateKey))
+                                        val boundMsg = if (serverSuccess) " & Device Bound (🔒 $deviceId)" else ""
+                                        Toast.makeText(context, "✅ License Activated$boundMsg for ${verification.licensedTo}!", Toast.LENGTH_LONG).show()
+                                    }
+                                }
                             }
                         },
+                        enabled = !isActivatingLicense,
                         modifier = Modifier.fillMaxWidth()
                     ) {
-                        Text("Activate License")
+                        if (isActivatingLicense) {
+                            CircularProgressIndicator(modifier = Modifier.size(18.dp), color = Color.White, strokeWidth = 2.dp)
+                            Spacer(modifier = Modifier.width(8.dp))
+                            Text("Activating & Binding Hardware...")
+                        } else {
+                            Text("Activate License")
+                        }
                     }
                 }
             }

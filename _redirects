@@ -4,6 +4,7 @@
 /api/stripe-status /.netlify/functions/stripe-status 200
 /api/stripe-webhook /.netlify/functions/stripe-webhook 200
 /api/verify-license /.netlify/functions/verify-license 200
+/api/provision-device /.netlify/functions/provision-device 200
 /api/cancel-trial  /.netlify/functions/cancel-trial  200
 /api/reset-device  /.netlify/functions/reset-device  200
 /api/send-license-email /.netlify/functions/send-license-email 200

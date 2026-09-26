@@ -2228,7 +2228,7 @@ const server = http.createServer((req, res) => {
 
   // API Route: Verify License Key & Status (Supports GET & POST)
   if (relativePath === '/api/verify-license' || relativePath === '/api/verify-license/') {
-    const handleVerify = (rawKey) => {
+    const handleVerify = (rawKey, incomingDeviceId = '', incomingDeviceModel = '', incomingAppVersion = '1.8.9') => {
       const key = (rawKey || '').trim().toUpperCase();
       if (!key.startsWith('MCAS-') && !key.startsWith('MCAT-')) {
         return { valid: false, message: 'Invalid License Key Prefix. Keys start with MCAS- or MCAS-PRO-' };
@@ -2292,13 +2292,58 @@ const server = http.createServer((req, res) => {
       }
 
       // Check registered devices
-      let boundDevice = 'Unbound (Ready for Launch)';
-      const registeredDevicesFile = path.join(__dirname, 'registered_devices.json');
-      if (fs.existsSync(registeredDevicesFile)) {
+      let boundDevice = null;
+      let boundModel = null;
+      const localCachePath = path.join(__dirname, '.device_tokens_cache.json');
+      if (fs.existsSync(localCachePath)) {
         try {
-          const devices = JSON.parse(fs.readFileSync(registeredDevicesFile, 'utf8'));
-          if (devices[key] && devices[key].deviceId) {
-            boundDevice = devices[key].deviceId;
+          const devices = JSON.parse(fs.readFileSync(localCachePath, 'utf8'));
+          if (devices[key] && (devices[key].device_id || devices[key].deviceId)) {
+            boundDevice = devices[key].device_id || devices[key].deviceId;
+            boundModel = devices[key].device_model || devices[key].model || null;
+          }
+        } catch (e) {}
+      }
+      if (!boundDevice && masterLic && masterLic.deviceId) {
+        boundDevice = masterLic.deviceId;
+        boundModel = masterLic.deviceModel || null;
+      }
+
+      if (incomingDeviceId) {
+        const isDemo = key.includes('DEMO') || key.includes('TRIAL');
+        if (boundDevice && boundDevice !== incomingDeviceId && !isDemo) {
+          return {
+            valid: false,
+            error: `License is hardware-bound to another device (${boundDevice}). Reset in dashboard first.`,
+            hardwareLocked: true,
+            boundDeviceId: boundDevice
+          };
+        }
+        boundDevice = incomingDeviceId;
+        boundModel = incomingDeviceModel || boundModel;
+        try {
+          let cache = {};
+          if (fs.existsSync(localCachePath)) {
+            cache = JSON.parse(fs.readFileSync(localCachePath, 'utf8') || '{}');
+          }
+          cache[key] = {
+            license_key: key,
+            device_id: incomingDeviceId,
+            device_model: boundModel,
+            app_version: incomingAppVersion,
+            updatedAt: new Date().toISOString()
+          };
+          fs.writeFileSync(localCachePath, JSON.stringify(cache, null, 2), 'utf8');
+
+          const masterPath = path.join(__dirname, 'data', 'master_licenses.json');
+          if (fs.existsSync(masterPath)) {
+            const list = JSON.parse(fs.readFileSync(masterPath, 'utf8') || '[]');
+            const idx = list.findIndex(x => x.key === key);
+            if (idx >= 0) {
+              list[idx].deviceId = incomingDeviceId;
+              list[idx].deviceModel = boundModel;
+              fs.writeFileSync(masterPath, JSON.stringify(list, null, 2), 'utf8');
+            }
           }
         } catch (e) {}
       }
@@ -2344,7 +2389,9 @@ const server = http.createServer((req, res) => {
         ],
         activationPrompt: activationPrompt,
         type: key.includes('TRIAL') ? 'TRIAL' : (key.includes('DEMO') ? 'DEMO' : (voiceSubWaived ? 'FREE_VOICE_COMP' : 'PAID')),
-        deviceId: boundDevice,
+        deviceId: boundDevice || null,
+        deviceModel: boundModel || null,
+        hardwareBound: !!boundDevice,
         features: {
           dualSim: true,
           n8nWebhook: isPro || voiceEntitlement,
@@ -2360,7 +2407,10 @@ const server = http.createServer((req, res) => {
     if (req.method === 'GET') {
       const urlObj = new URL(req.url, `http://localhost:${PORT}`);
       const key = urlObj.searchParams.get('key') || urlObj.searchParams.get('licenseKey') || '';
-      const result = handleVerify(key);
+      const devId = urlObj.searchParams.get('deviceId') || urlObj.searchParams.get('device_id') || '';
+      const devModel = urlObj.searchParams.get('deviceModel') || urlObj.searchParams.get('model') || '';
+      const appVer = urlObj.searchParams.get('appVersion') || urlObj.searchParams.get('app_version') || '1.8.9';
+      const result = handleVerify(key, devId, devModel, appVer);
       res.writeHead(200, { 'Content-Type': 'application/json; charset=utf-8', 'Access-Control-Allow-Origin': '*' });
       res.end(JSON.stringify(result));
       return;
@@ -2373,7 +2423,10 @@ const server = http.createServer((req, res) => {
         try {
           const payload = JSON.parse(body || '{}');
           const key = payload.licenseKey || payload.key || '';
-          const result = handleVerify(key);
+          const devId = payload.deviceId || payload.device_id || '';
+          const devModel = payload.deviceModel || payload.model || '';
+          const appVer = payload.appVersion || payload.app_version || '1.8.9';
+          const result = handleVerify(key, devId, devModel, appVer);
           res.writeHead(200, { 'Content-Type': 'application/json; charset=utf-8', 'Access-Control-Allow-Origin': '*' });
           res.end(JSON.stringify(result));
         } catch (e) {
@@ -4631,6 +4684,26 @@ const server = http.createServer((req, res) => {
       }
     } catch (e) {
       console.warn('[api/licenses] Error merging fleet cache:', e.message);
+    }
+
+    // Attach bound device IDs from .device_tokens_cache.json
+    let localDevCache = {};
+    try {
+      const devCachePath = path.join(__dirname, '.device_tokens_cache.json');
+      if (fs.existsSync(devCachePath)) {
+        localDevCache = JSON.parse(fs.readFileSync(devCachePath, 'utf8') || '{}');
+      }
+    } catch (e) {}
+
+    for (const lic of combined) {
+      if (!lic.deviceId) {
+        const fromCache = localDevCache[lic.key]?.device_id || localDevCache[lic.key]?.deviceId;
+        lic.deviceId = fromCache || null;
+      }
+      if (!lic.deviceModel) {
+        const fromCacheModel = localDevCache[lic.key]?.device_model || localDevCache[lic.key]?.model;
+        lic.deviceModel = fromCacheModel || null;
+      }
     }
 
     res.writeHead(200, { 'Content-Type': 'application/json; charset=utf-8', 'Access-Control-Allow-Origin': '*' });

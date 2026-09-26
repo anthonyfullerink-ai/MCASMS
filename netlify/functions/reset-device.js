@@ -27,6 +27,43 @@ exports.handler = async (event) => {
       };
     }
 
+    // 1. Clear Firestore device binding & master_licenses doc deviceId
+    try {
+      const fsModule = require('../../lib/firestore');
+      if (fsModule && (process.env.FIREBASE_SERVICE_ACCOUNT_KEY || process.env.FIREBASE_SERVICE_ACCOUNT)) {
+        await fsModule.clearDeviceBinding(licenseKey);
+      }
+    } catch (fsErr) {
+      console.warn('[reset-device] Firestore clear notice:', fsErr.message);
+    }
+
+    // 2. Clear from local .device_tokens_cache.json
+    try {
+      const fs = require('fs');
+      const path = require('path');
+      const localCachePath = path.join(__dirname, '../../.device_tokens_cache.json');
+      if (fs.existsSync(localCachePath)) {
+        const cache = JSON.parse(fs.readFileSync(localCachePath, 'utf8') || '{}');
+        if (cache[licenseKey]) {
+          delete cache[licenseKey];
+          fs.writeFileSync(localCachePath, JSON.stringify(cache, null, 2), 'utf8');
+        }
+      }
+      // Clear from data/master_licenses.json
+      const masterPath = path.join(__dirname, '../../data/master_licenses.json');
+      if (fs.existsSync(masterPath)) {
+        const list = JSON.parse(fs.readFileSync(masterPath, 'utf8') || '[]');
+        const idx = list.findIndex(x => x.key === licenseKey);
+        if (idx >= 0) {
+          list[idx].deviceId = null;
+          list[idx].deviceModel = null;
+          fs.writeFileSync(masterPath, JSON.stringify(list, null, 2), 'utf8');
+        }
+      }
+    } catch (cacheErr) {
+      console.warn('[reset-device] Local cache clear notice:', cacheErr.message);
+    }
+
     // Check if there is an active Voice Pro binding for this key
     let voiceSubscriptionActive = false;
     let voiceDetails = null;

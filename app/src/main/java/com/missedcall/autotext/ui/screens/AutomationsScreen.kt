@@ -90,8 +90,13 @@ fun AutomationsScreen(
                     connectTimeout = 5000
                     readTimeout = 5000
                     doOutput = true
-                    setRequestProperty("Content-Type", "application/json")
-                    val payload = JSONObject().apply { put("licenseKey", candidateKey) }
+                    setRequestProperty("Content-Type", "application/json; charset=utf-8")
+                    val payload = JSONObject().apply {
+                        put("licenseKey", candidateKey)
+                        put("deviceId", com.missedcall.autotext.data.license.LicenseManager.getDeviceId(context))
+                        put("deviceModel", "${android.os.Build.MANUFACTURER} ${android.os.Build.MODEL}")
+                        put("appVersion", com.missedcall.autotext.BuildConfig.VERSION_NAME)
+                    }
                     outputStream.use { it.write(payload.toString().toByteArray(StandardCharsets.UTF_8)) }
                 }
 

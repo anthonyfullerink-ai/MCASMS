@@ -85,6 +85,38 @@ class MainActivity : ComponentActivity() {
             android.util.Log.w("MainActivity", "Firebase FCM init warning", e)
         }
 
+        // Ensure device is hardware-bound on app launch if licensed
+        lifecycleScope.launch(kotlinx.coroutines.Dispatchers.IO) {
+            try {
+                val currentSettings = settingsRepo.getSettings()
+                val key = currentSettings.licenseKey.trim()
+                if (key.isNotBlank()) {
+                    val deviceId = com.missedcall.autotext.data.license.LicenseManager.getDeviceId(this@MainActivity)
+                    val deviceModel = "${Build.MANUFACTURER} ${Build.MODEL}"
+                    val url = java.net.URL("https://missedcallautosms.com/api/verify-license")
+                    val conn = (url.openConnection() as java.net.HttpURLConnection).apply {
+                        requestMethod = "POST"
+                        connectTimeout = 6000
+                        readTimeout = 6000
+                        doOutput = true
+                        setRequestProperty("Content-Type", "application/json; charset=utf-8")
+                        val payload = org.json.JSONObject().apply {
+                            put("licenseKey", key)
+                            put("deviceId", deviceId)
+                            put("deviceModel", deviceModel)
+                            put("appVersion", com.missedcall.autotext.BuildConfig.VERSION_NAME)
+                            put("fcmToken", currentSettings.fcmDeviceToken)
+                        }
+                        outputStream.use { it.write(payload.toString().toByteArray(java.nio.charset.StandardCharsets.UTF_8)) }
+                    }
+                    val code = conn.responseCode
+                    android.util.Log.i("MainActivity", "Auto-binding hardware check on startup: code $code for device $deviceId")
+                }
+            } catch (e: Exception) {
+                android.util.Log.w("MainActivity", "Hardware binding startup check notice: ${e.message}")
+            }
+        }
+
         setContent {
             MissedCallAutoTextTheme {
                 Surface(

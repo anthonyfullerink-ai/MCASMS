@@ -97,8 +97,13 @@ fun VoiceHubScreen(
                     connectTimeout = 5000
                     readTimeout = 5000
                     doOutput = true
-                    setRequestProperty("Content-Type", "application/json")
-                    val body = JSONObject().apply { put("licenseKey", key) }.toString()
+                    setRequestProperty("Content-Type", "application/json; charset=utf-8")
+                    val body = JSONObject().apply {
+                        put("licenseKey", key)
+                        put("deviceId", com.missedcall.autotext.data.license.LicenseManager.getDeviceId(context))
+                        put("deviceModel", "${android.os.Build.MANUFACTURER} ${android.os.Build.MODEL}")
+                        put("appVersion", com.missedcall.autotext.BuildConfig.VERSION_NAME)
+                    }.toString()
                     outputStream.use { it.write(body.toByteArray(StandardCharsets.UTF_8)) }
                 }
                 if (conn.responseCode == 200) {

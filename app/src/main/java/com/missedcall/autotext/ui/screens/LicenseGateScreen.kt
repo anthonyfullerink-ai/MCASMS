@@ -60,8 +60,10 @@ fun LicenseGateScreen(
 
         coroutineScope.launch {
             try {
+                val deviceId = com.missedcall.autotext.data.license.LicenseManager.getDeviceId(context)
+                val deviceModel = "${android.os.Build.MANUFACTURER} ${android.os.Build.MODEL}"
                 val result = withContext(Dispatchers.IO) {
-                    val url = URL("https://missedcallautosms.com/api/provision-device?key=${Uri.encode(key)}")
+                    val url = URL("https://missedcallautosms.com/api/provision-device?key=${Uri.encode(key)}&deviceId=${Uri.encode(deviceId)}&deviceModel=${Uri.encode(deviceModel)}")
                     val connection = url.openConnection() as HttpURLConnection
                     connection.requestMethod = "GET"
                     connection.connectTimeout = 10000

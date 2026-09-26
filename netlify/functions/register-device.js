@@ -140,11 +140,11 @@ exports.handler = async (event) => {
   const deviceId = (body.device_id || body.deviceId || '').trim();
   const appVersion = (body.app_version || body.appVersion || '1.0.0').trim();
 
-  if (!licenseKey || !fcmToken) {
+  if (!licenseKey || (!fcmToken && !deviceId)) {
     return {
       statusCode: 400,
       headers: { 'Access-Control-Allow-Origin': '*' },
-      body: JSON.stringify({ error: 'Missing license_key or fcm_token' })
+      body: JSON.stringify({ error: 'Missing license_key, or neither fcm_token nor device_id was provided' })
     };
   }
 
@@ -168,9 +168,26 @@ exports.handler = async (event) => {
     timestamp: Date.now()
   };
 
-  // 1. Try Firestore write if credentials provided
-  const db = initFirestore();
+  // 1. Save to registered_devices & master_licenses via Firestore abstraction if available
   let firestoreSaved = false;
+  try {
+    const fsModule = require('../../lib/firestore');
+    if (fsModule && (process.env.FIREBASE_SERVICE_ACCOUNT_KEY || process.env.FIREBASE_SERVICE_ACCOUNT)) {
+      if (deviceId) {
+        await fsModule.saveDeviceBinding(licenseKey, deviceId, {
+          appVersion,
+          fcmToken,
+          isPro: auth.isPro
+        });
+        firestoreSaved = true;
+      }
+    }
+  } catch (fsErr) {
+    console.warn("lib/firestore binding notice:", fsErr.message);
+  }
+
+  // Also write to device_tokens for backward compatibility with push notifications
+  const db = initFirestore();
   if (db && process.env.FIREBASE_SERVICE_ACCOUNT) {
     try {
       await db.collection('device_tokens').doc(licenseKey).set({
@@ -186,6 +203,19 @@ exports.handler = async (event) => {
 
   // 2. Always persist to local cache as reliable fallback
   saveLocalToken(licenseKey, record);
+
+  // 3. Update data/master_licenses.json if present
+  try {
+    const masterPath = path.join(__dirname, '../../data/master_licenses.json');
+    if (fs.existsSync(masterPath) && deviceId) {
+      const list = JSON.parse(fs.readFileSync(masterPath, 'utf8') || '[]');
+      const idx = list.findIndex(x => x.key === licenseKey);
+      if (idx >= 0) {
+        list[idx].deviceId = deviceId;
+        fs.writeFileSync(masterPath, JSON.stringify(list, null, 2), 'utf8');
+      }
+    }
+  } catch (e) {}
 
   return {
     statusCode: 200,
