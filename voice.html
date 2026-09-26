@@ -1050,25 +1050,25 @@
 
                 <!-- Integrated Live Vapi WebRTC Call Widget -->
                 <div class="call-demo-container">
-                    <div class="prompt-chips-title">💡 Click To Test Or Speak Any Of These Scenarios When Connected:</div>
+                    <div class="prompt-chips-title">💡 Speak Your Niche & Business Name Or Click Any Example Below:</div>
                     <div class="prompt-chips-grid">
-                        <div class="prompt-chip" onclick="copyPrompt('My AC unit stopped blowing cold air and it is 90 degrees inside.')">
-                            🔧 <span>"AC blowing hot air (HVAC Emergency)"</span>
+                        <div class="prompt-chip" onclick="copyPrompt('I run Apex Plumbing, a full-service residential plumbing repair company in Denver.')">
+                            🔧 <span>"Apex Plumbing (Plumbing & Drains)"</span>
                         </div>
-                        <div class="prompt-chip" onclick="copyPrompt('I have a burst pipe in the basement that is leaking water everywhere.')">
-                            💧 <span>"Burst pipe leak (Plumbing Triage)"</span>
+                        <div class="prompt-chip" onclick="copyPrompt('We are Horizon Air, an HVAC heating and air conditioning company in Dallas.')">
+                            ❄️ <span>"Horizon Air (HVAC & Heating)"</span>
                         </div>
-                        <div class="prompt-chip" onclick="copyPrompt('I need to book a skin fade and beard trim for Thursday at 3 PM.')">
-                            💈 <span>"Haircut & Beard Trim (Barbershop/Salon)"</span>
+                        <div class="prompt-chip" onclick="copyPrompt('I own Diamond Detailing, a mobile auto detailing and ceramic coating business.')">
+                            🚗 <span>"Diamond Detailing (Mobile Auto)"</span>
                         </div>
-                        <div class="prompt-chip" onclick="copyPrompt('Can I schedule a full bath and groom for my 40-pound Golden Retriever?')">
-                            🐕 <span>"Dog Grooming & Bath (Pet Care)"</span>
+                        <div class="prompt-chip" onclick="copyPrompt('We are Summit Roofing, residential and commercial roofing specialists.')">
+                            🏠 <span>"Summit Roofing (Roofing & Gutters)"</span>
                         </div>
-                        <div class="prompt-chip" onclick="copyPrompt('Half the kitchen outlets sparked and shut off. Can an electrician come out?')">
-                            ⚡ <span>"Sparking outlets (Electrical)"</span>
+                        <div class="prompt-chip" onclick="copyPrompt('I operate Classic Barbers, a busy barbershop booking fades, trims, and cuts.')">
+                            💈 <span>"Classic Barbers (Barbershop/Salon)"</span>
                         </div>
-                        <div class="prompt-chip" onclick="copyPrompt('How much do you charge for a full mobile paint correction and interior detail?')">
-                            🚗 <span>"Full auto detailing quote (Mobile Auto)"</span>
+                        <div class="prompt-chip" onclick="copyPrompt('We are Vantage Law Group, a personal injury and legal intake practice.')">
+                            ⚖️ <span>"Vantage Law (Legal Intake)"</span>
                         </div>
                     </div>
 
@@ -1083,20 +1083,20 @@
                             <span>Ready to Connect</span>
                         </div>
 
-                        <div class="call-agent-name">Riley • Universal AI Front Desk</div>
+                        <div class="call-agent-name">Missed Call Auto SMS • Live Demonstration Agent</div>
                         <div class="call-agent-subtitle" id="callSubtitle">
-                            Contractors • Plumbers • Electricians • Salons • Barbers • Pet Groomers • Solo Pros
+                            1-Tap Live Roleplay Demo • Test Any Niche / Profession • Real-Time Voice Answering
                         </div>
 
                         <!-- Idle State -->
                         <div id="callIdleControls">
                             <button class="btn-call-start" id="startCallBtn" onclick="startVapiCall()">
                                 <span>📞</span>
-                                <span>Start Live Call (Speak with Riley Now)</span>
+                                <span>Start 1-Tap Live Demo Call (Speak With Demonstration Agent)</span>
                             </button>
                             <div class="call-footer-note">
                                 <span>🔒 100% In-Browser Audio (WebRTC)</span>
-                                <span>⏱️ 90-Second Sample Call</span>
+                                <span>⏱️ 4-Minute Interactive Demo</span>
                                 <span>🎙️ Requires Mic Permission</span>
                             </div>
                         </div>
@@ -1104,13 +1104,13 @@
                         <!-- Connecting State -->
                         <div id="callConnectingControls" style="display: none;">
                             <p style="color: #EAB308; font-weight: 700; margin: 10px 0;">
-                                ⏳ Connecting to Riley via Vapi WebRTC...
+                                ⏳ Connecting to Demonstration Agent via Vapi WebRTC...
                             </p>
                         </div>
 
                         <!-- Active Call State -->
                         <div id="callActiveControls" style="display: none;">
-                            <div class="call-timer-display" id="callTimer">Call Time: 0:00 / 1:30</div>
+                            <div class="call-timer-display" id="callTimer">Call Time: 0:00 / 4:00</div>
 
                             <div class="call-wave-visualizer" id="liveWaveVisual">
                                 <!-- Generated wave bars -->
@@ -1131,16 +1131,21 @@
                         <!-- Completed Call State -->
                         <div id="callEndedControls" style="display: none;">
                             <p style="color: var(--primary); font-weight: 800; font-size: 16px; margin: 10px 0 16px;">
-                                ✅ Call Completed!
+                                ✅ Demonstration Completed!
                             </p>
                             <div style="display: flex; gap: 12px; justify-content: center; flex-wrap: wrap;">
                                 <button class="btn-call-mute" onclick="resetCallState()">
                                     <span>🔄</span>
-                                    <span>Start Another Call</span>
+                                    <span>Test Another Niche</span>
                                 </button>
-                                <a href="https://buy.stripe.com/5kQ5kDbBI8hkdao8WZ2go0c" class="btn-call-start" style="text-decoration: none; padding: 10px 22px; font-size: 14px;">
+                                <button onclick="proceedToFlagshipVoiceCheckout()" class="btn-call-start" style="border: none; cursor: pointer; text-decoration: none; padding: 10px 22px; font-size: 14px; background: #00E676; color: #000; font-weight: 800;">
                                     <span>⚡</span>
-                                    <span>Start 3-Day Free Trial ($0.00 Today)</span>
+                                    <span>Get Flagship + AI Voice Bundle ($59.98 Today, then $9.99/mo) ➔</span>
+                                </button>
+                            </div>
+                            <div style="margin-top: 14px; text-align: center;">
+                                <a href="https://buy.stripe.com/5kQ5kDbBI8hkdao8WZ2go0c" style="color: #94A3B8; font-size: 13px; text-decoration: underline;">
+                                    Or Start 3-Day Free Trial ($0.00 Today)
                                 </a>
                             </div>
                         </div>
@@ -1148,7 +1153,7 @@
                         <!-- Realtime Transcript Stream -->
                         <div class="call-transcript-stream" id="transcriptStream">
                             <div class="transcript-msg">
-                                <span class="speaker-tag speaker-system">System:</span> Click "Start Live Call" above to talk to Riley in real-time. Speak naturally into your microphone!
+                                <span class="speaker-tag speaker-system">System:</span> Click "Start 1-Tap Live Demo Call" above to speak with our Demonstration Agent in real-time. Speak your industry and business name!
                             </div>
                         </div>
                     </div>
@@ -1690,12 +1695,12 @@
         import Vapi from 'https://esm.sh/@vapi-ai/web@2.7.1';
 
         const VAPI_PUBLIC_KEY = 'f47d5c09-6c69-4190-b35b-d32bcf00008e';
-        const ASSISTANT_ID = '5105b379-8cbf-4037-becc-bba45504f781';
+        const ASSISTANT_ID = '2e486e8a-2875-4d99-b6dd-7f1162601874';
 
         let vapi = null;
         let callTimerInterval = null;
         let callSeconds = 0;
-        const MAX_CALL_SECONDS = 90; // 90-second safety sample cap
+        const MAX_CALL_SECONDS = 240; // 4-minute interactive sales & roleplay demo cap
         let isMuted = false;
 
         // Initialize Wave Bars
@@ -1726,7 +1731,7 @@
 
             let speakerHtml = '';
             if (role === 'assistant') {
-                speakerHtml = '<span class="speaker-tag speaker-ai">Riley (AI):</span> ';
+                speakerHtml = '<span class="speaker-tag speaker-ai">Demo Agent (AI):</span> ';
             } else if (role === 'user') {
                 speakerHtml = '<span class="speaker-tag speaker-caller">You:</span> ';
             } else {
@@ -1735,6 +1740,28 @@
 
             msgDiv.innerHTML = speakerHtml + escapeHtml(text);
             stream.appendChild(msgDiv);
+            stream.scrollTop = stream.scrollHeight;
+        }
+
+        function addCheckoutCard(details) {
+            const stream = document.getElementById('transcriptStream');
+            if (!stream) return;
+            const cardDiv = document.createElement('div');
+            cardDiv.style.margin = '10px 0';
+            cardDiv.style.padding = '12px 14px';
+            cardDiv.style.background = 'rgba(0, 230, 118, 0.12)';
+            cardDiv.style.border = '1px solid #00E676';
+            cardDiv.style.borderRadius = '8px';
+            cardDiv.innerHTML = `
+                <div style="font-weight: 800; color: #00E676; font-size: 13px; margin-bottom: 4px;">🛒 $59.98 BUNDLE SETUP LINK DISPATCHED</div>
+                <div style="font-size: 12px; color: #CBD5E1; margin-bottom: 10px;">
+                    Includes Founder's Flagship Lifetime APK ($49.99) + 24/7 AI Voice Receptionist ($9.99/mo). 100% Native SIM carrier SMS.
+                </div>
+                <button onclick="proceedToFlagshipVoiceCheckout()" style="background: #00E676; color: #000; font-weight: 800; font-size: 12px; padding: 8px 14px; border-radius: 6px; border: none; cursor: pointer;">
+                    Complete Setup ($59.98 Today, then $9.99/mo) ➔
+                </button>
+            `;
+            stream.appendChild(cardDiv);
             stream.scrollTop = stream.scrollHeight;
         }
 
@@ -1753,11 +1780,11 @@
                 const fmtMins = mins;
                 const fmtSecs = secs < 10 ? '0' + secs : secs;
                 if (timerEl) {
-                    timerEl.innerText = `Call Time: ${fmtMins}:${fmtSecs} / 1:30`;
+                    timerEl.innerText = `Call Time: ${fmtMins}:${fmtSecs} / 4:00`;
                 }
 
                 if (callSeconds >= MAX_CALL_SECONDS) {
-                    addTranscriptMessage('system', 'Sample call reached the 90-second limit. Disconnecting...');
+                    addTranscriptMessage('system', 'Sample call reached the 4-minute demo limit. Disconnecting...');
                     endVapiCall();
                 }
             }, 1000);
@@ -1791,10 +1818,10 @@
                         connectingControls.style.display = 'none';
                         activeControls.style.display = 'block';
                         statusBadge.className = 'call-status-badge live';
-                        statusBadge.innerHTML = '<span class="live-dot"></span> Live Call in Progress';
+                        statusBadge.innerHTML = '<span class="live-dot"></span> Live Demo Call in Progress';
                         avatar.innerText = '🗣️';
                         startTimer();
-                        addTranscriptMessage('system', 'Call connected! Riley is ready. Say hello or describe your request.');
+                        addTranscriptMessage('system', 'Call connected! The Demonstration Agent is listening. State your industry/niche and business name to begin your live roleplay demo!');
                     });
 
                     vapi.on('call-end', () => {
@@ -1818,6 +1845,14 @@
                         if (msg.type === 'transcript') {
                             if (msg.transcriptType === 'final') {
                                 addTranscriptMessage(msg.role, msg.transcript);
+                            }
+                        }
+                        if (msg.type === 'tool-calls' || (msg.toolCalls && msg.toolCalls.length > 0)) {
+                            const calls = msg.toolCalls || [];
+                            for (const c of calls) {
+                                if (c.function?.name === 'send_checkout_link' || c.name === 'send_checkout_link') {
+                                    addCheckoutCard();
+                                }
                             }
                         }
                     });
@@ -1852,6 +1887,24 @@
             handleCallFinished();
         };
 
+        window.proceedToFlagshipVoiceCheckout = async function() {
+            try {
+                const res = await fetch("/api/create-pro-checkout", {
+                    method: "POST",
+                    headers: { "Content-Type": "application/json" },
+                    body: JSON.stringify({ plan: "flagship", includeVoice: true })
+                });
+                const data = await res.json();
+                if (data.success && data.checkoutUrl) {
+                    window.location.href = data.checkoutUrl;
+                    return;
+                }
+            } catch (e) {
+                console.warn("Flagship voice checkout error:", e.message);
+            }
+            window.location.href = "https://buy.stripe.com/3cI9AT49g2X07Q41ux2go0a";
+        };
+
         function handleCallFinished() {
             stopTimer();
             const stage = document.getElementById('callStage');
@@ -1869,9 +1922,9 @@
             endedControls.style.display = 'block';
 
             statusBadge.className = 'call-status-badge';
-            statusBadge.innerHTML = '<span>Call Completed</span>';
+            statusBadge.innerHTML = '<span>Demo Completed</span>';
             avatar.innerText = '✅';
-            addTranscriptMessage('system', 'Call disconnected. Thank you for testing Riley AI Front Desk!');
+            addTranscriptMessage('system', 'Demo completed! Thank you for experiencing the Missed Call Auto SMS AI Demonstration Agent.');
         }
 
         window.resetCallState = function() {

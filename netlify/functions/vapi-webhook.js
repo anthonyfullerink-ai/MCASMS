@@ -451,6 +451,163 @@ Key Objectives:
               : `SMS request received and queued for dispatch to ${targetPhone}.`
           });
         }
+
+        if (fnName === 'send_checkout_link') {
+          let args = {};
+          try {
+            args = typeof tc.function?.arguments === 'string'
+              ? JSON.parse(tc.function.arguments)
+              : (tc.function?.arguments || tc.parameters || {});
+          } catch (e) {
+            args = {};
+          }
+
+          const contactType = (args.contact_type || 'sms').toLowerCase().trim();
+          const recipient = (args.recipient || callerNum || '').trim();
+          const businessName = (args.business_name || 'Your Business').trim();
+          const industry = (args.industry || 'Contractor / Business').trim();
+
+          console.log(`🛒 [VAPI TOOL CALL] send_checkout_link requested via ${contactType} to ${recipient} for "${businessName}" (${industry})`);
+
+          let checkoutUrl = "https://missedcallautosms.com/voice#pricing";
+          if (STRIPE_SECRET_KEY) {
+            try {
+              const sessionPostData = {
+                'mode': 'subscription',
+                'payment_method_types[0]': 'card',
+                'line_items[0][price_data][currency]': 'usd',
+                'line_items[0][price_data][unit_amount]': '4999',
+                'line_items[0][price_data][product_data][name]': "Missed Call Auto SMS - Founder's Flagship Appliance (Lifetime)",
+                'line_items[0][price_data][product_data][description]': "Founder's Lifetime Appliance License • 1 Android Phone Bound • 100% A2P 10DLC Carrier Exempt",
+                'line_items[0][quantity]': '1',
+                'line_items[1][price_data][currency]': 'usd',
+                'line_items[1][price_data][unit_amount]': '999',
+                'line_items[1][price_data][recurring][interval]': 'month',
+                'line_items[1][price_data][product_data][name]': 'Missed Call Auto SMS - 24/7 AI Voice Receptionist Add-On ($9.99/mo)',
+                'line_items[1][price_data][product_data][description]': '24/7 AI Voice Phone Receptionist • 15 Free Test Minutes on Activation • Instant Carrier SIM Confirmation SMS',
+                'line_items[1][quantity]': '1',
+                'subscription_data[metadata][tier]': 'flagship_plus_voice',
+                'subscription_data[metadata][plan]': 'flagship',
+                'subscription_data[metadata][include_voice]': 'true',
+                'subscription_data[metadata][monthly_fee]': '9.99',
+                'subscription_data[metadata][business_name]': businessName,
+                'metadata[tier]': 'flagship_plus_voice',
+                'metadata[plan]': 'flagship',
+                'metadata[source]': 'vapi_live_demo_agent',
+                'metadata[industry]': industry,
+                'metadata[recipient]': recipient,
+                'success_url': 'https://missedcallautosms.com/success.html?session_id={CHECKOUT_SESSION_ID}',
+                'cancel_url': 'https://missedcallautosms.com/voice'
+              };
+              if (contactType === 'email' && recipient.includes('@')) {
+                sessionPostData['customer_email'] = recipient;
+              }
+              const stripeSession = await stripeApiRequest('/v1/checkout/sessions', 'POST', sessionPostData);
+              if (stripeSession && stripeSession.url) {
+                checkoutUrl = stripeSession.url;
+              }
+            } catch (stripeErr) {
+              console.warn('[vapi-webhook] Stripe dynamic checkout creation error:', stripeErr.message);
+            }
+          }
+
+          if (contactType === 'email' && recipient.includes('@') && process.env.RESEND_API_KEY) {
+            try {
+              const resendPayload = JSON.stringify({
+                from: process.env.FROM_EMAIL || 'Missed Call Auto SMS <support@missedcallautosms.com>',
+                to: [recipient],
+                subject: `🚀 Your Missed Call Auto SMS Setup Link for ${businessName}`,
+                html: `
+                  <div style="font-family: -apple-system, BlinkMacSystemFont, sans-serif; background: #090B0E; color: #FFFFFF; padding: 32px; border-radius: 12px; max-width: 600px; margin: 0 auto; border: 1px solid #222836;">
+                    <div style="text-align: center; margin-bottom: 24px;">
+                      <span style="font-size: 24px; font-weight: 900; color: #00E676;">Missed Call Auto SMS</span>
+                      <p style="color: #94A3B8; font-size: 14px; margin-top: 4px;">24/7 AI Voice Receptionist + Native SIM Auto-Text</p>
+                    </div>
+                    <div style="background: #131720; padding: 24px; border-radius: 10px; border: 1px solid #222836;">
+                      <h2 style="color: #FFF; margin-top: 0; font-size: 18px;">Hello from your Demo Agent!</h2>
+                      <p style="color: #CBD5E1; font-size: 14px; line-height: 1.6;">
+                        Thank you for trying our live interactive voice demonstration for <strong>${businessName}</strong> (${industry}).
+                      </p>
+                      <p style="color: #CBD5E1; font-size: 14px; line-height: 1.6;">
+                        Here is your direct setup link for the <strong>$59.98 bundle</strong> ($49.99 Founder's Flagship lifetime APK + $9.99/mo 24/7 AI Voice Receptionist add-on):
+                      </p>
+                      <div style="text-align: center; margin: 28px 0;">
+                        <a href="${checkoutUrl}" style="background: #00E676; color: #000; font-weight: 800; font-size: 15px; padding: 14px 28px; border-radius: 8px; text-decoration: none; display: inline-block;">
+                          Complete Setup ($59.98 Today, then $9.99/mo) ➔
+                        </a>
+                      </div>
+                      <ul style="color: #94A3B8; font-size: 13px; line-height: 1.8; padding-left: 20px;">
+                        <li>Lifetime Android APK License bound to your phone</li>
+                        <li>100% Authentic Carrier SIM auto-texts (Zero 10DLC fees)</li>
+                        <li>24/7 AI Voice Phone Receptionist with 15 free test minutes</li>
+                        <li>Instant calendar booking & *71 conditional call forwarding</li>
+                      </ul>
+                    </div>
+                  </div>
+                `
+              });
+              await new Promise((res, rej) => {
+                const rReq = https.request({
+                  hostname: 'api.resend.com',
+                  path: '/emails',
+                  method: 'POST',
+                  headers: {
+                    'Authorization': `Bearer ${process.env.RESEND_API_KEY}`,
+                    'Content-Type': 'application/json',
+                    'Content-Length': Buffer.byteLength(resendPayload)
+                  }
+                }, rRes => {
+                  let b = '';
+                  rRes.on('data', c => b += c);
+                  rRes.on('end', () => res(b));
+                });
+                rReq.on('error', rej);
+                rReq.write(resendPayload);
+                rReq.end();
+              });
+              console.log(`✉️ [EMAIL SENT] Checkout link emailed to ${recipient}`);
+            } catch (emailErr) {
+              console.error('❌ [EMAIL SEND FAILED]:', emailErr.message);
+            }
+          } else {
+            const smsMessage = `Here is your link to get Missed Call Auto SMS ($59.98 today: $49.99 Flagship APK + $9.99/mo 24/7 AI Voice Receptionist): ${checkoutUrl} - Download your APK immediately after checkout!`;
+            if (fs && msg) {
+              try {
+                let sub = await fs.getVoiceBinding('MCAS-PRO-TRIAL-001');
+                let targetFcmToken = null;
+                if (sub?.licenseKey) {
+                  const dev = await fs.getDeviceBinding(sub.licenseKey);
+                  targetFcmToken = dev?.fcm_token;
+                }
+                if (!targetFcmToken) {
+                  const localCache = getLocalToken('MCAS-PRO-TRIAL-001');
+                  targetFcmToken = localCache?.fcm_token;
+                }
+                if (targetFcmToken) {
+                  await msg.send({
+                    token: targetFcmToken,
+                    data: {
+                      phone: recipient,
+                      message: smsMessage,
+                      sim_slot: '1',
+                      timestamp: String(Date.now()),
+                      source: 'central_cloud_relay'
+                    },
+                    android: { priority: 'high' }
+                  });
+                  console.log(`📱 [SMS DISPATCHED] Checkout link SMS sent to ${recipient}`);
+                }
+              } catch (smsErr) {
+                console.error('❌ [SMS DISPATCH FAILED]:', smsErr.message);
+              }
+            }
+          }
+
+          results.push({
+            toolCallId: tc.id,
+            result: `The $59.98 bundle checkout link (${checkoutUrl}) was successfully dispatched to ${recipient} via ${contactType}. Tell the customer you have sent the link and they can complete checkout anytime.`
+          });
+        }
       }
 
       return {

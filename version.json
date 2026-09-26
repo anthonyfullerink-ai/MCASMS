@@ -6,5 +6,5 @@
   "releaseNotes": "⚡ v1.8.9 AI Conversational SMS Engine & Takeover Safeguard:\n• 🚀 Cloud SMS Brain Hotfix: Resolved backend handler syntax conflict ensuring instant, intelligent conversational SMS auto-replies across all business types\n• ⏱️ Human Takeover Window: Reduced takeover pause duration from 24h to 30m with instant unpause queue resetting\n• 🛡️ Pacing Delay Protection: Extended AI dispatch matching window to 120s to ensure delayed AI auto-texts never falsely trigger manual human pauses\n• 🔔 Transparent Activity Notifications: Real-time reasons displayed directly in the in-app Activity Feed for complete visibility",
   "mandatory": true,
   "minSupportedVersion": 33,
-  "updatedAt": "2026-09-25T19:30:00.000Z"
+  "updatedAt": "2026-09-25T19:25:08.601Z"
 }
