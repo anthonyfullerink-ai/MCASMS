@@ -140,7 +140,7 @@ function generateEmailHtml(customerName, licenseKey, apkDownloadUrl, amountPaid,
 </html>`;
 }
 
-function generateComboEmailHtml(customerName, licenseKey, apkDownloadUrl, amountPaid, isPro = false) {
+function generateComboEmailHtml(customerName, licenseKey, apkDownloadUrl, amountPaid, isPro = false, forwardingNumber = '+1 (732) 660-9121', carrierCode = '*717326609121') {
   const brandTitle = isPro ? "Missed Call Auto SMS • Pro Gateway + AI Voice" : "Missed Call Auto SMS • Flagship + AI Voice";
   const badgeText = isPro ? "PRO AUTOMATION GATEWAY + 24/7 AI VOICE RECEPTIONIST" : "FOUNDER'S FLAGSHIP + 24/7 AI VOICE RECEPTIONIST";
   const themeBorderColor = "#00E676";
@@ -168,7 +168,7 @@ function generateComboEmailHtml(customerName, licenseKey, apkDownloadUrl, amount
         <div style="background: #1A202C; border-left: 4px solid ${themeBorderColor}; padding: 16px; border-radius: 8px; margin-bottom: 24px;">
             <h2 style="margin: 0 0 6px 0; font-size: 18px; color: #FFF;">Thank you, ${customerName}!</h2>
             <p style="margin: 0; color: #CBD5E0; font-size: 14px; line-height: 1.5;">
-                Your payment of <strong>$${amountPaid}</strong> was successful. Your ${isPro ? 'Pro Gateway' : "Founder's Flagship"} license key and 24/7 AI Voice Receptionist add-on are ready.
+                Your payment of <strong>$${amountPaid}</strong> was successful. Your ${isPro ? 'Pro Gateway' : "Founder's Flagship"} license key and 24/7 AI Voice Receptionist are activated with <strong>15 FREE starter minutes</strong>.
             </p>
         </div>
 
@@ -183,13 +183,25 @@ function generateComboEmailHtml(customerName, licenseKey, apkDownloadUrl, amount
 
         <!-- AI Voice Receptionist Add-On Highlight -->
         <div style="background: linear-gradient(180deg, rgba(0,230,118,0.12) 0%, rgba(9,11,14,0.9) 100%); border: 1px solid #00E676; border-radius: 12px; padding: 20px; margin-bottom: 24px;">
-            <div style="font-size: 14px; font-weight: 800; color: #00E676; margin-bottom: 6px;">🎙️ 24/7 AI Voice Receptionist Engine Active</div>
-            <p style="margin: 0 0 10px 0; color: #CBD5E0; font-size: 13px; line-height: 1.5;">
-                Your recurring $9.99/mo add-on is active and permanently bound to your hardware license key.
-            </p>
-            <div style="background: #090B0E; border: 1px dashed #00E676; border-radius: 8px; padding: 12px; font-size: 12px; color: #A7F3D0;">
-                🎁 <strong>15 Free Test Minutes on Activation:</strong> Test your voice receptionist directly in the app. When you're ready to start receiving forwarded phone calls, choose a flexible usage credit pack ($10, $25, $50, or $100) to activate your dedicated carrier forwarding line (*71).
+            <div style="font-size: 14px; font-weight: 800; color: #00E676; margin-bottom: 6px;">🎙️ 24/7 AI Voice Receptionist Live</div>
+            <div style="font-family: monospace; font-size: 22px; color: #38BDF8; font-weight: bold; margin: 8px 0;">${forwardingNumber}</div>
+            <div style="background: #090B0E; border: 1px dashed #00E676; border-radius: 8px; padding: 12px; font-size: 12px; color: #A7F3D0; margin-top: 10px;">
+                🎁 <strong>15 Free Minutes Ready to Answer:</strong> Your dedicated AI assistant is live right now with 15 free starter minutes.
             </div>
+        </div>
+
+        <!-- 1-Step Carrier Forwarding (*71) -->
+        <div style="background: rgba(0, 230, 118, 0.06); border: 1px solid rgba(0, 230, 118, 0.3); border-radius: 12px; padding: 20px; margin-bottom: 24px;">
+            <h3 style="color: #FFF; font-size: 16px; margin: 0 0 10px 0;">📲 1-Tap Carrier Forwarding (*71)</h3>
+            <p style="color: #CBD5E0; font-size: 13px; line-height: 1.5; margin: 0 0 12px 0;">
+                Open your mobile phone's dialer, dial this code once, and press <strong>Call</strong> to route missed calls to your AI receptionist:
+            </p>
+            <div style="background: #090B0E; padding: 12px; border-radius: 8px; border: 1px solid #222836; text-align: center; font-family: monospace; font-size: 20px; color: #00E676; font-weight: bold; margin-bottom: 12px;">
+                ${carrierCode}
+            </div>
+            <p style="color: #949BAE; font-size: 12px; margin: 0; line-height: 1.4;">
+                💡 Unconditional ringing (15s) before transfer. Revert anytime by dialing <code>*73</code>.
+            </p>
         </div>
 
         <!-- APK Download Button -->
@@ -206,7 +218,7 @@ function generateComboEmailHtml(customerName, licenseKey, apkDownloadUrl, amount
             <ol style="color: #CBD5E0; font-size: 14px; padding-left: 20px; line-height: 1.8;">
                 <li><strong>Download and install</strong> the APK on your Android business phone.</li>
                 <li>Open the app and <strong>paste your License Key</strong> above.</li>
-                <li>Grant standard SMS and Call Log permissions, then <strong>Toggle Master Appliance ON</strong>. Tap AI Voice Receptionist in Settings to customize your greeting.</li>
+                <li>Grant standard SMS and Call Log permissions, then <strong>Toggle Master Appliance ON</strong>. Customize your greeting anytime under AI Voice Receptionist.</li>
             </ol>
         </div>
 
@@ -1077,7 +1089,7 @@ exports.handler = async (event) => {
       }
 
       const currentBal = (existing && typeof existing.voiceMinutesBalance === 'number') ? existing.voiceMinutesBalance : 0;
-      const newBal = Math.round((currentBal + creditPackMinutes) * 100) / 100;
+      const newBal = Math.round(currentBal + creditPackMinutes);
       const targetKey = candidateKey || generateKey(customerName, 0, true);
 
       if (db) {
@@ -1096,8 +1108,9 @@ exports.handler = async (event) => {
             vapiPhoneNumberId,
             voiceMinutesBalance: newBal,
             ratePerMinute: 0.25,
-            autoRebillEnabled: true,
+            autoRebillEnabled: false,
             isVoicePaused: false,
+            aiSmsActive: true,
             provisionedAt: isFirstTimeProvisioning ? new Date().toISOString() : (existing?.provisionedAt || new Date().toISOString())
           });
 
@@ -1108,6 +1121,7 @@ exports.handler = async (event) => {
             voiceEntitlement: true,
             vapiProvisioned: true,
             voiceActive: true,
+            aiSmsActive: true,
             voiceNumber: forwardingNumber,
             carrierCode,
             voiceMinutesBalance: newBal,
@@ -1163,7 +1177,7 @@ exports.handler = async (event) => {
       };
     }
 
-    // === BRANCH 0B: $9.99/MO AI VOICE RECEPTIONIST ADD-ON (STAGE 1 SOFT GATE - $0 COGS) ===
+    // === BRANCH 0B: $9.99/MO AI VOICE RECEPTIONIST ADD-ON (IMMEDIATE ACTIVATION + 15 FREE MINS) ===
     if (isVoiceAddon) {
       const candidateKey = (session.client_reference_id ||
                            (session.metadata && session.metadata.license_key) || '').trim().toUpperCase();
@@ -1188,12 +1202,14 @@ exports.handler = async (event) => {
             voiceSubActive: true,
             voiceSubWaived: false,
             vapiProvisioned: true,
+            voiceActive: true,
+            aiSmsActive: true,
             forwardingNumber: forwardingNumber,
             carrierCode: carrierCode,
             carrierDeactivateCode: carrierDeactivateCode,
-            voiceMinutesBalance: 10.0,
+            voiceMinutesBalance: 15.0,
             ratePerMinute: 0.25,
-            autoRebillEnabled: true,
+            autoRebillEnabled: false,
             isVoicePaused: false,
             boundAt: new Date().toISOString()
           });
@@ -1210,12 +1226,13 @@ exports.handler = async (event) => {
             voiceSubWaived: false,
             vapiProvisioned: true,
             voiceActive: true,
+            aiSmsActive: true,
             voiceNumber: forwardingNumber,
             carrierCode: carrierCode,
             carrierDeactivateCode: carrierDeactivateCode,
             status: 'ACTIVE',
             subscriptionId: session.subscription || session.id,
-            voiceMinutesBalance: 10.0,
+            voiceMinutesBalance: 15.0,
             ratePerMinute: 0.25,
             isVoicePaused: false,
             date: new Date().toISOString()
@@ -1225,19 +1242,19 @@ exports.handler = async (event) => {
         }
       }
 
-      console.log(`🎙️ [VOICE ADD-ON ACTIVATED] Provisioned line ${forwardingNumber} (*71 code: ${carrierCode}) and credited 10.0 free test minutes for ${customerEmail}.`);
+      console.log(`🎙️ [VOICE ADD-ON ACTIVATED] Provisioned line ${forwardingNumber} (*71 code: ${carrierCode}) with 15.0 free starter minutes for ${customerEmail}.`);
 
       if (RESEND_API_KEY && customerEmail) {
         const emailSubject = `🎙️ Your 24/7 AI Voice Receptionist Line is Live! Line: ${forwardingNumber}`;
-        const emailHtml = generateVoiceProOnboardingEmailHtml ? generateVoiceProOnboardingEmailHtml({
+        const emailHtml = generateVoiceAddonEmailHtml(
           customerName,
-          customerEmail,
-          licenseKey: voiceLicenseKey,
+          voiceLicenseKey,
           forwardingNumber,
           carrierCode,
           carrierDeactivateCode,
-          monthlyMinutesQuota: 10
-        }) : generateVoiceUnlockEmailHtml(customerName, voiceLicenseKey, false);
+          15,
+          "0.25"
+        );
 
         try {
           await sendEmail(RESEND_API_KEY, customerEmail, emailSubject, emailHtml);
@@ -1255,7 +1272,7 @@ exports.handler = async (event) => {
           tier: 'voice_addon',
           voiceEntitlement: true,
           vapiProvisioned: true,
-          voiceMinutesBalance: 10.0,
+          voiceMinutesBalance: 15.0,
           forwardingNumber: forwardingNumber,
           carrierCode: carrierCode,
           status: 'ACTIVE',
@@ -1266,16 +1283,21 @@ exports.handler = async (event) => {
       };
     }
 
-    // === BRANCH 0C: APPLIANCE + AI VOICE COMBO ($49.99 / $299.99 + $9.99/mo) ===
+    // === BRANCH 0C: APPLIANCE + AI VOICE COMBO ($49.99 / $299.99 + $9.99/mo - IMMEDIATE ACTIVATION) ===
     if (isApplianceVoiceCombo) {
       const isProCombo = isProVoiceCombo;
       const licenseKey = generateKey(customerName, 0, isProCombo);
+      const forwardingNumber = process.env.VAPI_PRIMARY_PHONE_NUMBER || '+1 (732) 660-9121';
+      const cleanDigits = forwardingNumber.replace(/\D/g, '');
+      const carrierCode = `*71${cleanDigits.slice(-10)}`;
+      const carrierDeactivateCode = '*73';
+
       console.log(`⚡🎙️ [APPLIANCE + VOICE COMBO ACTIVATED] ${isProCombo ? 'PRO' : 'FLAGSHIP'} Key: ${licenseKey} for ${customerEmail} ($${amountPaid})`);
 
       const db = getFirestore();
       if (db) {
         try {
-          // 1. Save master appliance license
+          // 1. Save master appliance license with voice active and 15 free starter minutes
           await db.saveMasterLicense({
             key: licenseKey,
             customer: customerName,
@@ -1286,32 +1308,39 @@ exports.handler = async (event) => {
             voiceEntitlement: true,
             voiceSubActive: true,
             voiceSubWaived: false,
-            vapiProvisioned: false,
-            voiceActive: false,
+            vapiProvisioned: true,
+            voiceActive: true,
+            aiSmsActive: true,
+            voiceNumber: forwardingNumber,
+            carrierCode: carrierCode,
+            carrierDeactivateCode: carrierDeactivateCode,
+            voiceMinutesBalance: 15.0,
             status: 'ACTIVE',
             subscriptionId: session.subscription || session.id,
             date: new Date().toISOString()
           });
 
-          // 2. Unlock AI Voice Add-on soft gate (zero COGS until first credit pack loaded)
+          // 2. Provision Voice Binding with 15 free starter minutes
           await db.saveVoiceBinding(licenseKey, {
             subscriptionId: session.subscription || session.id,
             customerId: session.customer || null,
             stripeCustomerId: session.customer || null,
             customerEmail,
             customerName,
-            status: 'UNLOCKED_PENDING_PACK',
+            status: 'ACTIVE',
             tier: 'VOICE_ADDON',
             voiceEntitlement: true,
             voiceSubActive: true,
             voiceSubWaived: false,
-            vapiProvisioned: false,
-            forwardingNumber: null,
-            carrierCode: null,
-            carrierDeactivateCode: '*73',
-            voiceMinutesBalance: 0.0,
+            vapiProvisioned: true,
+            voiceActive: true,
+            aiSmsActive: true,
+            forwardingNumber: forwardingNumber,
+            carrierCode: carrierCode,
+            carrierDeactivateCode: carrierDeactivateCode,
+            voiceMinutesBalance: 15.0,
             ratePerMinute: 0.25,
-            autoRebillEnabled: true,
+            autoRebillEnabled: false,
             isVoicePaused: false,
             boundAt: new Date().toISOString()
           });
@@ -1324,7 +1353,7 @@ exports.handler = async (event) => {
         const emailSubject = isProCombo
           ? `⚡🎙️ Your Missed Call Auto SMS Pro Gateway License Key & AI Voice Setup Guide`
           : `📱🎙️ Your Missed Call Auto SMS Flagship License Key & AI Voice Setup Guide`;
-        const emailHtml = generateComboEmailHtml(customerName, licenseKey, apkDownloadUrl, amountPaid, isProCombo);
+        const emailHtml = generateComboEmailHtml(customerName, licenseKey, apkDownloadUrl, amountPaid, isProCombo, forwardingNumber, carrierCode);
 
         try {
           await sendEmail(RESEND_API_KEY, customerEmail, emailSubject, emailHtml);
@@ -1343,6 +1372,9 @@ exports.handler = async (event) => {
           isPro: isProCombo,
           licenseKey: licenseKey,
           voiceUnlocked: true,
+          forwardingNumber: forwardingNumber,
+          carrierCode: carrierCode,
+          voiceMinutesBalance: 15.0,
           amountPaid: amountPaid,
           customerEmail: customerEmail,
           subscriptionId: session.subscription || session.id

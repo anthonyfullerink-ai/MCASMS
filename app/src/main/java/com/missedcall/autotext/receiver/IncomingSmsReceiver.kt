@@ -252,7 +252,7 @@ class IncomingSmsReceiver : BroadcastReceiver() {
                     Log.i(TAG, "AI SMS engine did not send reply: reason=$reason, message=$message")
                     if (reason == "human_takeover_active") {
                         com.missedcall.autotext.util.AiNotificationManager.notifyHumanTakeover(context, senderNumber)
-                    } else if (reason == "plan_gated") {
+                    } else if (reason == "minutes_exhausted" || reason == "plan_gated") {
                         com.missedcall.autotext.util.AiNotificationManager.notifyAiSmsIgnored(
                             context = context,
                             callerPhone = senderNumber,

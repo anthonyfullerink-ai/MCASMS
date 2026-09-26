@@ -337,7 +337,7 @@ fun VoiceHubScreen(
 
                         val features = listOf(
                             "⚡ Instant Call Answering" to "Picks up in < 1s with ultra-realistic human AI voice.",
-                            "🎁 10 FREE Test Minutes Included" to "Test real calls on your dedicated carrier line immediately upon activation.",
+                            "🎁 15 FREE Test Minutes Included" to "Test real calls on your dedicated carrier line immediately upon activation.",
                             "📲 Instant SMS Lead Summaries" to "Receives caller name, phone number, and service need via SMS.",
                             "🛡️ Auto-Pause Safeguard" to "Pauses automatically at 0.0 balance so you're never surprise-billed.",
                             "📶 Carrier Conditional Forwarding" to "Works with your existing SIM (*71) on Verizon, AT&T, & T-Mobile."
@@ -384,7 +384,7 @@ fun VoiceHubScreen(
                                     shape = RoundedCornerShape(6.dp),
                                     color = Color(0xFF00E676).copy(alpha = 0.15f)
                                 ) {
-                                    Text("Includes 10 Free Mins", color = Color(0xFF00E676), fontWeight = FontWeight.Bold, fontSize = 11.sp, modifier = Modifier.padding(horizontal = 8.dp, vertical = 4.dp))
+                                    Text("Includes 15 Free Mins", color = Color(0xFF00E676), fontWeight = FontWeight.Bold, fontSize = 11.sp, modifier = Modifier.padding(horizontal = 8.dp, vertical = 4.dp))
                                 }
                             }
                         }

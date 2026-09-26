@@ -297,6 +297,31 @@ exports.handler = async (event) => {
       const emergencyKeywords = matchedPulse?.emergencyKeywords || matchedSub?.voiceEmergencyKeywords || 'leak, flooding, broken pipe, sparking, fire';
       const shopAddress = matchedSub?.aiSmsShopAddress || '';
 
+      // Check if subscriber's voice/SMS minutes are exhausted
+      const subBalance = typeof matchedSub?.voiceMinutesBalance === 'number' ? matchedSub.voiceMinutesBalance : null;
+      const isVoicePaused = matchedSub?.isVoicePaused === true || (subBalance !== null && subBalance <= 0);
+
+      if (isVoicePaused) {
+        console.log(`🔒 [VAPI CALL PAUSED - ZERO MINUTES] License ${licenseKey} has 0 minutes remaining. Returning quick busy notice so Native SIM auto-SMS handles caller.`);
+        return {
+          statusCode: 200,
+          headers,
+          body: JSON.stringify({
+            assistant: {
+              name: `${agentName} - Busy`,
+              firstMessage: `Thank you for calling ${businessName}. Our office is currently busy assisting clients. An automated text message has been sent to your phone so you can reach us directly. Have a great day!`,
+              endCallAfterSilenceSeconds: 2,
+              maxDurationSeconds: 15,
+              model: {
+                provider: 'openai',
+                model: 'gpt-4o-mini',
+                messages: [{ role: 'system', content: 'Say goodbye and hang up.' }]
+              }
+            }
+          })
+        };
+      }
+
       // Save session mapping for subsequent status-update, tool-calls, and end-of-call-report
       const sessionData = {
         callId,
@@ -633,6 +658,18 @@ Key Objectives:
             let sub = null;
             if (resolvedKey) sub = await fs.getVoiceBinding(resolvedKey);
             if (!sub && inboundNumber) sub = await fs.getVoiceBinding(inboundNumber);
+
+            // If subscriber's minutes are exhausted, do NOT dispatch voice_call_started.
+            // This allows the Android device's Native SIM Missed-Call SMS to fire immediately!
+            if (sub && (sub.isVoicePaused === true || (typeof sub.voiceMinutesBalance === 'number' && sub.voiceMinutesBalance <= 0))) {
+              console.log(`ℹ️ [FCM SUPPRESS SKIPPED] Sub ${sub.licenseKey} has 0 minutes; allowing Native SIM Missed-Call SMS to fire.`);
+              return {
+                statusCode: 200,
+                headers,
+                body: JSON.stringify({ success: true, message: 'Voice paused - native SMS allowed' })
+              };
+            }
+
             if (sub && sub.licenseKey) {
               const deviceRecord = await fs.getDeviceBinding(sub.licenseKey);
               if (deviceRecord && deviceRecord.fcm_token) {
@@ -663,7 +700,7 @@ Key Objectives:
       };
     }
 
-    // ── Real-Time Monthly Minute Metering & Stripe Overage Billing ────────────
+    // ── Real-Time Monthly Minute Metering (True Whole-Number Metering) ────────
     let meterResult = null;
     let stripeBilled = false;
     let stripeInvoiceItemId = null;
@@ -683,67 +720,47 @@ Key Objectives:
           endedAt: new Date().toISOString()
         });
 
-        // 2. Increment per-subscriber minutesUsed & compute overage
+        // 2. Increment minutesUsed & decrement voiceMinutesBalance (nearest whole minute)
         const session = CALL_LICENSE_MAP.get(callId) || (fs && fs.getCallSession ? await fs.getCallSession(callId) : null);
         const resolvedKey = callObj.metadata?.licenseKey || message.metadata?.licenseKey || session?.licenseKey;
         meterResult = await fs.incrementMinutesUsed(resolvedKey || inboundNumber || 'unknown', durationSec);
-
-        // 3. Automated Stripe Billing for Increments / Overage
         const sub = meterResult?.subscriber;
-        const newOverageMinutes = meterResult?.newOverageMinutes || 0;
 
-        if (sub && STRIPE_SECRET_KEY) {
-          const customerId = sub.customerId || sub.stripeCustomerId;
-          const subscriptionId = sub.subscriptionId;
-          const subItemId = sub.subscriptionItemId;
+        // 3. Option A (Manual Reload): If balance reached 0, pause AI voice & AI SMS and notify subscriber
+        if (meterResult?.isPaused && (meterResult?.previousBalance || 0) > 0) {
+          console.log(`⚠️ [MINUTES DEPLETED] Subscriber ${resolvedKey} reached 0 minutes. AI Voice & AI SMS paused.`);
 
-          // Case A: If subscriber has a dedicated metered subscription item, post usage record
-          if (subItemId) {
-            try {
-              await stripeApiRequest(`/v1/subscription_items/${subItemId}/usage_records`, 'POST', {
-                quantity: meterResult.callMinutes,
-                timestamp: Math.floor(Date.now() / 1000),
-                action: 'increment'
-              });
-              stripeBilled = true;
-              console.log(`💳 [STRIPE METERED USAGE] Reported ${meterResult.callMinutes} mins to subscription item ${subItemId}`);
-            } catch (meterErr) {
-              console.warn('[vapi-webhook] Usage record reporting note:', meterErr.message);
-            }
-          }
+          const subEmail = sub?.customerEmail || sub?.email;
+          const subName = sub?.customerName || sub?.customer || 'Valued Subscriber';
+          const rKey = process.env.RESEND_API_KEY;
+          const fromEm = process.env.FROM_EMAIL || 'Missed Call Auto SMS <support@missedcallautosms.com>';
 
-          // Case B: If this call pushed the user into overage (beyond their included pooled quota),
-          // automatically bill the overage increment ($0.20 or $0.25/minute, +1.5% if premium model) onto their upcoming monthly invoice
-          if (newOverageMinutes > 0 && customerId) {
-            let rawRate = sub.overageRatePerMinute || sub.overageRate || (sub.plan === 'VOICE_STARTER' || sub.tier === 'VOICE_STARTER' ? 0.25 : 0.20);
-            const isPremiumModel = sub.hasPremiumModel === true ||
-              (sub.model && sub.model.toLowerCase().includes('gpt-4o') && !sub.model.toLowerCase().includes('mini'));
-            if (isPremiumModel) {
-              rawRate = rawRate * 1.015; // 1.5% markup applied strictly to overages
-            }
-            const overageRateCents = Math.round(parseFloat(rawRate) * 100);
-            const amountCents = Math.round(newOverageMinutes * parseFloat(rawRate) * 100);
-            const rateFormatted = (parseFloat(rawRate)).toFixed(3);
-
-            try {
-              const markupNote = isPremiumModel ? ' (+1.5% Premium Model Markup)' : '';
-              const invoiceItemData = {
-                customer: customerId,
-                amount: amountCents,
-                currency: 'usd',
-                description: `24/7 AI Voice Receptionist Overage: ${newOverageMinutes} min(s) @ $${rateFormatted}/min${markupNote} (Call from ${callerNum})`
-              };
-              if (subscriptionId && subscriptionId.startsWith('sub_')) {
-                invoiceItemData.subscription = subscriptionId;
-              }
-
-              const invoiceItem = await stripeApiRequest('/v1/invoice_items', 'POST', invoiceItemData);
-              stripeBilled = true;
-              stripeInvoiceItemId = invoiceItem.id;
-              console.log(`💳 [STRIPE OVERAGE BILLED] Billed ${newOverageMinutes} min(s) ($${(amountCents/100).toFixed(2)} @ $${rateFormatted}/m${markupNote}) to customer ${customerId} (Invoice Item: ${invoiceItem.id})`);
-            } catch (invErr) {
-              console.error('❌ [STRIPE OVERAGE BILLING ERROR]:', invErr.message);
-            }
+          if (rKey && subEmail) {
+            const depletedHtml = `
+              <div style="font-family: -apple-system, BlinkMacSystemFont, Arial, sans-serif; background: #090B0E; color: #FFFFFF; padding: 24px;">
+                <div style="max-width: 600px; margin: 0 auto; background: #131720; border: 1px solid #222836; border-radius: 16px; padding: 32px;">
+                  <div style="text-align: center; margin-bottom: 20px;">
+                    <div style="font-size: 44px; margin-bottom: 8px;">⏳</div>
+                    <h2 style="color: #F59E0B; margin: 0;">AI Minutes Depleted (Balance: 0 mins)</h2>
+                  </div>
+                  <p style="color: #CBD5E0; font-size: 14px; line-height: 1.6;">
+                    Hi ${subName}, your available AI Voice Receptionist and AI SMS minutes have reached <strong>0</strong>.
+                  </p>
+                  <div style="background: rgba(245, 158, 11, 0.1); border: 1px solid rgba(245, 158, 11, 0.3); border-radius: 8px; padding: 14px; margin: 18px 0; font-size: 13px; color: #FBBF24;">
+                    ℹ️ <strong>Status Update:</strong> Your AI Voice Receptionist and Conversational AI SMS are safely paused until you reload. Your <strong>Native SIM Missed-Call SMS remains 100% active</strong> and will continue auto-replying to missed calls directly from your Android phone!
+                  </div>
+                  <div style="text-align: center; margin: 24px 0;">
+                    <a href="https://buy.stripe.com/5kA8wPfRY0PS6M014f" style="display: inline-block; background: #00E676; color: #000000; font-weight: 800; font-size: 15px; padding: 14px 32px; border-radius: 30px; text-decoration: none;">
+                      ⚡ Reload $10 Credit Pack (40 Mins) →
+                    </a>
+                  </div>
+                  <p style="color: #949BAE; font-size: 12px; text-align: center; margin: 0;">
+                    Credits never expire and roll over automatically. Missed Call Auto SMS
+                  </p>
+                </div>
+              </div>
+            `;
+            sendResendEmail(rKey, subEmail, fromEm, '⏳ Your AI Voice Minutes are Exhausted (Native SIM SMS remains active)', depletedHtml).catch(() => {});
           }
         }
       } catch (dbErr) {

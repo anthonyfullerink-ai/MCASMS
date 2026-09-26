@@ -280,26 +280,46 @@ exports.handler = async (event) => {
       };
     }
 
-    // Rule 0: Plan Entitlement Gate ($9.99/mo Voice & SMS Subscription or Pro License)
-    const isProOrSubscribed = !licenseKey ||
-      licenseKey.toUpperCase().includes('PRO') ||
-      licenseKey.toUpperCase().includes('TRIAL') ||
-      licenseKey === 'MCAS-PRO-DEMO-89F2';
-
+    // Rule 0: Plan Entitlement Gate & Minute Balance Check
     const { db, msg } = initFirebase();
 
-    if (!isProOrSubscribed && db) {
+    if (db && licenseKey) {
       try {
-        const subDoc = await db.collection('subscribers').doc(licenseKey).get();
-        if (subDoc.exists) {
-          const subData = subDoc.data() || {};
-          if (!subData.voiceSubscriptionActive && subData.tier !== 'PRO') {
-            console.log(`🔒 [AI SMS GATED] License ${licenseKey} lacks active $9.99/mo Voice & SMS plan.`);
+        let bindingDoc = await db.collection('voice_pro_bindings').doc(licenseKey).get();
+        if (!bindingDoc.exists) {
+          const qSnap = await db.collection('voice_pro_bindings').where('licenseKey', '==', licenseKey).limit(1).get();
+          if (!qSnap.empty) bindingDoc = qSnap.docs[0];
+        }
+
+        if (bindingDoc && bindingDoc.exists) {
+          const bData = bindingDoc.data() || {};
+          const isVoicePaused = bData.isVoicePaused === true || (typeof bData.voiceMinutesBalance === 'number' && bData.voiceMinutesBalance <= 0);
+          if (isVoicePaused) {
+            console.log(`🔒 [AI SMS PAUSED - ZERO MINUTES] License ${licenseKey} has 0 minutes left. AI SMS is disabled.`);
             return {
               statusCode: 200,
               headers,
-              body: JSON.stringify({ replied: false, reason: 'plan_gated', message: 'AI conversational replies require an active $9.99/mo plan.' })
+              body: JSON.stringify({
+                success: false,
+                replied: false,
+                reason: 'minutes_exhausted',
+                message: 'AI conversational replies are paused: Voice & AI SMS minute balance is 0. Native SIM auto-SMS remains active. Please reload minutes.'
+              })
             };
+          }
+        } else {
+          // If not in voice_pro_bindings, check subscribers collection
+          const subDoc = await db.collection('subscribers').doc(licenseKey).get();
+          if (subDoc.exists) {
+            const subData = subDoc.data() || {};
+            if (!subData.voiceSubscriptionActive && subData.tier !== 'PRO' && !licenseKey.includes('PRO') && !licenseKey.includes('TRIAL')) {
+              console.log(`🔒 [AI SMS GATED] License ${licenseKey} lacks active $9.99/mo Voice & SMS plan.`);
+              return {
+                statusCode: 200,
+                headers,
+                body: JSON.stringify({ replied: false, reason: 'plan_gated', message: 'AI conversational replies require an active $9.99/mo plan.' })
+              };
+            }
           }
         }
       } catch (gateErr) {

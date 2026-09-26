@@ -70,8 +70,8 @@ exports.handler = async (event) => {
           voiceCarrierCode = binding.carrierCode || null;
           vapiAssistantId = binding.vapiAssistantId || null;
           vapiPhoneNumberId = binding.vapiPhoneNumberId || null;
-          voiceMinutesBalance = typeof binding.voiceMinutesBalance === 'number' ? binding.voiceMinutesBalance : 0.0;
-          isPaused = binding.isVoicePaused === true || (voiceMinutesBalance <= 0 && binding.autoRebillEnabled === false);
+          voiceMinutesBalance = typeof binding.voiceMinutesBalance === 'number' ? Math.round(binding.voiceMinutesBalance) : 0.0;
+          isPaused = binding.isVoicePaused === true || (voiceMinutesBalance <= 0);
           voiceActive = voiceEntitlement && vapiProvisioned && (voiceMinutesBalance > 0) && !isPaused;
         }
       } else {
@@ -89,8 +89,8 @@ exports.handler = async (event) => {
             voiceCarrierCode = b.carrierCode || null;
             vapiAssistantId = b.vapiAssistantId || null;
             vapiPhoneNumberId = b.vapiPhoneNumberId || null;
-            voiceMinutesBalance = typeof b.voiceMinutesBalance === 'number' ? b.voiceMinutesBalance : 0.0;
-            isPaused = b.isVoicePaused === true || (voiceMinutesBalance <= 0 && b.autoRebillEnabled === false);
+            voiceMinutesBalance = typeof b.voiceMinutesBalance === 'number' ? Math.round(b.voiceMinutesBalance) : 0.0;
+            isPaused = b.isVoicePaused === true || (voiceMinutesBalance <= 0);
             voiceActive = voiceEntitlement && vapiProvisioned && (voiceMinutesBalance > 0) && !isPaused;
           }
         }
@@ -103,10 +103,11 @@ exports.handler = async (event) => {
     if (key === 'MCAS-PRO-DEMO-89F2') {
       voiceEntitlement = true;
       vapiProvisioned = true;
-      voiceForwardingNumber = voiceForwardingNumber || '+1 (555) 349-2810';
-      voiceCarrierCode = voiceCarrierCode || '*715553492810';
+      voiceForwardingNumber = voiceForwardingNumber || '+1 (732) 660-9121';
+      voiceCarrierCode = voiceCarrierCode || '*717326609121';
       voiceMinutesBalance = 50.0;
       voiceActive = true;
+      isPaused = false;
     }
 
     // Device Hardware Binding Check & Activation
@@ -224,10 +225,12 @@ exports.handler = async (event) => {
 
     let keyStatus = isPaused ? 'PAUSED' : 'ACTIVE';
     let activationPrompt = null;
-    if (voiceEntitlement && !vapiProvisioned) {
-      keyStatus = 'UNLOCKED_PENDING_PACK';
-      activationPrompt = 'Voice Engine Unlocked! Fund your first 40-minute credit pack ($10) to generate your dedicated carrier line and activate AI answering.';
+    if (voiceEntitlement && (voiceMinutesBalance <= 0 || isPaused)) {
+      keyStatus = 'PAUSED';
+      activationPrompt = 'Voice & AI SMS minutes exhausted. Load a minute pack ($10 for 40 mins) to resume AI answering.';
     }
+
+    const aiSmsActive = voiceEntitlement && (voiceMinutesBalance > 0) && !isPaused;
 
     return {
       statusCode: 200,
@@ -246,10 +249,11 @@ exports.handler = async (event) => {
         voiceSubWaived: voiceSubWaived,
         vapiProvisioned: vapiProvisioned,
         voiceActive: voiceActive,
+        aiSmsActive: aiSmsActive,
         voiceForwardingNumber: voiceForwardingNumber,
         carrierCode: voiceCarrierCode,
-        voiceMinutesBalance: voiceMinutesBalance,
-        autoRebillEnabled: true,
+        voiceMinutesBalance: Math.round(voiceMinutesBalance),
+        autoRebillEnabled: false,
         isVoicePaused: isPaused,
         ratePerMinute: 0.25,
         packPriceDollars: 10.00,
@@ -272,9 +276,10 @@ exports.handler = async (event) => {
           dualSim: true,
           n8nWebhook: isPro || voiceEntitlement,
           centralWebhookBridge: isPro || voiceEntitlement,
-          aiVoiceReceptionist: voiceEntitlement, // UI controls in APK unlocked
-          aiVoiceLiveTelephony: voiceActive,     // True once carrier forwarding active
-          p2pSmsExempt: true
+          aiVoiceReceptionist: voiceActive,
+          aiConversationalSms: aiSmsActive,
+          aiVoiceLiveTelephony: voiceActive,
+          p2pSmsExempt: true // Native SIM auto-SMS remains 100% active
         },
         verifiedAt: new Date().toISOString()
       })
