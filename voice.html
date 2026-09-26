@@ -1844,41 +1844,40 @@
                     handleCallFinished();
                 });
 
-                    vapi.on('speech-start', () => {
-                        stage.classList.add('speaking');
-                    });
+                vapi.on('speech-start', () => {
+                    stage.classList.add('speaking');
+                });
 
-                    vapi.on('speech-end', () => {
-                        stage.classList.remove('speaking');
-                        updateWaveBars(0.1);
-                    });
+                vapi.on('speech-end', () => {
+                    stage.classList.remove('speaking');
+                    updateWaveBars(0.1);
+                });
 
-                    vapi.on('volume-level', (vol) => {
-                        updateWaveBars(vol);
-                    });
+                vapi.on('volume-level', (vol) => {
+                    updateWaveBars(vol);
+                });
 
-                    vapi.on('message', (msg) => {
-                        if (msg.type === 'transcript') {
-                            if (msg.transcriptType === 'final') {
-                                addTranscriptMessage(msg.role, msg.transcript);
+                vapi.on('message', (msg) => {
+                    if (msg.type === 'transcript') {
+                        if (msg.transcriptType === 'final') {
+                            addTranscriptMessage(msg.role, msg.transcript);
+                        }
+                    }
+                    if (msg.type === 'tool-calls' || (msg.toolCalls && msg.toolCalls.length > 0)) {
+                        const calls = msg.toolCalls || [];
+                        for (const c of calls) {
+                            if (c.function?.name === 'send_checkout_link' || c.name === 'send_checkout_link') {
+                                addCheckoutCard();
                             }
                         }
-                        if (msg.type === 'tool-calls' || (msg.toolCalls && msg.toolCalls.length > 0)) {
-                            const calls = msg.toolCalls || [];
-                            for (const c of calls) {
-                                if (c.function?.name === 'send_checkout_link' || c.name === 'send_checkout_link') {
-                                    addCheckoutCard();
-                                }
-                            }
-                        }
-                    });
+                    }
+                });
 
-                    vapi.on('error', (err) => {
-                        console.error('Vapi WebRTC Error:', err);
-                        addTranscriptMessage('system', 'Notice: ' + (err.message || 'Call connection error occurred.'));
-                        handleCallFinished();
-                    });
-                }
+                vapi.on('error', (err) => {
+                    console.error('Vapi WebRTC Error:', err);
+                    addTranscriptMessage('system', 'Notice: ' + (err.message || 'Call connection error occurred.'));
+                    handleCallFinished();
+                });
 
                 await vapi.start(targetAssistantId);
 
