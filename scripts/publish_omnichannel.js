@@ -540,6 +540,18 @@ async function run() {
   const isDryRun = args.includes('--dry-run') || process.env.DRY_RUN === 'true';
   const slotArg = (args.find(a => a.startsWith('--slot=')) || '').replace('--slot=', '').toLowerCase();
 
+  // Guard: Omnichannel posting engine kill-switch
+  const settingsPath = path.join(__dirname, '../data/content_engine_settings.json');
+  if (fs.existsSync(settingsPath)) {
+    try {
+      const s = JSON.parse(fs.readFileSync(settingsPath, 'utf8'));
+      if (s.autoPostingEnabled === false && !args.includes('--force')) {
+        console.log('🛑 [Omnichannel Engine] Auto-posting is TURNED OFF by owner in settings. Halting execution.');
+        return;
+      }
+    } catch (e) {}
+  }
+
   // Run Meta Token Guard check
   if (!isDryRun) {
     await checkMetaTokenHealth();

@@ -91,7 +91,7 @@ async function getSettings() {
   }
 
   return {
-    autoPostingEnabled: true,
+    autoPostingEnabled: false,
     autoPublishApprovedOnly: true,
     postingTimeslots: ["09:00", "13:00", "18:00"],
     schedulerIntervalSeconds: 60,

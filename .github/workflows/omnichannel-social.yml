@@ -1,14 +1,8 @@
 name: Omnichannel Autonomous Social Publisher
 
+# Omnichannel posting engine disabled by owner request.
+# Schedule triggers commented out and job execution halted.
 on:
-  schedule:
-    # 1. Morning Blog Slot: 12:00 UTC (8:00 AM EDT)
-    - cron: '0 12 * * *'
-    # 2. Lunch Feed Post Slot (1:1): 16:30 UTC (12:30 PM EDT)
-    - cron: '30 16 * * *'
-    # 3. Evening Reel & Story Slot (9:16): 21:30 UTC (5:30 PM EDT)
-    - cron: '30 21 * * *'
-
   workflow_dispatch:
     inputs:
       slot:
@@ -24,7 +18,7 @@ on:
       dry_run:
         description: 'Run in Safe Dry-Run Mode (No Meta API requests)'
         required: true
-        default: false
+        default: true
         type: boolean
 
 permissions:
@@ -33,6 +27,8 @@ permissions:
 jobs:
   publish-omnichannel:
     name: Run Omnichannel Publisher
+    # Disabled by owner request
+    if: false
     runs-on: ubuntu-latest
     steps:
       - name: Checkout Repository
