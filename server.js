@@ -8175,6 +8175,123 @@ const server = http.createServer((req, res) => {
     return;
   }
 
+  // 11. POST /api/portal/view-as - Secure View-As Account Impersonation
+  // Allows Agency to view as their own client, or Owner to view as any client.
+  // Agencies are strictly forbidden from viewing other agencies' clients.
+  if ((relativePath === '/api/portal/view-as' || relativePath === '/api/portal/view-as/') && req.method === 'POST') {
+    let body = '';
+    req.on('data', chunk => body += chunk);
+    req.on('end', () => {
+      try {
+        const payload = JSON.parse(body || '{}');
+        const rawKey = String(payload.licenseKey || payload.account || '').trim().toUpperCase();
+        const viewerRole = String(payload.viewerRole || 'agency').toLowerCase(); // 'agency' or 'owner'
+        const reqAgencyId = String(payload.agencyId || '').trim();
+
+        if (!rawKey) {
+          res.writeHead(400, { 'Content-Type': 'application/json; charset=utf-8', 'Access-Control-Allow-Origin': '*' });
+          res.end(JSON.stringify({ success: false, error: 'licenseKey is required' }));
+          return;
+        }
+
+        const masterList = getMasterLicenses();
+        const subscribers = getVoiceSubscribers();
+        const accounts = getClientAccounts();
+
+        const master = masterList.find(m => m.key === rawKey);
+        const sub = subscribers.find(s => s.licenseKey === rawKey);
+        const existingAcc = accounts.find(a => a.licenseKey === rawKey);
+
+        if (!master && !sub && !existingAcc) {
+          res.writeHead(404, { 'Content-Type': 'application/json; charset=utf-8', 'Access-Control-Allow-Origin': '*' });
+          res.end(JSON.stringify({ success: false, error: 'Client account or license key not found.' }));
+          return;
+        }
+
+        // Determine client's agency
+        const clientAgencyId = (sub && sub.agencyId) || (master && master.agencyId) || (existingAcc && existingAcc.agencyId) || 'default';
+
+        // Strict Access Boundary Check:
+        // Agencies ONLY have access to their own account and their own clients.
+        if (viewerRole === 'agency') {
+          if (!reqAgencyId) {
+            res.writeHead(403, { 'Content-Type': 'application/json; charset=utf-8', 'Access-Control-Allow-Origin': '*' });
+            res.end(JSON.stringify({ success: false, error: 'Agency ID required for agency view-as.' }));
+            return;
+          }
+          if (clientAgencyId !== reqAgencyId && !(clientAgencyId === 'default' && reqAgencyId === 'default')) {
+            res.writeHead(403, { 'Content-Type': 'application/json; charset=utf-8', 'Access-Control-Allow-Origin': '*' });
+            res.end(JSON.stringify({
+              success: false,
+              error: `Access Denied: This client belongs to agency "${clientAgencyId}", not "${reqAgencyId}". Agencies only have access to their own account and clients.`
+            }));
+            return;
+          }
+        } else if (viewerRole !== 'owner') {
+          res.writeHead(403, { 'Content-Type': 'application/json; charset=utf-8', 'Access-Control-Allow-Origin': '*' });
+          res.end(JSON.stringify({ success: false, error: 'Invalid viewerRole. Must be "agency" or "owner".' }));
+          return;
+        }
+
+        const clientName = (existingAcc && existingAcc.businessName) || (master && (master.customer || master.businessName || master.name)) || (sub && (sub.name || sub.businessName)) || 'Client Business';
+        const branding = resolvePortalBranding(clientAgencyId);
+        const calls = getVoiceCallLogs().map(enrichCallWithAiDiagnostics);
+        const sms = getClientSmsHistory(rawKey);
+        const tasks = getClientTasks(rawKey);
+
+        const returnUrl = viewerRole === 'agency'
+          ? `/agency-dashboard?agency=${encodeURIComponent(clientAgencyId)}`
+          : `/owner_admin_dashboard.html`;
+
+        res.writeHead(200, { 'Content-Type': 'application/json; charset=utf-8', 'Access-Control-Allow-Origin': '*' });
+        res.end(JSON.stringify({
+          success: true,
+          impersonation: {
+            active: true,
+            viewerRole,
+            agencyId: clientAgencyId,
+            agencyName: branding.appName || clientAgencyId,
+            clientName,
+            licenseKey: rawKey,
+            returnUrl
+          },
+          token: existingAcc ? existingAcc.token : `impersonate_${Date.now()}`,
+          user: {
+            username: (existingAcc && existingAcc.username) || clientName.toLowerCase().replace(/[^a-z0-9]/g, '_'),
+            email: (existingAcc && existingAcc.email) || (master && master.email) || (sub && sub.email) || '',
+            businessName: clientName,
+            licenseKey: rawKey,
+            agencyId: clientAgencyId
+          },
+          branding,
+          client: {
+            name: clientName,
+            licenseKey: rawKey,
+            voiceMinutesBalance: (sub && sub.voiceMinutesBalance) || 45.2,
+            carrierCode: (sub && sub.carrierCode) || '*71',
+            isVoicePaused: false,
+            handsetStatus: 'ONLINE',
+            lastCheckin: new Date().toISOString()
+          },
+          calls,
+          sms,
+          tasks,
+          stats: {
+            totalCalls: calls.length,
+            urgentCount: calls.filter(c => c.urgency === 'HIGH').length,
+            totalMinutesUsed: Math.round(calls.reduce((acc, c) => acc + (c.durationSeconds || 60), 0) / 60 * 10) / 10,
+            totalSmsCount: sms.length,
+            pendingTasksCount: tasks.filter(t => t.status === 'PENDING').length
+          }
+        }));
+      } catch (err) {
+        res.writeHead(500, { 'Content-Type': 'application/json; charset=utf-8', 'Access-Control-Allow-Origin': '*' });
+        res.end(JSON.stringify({ success: false, error: err.message }));
+      }
+    });
+    return;
+  }
+
   // ─── Content Engine Marketing & Research Endpoints ───
   if (relativePath.startsWith('/api/content-engine/')) {
     const CE_DATA_DIR = path.join(__dirname, 'data');

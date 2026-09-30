@@ -2498,7 +2498,8 @@
             if (isAgencyMaster) {
                 actionButtons = `
                     <div class="action-button-grid">
-                        <button class="btn-action" style="color: #818CF8;" onclick="switchTab(6)">🏢 View Fleet</button>
+                        <a href="/agency-dashboard?agency=${encodeURIComponent(r.agencyId || r.key)}&impersonate=owner" target="_blank" class="btn-action" style="text-decoration:none; color: #F59E0B; font-weight: bold;" title="Open Agency Dashboard as this Agency">👁️ View as Agency</a>
+                        <button class="btn-action" style="color: #818CF8;" onclick="switchTab(7)">🏢 View Fleet</button>
                         <a href="/agency_dashboard.html#key=${r.key}" target="_blank" class="btn-action" style="text-decoration:none; color: #38BDF8;">Portal ➔</a>
                         <button class="btn-action btn-danger" onclick="toggleRevokeKey('${r.key}')">${isRevoked ? 'Reactivate' : 'Revoke'}</button>
                     </div>
@@ -2506,6 +2507,7 @@
             } else if (isFleetClient) {
                 actionButtons = `
                     <div class="action-button-grid">
+                        <a href="/portal?account=${encodeURIComponent(r.key)}&agency=${encodeURIComponent(r.agencyId || '')}&impersonate=owner" target="_blank" class="btn-action" style="color: #38BDF8; font-weight: bold; text-decoration:none;" title="Open Client Portal as this Client">👁️ View as Client</a>
                         <button class="btn-action" style="color: #38BDF8;" onclick="showSetupSheetForFleetKey('${r.key}', '${escapeHtml(r.name)}', '${escapeHtml(r.agencyName || 'Agency')}')">📋 Setup Sheet</button>
                         <button class="btn-action" onclick="resetDevice('${r.key}')" ${isRevoked ? 'disabled' : ''}>Reset Lock</button>
                         <button class="btn-action btn-danger" onclick="toggleRevokeKey('${r.key}')">${isRevoked ? 'Reactivate' : 'Revoke'}</button>
@@ -2514,6 +2516,7 @@
             } else {
                 actionButtons = `
                     <div class="action-button-grid">
+                        <a href="/portal?account=${encodeURIComponent(r.key)}&impersonate=owner" target="_blank" class="btn-action" style="color: #38BDF8; font-weight: bold; text-decoration:none;" title="Open Client Portal as this Client">👁️ View as Client</a>
                         <button class="btn-action" style="color: #10B981; font-weight: bold;" onclick="openMembershipManageModal('${r.key}')">⚙️ Manage Sub</button>
                         <button class="btn-action" style="color: ${isPro ? '#C084FC' : 'var(--primary)'};" onclick="triggerEmailForKey('${r.key}')">📧 Email APK</button>
                         <button class="btn-action" onclick="resetDevice('${r.key}')" ${isRevoked ? 'disabled' : ''}>Reset Lock</button>
@@ -5554,6 +5557,7 @@ OPERATIONAL PROTOCOL:
                         </td>
                         <td>
                             <div style="display: flex; gap: 6px; flex-wrap: wrap;">
+                                <a href="/agency-dashboard?agency=${encodeURIComponent(agency.id)}&impersonate=owner" target="_blank" class="btn-action" style="padding: 4px 8px; font-size: 11px; color: #F59E0B; border-color: #F59E0B; text-decoration: none;" title="Open Agency Dashboard as this Agency">👁️ View as Agency</a>
                                 <button class="btn-action" style="padding: 4px 8px; font-size: 11px; color: #38BDF8; border-color: #38BDF8;" onclick="openEditAgencyModal('${agency.id}')">✏️ Edit</button>
                                 <button class="btn-action" style="padding: 4px 8px; font-size: 11px; color: #10B981; border-color: #10B981;" onclick="triggerBuildAgency('${agency.id}')">🔨 Build</button>
                                 ${apk.exists ? `<a href="${apk.downloadUrl}" target="_blank" class="btn-action" style="padding: 4px 8px; font-size: 11px; color: #FFF; text-decoration: none;">📥 APK</a>` : ''}
@@ -5587,8 +5591,11 @@ OPERATIONAL PROTOCOL:
                                     <span class="badge badge-active">${escapeHtml(c.status || 'ACTIVE')}</span>
                                 </td>
                                 <td>
-                                    <button class="btn-action" style="padding: 4px 8px; font-size: 11px; color: #38BDF8; border-color: #38BDF8;" onclick="openOwnerRemoteConfigModal('${c.licenseKey}', '${escapeHtml(c.name)}', '${agency.id}')">⚙️ Remote Config</button>
-                                    <button class="btn-action" style="padding: 4px 8px; font-size: 11px;" onclick="copyToClipboard('${c.licenseKey}')">Copy Key</button>
+                                    <div style="display: flex; gap: 4px; flex-wrap: wrap;">
+                                        <a href="/portal?account=${encodeURIComponent(c.licenseKey)}&agency=${encodeURIComponent(agency.id)}&impersonate=owner" target="_blank" class="btn-action" style="padding: 4px 8px; font-size: 11px; color: #38BDF8; border-color: #38BDF8; text-decoration: none;" title="Open Client Portal as this Client">👁️ View as Client</a>
+                                        <button class="btn-action" style="padding: 4px 8px; font-size: 11px; color: #38BDF8; border-color: #38BDF8;" onclick="openOwnerRemoteConfigModal('${c.licenseKey}', '${escapeHtml(c.name)}', '${agency.id}')">⚙️ Remote Config</button>
+                                        <button class="btn-action" style="padding: 4px 8px; font-size: 11px;" onclick="copyToClipboard('${c.licenseKey}')">Copy Key</button>
+                                    </div>
                                 </td>
                             </tr>
                         `);

@@ -3,7 +3,7 @@
   functions = "netlify/functions"
 
 [functions]
-  included_files = ["data/**", "blog/posts.json"]
+  included_files = ["data/**", "blog/posts.json", "agencies/**"]
 
 [build.environment]
   SECRETS_SCAN_SMART_DETECTION_ENABLED = "false"
@@ -101,6 +101,17 @@
 [[redirects]]
   from = "/api/agency"
   to = "/.netlify/functions/agency-fleet"
+  status = 200
+
+# API Route: Client Portal & Impersonation Engine
+[[redirects]]
+  from = "/api/portal/*"
+  to = "/.netlify/functions/portal"
+  status = 200
+
+[[redirects]]
+  from = "/api/portal"
+  to = "/.netlify/functions/portal"
   status = 200
 
 # API Route: Create Voice Pro Checkout
@@ -261,6 +272,95 @@
 [[redirects]]
   from = "/success"
   to = "/success.html"
+  status = 200
+
+# Direct access to Client Portal
+[[redirects]]
+  from = "/portal"
+  to = "/client_portal.html"
+  status = 200
+
+[[redirects]]
+  from = "/portal/"
+  to = "/client_portal.html"
+  status = 200
+
+[[redirects]]
+  from = "/client-portal"
+  to = "/client_portal.html"
+  status = 200
+
+[[redirects]]
+  from = "/client_portal"
+  to = "/client_portal.html"
+  status = 200
+
+# Direct access to Agency Fleet Dashboard
+[[redirects]]
+  from = "/agency-dashboard"
+  to = "/agency_dashboard.html"
+  status = 200
+
+[[redirects]]
+  from = "/agency-dashboard/"
+  to = "/agency_dashboard.html"
+  status = 200
+
+[[redirects]]
+  from = "/agency_dashboard"
+  to = "/agency_dashboard.html"
+  status = 200
+
+[[redirects]]
+  from = "/fleet"
+  to = "/agency_dashboard.html"
+  status = 200
+
+# Direct access to White-Label Agency Page
+[[redirects]]
+  from = "/agency"
+  to = "/agency.html"
+  status = 200
+
+[[redirects]]
+  from = "/agency/"
+  to = "/agency.html"
+  status = 200
+
+[[redirects]]
+  from = "/whitelabel"
+  to = "/agency.html"
+  status = 200
+
+[[redirects]]
+  from = "/white-label"
+  to = "/agency.html"
+  status = 200
+
+# Direct access to 25% Affiliate Program
+[[redirects]]
+  from = "/affiliate"
+  to = "/affiliate.html"
+  status = 200
+
+[[redirects]]
+  from = "/affiliate/"
+  to = "/affiliate.html"
+  status = 200
+
+[[redirects]]
+  from = "/affiliates"
+  to = "/affiliate.html"
+  status = 200
+
+[[redirects]]
+  from = "/partner"
+  to = "/affiliate.html"
+  status = 200
+
+[[redirects]]
+  from = "/partners"
+  to = "/affiliate.html"
   status = 200
 
 # Serve index.html as homepage

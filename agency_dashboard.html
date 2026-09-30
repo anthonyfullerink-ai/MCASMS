@@ -654,7 +654,23 @@
         }
     </style>
 </head>
-<body>
+<!-- Owner Impersonation Banner -->
+<div id="ownerImpersonationBanner" style="display: none; background: linear-gradient(90deg, #6366F1, #818CF8); color: #FFF; padding: 10px 24px; font-weight: 800; font-size: 13px; position: sticky; top: 0; z-index: 300; box-shadow: 0 4px 15px rgba(99,102,241,0.4);">
+    <div style="max-width: 1200px; margin: 0 auto; display: flex; justify-content: space-between; align-items: center; gap: 12px; flex-wrap: wrap;">
+        <div style="display: flex; align-items: center; gap: 10px;">
+            <span style="font-size: 18px;">👑</span>
+            <div>
+                <strong>OWNER IMPERSONATION MODE:</strong> Viewing Agency Dashboard for <u id="ownerBannerAgencyName">Agency Partner</u> (<code id="ownerBannerAgencySlug" style="font-family: monospace; background: rgba(0,0,0,0.25); padding: 2px 6px; border-radius: 4px;">slug</code>).
+                <div style="font-size: 11.5px; font-weight: 500; color: #E0E7FF;">Viewing exactly what this white-label agency partner experiences in their dashboard.</div>
+            </div>
+        </div>
+        <div>
+            <button onclick="exitOwnerAgencyView()" style="background: #0F172A; color: #FFF; border: 1px solid #334155; border-radius: 6px; padding: 6px 14px; font-size: 12px; font-weight: 800; cursor: pointer; display: flex; align-items: center; gap: 6px; box-shadow: 0 2px 8px rgba(0,0,0,0.3);">
+                ✕ Return to Owner Admin
+            </button>
+        </div>
+    </div>
+</div>
 
 <!-- Navigation -->
 <nav>
@@ -1484,6 +1500,13 @@ Click "Send Test Payload" above to fire a sample event and inspect the HTTP stat
             document.getElementById('inputAgencySlug').value = currentAgencySlug;
         }
 
+        // Check if Owner is Impersonating this Agency
+        if (params.get('impersonate') === 'owner') {
+            const ob = document.getElementById('ownerImpersonationBanner');
+            if (ob) ob.style.display = 'block';
+            document.getElementById('ownerBannerAgencySlug').innerText = currentAgencySlug || 'agency';
+        }
+
         if (currentAgencySlug) {
             const sessionId = params.get('session_id');
             if (sessionId) {
@@ -1493,6 +1516,10 @@ Click "Send Test Payload" above to fire a sample event and inspect the HTTP stat
             }
         }
     });
+
+    function exitOwnerAgencyView() {
+        window.location.href = '/owner_admin_dashboard.html#tab7';
+    }
 
     async function verifyStripeSession(sessionId) {
         try {
@@ -1600,6 +1627,14 @@ Click "Send Test Payload" above to fire a sample event and inspect the HTTP stat
         document.getElementById('textAgencyTitle').innerText = appName;
         document.getElementById('textAgencyTagline').innerText = agency.tagline || 'AI Telecom Appliance & 24/7 Voice Receptionist';
         document.getElementById('textAgencySlug').innerText = agency.id || currentAgencySlug;
+
+        const urlParams = new URLSearchParams(window.location.search);
+        if (urlParams.get('impersonate') === 'owner') {
+            const ob = document.getElementById('ownerImpersonationBanner');
+            if (ob) ob.style.display = 'block';
+            document.getElementById('ownerBannerAgencyName').innerText = appName;
+            document.getElementById('ownerBannerAgencySlug').innerText = agency.id || currentAgencySlug;
+        }
 
         // Billing Bar Rendering
         const billingIcon = document.getElementById('billingIcon');
@@ -1779,6 +1814,7 @@ Click "Send Test Payload" above to fire a sample event and inspect the HTTP stat
                     <td style="color: var(--muted); font-size: 12px;">${dateStr}</td>
                     <td>
                         <div class="action-btns">
+                            <a href="/portal?account=${encodeURIComponent(c.licenseKey)}&agency=${encodeURIComponent(currentAgencySlug)}&impersonate=agency" target="_blank" class="btn-sm" style="background: rgba(56, 189, 248, 0.15); border-color: var(--agency-accent); color: var(--agency-accent); font-weight: 800; text-decoration: none;" title="Open and preview the Client Portal exactly as this client experiences it">👁️ View as Client</a>
                             <button class="btn-sm" style="border-color: var(--agency-accent); color: var(--agency-accent); font-weight: 700;" onclick="openRemoteConfigModal('${escapeHtml(c.licenseKey)}')">⚙️ Remote Config</button>
                             <button class="btn-sm" onclick="showClientSheet('${escapeHtml(c.licenseKey)}')">Setup Guide</button>
                             <button class="btn-sm" onclick="resetClientDevice('${escapeHtml(c.licenseKey)}')">Reset Lock</button>
