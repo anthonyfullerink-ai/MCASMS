@@ -179,12 +179,12 @@ pre, code {
     flex-shrink: 0;
 }
 
-/* Dedicated Login Pill Buttons */
+/* Dedicated Login Non-Rounded Buttons */
 .global-btn-login {
     background: rgba(255, 255, 255, 0.05);
     border: 1px solid rgba(255, 255, 255, 0.12);
     padding: 7px 12px;
-    border-radius: 9999px;
+    border-radius: 0px !important;
     font-size: 12.5px;
     font-weight: 700;
     color: #E2E8F0;
@@ -230,7 +230,7 @@ pre, code {
     background: rgba(255, 255, 255, 0.06);
     border: 1px solid rgba(255, 255, 255, 0.12);
     padding: 7px 12px;
-    border-radius: 9999px;
+    border-radius: 0px !important;
     font-size: 12.5px;
     font-weight: 700;
     color: #E2E8F0;
@@ -247,14 +247,14 @@ pre, code {
     border-color: rgba(255, 255, 255, 0.25);
 }
 
-/* Super CTA Button */
+/* Super CTA Button (Sharp Non-Rounded) */
 .global-btn-trial {
     background: linear-gradient(135deg, #2563EB 0%, #1D4ED8 100%);
     color: #FFFFFF !important;
     font-size: 13.5px;
     font-weight: 800;
     padding: 8px 16px;
-    border-radius: 9999px;
+    border-radius: 0px !important;
     text-decoration: none;
     border: 1px solid rgba(255, 255, 255, 0.2);
     box-shadow: 0 4px 14px rgba(37, 99, 235, 0.4);
@@ -279,7 +279,7 @@ pre, code {
     display: none;
     background: rgba(255, 255, 255, 0.06);
     border: 1px solid rgba(255, 255, 255, 0.12);
-    border-radius: 8px;
+    border-radius: 0px !important;
     width: 42px;
     height: 42px;
     padding: 10px 8px;
@@ -297,7 +297,7 @@ pre, code {
     width: 22px;
     height: 2px;
     background: #FFFFFF;
-    border-radius: 2px;
+    border-radius: 0px !important;
     transition: all 0.25s ease;
 }
 .global-mobile-menu-btn.active span:nth-child(1) {
@@ -349,7 +349,7 @@ pre, code {
     font-size: 16px;
     font-weight: 700;
     padding: 12px 14px;
-    border-radius: 10px;
+    border-radius: 0px !important;
     transition: background 0.15s ease, color 0.15s ease;
 }
 
@@ -433,4 +433,68 @@ pre, code {
         text-align: center !important;
         gap: 16px !important;
     }
+}
+
+/* ==========================================================================
+   UNIVERSAL INDUSTRIAL SHARP DESIGN: ZERO ROUNDED CORNERS ON ALL BUTTONS
+   ========================================================================== */
+button,
+input[type="button"],
+input[type="submit"],
+input[type="reset"],
+.btn,
+.btn-primary,
+.btn-secondary,
+.btn-super-cta,
+.btn-outline,
+.btn-action,
+.btn-portal-action,
+.btn-primary-action,
+.btn-pro-action,
+.btn-free-action,
+.btn-hero,
+.btn-hero-primary,
+.btn-hero-secondary,
+.btn-large-trial,
+.btn-pro-nav,
+.btn-agency-primary,
+.btn-logout,
+.btn-sm,
+.btn-danger,
+.btn-ghost,
+.btn-white,
+.cta-btn,
+.hero-cta,
+.pricing-cta,
+.tab-btn,
+.auth-tab-btn,
+.cat-btn,
+.filter-btn,
+.filter-pill,
+.global-btn-trial,
+.global-btn-login,
+.global-btn-login-client,
+.global-btn-login-agency,
+.global-nav-phone,
+.global-mobile-menu-btn,
+.global-mobile-nav-link,
+.nav-phone-pill,
+.agency-pill,
+a.btn,
+a.btn-primary,
+a.btn-secondary,
+a.btn-super-cta,
+a.btn-outline,
+a.btn-hero,
+a.btn-action,
+a.btn-portal-action,
+a.btn-large-trial,
+a.btn-pro-nav,
+a.btn-agency-primary,
+a.cta-btn,
+a.pricing-cta,
+a.global-btn-trial,
+a.global-btn-login,
+[role="button"] {
+    border-radius: 0px !important;
 }

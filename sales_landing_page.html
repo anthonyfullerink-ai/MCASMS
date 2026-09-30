@@ -12,13 +12,13 @@
     <link rel="canonical" href="https://missedcallautosms.com/">
 
     <!-- Favicon & Mobile App Icons -->
-    <link rel="icon" type="image/svg+xml" href="/favicon.svg?v=2">
-    <link rel="icon" type="image/png" sizes="32x32" href="/favicon-32x32.png?v=2">
-    <link rel="icon" type="image/png" sizes="16x16" href="/favicon-16x16.png?v=2">
-    <link rel="shortcut icon" href="/favicon.ico?v=2">
-    <link rel="apple-touch-icon" sizes="180x180" href="/apple-touch-icon.png?v=2">
+    <link rel="icon" type="image/svg+xml" href="/favicon.svg?v=2026">
+    <link rel="icon" type="image/png" sizes="32x32" href="/favicon-32x32.png?v=2026">
+    <link rel="icon" type="image/png" sizes="16x16" href="/favicon-16x16.png?v=2026">
+    <link rel="shortcut icon" href="/favicon.ico?v=2026">
+    <link rel="apple-touch-icon" sizes="180x180" href="/apple-touch-icon.png?v=2026">
     <link rel="manifest" href="/site.webmanifest">
-    <meta name="theme-color" content="#090B0E">
+    <meta name="theme-color" content="#07090E">
 
     <!-- Open Graph / Facebook -->
     <meta property="og:type" content="website">
@@ -102,19 +102,22 @@
 
     <style>
         :root {
-            --bg: #090B0E;
-            --card-bg: #131720;
-            --card-border: #222836;
-            --primary: #00E676;
-            --primary-hover: #00C853;
+            --bg: #07090E;
+            --card-bg: #0F172A;
+            --card-border: #1E293B;
+            --primary: #2563EB;
+            --primary-hover: #1D4ED8;
             --text: #FFFFFF;
-            --muted: #949BAE;
-            --danger: #FF5252;
-            --accent: #29B6F6;
-            --warning: #FFB300;
+            --muted: #94A3B8;
+            --danger: #EF4444;
+            --accent: #38BDF8;
+            --warning: #F59E0B;
         }
 
         * { box-sizing: border-box; }
+        button, input[type="button"], input[type="submit"], .btn, .cta-btn, .hero-cta, .pricing-cta, a.cta-btn, a.btn {
+            border-radius: 0px !important;
+        }
 
         html, body {
             overflow-x: hidden;
@@ -3211,12 +3214,12 @@
             </div>
 
             <!-- Option B: New Customer -->
-            <div style="background: linear-gradient(180deg, rgba(0,230,118,0.12) 0%, rgba(9,11,14,0.6) 100%); border: 1px solid #00E676; border-radius: 12px; padding: 18px; text-align: center;">
-                <div style="font-size: 13px; font-weight: 800; color: #00E676; margin-bottom: 4px;">Option B: Don't Own an Appliance Yet?</div>
+            <div style="background: linear-gradient(180deg, rgba(37,99,235,0.12) 0%, rgba(9,11,14,0.6) 100%); border: 1px solid #2563EB; border-radius: 0px; padding: 18px; text-align: center;">
+                <div style="font-size: 13px; font-weight: 800; color: #38BDF8; margin-bottom: 4px;">Option B: Don't Own an Appliance Yet?</div>
                 <div style="font-size: 12px; color: #CBD5E0; margin-bottom: 14px; line-height: 1.4;">
                     Get the <strong>Flagship Appliance ($49.99)</strong> with the optional $9.99/mo AI Voice add-on:
                 </div>
-                <button onclick="closeVoiceAddonModal(); openFlagshipCheckoutModal(true);" style="width: 100%; background: linear-gradient(135deg, #00E676, #00B0FF); color: #000; font-weight: 900; padding: 12px 24px; border: none; border-radius: 25px; cursor: pointer; font-size: 13px; box-shadow: 0 4px 14px rgba(0,230,118,0.4);">
+                <button onclick="closeVoiceAddonModal(); openFlagshipCheckoutModal(true);" style="width: 100%; background: linear-gradient(135deg, #2563EB, #38BDF8); color: #FFF; font-weight: 900; padding: 12px 24px; border: none; border-radius: 0px; cursor: pointer; font-size: 13px; box-shadow: 0 4px 14px rgba(37,99,235,0.4);">
                     📱 Get Flagship Appliance + AI Voice Bump ➔
                 </button>
                 <div style="margin-top: 10px;">
@@ -3288,7 +3291,7 @@
             </div>
         </div>
 
-        <button id="btnProceedFlagshipCheckout" onclick="proceedToFlagshipCheckout()" style="width: 100%; background: linear-gradient(135deg, #00E676, #00C853); color: #000; font-weight: 900; font-size: 15px; padding: 16px; border: none; border-radius: 12px; cursor: pointer; box-shadow: 0 4px 18px rgba(0,230,118,0.35); transition: transform 0.15s ease;">
+        <button id="btnProceedFlagshipCheckout" onclick="proceedToFlagshipCheckout()" style="width: 100%; background: linear-gradient(135deg, #2563EB, #1D4ED8); color: #FFF; font-weight: 900; font-size: 15px; padding: 16px; border: none; border-radius: 0px; cursor: pointer; box-shadow: 0 4px 18px rgba(37,99,235,0.4); transition: transform 0.15s ease;">
             Proceed to Checkout with Flagship ($49.99) ➔
         </button>
 
@@ -3307,7 +3310,7 @@
         <button onclick="closeProCheckoutModal()" style="position: absolute; top: 16px; right: 16px; background: none; border: none; color: #949BAE; font-size: 24px; cursor: pointer; line-height: 1;">&times;</button>
         
         <div style="margin-bottom: 16px;">
-            <div style="display: inline-block; background: rgba(121,40,202,0.2); border: 1px solid #7928CA; color: #D8B4FE; font-size: 11px; font-weight: 800; padding: 4px 12px; border-radius: 20px; margin-bottom: 6px; text-transform: uppercase;">
+            <div style="display: inline-block; background: rgba(121,40,202,0.2); border: 1px solid #7928CA; color: #D8B4FE; font-size: 11px; font-weight: 800; padding: 4px 12px; border-radius: 0px; margin-bottom: 6px; text-transform: uppercase;">
                 ⚡ SECURE PRO APPLIANCE CHECKOUT
             </div>
             <h2 id="proModalHeading" style="color: #FFF; margin: 0 0 6px 0; font-size: 22px; font-weight: 900;">Pro Automation Gateway Appliance</h2>
@@ -3318,24 +3321,24 @@
 
         <!-- Edition Selector: New Pro License vs Owner Upgrade -->
         <!-- Pro Appliance Plan Card -->
-        <div style="background: rgba(121,40,202,0.12); border: 1px solid #7928CA; border-radius: 10px; padding: 12px 16px; margin-bottom: 16px; display: flex; justify-content: space-between; align-items: center;">
+        <div style="background: rgba(121,40,202,0.12); border: 1px solid #7928CA; border-radius: 0px; padding: 12px 16px; margin-bottom: 16px; display: flex; justify-content: space-between; align-items: center;">
             <div>
                 <div style="color: #FFF; font-weight: 800; font-size: 14px;">Pro Automation Appliance License</div>
                 <div style="color: #94A3B8; font-size: 12px; margin-top: 2px;">Perpetual hardware license • Zero monthly fees</div>
             </div>
-            <div style="color: #00E676; font-size: 18px; font-weight: 900;">$299.99</div>
+            <div style="color: #A855F7; font-size: 18px; font-weight: 900;">$299.99</div>
         </div>
 
         <!-- Optional Voice Order Bump Card -->
-        <div id="orderBumpCard" style="background: linear-gradient(180deg, rgba(168,85,247,0.12) 0%, rgba(9,11,14,0.85) 100%); border: 2px dashed #A855F7; border-radius: 12px; padding: 16px; margin-bottom: 16px; transition: all 0.2s ease;">
+        <div id="orderBumpCard" style="background: linear-gradient(180deg, rgba(168,85,247,0.12) 0%, rgba(9,11,14,0.85) 100%); border: 2px dashed #A855F7; border-radius: 0px; padding: 16px; margin-bottom: 16px; transition: all 0.2s ease;">
             <label style="display: flex; align-items: flex-start; gap: 12px; cursor: pointer;">
-                <input type="checkbox" id="checkProVoiceOrderBump" onchange="onProOrderBumpToggle()" style="margin-top: 3px; width: 20px; height: 20px; cursor: pointer; accent-color: #00E676; flex-shrink: 0;">
+                <input type="checkbox" id="checkProVoiceOrderBump" onchange="onProOrderBumpToggle()" style="margin-top: 3px; width: 20px; height: 20px; cursor: pointer; accent-color: #2563EB; flex-shrink: 0;">
                 <div>
                     <div style="display: flex; align-items: center; gap: 8px; flex-wrap: wrap;">
-                        <span style="background: #00E676; color: #000; font-size: 10px; font-weight: 900; padding: 2px 6px; border-radius: 4px; text-transform: uppercase;">RECOMMENDED</span>
+                        <span style="background: #2563EB; color: #FFF; font-size: 10px; font-weight: 900; padding: 2px 6px; border-radius: 0px; text-transform: uppercase;">RECOMMENDED</span>
                         <span style="color: #FFF; font-weight: 800; font-size: 14px;">Add 24/7 AI Voice &amp; Conversational SMS ($9.99/mo)</span>
                     </div>
-                    <div style="font-size: 12px; color: #00E676; font-weight: 800; margin: 4px 0;">
+                    <div style="font-size: 12px; color: #38BDF8; font-weight: 800; margin: 4px 0;">
                         ⚡ Includes 15 Free Test Minutes on Activation • Metered Usage in Credit Packs
                     </div>
                     <p style="margin: 0; font-size: 12px; color: #CBD5E0; line-height: 1.45;">
@@ -3346,7 +3349,7 @@
         </div>
 
         <!-- Order Summary Box -->
-        <div style="background: #090B0E; border: 1px solid #222836; border-radius: 12px; padding: 14px; margin-bottom: 16px; font-size: 13px;">
+        <div style="background: #090B0E; border: 1px solid #222836; border-radius: 0px; padding: 14px; margin-bottom: 16px; font-size: 13px;">
             <div style="display: flex; justify-content: space-between; margin-bottom: 8px; color: #CBD5E0;">
                 <span id="summaryProPlanName">Pro Automation Gateway ($299.99)</span>
                 <span style="color: #C084FC; font-weight: bold;">One-Time</span>
@@ -3357,14 +3360,14 @@
             </div>
             <div style="border-top: 1px solid #222836; padding-top: 8px; display: flex; justify-content: space-between; align-items: baseline;">
                 <span style="font-weight: 800; color: #FFF; font-size: 15px;">Due Today:</span>
-                <span id="summaryTotalDue" style="font-weight: 900; color: #00E676; font-size: 20px;">$299.99</span>
+                <span id="summaryTotalDue" style="font-weight: 900; color: #38BDF8; font-size: 20px;">$299.99</span>
             </div>
             <div id="summaryTotalRenews" style="display: none; font-size: 11px; color: #94A3B8; text-align: right; margin-top: 4px;">
                 Renews at $9.99/mo. Cancel anytime.
             </div>
         </div>
 
-        <button id="btnProceedProCheckout" onclick="proceedToProDynamicCheckout()" style="width: 100%; background: linear-gradient(135deg, #00E676, #00C853); color: #000; font-weight: 900; font-size: 15px; padding: 16px; border: none; border-radius: 12px; cursor: pointer; box-shadow: 0 4px 18px rgba(0,230,118,0.35); transition: transform 0.15s ease;">
+        <button id="btnProceedProCheckout" onclick="proceedToProDynamicCheckout()" style="width: 100%; background: linear-gradient(135deg, #7C3AED, #6D28D9); color: #FFF; font-weight: 900; font-size: 15px; padding: 16px; border: none; border-radius: 0px; cursor: pointer; box-shadow: 0 4px 18px rgba(124,58,237,0.4); transition: transform 0.15s ease;">
             Proceed to Checkout with Pro Gateway ($299.99) ➔
         </button>
 

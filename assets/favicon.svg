@@ -1,50 +1,89 @@
-﻿<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" width="100%" height="100%">
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" width="100%" height="100%">
   <defs>
-    <linearGradient id="neonGreenCyan" x1="0%" y1="0%" x2="100%" y2="100%">
-      <stop offset="0%" stop-color="#00E676" />
-      <stop offset="50%" stop-color="#00F0FF" />
-      <stop offset="100%" stop-color="#00E676" />
+    <linearGradient id="metallicRim" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#94A3B8" />
+      <stop offset="25%" stop-color="#FFFFFF" />
+      <stop offset="50%" stop-color="#475569" />
+      <stop offset="75%" stop-color="#CBD5E1" />
+      <stop offset="100%" stop-color="#1E293B" />
     </linearGradient>
-    <filter id="glow" x="-20%" y="-20%" width="140%" height="140%">
-      <feGaussianBlur stdDeviation="8" result="blur" />
-      <feComposite in="SourceGraphic" in2="blur" operator="over" />
+
+    <radialGradient id="badgeBody" cx="50%" cy="35%" r="75%">
+      <stop offset="0%" stop-color="#1E293B" />
+      <stop offset="45%" stop-color="#0F172A" />
+      <stop offset="85%" stop-color="#090E1A" />
+      <stop offset="100%" stop-color="#050811" />
+    </radialGradient>
+
+    <linearGradient id="glossGel" x1="0%" y1="0%" x2="0%" y2="100%">
+      <stop offset="0%" stop-color="#FFFFFF" stop-opacity="0.55" />
+      <stop offset="35%" stop-color="#FFFFFF" stop-opacity="0.22" />
+      <stop offset="80%" stop-color="#FFFFFF" stop-opacity="0.04" />
+      <stop offset="100%" stop-color="#FFFFFF" stop-opacity="0" />
+    </linearGradient>
+
+    <linearGradient id="laserSapphire" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#60A5FA" />
+      <stop offset="40%" stop-color="#2563EB" />
+      <stop offset="100%" stop-color="#1D4ED8" />
+    </linearGradient>
+
+    <linearGradient id="symbolGloss" x1="0%" y1="0%" x2="0%" y2="100%">
+      <stop offset="0%" stop-color="#FFFFFF" stop-opacity="0.9" />
+      <stop offset="50%" stop-color="#E2E8F0" stop-opacity="0.6" />
+      <stop offset="100%" stop-color="#CBD5E1" stop-opacity="0.2" />
+    </linearGradient>
+
+    <radialGradient id="jewelEmerald" cx="35%" cy="35%" r="65%">
+      <stop offset="0%" stop-color="#6EE7B7" />
+      <stop offset="40%" stop-color="#10B981" />
+      <stop offset="85%" stop-color="#047857" />
+      <stop offset="100%" stop-color="#064E3B" />
+    </radialGradient>
+
+    <filter id="badgeShadow" x="-15%" y="-15%" width="130%" height="130%">
+      <feDropShadow dx="0" dy="16" stdDeviation="20" flood-color="#000000" flood-opacity="0.65" />
+    </filter>
+    <filter id="symbolShadow" x="-20%" y="-20%" width="140%" height="140%">
+      <feDropShadow dx="0" dy="6" stdDeviation="8" flood-color="#000000" flood-opacity="0.45" />
     </filter>
   </defs>
 
-  <!-- Dark Rounded Squircle Background -->
-  <rect width="512" height="512" rx="115" fill="#090B0E" />
-  <rect width="504" height="504" x="4" y="4" rx="112" fill="none" stroke="url(#neonGreenCyan)" stroke-width="6" opacity="0.35" />
+  <g filter="url(#badgeShadow)">
+    <rect x="24" y="24" width="464" height="464" rx="112" fill="url(#metallicRim)" />
+    <rect x="30" y="30" width="452" height="452" rx="106" fill="url(#badgeBody)" />
+    <rect x="32" y="32" width="448" height="448" rx="104" fill="none" stroke="rgba(255, 255, 255, 0.15)" stroke-width="2" />
+  </g>
 
-  <g filter="url(#glow)">
-    <!-- Missed Call Return Loop Arrow -->
-    <path d="M 135 270 C 130 185 185 125 270 120 C 300 118 335 128 360 145" 
-          fill="none" 
-          stroke="#00E676" 
-          stroke-width="26" 
-          stroke-linecap="round" />
-    <!-- Arrowhead -->
-    <polygon points="340,115 385,150 335,175" fill="#00E676" />
+  <path d="M 32 138 C 32 80 78 34 136 34 H 376 C 434 34 480 80 480 138 C 480 236 376 280 256 280 C 136 280 32 236 32 138 Z" fill="url(#glossGel)" />
 
-    <!-- Stylized Modern Phone Handset -->
-    <path d="M 185 240 C 175 250 170 270 180 300 C 200 350 250 400 300 420 C 330 430 350 425 360 415 L 395 380 C 405 370 405 350 390 340 L 345 310 C 330 300 315 305 305 315 C 295 325 280 325 265 315 C 245 300 230 280 225 265 C 220 250 225 235 235 225 L 245 215 C 255 205 255 190 245 175 L 215 130 C 205 115 185 115 175 125 Z" 
+  <g filter="url(#symbolShadow)">
+    <path d="M 160 256 C 160 180 216 124 292 124 C 344 124 388 152 410 192" 
           fill="none" 
-          stroke="url(#neonGreenCyan)" 
+          stroke="url(#laserSapphire)" 
           stroke-width="24" 
-          stroke-linejoin="round" 
           stroke-linecap="round" />
+    
+    <polygon points="414,168 428,212 384,204" fill="#60A5FA" />
 
-    <!-- SMS Auto-Reply Speech Bubble -->
-    <path d="M 285 185 H 415 A 22 22 0 0 1 437 207 V 285 A 22 22 0 0 1 415 307 H 355 L 320 338 V 307 H 285 A 22 22 0 0 1 263 285 V 207 A 22 22 0 0 1 285 185 Z" 
-          fill="#0D1117" 
-          stroke="#00F0FF" 
-          stroke-width="20" 
-          stroke-linejoin="round" />
+    <g transform="translate(130, 150)">
+      <path d="M 45 60 C 35 70 30 92 42 124 C 62 176 112 226 164 246 C 196 258 218 253 228 243 L 255 212 C 263 204 263 190 252 181 L 214 152 C 204 144 191 147 183 155 L 173 165 C 165 173 153 173 141 165 C 124 153 111 138 101 123 C 95 111 95 99 103 91 L 113 81 C 121 73 124 60 116 50 L 87 12 C 78 1 64 1 56 9 Z" 
+            fill="#FFFFFF" />
+      <path d="M 56 9 C 64 1 78 1 87 12 L 105 35 C 90 40 75 48 65 60 L 45 60 C 35 70 32 86 37 108 L 36 90 C 30 65 42 25 56 9 Z" 
+            fill="url(#symbolGloss)" opacity="0.8" />
+    </g>
 
-    <!-- SMS Fast Chat Lines -->
-    <line x1="305" y1="232" x2="385" y2="232" stroke="#00E676" stroke-width="12" stroke-linecap="round" />
-    <line x1="305" y1="262" x2="360" y2="262" stroke="#00E676" stroke-width="12" stroke-linecap="round" />
-
-    <!-- Instant Lightning Bolt Spark -->
-    <polygon points="415,225 390,265 410,265 395,305 435,255 410,255" fill="#00E676" stroke="#090B0E" stroke-width="3" />
+    <g transform="translate(260, 240)">
+      <path d="M 20 0 H 150 C 161 0 170 9 170 20 V 90 C 170 101 161 110 150 110 H 90 L 55 138 V 110 H 20 C 9 110 0 101 0 90 V 20 C 0 9 9 0 20 0 Z" 
+            fill="url(#metallicRim)" />
+      <path d="M 20 4 H 150 C 158 4 166 12 166 20 V 90 C 166 98 158 106 150 106 H 88 L 59 129 V 106 H 20 C 12 106 4 98 4 90 V 20 C 4 12 12 4 20 4 Z" 
+            fill="#0F172A" />
+      <path d="M 6 22 C 6 12 13 6 22 6 H 148 C 157 6 164 12 164 22 V 55 C 164 55 110 70 85 70 C 60 70 6 55 6 55 Z" 
+            fill="url(#glossGel)" opacity="0.75" />
+      <rect x="32" y="38" width="86" height="10" rx="5" fill="url(#laserSapphire)" />
+      <rect x="32" y="60" width="58" height="10" rx="5" fill="url(#laserSapphire)" />
+      <circle cx="132" cy="65" r="14" fill="url(#jewelEmerald)" filter="url(#symbolShadow)" />
+      <circle cx="130" cy="62" r="5" fill="#FFFFFF" opacity="0.75" />
+    </g>
   </g>
 </svg>

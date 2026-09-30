@@ -6,12 +6,12 @@
     <title>MissedCallAutoSMS | Master Owner Admin Dashboard</title>
 
     <!-- Favicon & Touch Icons -->
-    <link rel="icon" type="image/svg+xml" href="/favicon.svg?v=2">
-    <link rel="icon" type="image/png" sizes="32x32" href="/favicon-32x32.png?v=2">
-    <link rel="icon" type="image/png" sizes="16x16" href="/favicon-16x16.png?v=2">
-    <link rel="shortcut icon" href="/favicon.ico?v=2">
-    <link rel="apple-touch-icon" sizes="180x180" href="/apple-touch-icon.png?v=2">
-    <meta name="theme-color" content="#080C16">
+    <link rel="icon" type="image/svg+xml" href="/favicon.svg?v=2026">
+    <link rel="icon" type="image/png" sizes="32x32" href="/favicon-32x32.png?v=2026">
+    <link rel="icon" type="image/png" sizes="16x16" href="/favicon-16x16.png?v=2026">
+    <link rel="shortcut icon" href="/favicon.ico?v=2026">
+    <link rel="apple-touch-icon" sizes="180x180" href="/apple-touch-icon.png?v=2026">
+    <meta name="theme-color" content="#07090E">
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800;900&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
@@ -31,6 +31,11 @@
         }
 
         * { box-sizing: border-box; }
+
+        /* Sharp Industrial Buttons */
+        button, input[type="button"], input[type="submit"], .btn, .btn-action, .btn-primary-action, .btn-pro-action, .btn-free-action, .btn-logout, .tab-btn, .filter-pill, a.btn, a.btn-action {
+            border-radius: 0px !important;
+        }
 
         html, body {
             max-width: 100vw;
@@ -86,7 +91,7 @@
             color: var(--danger);
             border: 1px solid var(--danger);
             padding: 8px 16px;
-            border-radius: 20px;
+            border-radius: 0px !important;
             font-weight: bold;
             font-size: 13px;
             cursor: pointer;
@@ -179,7 +184,7 @@
             color: var(--muted);
             border: 1px solid var(--card-border);
             padding: 10px 18px;
-            border-radius: 10px;
+            border-radius: 0px !important;
             font-size: 14px;
             font-weight: 700;
             cursor: pointer;
@@ -190,7 +195,7 @@
         }
 
         .tab-btn:hover { color: #FFF; border-color: var(--primary); }
-        .tab-btn.active { background: var(--primary); color: #000; border-color: var(--primary); font-weight: 800; }
+        .tab-btn.active { background: var(--primary); color: #FFF; border-color: var(--primary); font-weight: 800; }
 
         /* Card Container */
         .card {
@@ -253,7 +258,7 @@
             white-space: nowrap;
         }
 
-        .badge-active { background: rgba(0, 230, 118, 0.15); color: var(--primary); border: 1px solid var(--primary); }
+        .badge-active { background: rgba(37, 99, 235, 0.15); color: var(--primary); border: 1px solid var(--primary); }
         .badge-pro { background: rgba(168, 85, 247, 0.15); color: #C084FC; border: 1px solid #A855F7; }
         .badge-agency { background: rgba(99, 102, 241, 0.15); color: #818CF8; border: 1px solid #6366F1; }
         .badge-fleet { background: rgba(56, 189, 248, 0.15); color: #38BDF8; border: 1px solid #38BDF8; }
@@ -267,7 +272,7 @@
             color: var(--muted);
             border: 1px solid var(--card-border);
             padding: 6px 14px;
-            border-radius: 20px;
+            border-radius: 0px !important;
             font-size: 12px;
             font-weight: 700;
             cursor: pointer;
@@ -285,7 +290,7 @@
             color: var(--accent);
             border: 1px solid var(--card-border);
             padding: 8px 14px;
-            border-radius: 8px;
+            border-radius: 0px !important;
             cursor: pointer;
             font-size: 12px;
             font-weight: 700;
@@ -298,11 +303,11 @@
         }
 
         .btn-action:hover { background: #30364D; }
-        .btn-primary-action { background: var(--primary); color: #000; border: none; font-size: 13px; padding: 10px 18px; border-radius: 20px; font-weight: 800; }
+        .btn-primary-action { background: var(--primary); color: #FFF; border: none; font-size: 13px; padding: 10px 18px; border-radius: 0px !important; font-weight: 800; cursor: pointer; }
         .btn-primary-action:hover { background: var(--primary-hover); }
-        .btn-pro-action { background: linear-gradient(135deg, #9333EA, #7928CA); color: #FFF; border: 1px solid #C084FC; font-size: 13px; padding: 10px 18px; border-radius: 20px; font-weight: 800; cursor: pointer; }
+        .btn-pro-action { background: linear-gradient(135deg, #9333EA, #7928CA); color: #FFF; border: 1px solid #C084FC; font-size: 13px; padding: 10px 18px; border-radius: 0px !important; font-weight: 800; cursor: pointer; }
         .btn-pro-action:hover { background: linear-gradient(135deg, #A855F7, #9333EA); }
-        .btn-free-action { background: rgba(41, 182, 246, 0.15); color: var(--accent); border: 1px solid var(--accent); font-size: 13px; padding: 10px 18px; border-radius: 20px; }
+        .btn-free-action { background: rgba(41, 182, 246, 0.15); color: var(--accent); border: 1px solid var(--accent); font-size: 13px; padding: 10px 18px; border-radius: 0px !important; cursor: pointer; }
         .btn-free-action:hover { background: rgba(41, 182, 246, 0.3); }
         .btn-danger { color: var(--danger); }
         .btn-danger:hover { background: rgba(248, 81, 73, 0.15); }
@@ -1311,13 +1316,13 @@
         </div>
 
         <!-- DEVELOPER LIVE CHAT ROUTING GATEWAY (Anthony's Web-to-SMS vs 24/7 AI Assistant) -->
-        <div style="background: #090B0E; border: 1px solid var(--primary); border-radius: 14px; padding: 20px; margin-bottom: 24px; box-shadow: 0 0 24px rgba(0,230,118,0.12);">
+        <div style="background: #090B0E; border: 1px solid var(--primary); border-radius: 14px; padding: 20px; margin-bottom: 24px; box-shadow: 0 0 24px rgba(37,99,235,0.18);">
             <div style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 16px; border-bottom: 1px solid var(--card-border); padding-bottom: 16px; margin-bottom: 16px;">
                 <div>
                     <div style="display: flex; align-items: center; gap: 10px;">
                         <span style="font-size: 22px;">💬</span>
                         <h3 style="margin: 0; color: #FFF; font-size: 18px; font-weight: 900;">Website Live Support Gateway (Live Operator vs 24/7 AI Assistant)</h3>
-                        <span id="gatewayStatusBadge" class="badge" style="background: rgba(0,230,118,0.15); color: var(--primary); border: 1px solid var(--primary); font-size: 11px;">SYNCING...</span>
+                        <span id="gatewayStatusBadge" class="badge" style="background: rgba(37,99,235,0.15); color: var(--primary); border: 1px solid var(--primary); font-size: 11px;">SYNCING...</span>
                     </div>
                     <div style="font-size: 13px; color: var(--muted); margin-top: 4px;">
                         Control how live inquiries on <strong style="color: #FFF;">missedcallautosms.com</strong> are answered. Toggle between Live Chat (answers in dashboard) or automatic 24/7 AI Voice & Text support.
