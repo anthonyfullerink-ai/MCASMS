@@ -175,30 +175,69 @@ pre, code {
 .global-nav-actions {
     display: flex;
     align-items: center;
-    gap: 12px;
+    gap: 8px;
     flex-shrink: 0;
 }
 
-/* Phone Pill */
-@keyframes global-phone-shake {
-    0%, 100% { transform: rotate(0deg); }
-    20% { transform: rotate(14deg); }
-    40% { transform: rotate(-12deg); }
-    60% { transform: rotate(8deg); }
-    80% { transform: rotate(-6deg); }
-}
-.global-nav-phone {
-    background: rgba(255, 255, 255, 0.06);
+/* Dedicated Login Pill Buttons */
+.global-btn-login {
+    background: rgba(255, 255, 255, 0.05);
     border: 1px solid rgba(255, 255, 255, 0.12);
-    padding: 8px 14px;
+    padding: 7px 12px;
     border-radius: 9999px;
-    font-size: 13px;
+    font-size: 12.5px;
     font-weight: 700;
     color: #E2E8F0;
     text-decoration: none;
     display: inline-flex;
     align-items: center;
-    gap: 8px;
+    gap: 6px;
+    transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1);
+    white-space: nowrap;
+    cursor: pointer;
+}
+.global-btn-login:hover {
+    background: rgba(255, 255, 255, 0.12);
+    color: #FFFFFF;
+    border-color: rgba(255, 255, 255, 0.3);
+    transform: translateY(-1px);
+}
+.global-btn-login-client {
+    border-color: rgba(16, 185, 129, 0.35);
+    color: #34D399;
+    background: rgba(16, 185, 129, 0.08);
+}
+.global-btn-login-client:hover {
+    background: rgba(16, 185, 129, 0.2);
+    border-color: #10B981;
+    color: #FFFFFF;
+    box-shadow: 0 4px 12px rgba(16, 185, 129, 0.25);
+}
+.global-btn-login-agency {
+    border-color: rgba(56, 189, 248, 0.35);
+    color: #38BDF8;
+    background: rgba(56, 189, 248, 0.08);
+}
+.global-btn-login-agency:hover {
+    background: rgba(56, 189, 248, 0.2);
+    border-color: #38BDF8;
+    color: #FFFFFF;
+    box-shadow: 0 4px 12px rgba(56, 189, 248, 0.25);
+}
+
+/* Legacy/Fallback Phone Pill */
+.global-nav-phone {
+    background: rgba(255, 255, 255, 0.06);
+    border: 1px solid rgba(255, 255, 255, 0.12);
+    padding: 7px 12px;
+    border-radius: 9999px;
+    font-size: 12.5px;
+    font-weight: 700;
+    color: #E2E8F0;
+    text-decoration: none;
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
     transition: all 0.2s ease;
     white-space: nowrap;
 }
@@ -207,18 +246,14 @@ pre, code {
     color: #FFFFFF;
     border-color: rgba(255, 255, 255, 0.25);
 }
-.global-nav-phone:hover .phone-icon {
-    display: inline-block;
-    animation: global-phone-shake 0.5s ease-in-out;
-}
 
 /* Super CTA Button */
 .global-btn-trial {
     background: linear-gradient(135deg, #2563EB 0%, #1D4ED8 100%);
     color: #FFFFFF !important;
-    font-size: 14px;
+    font-size: 13.5px;
     font-weight: 800;
-    padding: 10px 20px;
+    padding: 8px 16px;
     border-radius: 9999px;
     text-decoration: none;
     border: 1px solid rgba(255, 255, 255, 0.2);
@@ -226,7 +261,7 @@ pre, code {
     display: inline-flex;
     align-items: center;
     justify-content: center;
-    gap: 8px;
+    gap: 6px;
     transition: transform 0.2s cubic-bezier(0.16, 1, 0.3, 1), box-shadow 0.2s ease;
     white-space: nowrap;
     cursor: pointer;
@@ -339,9 +374,22 @@ pre, code {
     gap: 10px;
 }
 
-/* Breakpoint Logic (Tablet & Mobile) */
-@media (max-width: 1060px) {
+/* Breakpoint Logic (Desktop, Tablet & Mobile) */
+@media (max-width: 1240px) {
     .global-nav-links {
+        gap: 10px !important;
+    }
+    .global-nav-link {
+        font-size: 13px !important;
+        padding: 6px 2px !important;
+    }
+}
+
+@media (max-width: 1120px) {
+    .global-nav-links {
+        display: none !important;
+    }
+    .global-btn-login {
         display: none !important;
     }
     .global-mobile-menu-btn {
@@ -354,16 +402,24 @@ pre, code {
 }
 
 @media (max-width: 768px) {
-    .global-nav-phone {
+    .global-nav-phone,
+    .global-btn-login {
         display: none !important;
     }
     .global-nav-container {
         padding: 0 16px !important;
-        height: 64px !important;
+        height: 62px !important;
+    }
+    .global-logo-text {
+        font-size: 15px !important;
+    }
+    .global-logo-img {
+        width: 28px !important;
+        height: 28px !important;
     }
     .global-btn-trial {
-        padding: 8px 14px !important;
-        font-size: 13px !important;
+        padding: 7px 12px !important;
+        font-size: 12px !important;
     }
     .footer-grid {
         grid-template-columns: 1fr !important;

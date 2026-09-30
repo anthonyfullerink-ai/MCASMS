@@ -569,21 +569,20 @@
         </a>
 
         <nav class="global-nav-links">
-            <a href="/#demo-stage" class="global-nav-link">Overview</a>
             <a href="/#features" class="global-nav-link">Features</a>
             <a href="/voice" class="global-nav-link">AI Voice <span class="global-link-badge">*71</span></a>
             <a href="/pro" class="global-nav-link">Pro Gateway <span class="global-link-badge">API</span></a>
             <a href="/#pricing" class="global-nav-link">Pricing</a>
-            <a href="/portal" class="global-nav-link">Client Portal</a>
-            <a href="/agency" class="global-nav-link">Agency White-Label</a>
+            <a href="/agency" class="global-nav-link">White-Label Agency</a>
             <a href="/affiliate" class="global-nav-link active">Affiliates (25%)</a>
-            <a href="/developers" class="global-nav-link">Developers</a>
         </nav>
 
         <div class="global-nav-actions">
-            <a href="tel:+17329035611" class="global-nav-phone">
-                <span class="phone-icon">📞</span>
-                <span>(732) 903-5611</span>
+            <a href="/portal" class="global-btn-login global-btn-login-client" title="Client Account Portal Login">
+                <span>👤 Client Login</span>
+            </a>
+            <a href="/agency-dashboard" class="global-btn-login global-btn-login-agency" title="Agency Fleet Dashboard Login">
+                <span>🏢 Agency Login</span>
             </a>
             <a href="javascript:void(0)" onclick="openPartnerModal()" class="global-btn-trial">
                 Join Network &rarr;
@@ -598,41 +597,52 @@
 
     <!-- Global Mobile Drawer -->
     <div id="globalMobileDrawer" class="global-mobile-drawer">
+        <!-- Mobile Logins Card -->
+        <div style="background: rgba(15, 23, 42, 0.85); border: 1px solid rgba(255, 255, 255, 0.1); border-radius: 14px; padding: 12px; margin-bottom: 12px; display: grid; grid-template-columns: 1fr 1fr; gap: 10px;">
+            <a href="/portal" onclick="closeGlobalMobileMenu()" style="background: rgba(16, 185, 129, 0.12); border: 1px solid rgba(16, 185, 129, 0.35); color: #34D399; padding: 10px 8px; border-radius: 10px; text-decoration: none; font-size: 13px; font-weight: 800; text-align: center; display: flex; flex-direction: column; align-items: center; gap: 4px;">
+                <span style="font-size: 20px;">👤</span>
+                <span>Client Login</span>
+            </a>
+            <a href="/agency-dashboard" onclick="closeGlobalMobileMenu()" style="background: rgba(56, 189, 248, 0.12); border: 1px solid rgba(56, 189, 248, 0.35); color: #38BDF8; padding: 10px 8px; border-radius: 10px; text-decoration: none; font-size: 13px; font-weight: 800; text-align: center; display: flex; flex-direction: column; align-items: center; gap: 4px;">
+                <span style="font-size: 20px;">🏢</span>
+                <span>Agency Login</span>
+            </a>
+        </div>
+
+        <a href="javascript:void(0)" onclick="closeGlobalMobileMenu(); openPartnerModal();" class="global-btn-trial" style="width: 100%; margin-bottom: 12px; padding: 12px;">
+            🤝 Join Partner Network (25% Rev-Share) &rarr;
+        </a>
+
         <a href="/#demo-stage" class="global-mobile-nav-link" onclick="closeGlobalMobileMenu()">
-            <span>⚡ Overview &amp; Interactive Demo</span> <span class="link-arrow">&rsaquo;</span>
+            <span>⚡ Interactive Telecom Demo</span> <span class="link-arrow">&rsaquo;</span>
         </a>
         <a href="/#features" class="global-mobile-nav-link" onclick="closeGlobalMobileMenu()">
-            <span>🛡️ Features &amp; P2P Hardware Engine</span> <span class="link-arrow">&rsaquo;</span>
+            <span>🛡️ P2P Cellular Appliance Features</span> <span class="link-arrow">&rsaquo;</span>
         </a>
         <a href="/voice" class="global-mobile-nav-link" onclick="closeGlobalMobileMenu()">
-            <span>🎙️ 24/7 AI Voice &amp; Conversational SMS</span> <span class="link-arrow">&rsaquo;</span>
+            <span>🎙️ 24/7 AI Voice Receptionist (*71)</span> <span class="link-arrow">&rsaquo;</span>
         </a>
         <a href="/pro" class="global-mobile-nav-link" onclick="closeGlobalMobileMenu()">
-            <span>🛠️ Pro Automation Gateway (Webhooks)</span> <span class="link-arrow">&rsaquo;</span>
+            <span>🛠️ Pro Gateway &amp; CRM Webhooks</span> <span class="link-arrow">&rsaquo;</span>
         </a>
-        <a href="/portal" class="global-mobile-nav-link" onclick="closeGlobalMobileMenu()">
-            <span>📋 Client Portal</span> <span class="link-arrow">&rsaquo;</span>
+        <a href="/#pricing" class="global-mobile-nav-link" onclick="closeGlobalMobileMenu()">
+            <span>💰 Transparent Universal Pricing</span> <span class="link-arrow">&rsaquo;</span>
         </a>
-        <a href="/agency" class="global-mobile-nav-link" onclick="closeGlobalMobileMenu()">
-            <span>🏢 Agency White-Label Platform</span> <span class="link-arrow">&rsaquo;</span>
+        <a href="/agency" class="global-mobile-nav-link" onclick="closeGlobalMobileMenu()" style="color: #38BDF8;">
+            <span>🏢 White-Label Agency Platform</span> <span class="link-arrow">&rsaquo;</span>
         </a>
-        <a href="/affiliate" class="global-mobile-nav-link" onclick="closeGlobalMobileMenu()" style="color: #38BDF8;">
-            <span>🤝 Affiliate Program (25% Rev-Share)</span> <span class="link-arrow">&rsaquo;</span>
+        <a href="/affiliate" class="global-mobile-nav-link" onclick="closeGlobalMobileMenu()" style="color: #34D399;">
+            <span>🤝 25% Affiliate Partner Program</span> <span class="link-arrow">&rsaquo;</span>
         </a>
         <a href="/developers" class="global-mobile-nav-link" onclick="closeGlobalMobileMenu()">
             <span>💻 Developer Webhook API Docs</span> <span class="link-arrow">&rsaquo;</span>
         </a>
+        <a href="/blog" class="global-mobile-nav-link" onclick="closeGlobalMobileMenu()">
+            <span>📚 Blog &amp; Case Studies</span> <span class="link-arrow">&rsaquo;</span>
+        </a>
         <a href="/support" class="global-mobile-nav-link" onclick="closeGlobalMobileMenu()">
             <span>🎫 Customer Support Desk</span> <span class="link-arrow">&rsaquo;</span>
         </a>
-        <div class="global-mobile-drawer-cta">
-            <a href="tel:+17329035611" class="global-nav-phone" style="justify-content: center; width: 100%;">
-                <span class="phone-icon">📞</span> Call Live Demo: (732) 903-5611
-            </a>
-            <a href="javascript:void(0)" onclick="closeGlobalMobileMenu(); openPartnerModal();" class="global-btn-trial" style="width: 100%;">
-                🤝 Join Partner Network (25% Rev-Share) &rarr;
-            </a>
-        </div>
     </div>
 </header>
 
