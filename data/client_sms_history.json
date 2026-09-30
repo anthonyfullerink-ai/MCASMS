@@ -1,0 +1,74 @@
+[
+  {
+    "id": "portal_1790791463464",
+    "licenseKey": "MCAS-PORTAL-TEST-1790791463417",
+    "direction": "OUTBOUND_MANUAL",
+    "phoneNumber": "+1 (404) 555-9988",
+    "customerName": "Customer",
+    "message": "On our way to your location now!",
+    "timestamp": "2026-09-30T18:04:23.466Z",
+    "status": "QUEUED_FOR_SIM",
+    "simSlot": "SIM 1 (Business)",
+    "aiContext": "Manual reply dispatched directly from Client Portal via office Android SIM"
+  },
+  {
+    "id": "portal_1790790701318",
+    "licenseKey": "MCAS-PRO-TEST-PORTAL-KEY-001",
+    "direction": "OUTBOUND_MANUAL",
+    "phoneNumber": "+1 (555) 789-0123",
+    "customerName": "Customer",
+    "message": "Hello from the client portal via office SIM!",
+    "timestamp": "2026-09-30T17:51:41.320Z",
+    "status": "QUEUED_FOR_SIM",
+    "simSlot": "SIM 1 (Business)",
+    "aiContext": "Manual reply dispatched directly from Client Portal via office Android SIM"
+  },
+  {
+    "id": "sms_hist_1",
+    "licenseKey": "MCAS-PRO-TEST-PORTAL-KEY-001",
+    "direction": "OUTBOUND_POSTCALL",
+    "phoneNumber": "+1 (404) 555-8321",
+    "customerName": "Sarah Jenkins",
+    "message": "Hey Sarah, this is Anthony. Got your note about the AC unit making loud grinding noise. Reaching out shortly!",
+    "timestamp": "2026-09-30T15:51:41.302Z",
+    "status": "DELIVERED_ON_SIM",
+    "simSlot": "SIM 1 (Business)",
+    "aiContext": "Auto-dispatched immediately after 24/7 AI Receptionist call intake"
+  },
+  {
+    "id": "sms_hist_2",
+    "licenseKey": "MCAS-PRO-TEST-PORTAL-KEY-001",
+    "direction": "INBOUND_CUSTOMER",
+    "phoneNumber": "+1 (404) 555-8321",
+    "customerName": "Sarah Jenkins",
+    "message": "Thank you Anthony! We will be home after 4:30 PM if the tech can come then.",
+    "timestamp": "2026-09-30T16:03:41.302Z",
+    "status": "RECEIVED",
+    "simSlot": "SIM 1 (Business)",
+    "aiContext": "Inbound customer reply received directly on office Android SIM"
+  },
+  {
+    "id": "sms_hist_3",
+    "licenseKey": "MCAS-PRO-TEST-PORTAL-KEY-001",
+    "direction": "OUTBOUND_AUTOSMS",
+    "phoneNumber": "+1 (404) 555-0199",
+    "customerName": "Prospective Client",
+    "message": "Hey! Sorry I missed your call. How can I help you today? - Office Auto-Response",
+    "timestamp": "2026-09-30T11:51:41.302Z",
+    "status": "DELIVERED_ON_SIM",
+    "simSlot": "SIM 1 (Business)",
+    "aiContext": "Dispatched via handset physical SIM within 15 seconds of carrier missed call"
+  },
+  {
+    "id": "sms_hist_4",
+    "licenseKey": "MCAS-PRO-TEST-PORTAL-KEY-001",
+    "direction": "OUTBOUND_POSTCALL",
+    "phoneNumber": "+1 (404) 555-9876",
+    "customerName": "Alex Johnson",
+    "message": "Hey Alex, Dave here from Apex. Got your note about the water heater burst. Headed over shortly!",
+    "timestamp": "2026-09-30T03:51:41.302Z",
+    "status": "DELIVERED_ON_SIM",
+    "simSlot": "SIM 1 (Business)",
+    "aiContext": "Auto-enqueued post-call follow-up for emergency water leak"
+  }
+]

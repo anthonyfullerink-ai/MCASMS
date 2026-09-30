@@ -103,6 +103,7 @@ fun SettingsScreen(
 
     // Customer Portal Dialog state
     var showCustomerPortal by remember { mutableStateOf(false) }
+    var isSyncingRemote by remember { mutableStateOf(false) }
 
     // SIM subscription detection
     val activeSimInfoList = remember {
@@ -186,7 +187,7 @@ fun SettingsScreen(
             text = {
                 Column {
                     Text(
-                        text = update.releaseNotes ?: "A performance and security update is ready for Missed Call Auto SMS.",
+                        text = update.releaseNotes ?: "A performance and security update is ready for ${com.missedcall.autotext.util.AppBranding.appName}.",
                         style = MaterialTheme.typography.bodyMedium
                     )
                     Spacer(modifier = Modifier.height(8.dp))
@@ -291,6 +292,63 @@ fun SettingsScreen(
                         fontWeight = FontWeight.Bold,
                         color = if (isPro) SapphireLight else if (hasActiveSubscription) EmeraldLight else TextMuted
                     )
+                }
+            }
+        }
+
+        // ── REMOTE AGENCY MANAGEMENT & CLOUD SYNC BANNER ──
+        if (settings.lockHandsetSettings) {
+            Card(
+                shape = RoundedCornerShape(14.dp),
+                colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.5f)),
+                border = BorderStroke(1.dp, SapphireLight.copy(alpha = 0.6f)),
+                modifier = Modifier.fillMaxWidth()
+            ) {
+                Row(
+                    modifier = Modifier.padding(14.dp),
+                    verticalAlignment = Alignment.CenterVertically
+                ) {
+                    Icon(
+                        Icons.Default.Lock,
+                        contentDescription = null,
+                        tint = SapphireLight,
+                        modifier = Modifier.size(24.dp)
+                    )
+                    Spacer(modifier = Modifier.width(12.dp))
+                    Column(modifier = Modifier.weight(1f)) {
+                        Text(
+                            text = "Managed Remotely by " + settings.remoteConfigManagedBy.ifBlank { "Agency Partner" },
+                            fontWeight = FontWeight.Bold,
+                            style = MaterialTheme.typography.titleSmall,
+                            color = TextHeading
+                        )
+                        Text(
+                            text = "Auto-reply messages and voice settings are managed remotely. Handset modifications are locked.",
+                            style = MaterialTheme.typography.bodySmall,
+                            color = TextMuted
+                        )
+                    }
+                    Spacer(modifier = Modifier.width(8.dp))
+                    FilledTonalButton(
+                        enabled = !isSyncingRemote,
+                        onClick = {
+                            coroutineScope.launch {
+                                isSyncingRemote = true
+                                val repo = com.missedcall.autotext.data.SettingsRepository(context)
+                                val updated = repo.fetchAndApplyRemoteConfig(settings.licenseKey)
+                                isSyncingRemote = false
+                                if (updated) {
+                                    Toast.makeText(context, "Settings updated from cloud!", Toast.LENGTH_SHORT).show()
+                                } else {
+                                    Toast.makeText(context, "Handset is up to date", Toast.LENGTH_SHORT).show()
+                                }
+                            }
+                        },
+                        shape = RoundedCornerShape(8.dp),
+                        contentPadding = PaddingValues(horizontal = 10.dp, vertical = 6.dp)
+                    ) {
+                        Text(if (isSyncingRemote) "..." else "🔄 Sync", fontSize = 11.sp, fontWeight = FontWeight.Bold)
+                    }
                 }
             }
         }
@@ -1170,7 +1228,7 @@ fun SettingsScreen(
                     ) {
                         Column(modifier = Modifier.padding(12.dp)) {
                             Text(
-                                text = "1. Open Android Phone Settings → Apps → Missed Call Auto SMS.\n" +
+                                text = "1. Open Android Phone Settings → Apps → ${com.missedcall.autotext.util.AppBranding.appName}.\n" +
                                        "2. Tap the 3 dots (⋮) in the top-right corner of the App Info page.\n" +
                                        "3. Tap \"Allow restricted settings\" and enter your phone PIN.\n" +
                                        "4. Go to Permissions → SMS & Call Logs → Allow.",

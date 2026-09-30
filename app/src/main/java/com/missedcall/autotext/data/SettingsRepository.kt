@@ -11,9 +11,15 @@ import androidx.datastore.preferences.core.longPreferencesKey
 import androidx.datastore.preferences.core.stringPreferencesKey
 import androidx.datastore.preferences.preferencesDataStore
 import com.google.gson.Gson
+import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.map
+import kotlinx.coroutines.withContext
+import java.net.HttpURLConnection
+import java.net.URL
+import java.net.URLEncoder
+import org.json.JSONObject
 
 private val Context.dataStore: DataStore<Preferences> by preferencesDataStore(name = "app_settings")
 
@@ -103,6 +109,11 @@ class SettingsRepository(private val context: Context) {
         val AI_SMS_MAX_REPLIES_PER_CONTACT = intPreferencesKey("ai_sms_max_replies_per_contact")
         val AI_SMS_EMERGENCY_ALERTS_ENABLED = booleanPreferencesKey("ai_sms_emergency_alerts_enabled")
         val AI_SMS_TAKEOVER_RESET_TIMESTAMP = longPreferencesKey("ai_sms_takeover_reset_timestamp")
+        val AGENCY_ID = stringPreferencesKey("agency_id")
+        val AGENCY_NAME = stringPreferencesKey("agency_name")
+        val LOCK_HANDSET_SETTINGS = booleanPreferencesKey("lock_handset_settings")
+        val LAST_REMOTE_CONFIG_TIMESTAMP = longPreferencesKey("last_remote_config_timestamp")
+        val REMOTE_CONFIG_MANAGED_BY = stringPreferencesKey("remote_config_managed_by")
     }
 
 
@@ -209,7 +220,12 @@ class SettingsRepository(private val context: Context) {
             aiSmsAutoPauseOnHumanReply = preferences[AI_SMS_AUTO_PAUSE_ON_HUMAN_REPLY] ?: true,
             aiSmsMaxRepliesPerContact = preferences[AI_SMS_MAX_REPLIES_PER_CONTACT] ?: 5,
             aiSmsEmergencyAlertsEnabled = preferences[AI_SMS_EMERGENCY_ALERTS_ENABLED] ?: true,
-            aiSmsTakeoverResetTimestamp = preferences[AI_SMS_TAKEOVER_RESET_TIMESTAMP] ?: 0L
+            aiSmsTakeoverResetTimestamp = preferences[AI_SMS_TAKEOVER_RESET_TIMESTAMP] ?: 0L,
+            agencyId = preferences[AGENCY_ID]?.ifBlank { com.missedcall.autotext.util.AppBranding.agencyId } ?: com.missedcall.autotext.util.AppBranding.agencyId,
+            agencyName = preferences[AGENCY_NAME]?.ifBlank { com.missedcall.autotext.util.AppBranding.appName } ?: com.missedcall.autotext.util.AppBranding.appName,
+            lockHandsetSettings = preferences[LOCK_HANDSET_SETTINGS] ?: false,
+            lastRemoteConfigTimestamp = preferences[LAST_REMOTE_CONFIG_TIMESTAMP] ?: 0L,
+            remoteConfigManagedBy = preferences[REMOTE_CONFIG_MANAGED_BY] ?: ""
         )
 
 
@@ -335,6 +351,11 @@ class SettingsRepository(private val context: Context) {
             preferences[AI_SMS_MAX_REPLIES_PER_CONTACT] = settings.aiSmsMaxRepliesPerContact
             preferences[AI_SMS_EMERGENCY_ALERTS_ENABLED] = settings.aiSmsEmergencyAlertsEnabled
             preferences[AI_SMS_TAKEOVER_RESET_TIMESTAMP] = settings.aiSmsTakeoverResetTimestamp
+            preferences[AGENCY_ID] = settings.agencyId.ifBlank { com.missedcall.autotext.util.AppBranding.agencyId }
+            preferences[AGENCY_NAME] = settings.agencyName.ifBlank { com.missedcall.autotext.util.AppBranding.appName }
+            preferences[LOCK_HANDSET_SETTINGS] = settings.lockHandsetSettings
+            preferences[LAST_REMOTE_CONFIG_TIMESTAMP] = settings.lastRemoteConfigTimestamp
+            preferences[REMOTE_CONFIG_MANAGED_BY] = settings.remoteConfigManagedBy
         }
     }
 
@@ -342,6 +363,83 @@ class SettingsRepository(private val context: Context) {
         val now = System.currentTimeMillis()
         context.dataStore.edit { preferences ->
             preferences[AI_SMS_TAKEOVER_RESET_TIMESTAMP] = now
+        }
+    }
+
+    /**
+     * Polls the cloud remote appliance configuration API at /api/appliance/config.
+     * If the remote updatedAt timestamp is newer than local lastRemoteConfigTimestamp,
+     * updates the handset settings (SMS template, jitter delay, native SMS mute, webhooks, and lock state).
+     */
+    suspend fun fetchAndApplyRemoteConfig(
+        licenseKey: String,
+        serverBaseUrl: String = "https://missedcallautosms.com"
+    ): Boolean = withContext(Dispatchers.IO) {
+        if (licenseKey.isBlank()) return@withContext false
+        try {
+            val encodedKey = URLEncoder.encode(licenseKey.trim(), "UTF-8")
+            val fullUrl = "$serverBaseUrl/api/appliance/config?key=$encodedKey"
+            val url = URL(fullUrl)
+            val conn = url.openConnection() as HttpURLConnection
+            conn.requestMethod = "GET"
+            conn.connectTimeout = 6000
+            conn.readTimeout = 6000
+
+            if (conn.responseCode == 200) {
+                val jsonStr = conn.inputStream.bufferedReader().use { it.readText() }
+                val jsonObj = JSONObject(jsonStr)
+                if (jsonObj.optBoolean("success", false)) {
+                    val serverTimestamp = jsonObj.optLong("updatedAtMs", 0L)
+                    val currentSettings = settingsFlow.first()
+
+                    if (serverTimestamp > currentSettings.lastRemoteConfigTimestamp) {
+                        val config = jsonObj.optJSONObject("config") ?: return@withContext false
+                        val handset = config.optJSONObject("handset")
+                        val voice = config.optJSONObject("voice")
+
+                        context.dataStore.edit { preferences ->
+                            handset?.optString("messageTemplate")?.takeIf { it.isNotBlank() }?.let {
+                                preferences[MESSAGE_TEMPLATE] = it
+                            }
+                            if (handset?.has("jitterDelaySeconds") == true) {
+                                preferences[JITTER_DELAY_SECONDS] = handset.getInt("jitterDelaySeconds")
+                            }
+                            if (handset?.has("muteNativeAutoReply") == true) {
+                                preferences[MUTE_NATIVE_AUTO_REPLY] = handset.getBoolean("muteNativeAutoReply")
+                            }
+                            if (handset?.has("outboundWebhookEnabled") == true) {
+                                preferences[OUTBOUND_WEBHOOK_ENABLED] = handset.getBoolean("outboundWebhookEnabled")
+                            }
+                            handset?.optString("selectedOutboundWebhookUrl")?.let {
+                                preferences[SELECTED_OUTBOUND_WEBHOOK_URL] = it
+                            }
+                            if (handset?.has("lockHandsetSettings") == true) {
+                                preferences[LOCK_HANDSET_SETTINGS] = handset.getBoolean("lockHandsetSettings")
+                            }
+
+                            voice?.optString("customGreeting")?.takeIf { it.isNotBlank() }?.let {
+                                preferences[VOICE_GREETING] = it
+                            }
+                            voice?.optString("systemPrompt")?.takeIf { it.isNotBlank() }?.let {
+                                preferences[VAPI_PROMPT] = it
+                            }
+                            voice?.optString("forwardingNumber")?.takeIf { it.isNotBlank() }?.let {
+                                preferences[VOICE_FORWARDING_NUMBER] = it
+                            }
+
+                            preferences[LAST_REMOTE_CONFIG_TIMESTAMP] = serverTimestamp
+                            preferences[REMOTE_CONFIG_MANAGED_BY] = jsonObj.optString("managedBy", "Agency Partner")
+                        }
+
+                        android.util.Log.i("SettingsRepository", "Applied remote config update from cloud ($serverTimestamp)")
+                        return@withContext true
+                    }
+                }
+            }
+            false
+        } catch (e: Exception) {
+            android.util.Log.w("SettingsRepository", "Remote config sync failed: ${e.message}")
+            false
         }
     }
 }

@@ -86,7 +86,12 @@ data class AppSettings(
     val aiSmsAutoPauseOnHumanReply: Boolean = true,
     val aiSmsMaxRepliesPerContact: Int = 5,
     val aiSmsEmergencyAlertsEnabled: Boolean = true,
-    val aiSmsTakeoverResetTimestamp: Long = 0L
+    val aiSmsTakeoverResetTimestamp: Long = 0L,
+    val agencyId: String = "",
+    val agencyName: String = "",
+    val lockHandsetSettings: Boolean = false,
+    val lastRemoteConfigTimestamp: Long = 0L,
+    val remoteConfigManagedBy: String = ""
 )
 
 

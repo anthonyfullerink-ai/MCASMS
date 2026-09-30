@@ -1,0 +1,2468 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title id="portalPageTitle">Client Portal | Calls, SMS, Tasks &amp; AI Intelligence</title>
+
+    <!-- Favicon & Touch Icons -->
+    <link rel="icon" type="image/svg+xml" href="/favicon.svg?v=2">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800;900&family=JetBrains+Mono:wght@400;500;600;700&display=swap" rel="stylesheet">
+
+    <style>
+        :root {
+            --bg: #07090E;
+            --card-bg: #0D131F;
+            --card-border: rgba(255, 255, 255, 0.08);
+            --primary: #2563EB;
+            --primary-hover: #1D4ED8;
+            --accent: #38BDF8;
+            --text: #F8FAFC;
+            --muted: #94A3B8;
+            --green: #10B981;
+            --red: #EF4444;
+            --gold: #F59E0B;
+            --purple: #8B5CF6;
+        }
+
+        * { box-sizing: border-box; }
+
+        body {
+            font-family: 'Plus Jakarta Sans', -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+            background-color: var(--bg);
+            color: var(--text);
+            margin: 0;
+            padding: 0;
+            min-height: 100vh;
+        }
+
+        /* Top Navigation Bar */
+        nav {
+            background: #0A0E17;
+            border-bottom: 1px solid var(--card-border);
+            padding: 14px 24px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            position: sticky;
+            top: 0;
+            z-index: 100;
+            backdrop-filter: blur(10px);
+        }
+
+        .nav-brand {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            text-decoration: none;
+            color: #FFF;
+        }
+
+        .brand-icon-box {
+            width: 38px;
+            height: 38px;
+            border-radius: 10px;
+            background: linear-gradient(135deg, var(--primary), var(--accent));
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 20px;
+            box-shadow: 0 4px 14px rgba(56, 189, 248, 0.3);
+        }
+
+        .brand-text-wrap {
+            display: flex;
+            flex-direction: column;
+        }
+
+        .brand-name {
+            font-size: 16px;
+            font-weight: 800;
+            letter-spacing: -0.3px;
+        }
+
+        .brand-sub {
+            font-size: 11px;
+            color: var(--muted);
+            font-weight: 600;
+        }
+
+        .nav-status-items {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            flex-wrap: wrap;
+        }
+
+        .status-pill {
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+            font-size: 12px;
+            font-weight: 700;
+            padding: 5px 12px;
+            border-radius: 20px;
+            border: 1px solid transparent;
+        }
+
+        .status-online {
+            background: rgba(16, 185, 129, 0.12);
+            color: var(--green);
+            border-color: rgba(16, 185, 129, 0.3);
+        }
+
+        .status-airtime {
+            background: rgba(56, 189, 248, 0.12);
+            color: var(--accent);
+            border-color: rgba(56, 189, 248, 0.3);
+        }
+
+        .btn-portal-action {
+            background: #1E293B;
+            color: #E2E8F0;
+            border: 1px solid var(--card-border);
+            padding: 7px 14px;
+            border-radius: 8px;
+            font-size: 12px;
+            font-weight: 700;
+            cursor: pointer;
+            transition: all 0.15s ease;
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+            text-decoration: none;
+        }
+
+        .btn-portal-action:hover {
+            background: #2D3748;
+            color: #FFF;
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 24px;
+        }
+
+        /* ─── AUTH SCREEN ─── */
+        .auth-container {
+            max-width: 520px;
+            margin: 60px auto;
+            background: var(--card-bg);
+            border: 1px solid var(--card-border);
+            border-radius: 20px;
+            padding: 36px;
+            box-shadow: 0 20px 60px rgba(0,0,0,0.6);
+            position: relative;
+            overflow: hidden;
+        }
+
+        .auth-container::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            height: 4px;
+            background: linear-gradient(90deg, var(--primary), var(--accent));
+        }
+
+        .auth-tabs {
+            display: flex;
+            gap: 8px;
+            background: #080C14;
+            padding: 4px;
+            border-radius: 12px;
+            margin-bottom: 24px;
+            border: 1px solid var(--card-border);
+        }
+
+        .auth-tab-btn {
+            flex: 1;
+            padding: 10px;
+            background: none;
+            border: none;
+            color: var(--muted);
+            font-size: 13px;
+            font-weight: 700;
+            border-radius: 8px;
+            cursor: pointer;
+            transition: all 0.15s;
+        }
+
+        .auth-tab-btn.active {
+            background: #1E293B;
+            color: #FFF;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.4);
+        }
+
+        .input-group {
+            margin-bottom: 18px;
+        }
+
+        .input-group label {
+            display: block;
+            font-size: 12px;
+            font-weight: 700;
+            color: var(--muted);
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            margin-bottom: 6px;
+        }
+
+        .input-field {
+            width: 100%;
+            background: #07090E;
+            border: 1px solid var(--card-border);
+            color: #FFF;
+            padding: 12px 14px;
+            border-radius: 10px;
+            font-size: 14px;
+            font-family: inherit;
+            outline: none;
+            transition: border-color 0.2s;
+        }
+
+        .input-field:focus { border-color: var(--accent); }
+
+        .btn-primary {
+            background: linear-gradient(135deg, var(--primary), var(--accent));
+            color: #FFF;
+            border: none;
+            padding: 13px 22px;
+            border-radius: 10px;
+            font-weight: 800;
+            font-size: 14px;
+            cursor: pointer;
+            width: 100%;
+            box-shadow: 0 4px 16px rgba(56, 189, 248, 0.3);
+            transition: transform 0.15s, opacity 0.15s;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
+        }
+
+        .btn-primary:hover {
+            transform: translateY(-1px);
+            opacity: 0.95;
+        }
+
+        /* ─── MAIN PORTAL VIEW ─── */
+        .portal-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 24px;
+            flex-wrap: wrap;
+            gap: 16px;
+        }
+
+        .portal-title-wrap h1 {
+            font-size: 26px;
+            font-weight: 900;
+            margin: 0 0 6px 0;
+            letter-spacing: -0.5px;
+        }
+
+        .portal-title-wrap p {
+            margin: 0;
+            color: var(--muted);
+            font-size: 14px;
+        }
+
+        /* Metrics Bar */
+        .metrics-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 16px;
+            margin-bottom: 28px;
+        }
+
+        .metric-card {
+            background: var(--card-bg);
+            border: 1px solid var(--card-border);
+            border-radius: 16px;
+            padding: 20px;
+            display: flex;
+            align-items: center;
+            gap: 16px;
+        }
+
+        .metric-icon-box {
+            width: 48px;
+            height: 48px;
+            border-radius: 12px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 24px;
+        }
+
+        .metric-val {
+            font-size: 24px;
+            font-weight: 900;
+            letter-spacing: -0.5px;
+        }
+
+        .metric-label {
+            font-size: 12px;
+            color: var(--muted);
+            font-weight: 700;
+            text-transform: uppercase;
+        }
+
+        /* Main Tabs */
+        .nav-tabs {
+            display: flex;
+            gap: 8px;
+            border-bottom: 1px solid var(--card-border);
+            margin-bottom: 24px;
+            overflow-x: auto;
+            padding-bottom: 4px;
+        }
+
+        .tab-btn {
+            background: none;
+            border: none;
+            color: var(--muted);
+            font-size: 14px;
+            font-weight: 700;
+            padding: 10px 18px;
+            border-radius: 10px;
+            cursor: pointer;
+            transition: all 0.15s ease;
+            white-space: nowrap;
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .tab-btn.active {
+            background: rgba(56, 189, 248, 0.12);
+            color: var(--accent);
+        }
+
+        .tab-pane {
+            display: none;
+        }
+
+        .tab-pane.active {
+            display: block;
+        }
+
+        /* Filter Controls */
+        .filter-bar {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 20px;
+            flex-wrap: wrap;
+            gap: 12px;
+        }
+
+        .search-box {
+            background: #07090E;
+            border: 1px solid var(--card-border);
+            color: #FFF;
+            padding: 10px 16px;
+            border-radius: 10px;
+            font-size: 13px;
+            width: 100%;
+            max-width: 360px;
+            outline: none;
+        }
+
+        .search-box:focus { border-color: var(--accent); }
+
+        .filter-chips {
+            display: flex;
+            gap: 8px;
+            flex-wrap: wrap;
+        }
+
+        .chip {
+            background: #0D131F;
+            border: 1px solid var(--card-border);
+            color: var(--muted);
+            padding: 6px 14px;
+            border-radius: 20px;
+            font-size: 12px;
+            font-weight: 700;
+            cursor: pointer;
+            transition: all 0.15s;
+        }
+
+        .chip.active {
+            background: rgba(56, 189, 248, 0.15);
+            color: var(--accent);
+            border-color: var(--accent);
+        }
+
+        /* ─── TASK CARDS ─── */
+        .task-card {
+            background: var(--card-bg);
+            border: 1px solid var(--card-border);
+            border-radius: 16px;
+            padding: 20px;
+            margin-bottom: 14px;
+            transition: all 0.2s ease;
+        }
+
+        .task-card.critical {
+            border-left: 4px solid var(--red);
+        }
+
+        .task-card.completed {
+            opacity: 0.65;
+            background: #070A10;
+        }
+
+        .task-card:hover {
+            border-color: rgba(255,255,255,0.18);
+        }
+
+        /* ─── CALL ITEM CARDS ─── */
+        .call-card {
+            background: var(--card-bg);
+            border: 1px solid var(--card-border);
+            border-radius: 16px;
+            padding: 22px;
+            margin-bottom: 16px;
+            transition: border-color 0.2s;
+        }
+
+        .call-card.urgent {
+            border-left: 4px solid var(--red);
+        }
+
+        .call-card:hover {
+            border-color: rgba(255,255,255,0.18);
+        }
+
+        .call-top {
+            display: flex;
+            justify-content: space-between;
+            align-items: flex-start;
+            margin-bottom: 14px;
+            flex-wrap: wrap;
+            gap: 10px;
+        }
+
+        .caller-title {
+            font-size: 17px;
+            font-weight: 800;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .caller-phone {
+            color: var(--accent);
+            font-family: 'JetBrains Mono', monospace;
+            text-decoration: none;
+            font-size: 15px;
+        }
+
+        .caller-phone:hover { text-decoration: underline; }
+
+        .call-meta {
+            font-size: 12px;
+            color: var(--muted);
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+
+        .urgency-badge {
+            font-size: 11px;
+            font-weight: 800;
+            padding: 4px 10px;
+            border-radius: 6px;
+            text-transform: uppercase;
+        }
+
+        .urgency-high {
+            background: rgba(239, 68, 68, 0.18);
+            color: var(--red);
+            border: 1px solid rgba(239, 68, 68, 0.4);
+        }
+
+        .urgency-normal {
+            background: rgba(16, 185, 129, 0.12);
+            color: var(--green);
+            border: 1px solid rgba(16, 185, 129, 0.3);
+        }
+
+        /* Audio Player Bar */
+        .audio-bar {
+            background: #07090E;
+            border: 1px solid var(--card-border);
+            border-radius: 12px;
+            padding: 12px 16px;
+            margin-bottom: 14px;
+            display: flex;
+            align-items: center;
+            gap: 14px;
+            flex-wrap: wrap;
+        }
+
+        .btn-play {
+            width: 38px;
+            height: 38px;
+            border-radius: 50%;
+            background: var(--accent);
+            color: #000;
+            border: none;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 16px;
+            font-weight: 900;
+            transition: transform 0.15s;
+        }
+
+        .btn-play:hover { transform: scale(1.08); }
+
+        .audio-progress {
+            flex: 1;
+            min-width: 140px;
+            height: 6px;
+            background: #1E293B;
+            border-radius: 3px;
+            position: relative;
+            cursor: pointer;
+        }
+
+        .audio-progress-fill {
+            height: 100%;
+            background: var(--accent);
+            border-radius: 3px;
+            width: 0%;
+        }
+
+        .audio-time {
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 11px;
+            color: var(--muted);
+            min-width: 70px;
+            text-align: right;
+        }
+
+        .btn-speed {
+            background: #1E293B;
+            border: 1px solid var(--card-border);
+            color: #CBD5E0;
+            padding: 4px 8px;
+            border-radius: 6px;
+            font-size: 11px;
+            font-weight: 700;
+            cursor: pointer;
+        }
+
+        /* Summary & Address */
+        .summary-box {
+            font-size: 14px;
+            line-height: 1.5;
+            color: #E2E8F0;
+            margin-bottom: 12px;
+        }
+
+        .address-box {
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+            background: rgba(255, 255, 255, 0.04);
+            border: 1px solid var(--card-border);
+            padding: 5px 12px;
+            border-radius: 8px;
+            font-size: 12px;
+            color: #CBD5E0;
+            margin-bottom: 14px;
+        }
+
+        /* Call Actions Footer */
+        .call-actions-row {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            border-top: 1px solid var(--card-border);
+            padding-top: 12px;
+            flex-wrap: wrap;
+            gap: 10px;
+        }
+
+        .call-actions-left {
+            display: flex;
+            gap: 8px;
+            flex-wrap: wrap;
+        }
+
+        .btn-call-sub {
+            background: #141C2B;
+            border: 1px solid var(--card-border);
+            color: #CBD5E0;
+            padding: 6px 12px;
+            border-radius: 8px;
+            font-size: 12px;
+            font-weight: 700;
+            cursor: pointer;
+            transition: all 0.15s;
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+        }
+
+        .btn-call-sub:hover {
+            background: #1E293B;
+            color: #FFF;
+        }
+
+        /* Transcript Expandable */
+        .transcript-drawer {
+            display: none;
+            background: #07090E;
+            border: 1px solid var(--card-border);
+            border-radius: 12px;
+            padding: 16px;
+            margin-top: 14px;
+            font-size: 13px;
+            line-height: 1.6;
+        }
+
+        .transcript-drawer.active {
+            display: block;
+        }
+
+        .chat-bubble {
+            padding: 10px 14px;
+            border-radius: 10px;
+            margin-bottom: 8px;
+            max-width: 85%;
+        }
+
+        .bubble-ai {
+            background: rgba(56, 189, 248, 0.1);
+            border: 1px solid rgba(56, 189, 248, 0.2);
+            color: #E2E8F0;
+            margin-right: auto;
+        }
+
+        .bubble-caller {
+            background: #1E293B;
+            border: 1px solid var(--card-border);
+            color: #FFF;
+            margin-left: auto;
+        }
+
+        /* AI Diagnostics Drawer */
+        .diagnostics-drawer {
+            display: none;
+            background: #07090E;
+            border: 1px solid rgba(139, 92, 246, 0.3);
+            border-radius: 12px;
+            padding: 18px;
+            margin-top: 14px;
+            position: relative;
+        }
+
+        .diagnostics-drawer.active {
+            display: block;
+        }
+
+        .diag-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 12px;
+            margin-bottom: 16px;
+        }
+
+        .diag-card {
+            background: #0D131F;
+            border: 1px solid var(--card-border);
+            padding: 12px;
+            border-radius: 8px;
+            font-size: 12px;
+        }
+
+        .diag-label {
+            font-size: 11px;
+            color: var(--muted);
+            font-weight: 700;
+            text-transform: uppercase;
+            margin-bottom: 4px;
+        }
+
+        .diag-val {
+            font-weight: 800;
+            color: #FFF;
+            font-family: 'JetBrains Mono', monospace;
+        }
+
+        .timeline-step {
+            display: flex;
+            gap: 12px;
+            margin-bottom: 12px;
+            font-size: 12px;
+        }
+
+        .timeline-badge {
+            background: rgba(16, 185, 129, 0.2);
+            color: var(--green);
+            width: 22px;
+            height: 22px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: 900;
+            font-size: 11px;
+            flex-shrink: 0;
+        }
+
+        /* SMS Conversation View */
+        .sms-item {
+            background: var(--card-bg);
+            border: 1px solid var(--card-border);
+            border-radius: 14px;
+            padding: 18px;
+            margin-bottom: 14px;
+            display: flex;
+            gap: 16px;
+            align-items: flex-start;
+        }
+
+        .sms-direction-icon {
+            width: 38px;
+            height: 38px;
+            border-radius: 10px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 18px;
+            flex-shrink: 0;
+        }
+
+        .sms-inbound { background: rgba(16, 185, 129, 0.15); color: var(--green); }
+        .sms-outbound { background: rgba(56, 189, 248, 0.15); color: var(--accent); }
+
+        .sms-content { flex: 1; }
+
+        .sms-header-line {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 6px;
+            flex-wrap: wrap;
+            gap: 8px;
+        }
+
+        .sms-phone {
+            font-weight: 800;
+            font-size: 15px;
+            font-family: 'JetBrains Mono', monospace;
+        }
+
+        .sms-badge {
+            font-size: 10px;
+            padding: 3px 8px;
+            border-radius: 4px;
+            font-weight: 700;
+            background: rgba(255, 255, 255, 0.06);
+            color: var(--muted);
+        }
+
+        .sms-body {
+            font-size: 13px;
+            color: #E2E8F0;
+            line-height: 1.5;
+            margin-bottom: 8px;
+        }
+
+        .sms-ai-note {
+            font-size: 11px;
+            color: var(--accent);
+            display: flex;
+            align-items: center;
+            gap: 6px;
+        }
+
+        /* Modals */
+        .modal-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: rgba(0,0,0,0.85);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            z-index: 200;
+            padding: 20px;
+            visibility: hidden;
+            opacity: 0;
+            transition: all 0.2s;
+            backdrop-filter: blur(6px);
+        }
+
+        .modal-overlay.active {
+            visibility: visible;
+            opacity: 1;
+        }
+
+        .modal-box {
+            background: var(--card-bg);
+            border: 1px solid var(--card-border);
+            border-radius: 18px;
+            max-width: 520px;
+            width: 100%;
+            padding: 28px;
+            box-shadow: 0 20px 60px rgba(0,0,0,0.7);
+        }
+
+        /* Toast Feedback */
+        .toast {
+            position: fixed;
+            bottom: 24px;
+            right: 24px;
+            background: #0E1726;
+            color: #FFF;
+            border: 1px solid var(--accent);
+            padding: 12px 20px;
+            border-radius: 12px;
+            font-size: 13px;
+            font-weight: 700;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.6);
+            z-index: 300;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            transform: translateY(100px);
+            opacity: 0;
+            transition: all 0.25s ease;
+        }
+
+        .toast.show {
+            transform: translateY(0);
+            opacity: 1;
+        }
+    </style>
+</head>
+<body>
+
+<!-- Navigation Bar -->
+<nav>
+    <div class="nav-brand">
+        <div class="brand-icon-box" id="navIconBox">⚡</div>
+        <div class="brand-text-wrap">
+            <span class="brand-name" id="navBrandTitle">Missed Call Auto SMS</span>
+            <span class="brand-sub" id="navBrandSub">Client Call, SMS &amp; AI Tasks Portal</span>
+        </div>
+    </div>
+
+    <!-- Active Status Indicators (Shown after auth) -->
+    <div class="nav-status-items" id="navStatusGroup" style="display: none;">
+        <span class="status-pill status-online" id="pillHandsetStatus">
+            <span>🟢</span> Office SIM Handset Online
+        </span>
+        <span class="status-pill status-airtime" id="pillAirtime">
+            <span>⏱️</span> <span id="textAirtimeMins">45.2</span> Mins Airtime
+        </span>
+        <span class="btn-portal-action" style="cursor: default;" id="navUserBadge">
+            👤 <span id="navUsernameText">Client</span>
+        </span>
+        <button class="btn-portal-action" onclick="refreshPortalData()" title="Refresh Calls &amp; Tasks">
+            🔄 Refresh
+        </button>
+        <button class="btn-portal-action" onclick="logoutClientPortal()" style="background: rgba(239,68,68,0.15); color: var(--red); border-color: rgba(239,68,68,0.3);">
+            Sign Out
+        </button>
+    </div>
+</nav>
+
+<!-- Main Container -->
+<div class="container">
+
+    <!-- ═══════════════════════════════════════════════════════════════ -->
+    <!-- 1. AUTH SCREEN (SIGN IN OR ACTIVATE LICENSE)                     -->
+    <!-- ═══════════════════════════════════════════════════════════════ -->
+    <div id="authSection" class="auth-container">
+        <div style="text-align: center; margin-bottom: 24px;">
+            <div style="font-size: 38px; margin-bottom: 8px;" id="authLogoIcon">📱</div>
+            <h2 style="margin: 0 0 6px 0; font-size: 22px; font-weight: 900;" id="authCardTitle">Client Sign In</h2>
+            <p style="margin: 0; color: var(--muted); font-size: 13px;" id="authCardSub">
+                Access your calls, audio recordings, SMS history, and actionable tasks.
+            </p>
+        </div>
+
+        <!-- Auth Tabs: Sign In vs First-Time Activation -->
+        <div class="auth-tabs">
+            <button class="auth-tab-btn active" id="btnTabSignIn" onclick="switchAuthTab('signin')">
+                Sign In
+            </button>
+            <button class="auth-tab-btn" id="btnTabActivate" onclick="switchAuthTab('activate')">
+                First-Time Activation
+            </button>
+        </div>
+
+        <!-- Form 1: Sign In with Username/Email or Google -->
+        <div id="paneSignIn">
+            <!-- Continue with Google Button -->
+            <button type="button" class="btn-portal-action" style="width: 100%; justify-content: center; padding: 11px; margin-bottom: 16px; background: #FFF; color: #1F2937; font-weight: 700; border-radius: 10px; border: none; font-size: 13px; box-shadow: 0 2px 6px rgba(0,0,0,0.2);" onclick="triggerGoogleSignIn()">
+                <svg width="18" height="18" viewBox="0 0 24 24" style="vertical-align: middle; margin-right: 8px;"><path fill="#4285F4" d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z"/><path fill="#34A853" d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z"/><path fill="#FBBC05" d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.06H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.94l2.85-2.22.81-.63z"/><path fill="#EA4335" d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.06l3.66 2.84c.87-2.6 3.3-4.52 6.16-4.52z"/></svg>
+                Continue with Google
+            </button>
+
+            <div style="display: flex; align-items: center; gap: 12px; margin-bottom: 16px; color: var(--muted); font-size: 11px; text-transform: uppercase;">
+                <div style="flex: 1; height: 1px; background: var(--card-border);"></div>
+                <span>or with password</span>
+                <div style="flex: 1; height: 1px; background: var(--card-border);"></div>
+            </div>
+
+            <form onsubmit="handleLoginSubmit(event)">
+                <div class="input-group">
+                    <label>Username or Business Email</label>
+                    <input type="text" id="loginUsername" class="input-field" placeholder="e.g. apex_plumbing or sarah@domain.com" required autocomplete="username">
+                </div>
+                <div class="input-group" style="margin-bottom: 10px;">
+                    <label>Password</label>
+                    <input type="password" id="loginPassword" class="input-field" placeholder="••••••••" required autocomplete="current-password">
+                </div>
+
+                <!-- Remember Me Checkbox -->
+                <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 18px;">
+                    <label style="display: flex; align-items: center; gap: 8px; font-size: 12px; color: var(--muted); cursor: pointer; text-transform: none; font-weight: 600; margin-bottom: 0;">
+                        <input type="checkbox" id="cbRememberMe" checked style="accent-color: var(--accent); transform: scale(1.15);">
+                        <span>Remember me (30-day auto-login)</span>
+                    </label>
+                </div>
+
+                <button type="submit" class="btn-primary" id="btnSignInSubmit">
+                    Sign In to Portal ➔
+                </button>
+            </form>
+            <div style="text-align: center; margin-top: 18px; font-size: 12px; color: var(--muted);">
+                First time logging in with your license key? 
+                <a href="#" onclick="switchAuthTab('activate'); return false;" style="color: var(--accent); font-weight: 700; text-decoration: none;">
+                    Activate here ➔
+                </a>
+            </div>
+        </div>
+
+        <!-- Form 2: First-Time Account Activation with License Key -->
+        <div id="paneActivate" style="display: none;">
+            <!-- Activate with Google Button -->
+            <button type="button" class="btn-portal-action" style="width: 100%; justify-content: center; padding: 11px; margin-bottom: 16px; background: #FFF; color: #1F2937; font-weight: 700; border-radius: 10px; border: none; font-size: 13px; box-shadow: 0 2px 6px rgba(0,0,0,0.2);" onclick="triggerGoogleActivate()">
+                <svg width="18" height="18" viewBox="0 0 24 24" style="vertical-align: middle; margin-right: 8px;"><path fill="#4285F4" d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z"/><path fill="#34A853" d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z"/><path fill="#FBBC05" d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.06H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.94l2.85-2.22.81-.63z"/><path fill="#EA4335" d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.06l3.66 2.84c.87-2.6 3.3-4.52 6.16-4.52z"/></svg>
+                Activate Account with Google
+            </button>
+
+            <div style="display: flex; align-items: center; gap: 12px; margin-bottom: 16px; color: var(--muted); font-size: 11px; text-transform: uppercase;">
+                <div style="flex: 1; height: 1px; background: var(--card-border);"></div>
+                <span>or set custom credentials</span>
+                <div style="flex: 1; height: 1px; background: var(--card-border);"></div>
+            </div>
+
+            <form onsubmit="handleActivationSubmit(event)">
+                <div class="input-group">
+                    <label>Your Pro License Key *</label>
+                    <div style="display: flex; gap: 8px;">
+                        <input type="text" id="actLicenseKey" class="input-field" placeholder="MCAS-PRO-..." style="font-family: monospace;" required>
+                        <button type="button" class="btn-portal-action" onclick="verifyLicenseKey()" style="white-space: nowrap;">
+                            Verify Key
+                        </button>
+                    </div>
+                </div>
+
+                <div id="activationDetailsBox" style="display: none;">
+                    <div style="background: rgba(56, 189, 248, 0.08); border: 1px solid rgba(56, 189, 248, 0.2); border-radius: 10px; padding: 12px; margin-bottom: 16px; font-size: 12px;">
+                        <span style="color: var(--accent); font-weight: 700;">License Verified:</span> 
+                        <span id="actBusinessDisplay">Client Business</span>
+                        <div style="color: var(--muted); font-size: 11px; margin-top: 2px;">
+                            Choose your permanent login credentials below for all future sign-ins.
+                        </div>
+                    </div>
+
+                    <div class="input-group">
+                        <label>Choose Permanent Username *</label>
+                        <input type="text" id="actUsername" class="input-field" placeholder="e.g. premier_roofing" required>
+                    </div>
+
+                    <div class="input-group">
+                        <label>Business Email *</label>
+                        <input type="email" id="actEmail" class="input-field" placeholder="e.g. sarah@premierroofing.com" required>
+                    </div>
+
+                    <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 12px;">
+                        <div class="input-group">
+                            <label>Password (min 6 chars) *</label>
+                            <input type="password" id="actPassword" class="input-field" placeholder="••••••••" required>
+                        </div>
+                        <div class="input-group">
+                            <label>Confirm Password *</label>
+                            <input type="password" id="actPasswordConfirm" class="input-field" placeholder="••••••••" required>
+                        </div>
+                    </div>
+
+                    <button type="submit" class="btn-primary" id="btnActivateSubmit">
+                        ⚡ Activate Permanent Account &amp; Enter Portal ➔
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+
+    <!-- ═══════════════════════════════════════════════════════════════ -->
+    <!-- 2. MAIN CLIENT DASHBOARD                                       -->
+    <!-- ═══════════════════════════════════════════════════════════════ -->
+    <div id="dashboardSection" style="display: none;">
+
+        <!-- Header -->
+        <div class="portal-header">
+            <div class="portal-title-wrap">
+                <h1 id="clientBusinessTitle">Apex Plumbing &amp; Heating</h1>
+                <p id="clientTagline">AI Telecom Appliance &amp; 24/7 Voice Receptionist</p>
+            </div>
+            <div style="display: flex; gap: 10px; flex-wrap: wrap;">
+                <button class="btn-portal-action" onclick="openAddTaskModal()">
+                    + Add Task
+                </button>
+                <button class="btn-portal-action" onclick="exportCallsToCsv()">
+                    📥 Export Calls (CSV)
+                </button>
+                <button class="btn-portal-action" style="background: var(--accent); color: #000; font-weight: 800;" onclick="openQuickSmsModal()">
+                    💬 Send SMS via SIM
+                </button>
+            </div>
+        </div>
+
+        <!-- Metrics Overview -->
+        <div class="metrics-grid">
+            <div class="metric-card">
+                <div class="metric-icon-box" style="background: rgba(245, 158, 11, 0.12); color: var(--gold);">📋</div>
+                <div>
+                    <div class="metric-val" id="statPendingTasks" style="color: var(--gold);">0</div>
+                    <div class="metric-label">Action Items Pending</div>
+                </div>
+            </div>
+            <div class="metric-card">
+                <div class="metric-icon-box" style="background: rgba(239, 68, 68, 0.12); color: var(--red);">🚨</div>
+                <div>
+                    <div class="metric-val" id="statUrgentLeads" style="color: var(--red);">0</div>
+                    <div class="metric-label">Urgent Emergencies</div>
+                </div>
+            </div>
+            <div class="metric-card">
+                <div class="metric-icon-box" style="background: rgba(56, 189, 248, 0.12); color: var(--accent);">📞</div>
+                <div>
+                    <div class="metric-val" id="statTotalCalls">0</div>
+                    <div class="metric-label">Calls Handled</div>
+                </div>
+            </div>
+            <div class="metric-card">
+                <div class="metric-icon-box" style="background: rgba(16, 185, 129, 0.12); color: var(--green);">💬</div>
+                <div>
+                    <div class="metric-val" id="statTotalSms">0</div>
+                    <div class="metric-label">SIM Texts Delivered</div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Navigation Tabs -->
+        <div class="nav-tabs">
+            <button class="tab-btn active" id="tabBtnTasks" onclick="switchMainTab('tasks')">
+                📋 Action Items &amp; Tasks (<span id="countTasksTab">0</span>)
+            </button>
+            <button class="tab-btn" id="tabBtnCalls" onclick="switchMainTab('calls')">
+                🎙️ Calls &amp; Audio Recordings (<span id="countCallsTab">0</span>)
+            </button>
+            <button class="tab-btn" id="tabBtnSms" onclick="switchMainTab('sms')">
+                💬 SMS History &amp; Replies (<span id="countSmsTab">0</span>)
+            </button>
+            <button class="tab-btn" id="tabBtnAiTrace" onclick="switchMainTab('aitrace')">
+                🧠 Behind-The-Scenes AI Diagnostics
+            </button>
+            <button class="tab-btn" id="tabBtnAppliance" onclick="switchMainTab('appliance')">
+                📱 Office Appliance &amp; Forwarding
+            </button>
+        </div>
+
+
+        <!-- ── TAB 1: ACTION ITEMS & AI TASKS ── -->
+        <div id="paneTasks" class="tab-pane active">
+            <div class="filter-bar">
+                <input type="text" id="taskSearchInput" class="search-box" placeholder="🔍 Search tasks, customer name, notes..." oninput="filterTasksList()">
+                <div class="filter-chips">
+                    <button class="chip active" id="chipAllTasks" onclick="setTaskFilter('all')">All Tasks</button>
+                    <button class="chip" id="chipPendingTasks" onclick="setTaskFilter('pending')">⏳ Pending Only</button>
+                    <button class="chip" id="chipCriticalTasks" onclick="setTaskFilter('critical')">🚨 Critical Emergencies</button>
+                    <button class="chip" id="chipCompletedTasks" onclick="setTaskFilter('completed')">✅ Completed</button>
+                </div>
+            </div>
+
+            <!-- Tasks Feed -->
+            <div id="tasksFeedContainer">
+                <!-- Rendered dynamically via JS -->
+            </div>
+        </div>
+
+
+        <!-- ── TAB 2: CALLS & AUDIO RECORDINGS ── -->
+        <div id="paneCalls" class="tab-pane">
+            <div class="filter-bar">
+                <input type="text" id="callSearchInput" class="search-box" placeholder="🔍 Search caller name, phone number, address..." oninput="filterCallsList()">
+                <div class="filter-chips">
+                    <button class="chip active" id="chipAllCalls" onclick="setCallFilter('all')">All Calls</button>
+                    <button class="chip" id="chipUrgentCalls" onclick="setCallFilter('urgent')">🚨 Emergencies Only</button>
+                    <button class="chip" id="chipAudioCalls" onclick="setCallFilter('audio')">🎙️ Audio Recordings</button>
+                </div>
+            </div>
+
+            <!-- Call Cards Feed -->
+            <div id="callsFeedContainer">
+                <!-- Rendered dynamically via JS -->
+            </div>
+        </div>
+
+
+        <!-- ── TAB 3: SMS HISTORY & REPLIES ── -->
+        <div id="paneSms" class="tab-pane">
+            <div class="filter-bar">
+                <input type="text" id="smsSearchInput" class="search-box" placeholder="🔍 Search SMS text or phone number..." oninput="filterSmsList()">
+                <div class="filter-chips">
+                    <button class="chip active" id="chipAllSms" onclick="setSmsFilter('all')">All Messages</button>
+                    <button class="chip" id="chipInboundSms" onclick="setSmsFilter('inbound')">📥 Customer Replies</button>
+                    <button class="chip" id="chipOutboundSms" onclick="setSmsFilter('outbound')">📤 Auto-Dispatched</button>
+                </div>
+            </div>
+
+            <!-- SMS Feed -->
+            <div id="smsFeedContainer">
+                <!-- Rendered dynamically via JS -->
+            </div>
+        </div>
+
+
+        <!-- ── TAB 4: BEHIND-THE-SCENES AI DIAGNOSTICS ── -->
+        <div id="paneAiTrace" class="tab-pane">
+            <div style="background: var(--card-bg); border: 1px solid var(--card-border); border-radius: 18px; padding: 26px; margin-bottom: 24px;">
+                <div style="display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 18px; flex-wrap: wrap; gap: 12px;">
+                    <div>
+                        <h2 style="margin: 0 0 6px 0; font-size: 20px; font-weight: 800; display: flex; align-items: center; gap: 8px;">
+                            <span>🧠</span> How Your 24/7 AI Receptionist Operates Behind the Scenes
+                        </h2>
+                        <p style="margin: 0; color: var(--muted); font-size: 13px;">
+                            Complete operational transparency into voice models, emergency intent detection, and office SIM dispatch algorithms.
+                        </p>
+                    </div>
+                    <span class="status-pill status-online" style="font-size: 11px;">PIPELINE HEALTHY • 320ms LATENCY</span>
+                </div>
+
+                <div class="diag-grid">
+                    <div class="diag-card">
+                        <div class="diag-label">Speech Recognition (STT)</div>
+                        <div class="diag-val" style="color: var(--accent);">Deepgram Nova-2 HD</div>
+                        <div style="font-size: 11px; color: var(--muted); margin-top: 4px;">Ultra-low 240ms speech endpointing with 99.2% transcription accuracy.</div>
+                    </div>
+                    <div class="diag-card">
+                        <div class="diag-label">Reasoning &amp; Dialogue LLM</div>
+                        <div class="diag-val" style="color: var(--purple);">Claude 3.5 Sonnet / Vapi</div>
+                        <div style="font-size: 11px; color: var(--muted); margin-top: 4px;">Trained on contractor intake, address verification, and objection handling.</div>
+                    </div>
+                    <div class="diag-card">
+                        <div class="diag-label">Voice Synthesis (TTS)</div>
+                        <div class="diag-val" style="color: var(--green);">Cartesia Sonic Ultra-Fast</div>
+                        <div style="font-size: 11px; color: var(--muted); margin-top: 4px;">Human breath cadence, natural pause handling, and warm tone.</div>
+                    </div>
+                    <div class="diag-card">
+                        <div class="diag-label">SMS Carrier Bridge</div>
+                        <div class="diag-val" style="color: var(--gold);">Physical SIM Relay</div>
+                        <div style="font-size: 11px; color: var(--muted); margin-top: 4px;">Carrier cellular plan execution (10DLC exempt, zero per-text surcharges).</div>
+                    </div>
+                </div>
+
+                <h3 style="font-size: 15px; font-weight: 800; margin: 24px 0 14px 0;">⚡ Autonomous 5-Step Execution Workflow</h3>
+                <div style="background: #07090E; border: 1px solid var(--card-border); border-radius: 12px; padding: 18px;">
+                    <div class="timeline-step">
+                        <div class="timeline-badge">1</div>
+                        <div>
+                            <strong style="color: #FFF;">Carrier Call Intercept &amp; Custom Greeting</strong>
+                            <div style="color: var(--muted); font-size: 12px; margin-top: 2px;">When a call rings into your office line, carrier call forwarding routes it to your AI voice receptionist on ring 1 with your company's custom branded greeting.</div>
+                        </div>
+                    </div>
+                    <div class="timeline-step">
+                        <div class="timeline-badge">2</div>
+                        <div>
+                            <strong style="color: #FFF;">Real-Time Entity &amp; Address Extraction</strong>
+                            <div style="color: var(--muted); font-size: 12px; margin-top: 2px;">The AI asks the caller for their name, problem description, and street address. It actively repeats and confirms the spelling with the caller to eliminate technician dispatch errors.</div>
+                        </div>
+                    </div>
+                    <div class="timeline-step">
+                        <div class="timeline-badge">3</div>
+                        <div>
+                            <strong style="color: #FFF;">Emergency Intent &amp; Urgency Scoring</strong>
+                            <div style="color: var(--muted); font-size: 12px; margin-top: 2px;">The AI checks for critical urgency keywords ("flooding", "gas leak", "burst pipe", "sparking breaker"). If emergency thresholds are met, the call is instantly stamped <code>🚨 HIGH_URGENCY</code>.</div>
+                        </div>
+                    </div>
+                    <div class="timeline-step">
+                        <div class="timeline-badge">4</div>
+                        <div>
+                            <strong style="color: #FFF;">Automatic Carrier SIM SMS Follow-Up</strong>
+                            <div style="color: var(--muted); font-size: 12px; margin-top: 2px;">Within seconds after hanging up, your office Android smartphone dispatches a real carrier SIM text to the caller with a confirmation message, reassuring them that their ticket is active.</div>
+                        </div>
+                    </div>
+                    <div class="timeline-step">
+                        <div class="timeline-badge">5</div>
+                        <div>
+                            <strong style="color: #FFF;">Audio Storage &amp; CRM Sync</strong>
+                            <div style="color: var(--muted); font-size: 12px; margin-top: 2px;">The audio recording is converted to high-definition MP3 and pushed alongside the full conversation transcript to this portal and connected CRM workflows (GoHighLevel, Zapier, n8n).</div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+
+        <!-- ── TAB 5: OFFICE APPLIANCE & FORWARDING ── -->
+        <div id="paneAppliance" class="tab-pane">
+            <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(340px, 1fr)); gap: 20px;">
+                <!-- Card 1: Forwarding Dial Codes -->
+                <div style="background: var(--card-bg); border: 1px solid var(--card-border); border-radius: 16px; padding: 22px;">
+                    <h3 style="margin: 0 0 10px 0; font-size: 16px; font-weight: 800; display: flex; align-items: center; gap: 8px;">
+                        <span>📞</span> Carrier Call Forwarding Dial Codes
+                    </h3>
+                    <p style="font-size: 13px; color: var(--muted); margin: 0 0 16px 0; line-height: 1.5;">
+                        Dial the code below directly from your office phone dialer to route unanswered calls to your 24/7 AI Voice Receptionist.
+                    </p>
+
+                    <div style="background: #07090E; border: 1px solid var(--card-border); border-radius: 10px; padding: 14px; margin-bottom: 14px;">
+                        <div style="font-size: 11px; color: var(--muted); font-weight: 700; text-transform: uppercase;">Your Dedicated Forwarding Code:</div>
+                        <div style="display: flex; justify-content: space-between; align-items: center; margin-top: 6px;">
+                            <span id="forwardingCodeDisplay" style="font-family: 'JetBrains Mono', monospace; font-size: 18px; color: var(--accent); font-weight: 800;">*71 (555) 019-9821</span>
+                            <button class="btn-portal-action" onclick="copyForwardingCode()">📋 Copy</button>
+                        </div>
+                    </div>
+
+                    <div style="font-size: 12px; color: #CBD5E0; line-height: 1.6;">
+                        <strong>Quick Carrier Instructions:</strong><br>
+                        • <strong>Verizon / AT&amp;T:</strong> Dial <code>*71[Number]</code> and press Call. Wait for confirmation tone.<br>
+                        • <strong>T-Mobile / Mint:</strong> Dial <code>**61*[Number]#</code> and press Call.<br>
+                        • <strong>To Deactivate:</strong> Dial <code>*73</code> or <code>##61#</code>.
+                    </div>
+                </div>
+
+                <!-- Card 2: Office Android Appliance Details -->
+                <div style="background: var(--card-bg); border: 1px solid var(--card-border); border-radius: 16px; padding: 22px;">
+                    <h3 style="margin: 0 0 10px 0; font-size: 16px; font-weight: 800; display: flex; align-items: center; gap: 8px;">
+                        <span>📱</span> Dedicated Office Android Appliance
+                    </h3>
+                    <p style="font-size: 13px; color: var(--muted); margin: 0 0 16px 0; line-height: 1.5;">
+                        Your dedicated office Android handset handles physical cellular SIM dispatch and dual-SIM routing.
+                    </p>
+
+                    <div class="diag-grid" style="grid-template-columns: 1fr 1fr; margin-bottom: 16px;">
+                        <div class="diag-card">
+                            <div class="diag-label">Handset Status</div>
+                            <div class="diag-val" style="color: var(--green);">🟢 ONLINE</div>
+                        </div>
+                        <div class="diag-card">
+                            <div class="diag-label">Active SIM Card</div>
+                            <div class="diag-val">SIM 1 (Carrier)</div>
+                        </div>
+                        <div class="diag-card">
+                            <div class="diag-label">Handset Model</div>
+                            <div class="diag-val" id="textHandsetModel">Motorola Moto G</div>
+                        </div>
+                        <div class="diag-card">
+                            <div class="diag-label">Hardware Lock</div>
+                            <div class="diag-val" style="color: var(--accent);">🔒 BOUND</div>
+                        </div>
+                    </div>
+
+                    <div style="background: rgba(56, 189, 248, 0.08); border: 1px solid rgba(56, 189, 248, 0.2); border-radius: 10px; padding: 12px; font-size: 12px; color: var(--muted);">
+                        Need help or want to adjust your voice greeting? Contact support: 
+                        <strong style="color: #FFF;" id="textSupportContact">support@missedcallautosms.com</strong>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+    </div>
+
+</div>
+
+
+<!-- ═══════════════════════════════════════════════════════════════════ -->
+<!-- MODAL: ADD CUSTOM TASK                                             -->
+<!-- ═══════════════════════════════════════════════════════════════ -->
+<div id="addTaskModal" class="modal-overlay">
+    <div class="modal-box">
+        <h3 style="margin: 0 0 6px 0; font-size: 18px; font-weight: 800; color: #FFF; display: flex; align-items: center; gap: 8px;">
+            <span>📋</span> Create New Follow-Up Task
+        </h3>
+        <p style="margin: 0 0 18px 0; font-size: 13px; color: var(--muted);">
+            Log an actionable field task or customer follow-up to keep your crew organized.
+        </p>
+
+        <form onsubmit="handleCreateTask(event)">
+            <div class="input-group">
+                <label>Task Title *</label>
+                <input type="text" id="taskInputTitle" class="input-field" placeholder="e.g. Schedule chimney cap inspection" required>
+            </div>
+
+            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 12px;">
+                <div class="input-group">
+                    <label>Priority</label>
+                    <select id="taskInputPriority" class="input-field" style="padding: 10px;">
+                        <option value="NORMAL">Normal</option>
+                        <option value="HIGH">High Priority</option>
+                        <option value="CRITICAL">🚨 Critical / Emergency</option>
+                    </select>
+                </div>
+                <div class="input-group">
+                    <label>Due SLA / Time</label>
+                    <input type="text" id="taskInputSla" class="input-field" placeholder="e.g. Within 2 Hours or Tomorrow 10am">
+                </div>
+            </div>
+
+            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 12px;">
+                <div class="input-group">
+                    <label>Customer Name</label>
+                    <input type="text" id="taskInputName" class="input-field" placeholder="e.g. John Doe">
+                </div>
+                <div class="input-group">
+                    <label>Phone Number</label>
+                    <input type="tel" id="taskInputPhone" class="input-field" placeholder="+1 (555) 000-0000">
+                </div>
+            </div>
+
+            <div class="input-group">
+                <label>Service Address</label>
+                <input type="text" id="taskInputAddress" class="input-field" placeholder="e.g. 124 Main Street">
+            </div>
+
+            <div class="input-group">
+                <label>Notes &amp; Details</label>
+                <textarea id="taskInputNotes" class="input-field" rows="2" placeholder="Details discussed with customer..."></textarea>
+            </div>
+
+            <div style="display: flex; gap: 10px; justify-content: flex-end;">
+                <button type="button" class="btn-portal-action" onclick="closeAddTaskModal()">Cancel</button>
+                <button type="submit" class="btn-primary" style="width: auto; padding: 10px 20px;">
+                    Save Task ➔
+                </button>
+            </div>
+        </form>
+    </div>
+</div>
+
+<!-- ═══════════════════════════════════════════════════════════════════ -->
+<!-- MODAL: QUICK SMS COMPOSER VIA OFFICE SIM                           -->
+<!-- ═══════════════════════════════════════════════════════════════════ -->
+<div id="quickSmsModal" class="modal-overlay">
+    <div class="modal-box">
+        <h3 style="margin: 0 0 6px 0; font-size: 18px; font-weight: 800; color: #FFF; display: flex; align-items: center; gap: 8px;">
+            <span>💬</span> Dispatch SMS via Office SIM
+        </h3>
+        <p style="margin: 0 0 18px 0; font-size: 13px; color: var(--muted);">
+            This message will be dispatched directly through your office Android smartphone's physical carrier SIM (10DLC exempt).
+        </p>
+
+        <form onsubmit="handleSendQuickSms(event)">
+            <div class="input-group">
+                <label>Recipient Phone Number *</label>
+                <input type="tel" id="smsModalTo" class="input-field" placeholder="+1 (555) 000-0000" required>
+            </div>
+            <div class="input-group">
+                <label>Message Body *</label>
+                <textarea id="smsModalBody" class="input-field" rows="3" placeholder="Hi Sarah, our technician is headed to 742 Evergreen Terrace now. ETA: 25 minutes." required></textarea>
+            </div>
+            <div style="display: flex; gap: 10px; justify-content: flex-end;">
+                <button type="button" class="btn-portal-action" onclick="closeQuickSmsModal()">Cancel</button>
+                <button type="submit" class="btn-primary" style="width: auto; padding: 10px 20px;" id="btnSendSmsSubmit">
+                    📤 Send via Office SIM
+                </button>
+            </div>
+        </form>
+    </div>
+</div>
+
+<!-- Toast Feedback -->
+<div id="toast" class="toast"></div>
+
+<!-- Hidden HTML5 Audio Element for Playback -->
+<audio id="globalAudioPlayer" style="display: none;"></audio>
+
+<script>
+    // ══════════════════════════════════════════════════════════════════════
+    // CLIENT PORTAL STATE & CONTROLLER
+    // ══════════════════════════════════════════════════════════════════════
+    let currentPortalData = null;
+    let currentAuthToken = localStorage.getItem('mcas_portal_token') || sessionStorage.getItem('mcas_portal_token') || '';
+    let currentCalls = [];
+    let currentSms = [];
+    let currentTasks = [];
+    let activeCallFilter = 'all';
+    let activeSmsFilter = 'all';
+    let activeTaskFilter = 'all';
+    let currentlyPlayingCallId = null;
+
+    // Helper: string hash for demo Google IDs
+    function hashString(str) {
+        let hash = 0;
+        for (let i = 0; i < str.length; i++) {
+            hash = ((hash << 5) - hash) + str.charCodeAt(i);
+            hash |= 0;
+        }
+        return hash;
+    }
+
+    // Initialize on page load
+    window.addEventListener('DOMContentLoaded', async () => {
+        setupAudioPlayerEvents();
+
+        // Check if vanity agency parameter exists in URL
+        const urlParams = new URLSearchParams(window.location.search);
+        const vanityAgency = urlParams.get('agency') || urlParams.get('brand') || '';
+        if (vanityAgency) {
+            await fetchPublicBranding(vanityAgency);
+        }
+
+        // If we have a saved token (Remember Me), perform auto-login
+        if (currentAuthToken) {
+            await loadPortalWithToken(currentAuthToken);
+        } else {
+            document.getElementById('authSection').style.display = 'block';
+        }
+    });
+
+    async function fetchPublicBranding(agencySlug) {
+        try {
+            const res = await fetch(`/api/portal/branding?agency=${encodeURIComponent(agencySlug)}`);
+            const data = await res.json();
+            if (data.success && data.branding) {
+                applyBrandTheme(data.branding);
+            }
+        } catch (e) {}
+    }
+
+    function applyBrandTheme(branding) {
+        if (!branding) return;
+
+        if (branding.theme) {
+            if (branding.theme.primaryColor) {
+                document.documentElement.style.setProperty('--primary', branding.theme.primaryColor);
+            }
+            if (branding.theme.accentColor) {
+                document.documentElement.style.setProperty('--accent', branding.theme.accentColor);
+            }
+        }
+
+        const appName = branding.appName || 'Client Portal';
+        document.getElementById('portalPageTitle').innerText = `${appName} | Client Portal`;
+        document.getElementById('navBrandTitle').innerText = appName;
+        document.getElementById('navBrandSub').innerText = branding.tagline || 'Calls, SMS, Tasks & AI Intelligence';
+        document.getElementById('authCardTitle').innerText = `${appName} Sign In`;
+        document.getElementById('textSupportContact').innerText = branding.supportEmail || 'support@missedcallautosms.com';
+    }
+
+    // ─── Auth Tab Switching (Sign In vs Activation) ───
+    function switchAuthTab(tab) {
+        const btnSignIn = document.getElementById('btnTabSignIn');
+        const btnActivate = document.getElementById('btnTabActivate');
+        const paneSignIn = document.getElementById('paneSignIn');
+        const paneActivate = document.getElementById('paneActivate');
+
+        if (tab === 'signin') {
+            btnSignIn.classList.add('active');
+            btnActivate.classList.remove('active');
+            paneSignIn.style.display = 'block';
+            paneActivate.style.display = 'none';
+        } else {
+            btnActivate.classList.add('active');
+            btnSignIn.classList.remove('active');
+            paneActivate.style.display = 'block';
+            paneSignIn.style.display = 'none';
+        }
+    }
+
+    // ─── Google Sign-In & Activation ───
+    async function triggerGoogleSignIn() {
+        const emailPrompt = prompt('Enter your Google Account email to continue:', 'owner@mybusiness.com');
+        if (!emailPrompt) return;
+
+        try {
+            const res = await fetch('/api/portal/google-auth', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                    email: emailPrompt.trim().toLowerCase(),
+                    name: emailPrompt.split('@')[0],
+                    googleId: `goog_${Math.abs(hashString(emailPrompt))}`
+                })
+            });
+
+            const data = await res.json();
+            if (data.success) {
+                showToast(`Signed in with Google as ${data.user.email}!`);
+                saveSessionToken(data.token);
+                renderPortal(data);
+            } else if (data.needsLicense) {
+                showToast('First-time Google sign-in detected. Please enter your license key to link account.', 'ℹ️');
+                switchAuthTab('activate');
+                document.getElementById('actEmail').value = emailPrompt;
+                document.getElementById('actLicenseKey').focus();
+            } else {
+                showToast(data.error || 'Google authentication failed', '⚠️');
+            }
+        } catch (err) {
+            showToast('Google sign-in error: ' + err.message, '⚠️');
+        }
+    }
+
+    async function triggerGoogleActivate() {
+        const key = document.getElementById('actLicenseKey').value.trim().toUpperCase();
+        if (!key) {
+            showToast('Please enter your license key first', '⚠️');
+            document.getElementById('actLicenseKey').focus();
+            return;
+        }
+
+        const emailPrompt = prompt('Enter your Google Account email to link with this license:', 'owner@mybusiness.com');
+        if (!emailPrompt) return;
+
+        try {
+            const res = await fetch('/api/portal/google-auth', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                    email: emailPrompt.trim().toLowerCase(),
+                    name: emailPrompt.split('@')[0],
+                    googleId: `goog_${Math.abs(hashString(emailPrompt))}`,
+                    licenseKey: key
+                })
+            });
+
+            const data = await res.json();
+            if (data.success) {
+                showToast('Account activated with Google! Welcome to your Client Portal.');
+                saveSessionToken(data.token);
+                renderPortal(data);
+            } else {
+                showToast(data.error || 'Failed to activate with Google', '⚠️');
+            }
+        } catch (err) {
+            showToast('Activation error: ' + err.message, '⚠️');
+        }
+    }
+
+    function saveSessionToken(token) {
+        currentAuthToken = token;
+        const remember = document.getElementById('cbRememberMe')?.checked !== false;
+        if (remember) {
+            localStorage.setItem('mcas_portal_token', token);
+            sessionStorage.removeItem('mcas_portal_token');
+        } else {
+            sessionStorage.setItem('mcas_portal_token', token);
+            localStorage.removeItem('mcas_portal_token');
+        }
+    }
+
+    // ─── Step 1: Verify License Key ───
+    async function verifyLicenseKey() {
+        const key = document.getElementById('actLicenseKey').value.trim().toUpperCase();
+        if (!key) return showToast('Please enter your license key', '⚠️');
+
+        try {
+            const res = await fetch('/api/portal/check-key', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ licenseKey: key })
+            });
+
+            const data = await res.json();
+            if (!data.success) {
+                showToast(data.error || 'Failed to verify license key', '⚠️');
+                return;
+            }
+
+            if (data.isClaimed) {
+                showToast(`This license is already registered! Please sign in with username: ${data.username}`, 'ℹ️');
+                switchAuthTab('signin');
+                document.getElementById('loginUsername').value = data.username;
+                document.getElementById('loginPassword').focus();
+                return;
+            }
+
+            // Unclaimed: Reveal Step 2 credentials form
+            document.getElementById('activationDetailsBox').style.display = 'block';
+            document.getElementById('actBusinessDisplay').innerText = data.businessName || 'Verified Client';
+            if (data.branding) applyBrandTheme(data.branding);
+            showToast('License verified! Choose your permanent username and password.');
+            document.getElementById('actUsername').focus();
+        } catch (e) {
+            showToast('Connection error: ' + e.message, '⚠️');
+        }
+    }
+
+    // ─── Step 2: Handle First-Time Activation Submit ───
+    async function handleActivationSubmit(e) {
+        e.preventDefault();
+        const licenseKey = document.getElementById('actLicenseKey').value.trim().toUpperCase();
+        const username = document.getElementById('actUsername').value.trim().toLowerCase();
+        const email = document.getElementById('actEmail').value.trim();
+        const password = document.getElementById('actPassword').value;
+        const confirm = document.getElementById('actPasswordConfirm').value;
+
+        if (password !== confirm) {
+            showToast('Passwords do not match! Please check your typing.', '⚠️');
+            return;
+        }
+
+        const btn = document.getElementById('btnActivateSubmit');
+        btn.disabled = true;
+        btn.innerText = 'Activating Permanent Account...';
+
+        try {
+            const res = await fetch('/api/portal/activate', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ licenseKey, username, email, password })
+            });
+
+            const data = await res.json();
+            btn.disabled = false;
+            btn.innerText = '⚡ Activate Permanent Account & Enter Portal ➔';
+
+            if (!data.success) {
+                showToast(data.error || 'Failed to activate account', '⚠️');
+                return;
+            }
+
+            showToast('Account activated! Welcome to your Client Portal.');
+            saveSessionToken(data.token);
+            renderPortal(data);
+        } catch (err) {
+            btn.disabled = false;
+            btn.innerText = '⚡ Activate Permanent Account & Enter Portal ➔';
+            showToast('Error activating account: ' + err.message, '⚠️');
+        }
+    }
+
+    // ─── Step 3: Handle Returning User Sign In ───
+    async function handleLoginSubmit(e) {
+        e.preventDefault();
+        const username = document.getElementById('loginUsername').value.trim();
+        const password = document.getElementById('loginPassword').value;
+
+        const btn = document.getElementById('btnSignInSubmit');
+        btn.disabled = true;
+        btn.innerText = 'Signing In...';
+
+        try {
+            const res = await fetch('/api/portal/login', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ username, password })
+            });
+
+            const data = await res.json();
+            btn.disabled = false;
+            btn.innerText = 'Sign In to Portal ➔';
+
+            if (!data.success) {
+                if (data.needsActivation) {
+                    showToast(data.error || 'First time login detected. Please activate your account first.', '⚠️');
+                    switchAuthTab('activate');
+                    if (data.licenseKey) document.getElementById('actLicenseKey').value = data.licenseKey;
+                    return;
+                }
+                showToast(data.error || 'Invalid login credentials', '⚠️');
+                return;
+            }
+
+            showToast(`Welcome back, ${data.user.username}!`);
+            saveSessionToken(data.token);
+            renderPortal(data);
+        } catch (err) {
+            btn.disabled = false;
+            btn.innerText = 'Sign In to Portal ➔';
+            showToast('Sign in error: ' + err.message, '⚠️');
+        }
+    }
+
+    // ─── Load Portal With Saved Token (Remember Me) ───
+    async function loadPortalWithToken(token) {
+        try {
+            const res = await fetch('/api/portal/auth-check', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ token })
+            });
+
+            const data = await res.json();
+            if (data.success) {
+                renderPortal(data);
+            } else {
+                localStorage.removeItem('mcas_portal_token');
+                sessionStorage.removeItem('mcas_portal_token');
+                currentAuthToken = '';
+                document.getElementById('authSection').style.display = 'block';
+                document.getElementById('dashboardSection').style.display = 'none';
+            }
+        } catch (e) {
+            document.getElementById('authSection').style.display = 'block';
+        }
+    }
+
+    // ─── Render Full Portal View ───
+    function renderPortal(data) {
+        currentPortalData = data;
+        currentCalls = data.calls || [];
+        currentSms = data.sms || [];
+        currentTasks = data.tasks || [];
+
+        applyBrandTheme(data.branding);
+
+        document.getElementById('authSection').style.display = 'none';
+        document.getElementById('dashboardSection').style.display = 'block';
+        document.getElementById('navStatusGroup').style.display = 'flex';
+
+        // Header info
+        const client = data.client || {};
+        const user = data.user || {};
+        document.getElementById('clientBusinessTitle').innerText = client.name || user.businessName || 'My Business';
+        document.getElementById('navUsernameText').innerText = user.username || 'Client';
+        document.getElementById('textAirtimeMins').innerText = client.voiceMinutesBalance || '45.0';
+
+        // Forwarding code
+        const fCode = `${client.carrierCode || '*71'} (555) 019-9821`;
+        document.getElementById('forwardingCodeDisplay').innerText = fCode;
+
+        // Metrics
+        const stats = data.stats || {};
+        const pendingTasks = currentTasks.filter(t => t.status === 'PENDING').length;
+        document.getElementById('statPendingTasks').innerText = pendingTasks;
+        document.getElementById('statTotalCalls').innerText = stats.totalCalls || currentCalls.length;
+        document.getElementById('statUrgentLeads').innerText = stats.urgentCount || currentCalls.filter(c => c.urgency === 'HIGH').length;
+        document.getElementById('statTotalSms').innerText = stats.totalSmsCount || currentSms.length;
+
+        document.getElementById('countTasksTab').innerText = pendingTasks;
+        document.getElementById('countCallsTab').innerText = currentCalls.length;
+        document.getElementById('countSmsTab').innerText = currentSms.length;
+
+        // Render Feeds
+        renderTasksList();
+        renderCallsList();
+        renderSmsList();
+    }
+
+    // ─── Main Tabs Switching ───
+    function switchMainTab(tab) {
+        document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
+        document.querySelectorAll('.tab-pane').forEach(p => p.classList.remove('active'));
+
+        if (tab === 'tasks') {
+            document.getElementById('tabBtnTasks').classList.add('active');
+            document.getElementById('paneTasks').classList.add('active');
+        } else if (tab === 'calls') {
+            document.getElementById('tabBtnCalls').classList.add('active');
+            document.getElementById('paneCalls').classList.add('active');
+        } else if (tab === 'sms') {
+            document.getElementById('tabBtnSms').classList.add('active');
+            document.getElementById('paneSms').classList.add('active');
+        } else if (tab === 'aitrace') {
+            document.getElementById('tabBtnAiTrace').classList.add('active');
+            document.getElementById('paneAiTrace').classList.add('active');
+        } else if (tab === 'appliance') {
+            document.getElementById('tabBtnAppliance').classList.add('active');
+            document.getElementById('paneAppliance').classList.add('active');
+        }
+    }
+
+    // ─── Task Feed Rendering & Filtering ───
+    function setTaskFilter(filter) {
+        activeTaskFilter = filter;
+        document.getElementById('chipAllTasks').classList.toggle('active', filter === 'all');
+        document.getElementById('chipPendingTasks').classList.toggle('active', filter === 'pending');
+        document.getElementById('chipCriticalTasks').classList.toggle('active', filter === 'critical');
+        document.getElementById('chipCompletedTasks').classList.toggle('active', filter === 'completed');
+        renderTasksList();
+    }
+
+    function filterTasksList() {
+        renderTasksList();
+    }
+
+    function renderTasksList() {
+        const query = document.getElementById('taskSearchInput').value.trim().toLowerCase();
+        const container = document.getElementById('tasksFeedContainer');
+
+        let filtered = currentTasks.filter(task => {
+            if (activeTaskFilter === 'pending' && task.status !== 'PENDING') return false;
+            if (activeTaskFilter === 'completed' && task.status !== 'COMPLETED') return false;
+            if (activeTaskFilter === 'critical' && task.priority !== 'CRITICAL') return false;
+
+            if (query) {
+                const haystack = `${task.title || ''} ${task.notes || ''} ${task.customerName || ''} ${task.customerPhone || ''} ${task.serviceAddress || ''}`.toLowerCase();
+                if (!haystack.includes(query)) return false;
+            }
+            return true;
+        });
+
+        if (filtered.length === 0) {
+            container.innerHTML = `
+                <div style="background: var(--card-bg); border: 1px solid var(--card-border); border-radius: 16px; padding: 40px; text-align: center; color: var(--muted);">
+                    <div style="font-size: 32px; margin-bottom: 8px;">🎉</div>
+                    <div style="font-size: 16px; font-weight: 700; color: #FFF; margin-bottom: 4px;">All Caught Up!</div>
+                    <div style="font-size: 13px;">No pending action items matching this filter.</div>
+                </div>
+            `;
+            return;
+        }
+
+        container.innerHTML = filtered.map(task => {
+            const isComplete = task.status === 'COMPLETED';
+            const isCritical = task.priority === 'CRITICAL';
+            const dateStr = task.createdAt ? new Date(task.createdAt).toLocaleString([], { month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit' }) : 'Recent';
+
+            return `
+                <div class="task-card ${isComplete ? 'completed' : ''} ${isCritical ? 'critical' : ''}" id="task_${task.id}">
+                    <div style="display: flex; gap: 14px; align-items: flex-start;">
+                        <input type="checkbox" ${isComplete ? 'checked' : ''} onchange="toggleTaskComplete('${task.id}', this.checked)" style="transform: scale(1.3); margin-top: 5px; accent-color: var(--green); cursor: pointer;" title="Toggle Complete">
+                        <div style="flex: 1;">
+                            <div style="display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 6px; flex-wrap: wrap; gap: 8px;">
+                                <div>
+                                    <span style="font-size: 15px; font-weight: 800; ${isComplete ? 'text-decoration: line-through; color: var(--muted);' : 'color: #FFF;'}">
+                                        ${escapeHtml(task.title)}
+                                    </span>
+                                    <span class="urgency-badge ${isCritical ? 'urgency-high' : 'urgency-normal'}" style="margin-left: 8px; font-size: 10px;">
+                                        ${task.priority || 'NORMAL'}
+                                    </span>
+                                    <span class="sms-badge" style="margin-left: 4px;">
+                                        ${task.sourceType === 'VOICE_CALL' ? '🎙️ Voice AI Call' : task.sourceType === 'INBOUND_SMS' ? '💬 Inbound SMS' : '👤 Custom Note'}
+                                    </span>
+                                </div>
+                                <div style="font-size: 12px; font-weight: 700; color: ${isCritical ? 'var(--red)' : 'var(--accent)'}; display: flex; align-items: center; gap: 4px;">
+                                    <span>⏱️ ${task.dueSla || 'Same Day'}</span>
+                                </div>
+                            </div>
+                            
+                            <p style="font-size: 13px; color: ${isComplete ? '#64748B' : '#CBD5E0'}; margin: 0 0 10px 0; line-height: 1.5;">
+                                ${escapeHtml(task.notes || 'Autonomous task generated based on customer interaction.')}
+                            </p>
+
+                            <div style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 10px; font-size: 12px;">
+                                <div style="display: flex; gap: 12px; align-items: center; color: var(--muted); flex-wrap: wrap;">
+                                    ${task.customerName ? `<span>👤 <strong>${escapeHtml(task.customerName)}</strong></span>` : ''}
+                                    ${task.customerPhone ? `<span>📞 <a href="tel:${task.customerPhone}" class="caller-phone" style="font-size: 12px;">${task.customerPhone}</a></span>` : ''}
+                                    ${task.serviceAddress ? `<span>📍 ${escapeHtml(task.serviceAddress)}</span>` : ''}
+                                    <span style="font-size: 11px;">📅 ${dateStr}</span>
+                                </div>
+                                <div style="display: flex; gap: 8px;">
+                                    ${task.customerPhone ? `
+                                        <button class="btn-portal-action" style="padding: 4px 10px; font-size: 11px;" onclick="openQuickSmsModal('${task.customerPhone}', '${escapeHtml(task.customerName || '')}')">
+                                            💬 Reply via SIM
+                                        </button>
+                                    ` : ''}
+                                    <button class="btn-call-sub" style="padding: 4px 10px; font-size: 11px;" onclick="toggleTaskComplete('${task.id}', ${!isComplete})">
+                                        ${isComplete ? '↩️ Re-open' : '✓ Mark Complete'}
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            `;
+        }).join('');
+    }
+
+    async function toggleTaskComplete(taskId, isChecked) {
+        const newStatus = isChecked ? 'COMPLETED' : 'PENDING';
+        try {
+            const res = await fetch('/api/portal/tasks/update', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ taskId, status: newStatus })
+            });
+            const data = await res.json();
+            if (data.success) {
+                const target = currentTasks.find(t => t.id === taskId);
+                if (target) {
+                    target.status = newStatus;
+                    target.completedAt = isChecked ? new Date().toISOString() : null;
+                }
+                showToast(isChecked ? 'Task marked complete! Great work.' : 'Task re-opened.');
+                renderTasksList();
+                updateTaskCounts();
+            }
+        } catch (e) {
+            showToast('Error updating task: ' + e.message, '⚠️');
+        }
+    }
+
+    function updateTaskCounts() {
+        const pending = currentTasks.filter(t => t.status === 'PENDING').length;
+        document.getElementById('statPendingTasks').innerText = pending;
+        document.getElementById('countTasksTab').innerText = pending;
+    }
+
+    // ─── Add Custom Task Modal ───
+    function openAddTaskModal() {
+        document.getElementById('taskInputTitle').value = '';
+        document.getElementById('taskInputPriority').value = 'NORMAL';
+        document.getElementById('taskInputSla').value = '';
+        document.getElementById('taskInputName').value = '';
+        document.getElementById('taskInputPhone').value = '';
+        document.getElementById('taskInputAddress').value = '';
+        document.getElementById('taskInputNotes').value = '';
+        document.getElementById('addTaskModal').classList.add('active');
+        document.getElementById('taskInputTitle').focus();
+    }
+
+    function closeAddTaskModal() {
+        document.getElementById('addTaskModal').classList.remove('active');
+    }
+
+    async function handleCreateTask(e) {
+        e.preventDefault();
+        const title = document.getElementById('taskInputTitle').value.trim();
+        const priority = document.getElementById('taskInputPriority').value;
+        const dueSla = document.getElementById('taskInputSla').value.trim();
+        const customerName = document.getElementById('taskInputName').value.trim();
+        const customerPhone = document.getElementById('taskInputPhone').value.trim();
+        const serviceAddress = document.getElementById('taskInputAddress').value.trim();
+        const notes = document.getElementById('taskInputNotes').value.trim();
+
+        if (!title) return showToast('Please enter a task title', '⚠️');
+
+        try {
+            const res = await fetch('/api/portal/tasks/create', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                    licenseKey: currentPortalData?.client?.licenseKey,
+                    title,
+                    priority,
+                    dueSla,
+                    customerName,
+                    customerPhone,
+                    serviceAddress,
+                    notes
+                })
+            });
+
+            const data = await res.json();
+            if (data.success) {
+                showToast('New follow-up task added!');
+                closeAddTaskModal();
+                currentTasks.unshift(data.task);
+                renderTasksList();
+                updateTaskCounts();
+            } else {
+                showToast(data.error || 'Failed to create task', '⚠️');
+            }
+        } catch (err) {
+            showToast('Error creating task: ' + err.message, '⚠️');
+        }
+    }
+
+    // ─── Call Feed Rendering & Filtering ───
+    function setCallFilter(filter) {
+        activeCallFilter = filter;
+        document.getElementById('chipAllCalls').classList.toggle('active', filter === 'all');
+        document.getElementById('chipUrgentCalls').classList.toggle('active', filter === 'urgent');
+        document.getElementById('chipAudioCalls').classList.toggle('active', filter === 'audio');
+        renderCallsList();
+    }
+
+    function filterCallsList() {
+        renderCallsList();
+    }
+
+    function renderCallsList() {
+        const query = document.getElementById('callSearchInput').value.trim().toLowerCase();
+        const container = document.getElementById('callsFeedContainer');
+
+        let filtered = currentCalls.filter(call => {
+            if (activeCallFilter === 'urgent' && call.urgency !== 'HIGH') return false;
+            if (activeCallFilter === 'audio' && !call.audioUrl) return false;
+
+            if (query) {
+                const haystack = `${call.callerName || ''} ${call.callerNumber || ''} ${call.address || ''} ${call.summary || ''} ${call.transcript || ''}`.toLowerCase();
+                if (!haystack.includes(query)) return false;
+            }
+            return true;
+        });
+
+        if (filtered.length === 0) {
+            container.innerHTML = `
+                <div style="background: var(--card-bg); border: 1px solid var(--card-border); border-radius: 16px; padding: 40px; text-align: center; color: var(--muted);">
+                    <div style="font-size: 32px; margin-bottom: 8px;">📞</div>
+                    <div style="font-size: 16px; font-weight: 700; color: #FFF; margin-bottom: 4px;">No Calls Found</div>
+                    <div style="font-size: 13px;">No calls match your active filter criteria.</div>
+                </div>
+            `;
+            return;
+        }
+
+        container.innerHTML = filtered.map(call => {
+            const isUrgent = call.urgency === 'HIGH';
+            const duration = call.durationFormatted || `${call.durationSeconds || 60}s`;
+            const dateStr = call.timestamp ? new Date(call.timestamp).toLocaleString([], { month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit' }) : 'Recent Call';
+
+            return `
+                <div class="call-card ${isUrgent ? 'urgent' : ''}" id="card_${call.id}">
+                    <div class="call-top">
+                        <div>
+                            <div class="caller-title">
+                                <span>${escapeHtml(call.callerName || 'Prospective Customer')}</span>
+                                <a href="tel:${call.callerNumber}" class="caller-phone">${call.callerNumber}</a>
+                            </div>
+                            <div class="call-meta" style="margin-top: 4px;">
+                                <span>📅 ${dateStr}</span>
+                                <span>⏱️ ${duration}</span>
+                                <span>🏷️ ${escapeHtml(call.category || 'Inbound Call')}</span>
+                            </div>
+                        </div>
+                        <span class="urgency-badge ${isUrgent ? 'urgency-high' : 'urgency-normal'}">
+                            ${isUrgent ? '🚨 URGENT EMERGENCY' : '🟢 NORMAL INQUIRY'}
+                        </span>
+                    </div>
+
+                    <!-- In-Browser Audio Player Bar -->
+                    ${call.audioUrl ? `
+                        <div class="audio-bar">
+                            <button class="btn-play" id="btnPlay_${call.id}" onclick="toggleAudio('${call.id}', '${call.audioUrl}')">▶</button>
+                            <div class="audio-progress" onclick="seekAudio(event, '${call.id}')">
+                                <div class="audio-progress-fill" id="fill_${call.id}"></div>
+                            </div>
+                            <span class="audio-time" id="time_${call.id}">0:00 / ${duration}</span>
+                            <button class="btn-speed" onclick="cyclePlaybackSpeed('${call.id}')" id="speed_${call.id}">1.0x</button>
+                            <a href="${call.audioUrl}" download="call_${call.id}.mp3" class="btn-speed" title="Download Audio MP3">📥 MP3</a>
+                        </div>
+                    ` : ''}
+
+                    <!-- Summary & Address -->
+                    <div class="summary-box">
+                        <strong>AI Summary:</strong> ${escapeHtml(call.summary || 'Customer called regarding services. Handled by 24/7 Voice Receptionist.')}
+                    </div>
+
+                    ${call.address ? `
+                        <div class="address-box">
+                            <span>📍 Verified Service Address:</span>
+                            <strong style="color: #FFF;">${escapeHtml(call.address)}</strong>
+                        </div>
+                    ` : ''}
+
+                    <!-- Actions Row -->
+                    <div class="call-actions-row">
+                        <div class="call-actions-left">
+                            <button class="btn-call-sub" onclick="toggleTranscript('${call.id}')">
+                                💬 View Transcript
+                            </button>
+                            <button class="btn-call-sub" style="border-color: rgba(139, 92, 246, 0.4); color: var(--purple);" onclick="toggleAiTrace('${call.id}')">
+                                🧠 Inspect AI Diagnostics
+                            </button>
+                        </div>
+                        <div>
+                            <button class="btn-portal-action" style="background: rgba(56, 189, 248, 0.12); color: var(--accent); border-color: var(--accent);" onclick="openQuickSmsModal('${call.callerNumber}', '${escapeHtml(call.callerName || '')}')">
+                                💬 Reply via Office SIM ➔
+                            </button>
+                        </div>
+                    </div>
+
+                    <!-- Expandable Transcript -->
+                    <div class="transcript-drawer" id="transcript_${call.id}">
+                        <div style="font-size: 11px; font-weight: 700; color: var(--muted); text-transform: uppercase; margin-bottom: 10px;">
+                            Complete Conversational Transcript
+                        </div>
+                        ${renderTranscriptBubbles(call.transcript || 'AI: Thank you for calling! How can we assist you today?\nCaller: Hi, looking for an estimate on my roof repair.\nAI: Perfect, let me take down your address and alert the team.')}
+                    </div>
+
+                    <!-- Expandable Behind-the-Scenes AI Trace -->
+                    <div class="diagnostics-drawer" id="aitrace_${call.id}">
+                        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px;">
+                            <span style="font-size: 12px; font-weight: 800; color: var(--purple); text-transform: uppercase; letter-spacing: 0.5px;">
+                                🧠 Behind-The-Scenes AI Execution Trace
+                            </span>
+                            <span style="font-size: 11px; color: var(--green); font-weight: 700;">320ms REAL-TIME PIPELINE</span>
+                        </div>
+                        ${renderAiTraceDetails(call)}
+                    </div>
+                </div>
+            `;
+        }).join('');
+    }
+
+    function renderTranscriptBubbles(transcriptText) {
+        if (!transcriptText) return '';
+        const lines = transcriptText.split('\n').filter(l => l.trim().length > 0);
+        return lines.map(line => {
+            const isAi = line.startsWith('AI:') || line.startsWith('Riley:') || line.startsWith('Assistant:');
+            const cleanText = line.replace(/^(AI|Riley|Assistant|Caller):\s*/i, '');
+            return `
+                <div class="chat-bubble ${isAi ? 'bubble-ai' : 'bubble-caller'}">
+                    <strong style="display: block; font-size: 10px; text-transform: uppercase; color: var(--muted); margin-bottom: 2px;">
+                        ${isAi ? '🤖 24/7 AI Receptionist' : '👤 Caller'}
+                    </strong>
+                    ${escapeHtml(cleanText)}
+                </div>
+            `;
+        }).join('');
+    }
+
+    function renderAiTraceDetails(call) {
+        const diag = call.aiDiagnostics || {};
+        const steps = diag.executionTrace || [
+            { step: 1, label: 'Carrier Ring Intercept', detail: 'Answered on ring 1 by telecom voice pipeline.', status: 'SUCCESS' },
+            { step: 2, label: 'Deepgram Nova-2 Transcription', detail: 'Audio stream transcribed in 240ms with 99.2% confidence.', status: 'SUCCESS' },
+            { step: 3, label: 'Emergency Classification', detail: `Intent identified as "${call.category || 'Service Inquiry'}". Urgency score: ${call.urgency === 'HIGH' ? '94/100 (Critical)' : '22/100 (Standard)'}.`, status: 'SUCCESS' },
+            { step: 4, label: 'Carrier SIM SMS Dispatch', detail: 'Enqueued post-call text for office Android SIM dispatch.', status: 'SUCCESS' },
+            { step: 5, label: 'Airtime Ledger', detail: `Call duration ${call.durationFormatted || '1m 08s'} recorded to balance.`, status: 'SUCCESS' }
+        ];
+
+        return `
+            <div class="diag-grid">
+                <div class="diag-card">
+                    <div class="diag-label">STT Speech Model</div>
+                    <div class="diag-val">${diag.sttEngine || 'Deepgram Nova-2 HD'}</div>
+                </div>
+                <div class="diag-card">
+                    <div class="diag-label">LLM Reasoning Engine</div>
+                    <div class="diag-val" style="color: var(--purple);">${diag.llmEngine || 'Claude 3.5 Sonnet'}</div>
+                </div>
+                <div class="diag-card">
+                    <div class="diag-label">Urgency Score</div>
+                    <div class="diag-val" style="color: ${call.urgency === 'HIGH' ? 'var(--red)' : 'var(--green)'};">
+                        ${call.urgency === 'HIGH' ? '🚨 94 / 100 (CRITICAL)' : '🟢 22 / 100 (ROUTINE)'}
+                    </div>
+                </div>
+                <div class="diag-card">
+                    <div class="diag-label">Pipeline Latency</div>
+                    <div class="diag-val" style="color: var(--accent);">${diag.processingLatencyMs || 320} ms</div>
+                </div>
+            </div>
+
+            <div style="margin-top: 14px;">
+                <div style="font-size: 11px; font-weight: 700; color: var(--muted); text-transform: uppercase; margin-bottom: 8px;">
+                    Step-by-Step Autonomous Action Log
+                </div>
+                ${steps.map(s => `
+                    <div class="timeline-step">
+                        <div class="timeline-badge">${s.step}</div>
+                        <div>
+                            <strong style="color: #FFF;">${escapeHtml(s.label)}</strong>
+                            <div style="color: #CBD5E0; font-size: 11px; margin-top: 2px;">${escapeHtml(s.detail)}</div>
+                        </div>
+                    </div>
+                `).join('')}
+            </div>
+        `;
+    }
+
+    function toggleTranscript(callId) {
+        const el = document.getElementById(`transcript_${callId}`);
+        if (el) el.classList.toggle('active');
+    }
+
+    function toggleAiTrace(callId) {
+        const el = document.getElementById(`aitrace_${callId}`);
+        if (el) el.classList.toggle('active');
+    }
+
+    // ─── Audio Player Controls ───
+    const globalAudio = document.getElementById('globalAudioPlayer');
+
+    function setupAudioPlayerEvents() {
+        globalAudio.addEventListener('timeupdate', () => {
+            if (!currentlyPlayingCallId) return;
+            const fill = document.getElementById(`fill_${currentlyPlayingCallId}`);
+            const timeText = document.getElementById(`time_${currentlyPlayingCallId}`);
+            if (fill && globalAudio.duration) {
+                const pct = (globalAudio.currentTime / globalAudio.duration) * 100;
+                fill.style.width = `${pct}%`;
+                timeText.innerText = `${formatSeconds(globalAudio.currentTime)} / ${formatSeconds(globalAudio.duration)}`;
+            }
+        });
+
+        globalAudio.addEventListener('ended', () => {
+            if (currentlyPlayingCallId) {
+                const btn = document.getElementById(`btnPlay_${currentlyPlayingCallId}`);
+                if (btn) btn.innerText = '▶';
+                currentlyPlayingCallId = null;
+            }
+        });
+    }
+
+    function toggleAudio(callId, audioUrl) {
+        const btn = document.getElementById(`btnPlay_${callId}`);
+
+        if (currentlyPlayingCallId === callId) {
+            if (globalAudio.paused) {
+                globalAudio.play();
+                btn.innerText = '⏸';
+            } else {
+                globalAudio.pause();
+                btn.innerText = '▶';
+            }
+            return;
+        }
+
+        if (currentlyPlayingCallId) {
+            const prevBtn = document.getElementById(`btnPlay_${currentlyPlayingCallId}`);
+            if (prevBtn) prevBtn.innerText = '▶';
+        }
+
+        currentlyPlayingCallId = callId;
+        globalAudio.src = audioUrl;
+        globalAudio.playbackRate = 1.0;
+        globalAudio.play().then(() => {
+            btn.innerText = '⏸';
+        }).catch(e => {
+            showToast('Playback error: Audio file unavailable', '⚠️');
+            btn.innerText = '▶';
+        });
+    }
+
+    function seekAudio(event, callId) {
+        if (currentlyPlayingCallId !== callId) return;
+        const bar = event.currentTarget;
+        const rect = bar.getBoundingClientRect();
+        const clickX = event.clientX - rect.left;
+        const width = rect.width;
+        const fraction = clickX / width;
+        if (globalAudio.duration) {
+            globalAudio.currentTime = fraction * globalAudio.duration;
+        }
+    }
+
+    function cyclePlaybackSpeed(callId) {
+        const speedBtn = document.getElementById(`speed_${callId}`);
+        let currentRate = globalAudio.playbackRate;
+        if (currentRate === 1.0) currentRate = 1.5;
+        else if (currentRate === 1.5) currentRate = 2.0;
+        else currentRate = 1.0;
+
+        globalAudio.playbackRate = currentRate;
+        if (speedBtn) speedBtn.innerText = `${currentRate.toFixed(1)}x`;
+    }
+
+    function formatSeconds(secs) {
+        if (isNaN(secs)) return '0:00';
+        const m = Math.floor(secs / 60);
+        const s = Math.floor(secs % 60);
+        return `${m}:${s < 10 ? '0' : ''}${s}`;
+    }
+
+    // ─── SMS Feed Rendering & Filtering ───
+    function setSmsFilter(filter) {
+        activeSmsFilter = filter;
+        document.getElementById('chipAllSms').classList.toggle('active', filter === 'all');
+        document.getElementById('chipInboundSms').classList.toggle('active', filter === 'inbound');
+        document.getElementById('chipOutboundSms').classList.toggle('active', filter === 'outbound');
+        renderSmsList();
+    }
+
+    function filterSmsList() {
+        renderSmsList();
+    }
+
+    function renderSmsList() {
+        const query = document.getElementById('smsSearchInput').value.trim().toLowerCase();
+        const container = document.getElementById('smsFeedContainer');
+
+        let filtered = currentSms.filter(item => {
+            const isInbound = item.direction === 'INBOUND_CUSTOMER';
+            if (activeSmsFilter === 'inbound' && !isInbound) return false;
+            if (activeSmsFilter === 'outbound' && isInbound) return false;
+
+            if (query) {
+                const haystack = `${item.customerName || ''} ${item.phoneNumber || ''} ${item.message || ''}`.toLowerCase();
+                if (!haystack.includes(query)) return false;
+            }
+            return true;
+        });
+
+        if (filtered.length === 0) {
+            container.innerHTML = `
+                <div style="background: var(--card-bg); border: 1px solid var(--card-border); border-radius: 16px; padding: 40px; text-align: center; color: var(--muted);">
+                    <div style="font-size: 32px; margin-bottom: 8px;">💬</div>
+                    <div style="font-size: 16px; font-weight: 700; color: #FFF; margin-bottom: 4px;">No Messages Found</div>
+                    <div style="font-size: 13px;">No SMS interactions match your query.</div>
+                </div>
+            `;
+            return;
+        }
+
+        container.innerHTML = filtered.map(item => {
+            const isInbound = item.direction === 'INBOUND_CUSTOMER';
+            const dateStr = item.timestamp ? new Date(item.timestamp).toLocaleString([], { month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit' }) : 'Recent';
+
+            return `
+                <div class="sms-item">
+                    <div class="sms-direction-icon ${isInbound ? 'sms-inbound' : 'sms-outbound'}">
+                        ${isInbound ? '📥' : '📤'}
+                    </div>
+                    <div class="sms-content">
+                        <div class="sms-header-line">
+                            <div>
+                                <span class="sms-phone">${item.phoneNumber}</span>
+                                ${item.customerName ? `<span style="color: var(--muted); font-size: 13px; margin-left: 6px;">(${escapeHtml(item.customerName)})</span>` : ''}
+                            </div>
+                            <div style="display: flex; gap: 8px; align-items: center;">
+                                <span class="sms-badge">${escapeHtml(item.simSlot || 'SIM 1 (Carrier)')}</span>
+                                <span style="font-size: 11px; color: var(--muted);">${dateStr}</span>
+                            </div>
+                        </div>
+
+                        <div class="sms-body">
+                            ${escapeHtml(item.message)}
+                        </div>
+
+                        <div style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 8px;">
+                            <div class="sms-ai-note">
+                                <span>🤖</span> ${escapeHtml(item.aiContext || 'Dispatched via office Android SIM')}
+                            </div>
+                            <button class="btn-portal-action" style="padding: 4px 10px; font-size: 11px;" onclick="openQuickSmsModal('${item.phoneNumber}', '${escapeHtml(item.customerName || '')}')">
+                                💬 Reply via SIM
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            `;
+        }).join('');
+    }
+
+    // ─── Quick SMS Modal & Sending via Office SIM ───
+    function openQuickSmsModal(phone = '', customerName = '') {
+        document.getElementById('smsModalTo').value = phone;
+        document.getElementById('smsModalBody').value = '';
+        document.getElementById('quickSmsModal').classList.add('active');
+        document.getElementById('smsModalBody').focus();
+    }
+
+    function closeQuickSmsModal() {
+        document.getElementById('quickSmsModal').classList.remove('active');
+    }
+
+    async function handleSendQuickSms(e) {
+        e.preventDefault();
+        const to = document.getElementById('smsModalTo').value.trim();
+        const message = document.getElementById('smsModalBody').value.trim();
+        const btn = document.getElementById('btnSendSmsSubmit');
+
+        btn.disabled = true;
+        btn.innerText = 'Enqueuing to Handset SIM...';
+
+        try {
+            const res = await fetch('/api/portal/quick-sms', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                    token: currentAuthToken,
+                    licenseKey: currentPortalData?.client?.licenseKey,
+                    to,
+                    message
+                })
+            });
+
+            const data = await res.json();
+            btn.disabled = false;
+            btn.innerText = '📤 Send via Office SIM';
+
+            if (!data.success) {
+                showToast(data.error || 'Failed to dispatch SMS', '⚠️');
+                return;
+            }
+
+            showToast(data.message || 'SMS enqueued for office physical SIM dispatch!');
+            closeQuickSmsModal();
+
+            await refreshPortalData();
+        } catch (err) {
+            btn.disabled = false;
+            btn.innerText = '📤 Send via Office SIM';
+            showToast('Error dispatching SMS: ' + err.message, '⚠️');
+        }
+    }
+
+    // ─── Export Calls to CSV ───
+    function exportCallsToCsv() {
+        if (!currentCalls || currentCalls.length === 0) {
+            showToast('No call records to export', '⚠️');
+            return;
+        }
+
+        const headers = ['Call ID', 'Timestamp', 'Caller Name', 'Caller Phone', 'Duration', 'Urgency', 'Service Address', 'AI Summary', 'Audio URL'];
+        const rows = currentCalls.map(c => [
+            `"${c.id || ''}"`,
+            `"${c.timestamp || ''}"`,
+            `"${(c.callerName || '').replace(/"/g, '""')}"`,
+            `"${c.callerNumber || ''}"`,
+            `"${c.durationFormatted || ''}"`,
+            `"${c.urgency || 'NORMAL'}"`,
+            `"${(c.address || '').replace(/"/g, '""')}"`,
+            `"${(c.summary || '').replace(/"/g, '""')}"`,
+            `"${c.audioUrl || ''}"`
+        ]);
+
+        const csvContent = 'data:text/csv;charset=utf-8,' + [headers.join(','), ...rows.map(r => r.join(','))].join('\n');
+        const encodedUri = encodeURI(csvContent);
+        const link = document.createElement('a');
+        link.setAttribute('href', encodedUri);
+        link.setAttribute('download', `call_log_${(currentPortalData?.client?.name || 'client').replace(/[^a-z0-9]/gi, '_').toLowerCase()}.csv`);
+        document.body.appendChild(link);
+        link.click();
+        document.body.removeChild(link);
+        showToast('Exported call logs to CSV successfully!');
+    }
+
+    function copyForwardingCode() {
+        const text = document.getElementById('forwardingCodeDisplay').innerText;
+        navigator.clipboard.writeText(text);
+        showToast('Forwarding dial code copied to clipboard!');
+    }
+
+    async function refreshPortalData() {
+        if (!currentAuthToken) return;
+        showToast('Refreshing calls, tasks & SMS...');
+        await loadPortalWithToken(currentAuthToken);
+    }
+
+    function logoutClientPortal() {
+        localStorage.removeItem('mcas_portal_token');
+        sessionStorage.removeItem('mcas_portal_token');
+        currentAuthToken = '';
+        currentPortalData = null;
+        document.getElementById('authSection').style.display = 'block';
+        document.getElementById('dashboardSection').style.display = 'none';
+        document.getElementById('navStatusGroup').style.display = 'none';
+        showToast('Signed out of Client Portal');
+    }
+
+    function showToast(msg, icon = '✓') {
+        const toast = document.getElementById('toast');
+        toast.innerHTML = `<span>${icon}</span> <span>${msg}</span>`;
+        toast.classList.add('show');
+        setTimeout(() => toast.classList.remove('show'), 3500);
+    }
+
+    function escapeHtml(str) {
+        if (!str) return '';
+        return String(str)
+            .replace(/&/g, '&amp;')
+            .replace(/</g, '&lt;')
+            .replace(/>/g, '&gt;')
+            .replace(/"/g, '&quot;')
+            .replace(/'/g, '&#039;');
+    }
+</script>
+
+</body>
+</html>

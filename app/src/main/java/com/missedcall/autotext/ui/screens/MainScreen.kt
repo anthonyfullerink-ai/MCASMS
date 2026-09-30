@@ -29,6 +29,7 @@ import kotlinx.coroutines.launch
 
 import androidx.compose.ui.graphics.Color
 import com.missedcall.autotext.data.db.AppNotificationEvent
+import com.missedcall.autotext.util.AppBranding
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -75,6 +76,18 @@ fun MainScreen(
             }
         } catch (e: Exception) {
             // Background check failure
+        }
+    }
+
+    // Remote Configuration Sync: Pull latest agency/cloud settings into handset
+    val settingsRepo = remember { com.missedcall.autotext.data.SettingsRepository(context) }
+    LaunchedEffect(settings.licenseKey) {
+        if (settings.licenseKey.isNotBlank()) {
+            try {
+                settingsRepo.fetchAndApplyRemoteConfig(settings.licenseKey)
+            } catch (e: Exception) {
+                // Background sync fail-safe
+            }
         }
     }
 
@@ -148,7 +161,7 @@ fun MainScreen(
                             modifier = Modifier.fillMaxWidth().padding(bottom = 8.dp)
                         ) {
                             Text(
-                                text = "⚠️ This is a required critical update (v${update.versionName}, Build ${update.versionCode}). You must install this update to continue using Missed Call Auto SMS with the updated telecom routing & 24/7 AI Voice features.",
+                                text = "⚠️ This is a required critical update (v${update.versionName}, Build ${update.versionCode}). You must install this update to continue using ${AppBranding.appName} with the updated telecom routing & 24/7 AI Voice features.",
                                 color = MaterialTheme.colorScheme.onErrorContainer,
                                 style = MaterialTheme.typography.bodySmall,
                                 fontWeight = FontWeight.SemiBold,
@@ -157,7 +170,7 @@ fun MainScreen(
                         }
                     }
                     Text(
-                        text = update.releaseNotes ?: "A new performance and feature update is ready for Missed Call Auto SMS.",
+                        text = update.releaseNotes ?: "A new performance and feature update is ready for ${AppBranding.appName}.",
                         style = MaterialTheme.typography.bodyMedium
                     )
                     Spacer(modifier = Modifier.height(8.dp))
@@ -262,7 +275,7 @@ fun MainScreen(
                             .padding(vertical = 2.dp)
                     ) {
                         Text(
-                            text = "Missed Call Auto SMS",
+                            text = AppBranding.appName,
                             fontWeight = FontWeight.Bold,
                             fontSize = 15.sp,
                             maxLines = 1,

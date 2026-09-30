@@ -1,0 +1,45 @@
+{
+  "$schema": "./schema.json",
+  "agencies": {
+    "default": {
+      "agencyId": "default",
+      "appName": "Missed Call Auto SMS",
+      "tagline": "AI Telecom Appliance & 24/7 Voice Receptionist",
+      "supportEmail": "support@missedcallautosms.com",
+      "supportPhone": "+1 (732) 660-9121",
+      "privacyPolicyUrl": "https://missedcallautosms.com/privacy.html",
+      "termsUrl": "https://missedcallautosms.com/terms.html",
+      "stripeDescriptor": "Voice Hub Network",
+      "theme": {
+        "primaryColor": "#2563EB",
+        "accentColor": "#10B981"
+      }
+    },
+    "apex_leads": {
+      "agencyId": "apex_leads",
+      "appName": "Apex CallShield",
+      "tagline": "Instant 24/7 AI Receptionist & Lead Capture",
+      "supportEmail": "support@apexleads.io",
+      "supportPhone": "+1 (800) 555-0199",
+      "privacyPolicyUrl": "https://apexleads.io/privacy",
+      "termsUrl": "https://apexleads.io/terms",
+      "stripeDescriptor": "Voice Hub Network",
+      "theme": {
+        "primaryColor": "#0F52BA",
+        "accentColor": "#00E676"
+      },
+      "webhook": {
+        "masterUrl": "http://localhost:3200/webhook",
+        "signingSecret": "whsec_test_secret_1234567890abcdef",
+        "events": [
+          "voice.call_completed",
+          "lead.urgent",
+          "call.missed",
+          "sms.received"
+        ],
+        "active": true,
+        "updatedAt": "2026-09-30T17:34:52.208Z"
+      }
+    }
+  }
+}

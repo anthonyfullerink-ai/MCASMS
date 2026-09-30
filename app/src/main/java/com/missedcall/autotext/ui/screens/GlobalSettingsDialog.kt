@@ -291,7 +291,7 @@ fun GlobalSettingsDialog(
                             Spacer(modifier = Modifier.height(4.dp))
                             Text(
                                 if (isIgnoringBattery)
-                                    "✅ Unrestricted: Android will not kill the Missed Call Auto SMS background listener."
+                                    "✅ Unrestricted: Android will not kill the ${com.missedcall.autotext.util.AppBranding.appName} background listener."
                                 else
                                     "⚠️ Restricted: Please disable battery optimization so Android doesn't pause the appliance while the screen is locked.",
                                 style = MaterialTheme.typography.bodySmall,

@@ -150,8 +150,9 @@ fun VoiceHubScreen(
         val key = settings.licenseKey.trim()
         if (!hasPaymentMethod) {
             val email = settings.customerEmail.trim()
+            val agency = settings.agencyId.ifBlank { com.missedcall.autotext.util.AppBranding.agencyId }
             inAppPaymentTitle = "Add Minutes • $label"
-            inAppPaymentUrl = "https://missedcallautosms.com/api/create-credit-pack-checkout?pack=$packTier&key=${Uri.encode(key)}&email=${Uri.encode(email)}"
+            inAppPaymentUrl = "https://missedcallautosms.com/api/create-credit-pack-checkout?pack=$packTier&key=${Uri.encode(key)}&email=${Uri.encode(email)}&agency=${Uri.encode(agency)}"
             showInAppPayment = true
             return
         }

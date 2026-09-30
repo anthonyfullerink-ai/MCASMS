@@ -813,7 +813,7 @@
             <option value="4">🎫 Support Tickets</option>
             <option value="5">🎙️ AI Voice Receptionist</option>
             <option value="6">📢 Omnichannel Content Engine</option>
-            <option value="7">🏢 Agency Fleet Operations</option>
+            <option value="7">🏢 White-Label Agencies</option>
             <option value="8">🤝 Referral Partners & Rev-Share</option>
             <option value="9">💳 Memberships & Subscriptions</option>
         </select>
@@ -828,7 +828,7 @@
         <button id="tabBtn4" class="tab-btn" onclick="switchTab(4)">🎫 Support Tickets (<span id="countTabTickets">0</span>)</button>
         <button id="tabBtn5" class="tab-btn" onclick="switchTab(5)">🎙️ AI Voice Receptionist (<span id="countTabVoice">0</span>)</button>
         <button id="tabBtn6" class="tab-btn" onclick="switchTab(6)">📢 Omnichannel Content Engine (<span id="countTabContent">0</span>)</button>
-        <button id="tabBtn7" class="tab-btn" onclick="switchTab(7)" style="border-color: #6366F1; color: #818CF8;">🏢 Agency Fleet Operations (<span id="countTabFleet">0</span>)</button>
+        <button id="tabBtn7" class="tab-btn" onclick="switchTab(7)" style="border-color: #6366F1; color: #818CF8;">🏢 White-Label Agencies (<span id="countTabAgencies">0</span>)</button>
         <button id="tabBtn8" class="tab-btn" onclick="switchTab(8)" style="border-color: #10B981; color: #34D399;">🤝 Referral Partners & Rev-Share (<span id="countTabReferrals">0</span>)</button>
         <button id="tabBtn9" class="tab-btn" onclick="switchTab(9)" style="border-color: #10B981; color: #10B981; font-weight: 800;">💳 Memberships & Subscriptions (<span id="countTabSubs">0</span>)</button>
     </div>
@@ -1717,79 +1717,78 @@
         </div>
     </div>
 
-    <!-- TAB 7: Agency Fleet Operations -->
+    <!-- TAB 7: White-Label Agency Management Hub -->
     <div id="tab7" class="tab-content" style="display: none;">
         <div class="card-header">
             <div>
-                <h2>🏢 Agency Partner & Client Fleet Operations</h2>
-                <div style="font-size: 12px; color: var(--muted); margin-top: 4px;">Unified multi-tenant control center: Manage Agency Master Partners ($349/mo, $649/mo, $1,500/mo), seat quotas, pooled voice minutes, and individual client appliances.</div>
+                <h2>🏢 White-Label Agency Management Hub</h2>
+                <div style="font-size: 12px; color: var(--muted); margin-top: 4px;">Configure white-label agency profiles, manage bespoke app names and logos, monitor live client accounts, and trigger 1-click APK & OTA builds.</div>
             </div>
             <div style="display: flex; gap: 10px; flex-wrap: wrap;">
-                <button class="btn-action btn-pro-action" onclick="promptCreateAgencyPartner()">🏢 + Issue Agency Account</button>
-                <button class="btn-action" style="border-color: #38BDF8; color: #38BDF8;" onclick="loadAgencyFleetTab()">🔄 Refresh Fleet Data</button>
-                <a href="/agency_dashboard.html" target="_blank" class="btn-action" style="text-decoration: none; border-color: #818CF8; color: #818CF8;">🔗 Open Agency Portal</a>
+                <button class="btn-action btn-pro-action" onclick="openCreateAgencyModal()">✨ + Onboard New Agency</button>
+                <button class="btn-action" style="border-color: #38BDF8; color: #38BDF8;" onclick="loadAgencyFleetTab()">🔄 Refresh Agencies</button>
             </div>
         </div>
 
         <!-- Metric Cards Grid -->
         <div class="metrics-grid" style="grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); margin-bottom: 24px;">
             <div class="metric-card">
-                <div class="metric-title">Active Agency Partners</div>
+                <div class="metric-title">Registered Agencies</div>
                 <div class="metric-value" id="fleetMetricAgencies" style="color: #818CF8;">0</div>
-                <div class="metric-sub" id="fleetMetricAgenciesSub">5-Pack, 10-Pack & Enterprise</div>
+                <div class="metric-sub" id="fleetMetricAgenciesSub">Active Agency Profiles</div>
             </div>
             <div class="metric-card">
-                <div class="metric-title">Client Appliances Deployed</div>
+                <div class="metric-title">Agency Clients Deployed</div>
                 <div class="metric-value" id="fleetMetricSeats" style="color: var(--primary);">0</div>
-                <div class="metric-sub" id="fleetMetricSeatsSub">0 seats assigned</div>
+                <div class="metric-sub" id="fleetMetricSeatsSub">Total end-users on agency apps</div>
             </div>
             <div class="metric-card">
-                <div class="metric-title">Pooled Voice Minutes Pool</div>
-                <div class="metric-value" id="fleetMetricVoicePool" style="color: #A855F7;">0m</div>
-                <div class="metric-sub" id="fleetMetricVoiceSub">0 mins utilized across fleets</div>
+                <div class="metric-title">Voice Minutes Balance</div>
+                <div class="metric-value" id="fleetMetricVoicePool" style="color: #10B981;">0m</div>
+                <div class="metric-sub" id="fleetMetricVoiceSub">Combined client airtime balance</div>
             </div>
             <div class="metric-card">
-                <div class="metric-title">Hardware Bound Devices</div>
-                <div class="metric-value" id="fleetMetricHardware" style="color: #38BDF8;">0</div>
-                <div class="metric-sub">Physical Android appliances active</div>
+                <div class="metric-title">OTA Build Status</div>
+                <div class="metric-value" id="fleetMetricHardware" style="color: #38BDF8;">v1.9.3</div>
+                <div class="metric-sub">Build 39 Segmented OTA Engine</div>
             </div>
         </div>
 
-        <!-- SECTION 1: Agency Master Accounts Table -->
+        <!-- SECTION 1: White-Label Agency Profiles Table -->
         <div class="card-header" style="border-top: 1px solid var(--card-border); padding-top: 20px; margin-top: 10px;">
             <div>
-                <h3 style="margin: 0; font-size: 16px; color: #FFF;">🏢 Agency Partner Master Accounts (<span id="agencyPartnersCount">0</span>)</h3>
-                <div style="font-size: 12px; color: var(--muted); margin-top: 4px;">Each master key manages an isolated client fleet with pooled AI voice minutes and turnkey branding.</div>
+                <h3 style="margin: 0; font-size: 16px; color: #FFF;">🏢 Registered Partner Agency Profiles (<span id="agencyPartnersCount">0</span>)</h3>
+                <div style="font-size: 12px; color: var(--muted); margin-top: 4px;">Each profile has custom app branding, support contacts, privacy/terms links, and dedicated compiled APK builds.</div>
             </div>
-            <button class="btn-action" style="font-size: 12px;" onclick="promptCreateAgencyPartner()">+ New Partner</button>
+            <button class="btn-action" style="font-size: 12px;" onclick="openCreateAgencyModal()">+ Add Agency</button>
         </div>
 
         <div class="table-responsive">
             <table style="margin-bottom: 0;">
                 <thead>
                     <tr>
-                        <th>Agency Partner</th>
-                        <th>Master License Key</th>
-                        <th>Tier & Pricing</th>
-                        <th>Seat Quota Utilization</th>
-                        <th>Voice Pool (Mins)</th>
-                        <th>Status</th>
+                        <th>Agency & Slug</th>
+                        <th>Branded App Name</th>
+                        <th>Support Contact</th>
+                        <th>Stripe Descriptor</th>
+                        <th>Active Clients</th>
+                        <th>APK & OTA Build Status</th>
                         <th>Actions</th>
                     </tr>
                 </thead>
                 <tbody id="agencyPartnersTableBody">
-                    <tr><td colspan="7" style="text-align: center; color: var(--muted); padding: 24px;">Loading agency partner accounts...</td></tr>
+                    <tr><td colspan="7" style="text-align: center; color: var(--muted); padding: 24px;">Loading agency profiles...</td></tr>
                 </tbody>
             </table>
         </div>
 
-        <!-- SECTION 2: All Deployed Client Appliances Table -->
+        <!-- SECTION 2: Deployed Client Appliances Table -->
         <div class="card-header" style="border-top: 1px solid var(--card-border); padding-top: 20px;">
             <div>
-                <h3 style="margin: 0; font-size: 16px; color: #FFF;">📱 Deployed Client Appliance Fleets (<span id="allFleetClientsCount">0</span>)</h3>
-                <div style="font-size: 12px; color: var(--muted); margin-top: 4px;">All physical Android devices deployed under agency master keys. Reset hardware locks or issue client setup sheets directly.</div>
+                <h3 style="margin: 0; font-size: 16px; color: #FFF;">📱 Deployed Agency Client Accounts (<span id="allFleetClientsCount">0</span>)</h3>
+                <div style="font-size: 12px; color: var(--muted); margin-top: 4px;">Live businesses using agency-branded editions of the app with automatic voice minutes and SMS routing.</div>
             </div>
-            <input type="text" id="fleetClientSearchInput" placeholder="🔍 Search client appliance or key..." oninput="filterFleetClientsTable()" style="width: 260px; padding: 6px 12px; font-size: 12px; background: #161B22; border: 1px solid var(--card-border); border-radius: 8px; color: #FFF; outline: none;">
+            <input type="text" id="fleetClientSearchInput" placeholder="🔍 Search by client name, email, or key..." oninput="filterFleetClientsTable()" style="width: 280px; padding: 6px 12px; font-size: 12px; background: #161B22; border: 1px solid var(--card-border); border-radius: 8px; color: #FFF; outline: none;">
         </div>
 
         <div class="table-responsive">
@@ -1798,17 +1797,232 @@
                     <tr>
                         <th>Client Business</th>
                         <th>Parent Agency</th>
-                        <th>Appliance Key</th>
-                        <th>Bound Hardware ID</th>
-                        <th>Voice Usage</th>
-                        <th>Status</th>
+                        <th>License Key</th>
+                        <th>Voice Minutes Balance</th>
+                        <th>Account Status</th>
                         <th>Actions</th>
                     </tr>
                 </thead>
                 <tbody id="fleetClientsTableBody">
-                    <tr><td colspan="7" style="text-align: center; color: var(--muted); padding: 24px;">Loading deployed client appliances...</td></tr>
+                    <tr><td colspan="6" style="text-align: center; color: var(--muted); padding: 24px;">Loading deployed clients...</td></tr>
                 </tbody>
             </table>
+        </div>
+    </div>
+
+    <!-- Agency Profile Setup / Edit Modal -->
+    <div id="modalAgencyProfile" style="display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.85); z-index: 9999; align-items: center; justify-content: center; backdrop-filter: blur(6px); padding: 20px; overflow-y: auto;">
+        <div style="background: #0F172A; border: 1px solid #1E293B; border-radius: 16px; max-width: 640px; width: 100%; box-shadow: 0 25px 50px -12px rgba(0,0,0,0.7); overflow: hidden;">
+            <div style="padding: 18px 24px; border-bottom: 1px solid #1E293B; display: flex; justify-content: space-between; align-items: center; background: #131D31;">
+                <h3 id="agencyModalTitle" style="margin: 0; font-size: 18px; color: #FFF;">🏢 Configure Agency Profile</h3>
+                <button type="button" onclick="closeAgencyModal()" style="background: transparent; border: none; color: #94A3B8; font-size: 20px; cursor: pointer;">✕</button>
+            </div>
+            <form id="agencyProfileForm" onsubmit="handleSaveAgency(event)" style="padding: 24px; display: grid; gap: 16px;">
+                <input type="hidden" id="agencyIsEdit" value="0">
+                <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 14px;">
+                    <div>
+                        <label style="display: block; font-size: 12px; font-weight: 700; color: #CBD5E1; margin-bottom: 6px;">Agency Slug / Identifier *</label>
+                        <input type="text" id="agencyInputSlug" required placeholder="e.g. apex_marketing" style="width: 100%; padding: 10px 12px; background: #080C16; border: 1px solid #1E293B; border-radius: 8px; color: #FFF; font-family: monospace; font-size: 13px;">
+                        <small style="font-size: 10px; color: #64748B;">Lowercase, letters, numbers & underscores only</small>
+                    </div>
+                    <div>
+                        <label style="display: block; font-size: 12px; font-weight: 700; color: #CBD5E1; margin-bottom: 6px;">Agency Legal / Business Name *</label>
+                        <input type="text" id="agencyInputLegalName" required placeholder="e.g. Apex Marketing Group LLC" style="width: 100%; padding: 10px 12px; background: #080C16; border: 1px solid #1E293B; border-radius: 8px; color: #FFF; font-size: 13px;">
+                    </div>
+                </div>
+
+                <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 14px;">
+                    <div>
+                        <label style="display: block; font-size: 12px; font-weight: 700; color: #CBD5E1; margin-bottom: 6px;">Branded App Name *</label>
+                        <input type="text" id="agencyInputAppName" required placeholder="e.g. Apex CallShield" style="width: 100%; padding: 10px 12px; background: #080C16; border: 1px solid #1E293B; border-radius: 8px; color: #FFF; font-size: 13px; font-weight: 700;">
+                        <small style="font-size: 10px; color: #64748B;">Appears on Android home screen & top bar</small>
+                    </div>
+                    <div>
+                        <label style="display: block; font-size: 12px; font-weight: 700; color: #CBD5E1; margin-bottom: 6px;">Primary Brand Color</label>
+                        <div style="display: flex; gap: 8px; align-items: center;">
+                            <input type="color" id="agencyInputColorPicker" value="#2563EB" onchange="document.getElementById('agencyInputColorText').value = this.value" style="width: 42px; height: 38px; border: 1px solid #1E293B; border-radius: 8px; background: transparent; cursor: pointer;">
+                            <input type="text" id="agencyInputColorText" value="#2563EB" onchange="document.getElementById('agencyInputColorPicker').value = this.value" style="width: 100%; padding: 10px 12px; background: #080C16; border: 1px solid #1E293B; border-radius: 8px; color: #FFF; font-family: monospace; font-size: 13px;">
+                        </div>
+                    </div>
+                </div>
+
+                <div>
+                    <label style="display: block; font-size: 12px; font-weight: 700; color: #CBD5E1; margin-bottom: 6px;">Tagline / Subheading</label>
+                    <input type="text" id="agencyInputTagline" placeholder="e.g. 24/7 AI Receptionist & Instant Lead Protection" style="width: 100%; padding: 10px 12px; background: #080C16; border: 1px solid #1E293B; border-radius: 8px; color: #FFF; font-size: 13px;">
+                </div>
+
+                <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 14px;">
+                    <div>
+                        <label style="display: block; font-size: 12px; font-weight: 700; color: #CBD5E1; margin-bottom: 6px;">Support Email *</label>
+                        <input type="email" id="agencyInputSupportEmail" required placeholder="support@agency.com" style="width: 100%; padding: 10px 12px; background: #080C16; border: 1px solid #1E293B; border-radius: 8px; color: #FFF; font-size: 13px;">
+                    </div>
+                    <div>
+                        <label style="display: block; font-size: 12px; font-weight: 700; color: #CBD5E1; margin-bottom: 6px;">Support Phone</label>
+                        <input type="text" id="agencyInputSupportPhone" placeholder="+1 (800) 555-0199" style="width: 100%; padding: 10px 12px; background: #080C16; border: 1px solid #1E293B; border-radius: 8px; color: #FFF; font-size: 13px;">
+                    </div>
+                </div>
+
+                <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 14px;">
+                    <div>
+                        <label style="display: block; font-size: 12px; font-weight: 700; color: #CBD5E1; margin-bottom: 6px;">Privacy Policy URL</label>
+                        <input type="url" id="agencyInputPrivacyUrl" placeholder="https://agency.com/privacy" style="width: 100%; padding: 10px 12px; background: #080C16; border: 1px solid #1E293B; border-radius: 8px; color: #FFF; font-size: 13px;">
+                    </div>
+                    <div>
+                        <label style="display: block; font-size: 12px; font-weight: 700; color: #CBD5E1; margin-bottom: 6px;">Terms of Service URL</label>
+                        <input type="url" id="agencyInputTermsUrl" placeholder="https://agency.com/terms" style="width: 100%; padding: 10px 12px; background: #080C16; border: 1px solid #1E293B; border-radius: 8px; color: #FFF; font-size: 13px;">
+                    </div>
+                </div>
+
+                <div>
+                    <label style="display: block; font-size: 12px; font-weight: 700; color: #CBD5E1; margin-bottom: 6px;">Stripe Checkout Descriptor</label>
+                    <input type="text" id="agencyInputStripeDescriptor" value="Voice Hub Network" required style="width: 100%; padding: 10px 12px; background: #080C16; border: 1px solid #1E293B; border-radius: 8px; color: #FFF; font-size: 13px;">
+                    <small style="font-size: 10px; color: #64748B;">Shown on in-app minute checkouts (keeps carrier neutrality)</small>
+                </div>
+
+                <div style="display: flex; justify-content: flex-end; gap: 12px; margin-top: 10px; border-top: 1px solid #1E293B; padding-top: 16px;">
+                    <button type="button" onclick="closeAgencyModal()" style="padding: 10px 18px; border-radius: 8px; background: #1E293B; border: 1px solid #334155; color: #CBD5E1; font-weight: 600; cursor: pointer;">Cancel</button>
+                    <button type="submit" id="btnSaveAgencySubmit" style="padding: 10px 22px; border-radius: 8px; background: #2563EB; border: none; color: #FFF; font-weight: 700; cursor: pointer;">💾 Save Agency Profile</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- Owner Super-Admin Remote Appliance & Voice Config Modal -->
+    <div id="ownerRemoteConfigModal" style="display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.85); z-index: 9999; align-items: center; justify-content: center; backdrop-filter: blur(6px); padding: 20px; overflow-y: auto;">
+        <div style="background: #0F172A; border: 1px solid #1E293B; border-radius: 16px; max-width: 680px; width: 100%; box-shadow: 0 25px 50px -12px rgba(0,0,0,0.7); overflow: hidden;">
+            <div style="padding: 18px 24px; border-bottom: 1px solid #1E293B; display: flex; justify-content: space-between; align-items: center; background: #131D31;">
+                <div>
+                    <h3 style="margin: 0; font-size: 18px; color: #FFF; display: flex; align-items: center; gap: 8px;">
+                        <span>⚙️</span> Client Appliance & Voice Remote Config
+                    </h3>
+                    <div style="font-size: 12px; color: #94A3B8; margin-top: 2px;">
+                        Client: <strong id="orcClientName" style="color: #38BDF8;">Acme Plumbing</strong> • <code id="orcLicenseKey" style="font-family: monospace; color: #CBD5E1;">MCAS-...</code>
+                    </div>
+                </div>
+                <button type="button" onclick="closeOwnerRemoteConfigModal()" style="background: transparent; border: none; color: #94A3B8; font-size: 20px; cursor: pointer;">✕</button>
+            </div>
+
+            <!-- Tab Buttons -->
+            <div style="display: flex; gap: 8px; padding: 12px 24px 0 24px; border-bottom: 1px solid #1E293B; background: #0B1120;">
+                <button type="button" class="btn-action active" id="btnOrcTabVoice" onclick="switchOwnerRcTab('voice')" style="border-radius: 6px 6px 0 0; border-bottom: none; font-size: 12px;">🎙️ AI Receptionist</button>
+                <button type="button" class="btn-action" id="btnOrcTabSms" onclick="switchOwnerRcTab('sms')" style="border-radius: 6px 6px 0 0; border-bottom: none; font-size: 12px;">💬 Auto-SMS</button>
+                <button type="button" class="btn-action" id="btnOrcTabWebhook" onclick="switchOwnerRcTab('webhook')" style="border-radius: 6px 6px 0 0; border-bottom: none; font-size: 12px;">⚡ Webhooks</button>
+                <button type="button" class="btn-action" id="btnOrcTabLock" onclick="switchOwnerRcTab('lock')" style="border-radius: 6px 6px 0 0; border-bottom: none; font-size: 12px;">🔒 Appliance Lock</button>
+            </div>
+
+            <div style="padding: 24px; max-height: 70vh; overflow-y: auto;">
+                <!-- TAB 1: Voice Receptionist -->
+                <div id="orcPaneVoice">
+                    <div style="background: rgba(56, 189, 248, 0.08); border: 1px solid rgba(56, 189, 248, 0.25); border-radius: 8px; padding: 12px; margin-bottom: 16px; font-size: 12px; color: #CBD5E0;">
+                        <strong style="color: #38BDF8;">⚡ Real-Time Vapi Cloud Override:</strong> Changes saved here patch the Vapi cloud assistant immediately. Calls ringing into carrier forwarding will respond with the updated receptionist prompt.
+                    </div>
+
+                    <div style="display: flex; justify-content: space-between; align-items: center; background: #080C16; padding: 12px 14px; border: 1px solid #1E293B; border-radius: 8px; margin-bottom: 14px;">
+                        <div>
+                            <strong style="color: #FFF; font-size: 13px;">Enable AI Voice Receptionist</strong>
+                            <div style="font-size: 11px; color: #94A3B8;">Answering unanswered forwarded calls</div>
+                        </div>
+                        <input type="checkbox" id="orcVoiceEnabled" checked style="width: 18px; height: 18px; accent-color: #38BDF8;">
+                    </div>
+
+                    <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 14px; margin-bottom: 14px;">
+                        <div>
+                            <label style="display: block; font-size: 12px; font-weight: 700; color: #CBD5E1; margin-bottom: 6px;">Persona Name</label>
+                            <input type="text" id="orcVoiceAgentName" placeholder="Riley" style="width: 100%; padding: 8px 12px; background: #080C16; border: 1px solid #1E293B; border-radius: 8px; color: #FFF; font-size: 13px;">
+                        </div>
+                        <div>
+                            <label style="display: block; font-size: 12px; font-weight: 700; color: #CBD5E1; margin-bottom: 6px;">Model</label>
+                            <select id="orcVoiceModel" style="width: 100%; padding: 8px 12px; background: #080C16; border: 1px solid #1E293B; border-radius: 8px; color: #FFF; font-size: 13px;">
+                                <option value="gpt-4o-mini">GPT-4o Mini (Fast / Low Latency)</option>
+                                <option value="gpt-4o">GPT-4o (Deep Reasoning)</option>
+                            </select>
+                        </div>
+                    </div>
+
+                    <div style="margin-bottom: 14px;">
+                        <label style="display: block; font-size: 12px; font-weight: 700; color: #CBD5E1; margin-bottom: 6px;">AI Greeting Message (Spoken First)</label>
+                        <textarea id="orcCustomGreeting" rows="3" style="width: 100%; padding: 10px 12px; background: #080C16; border: 1px solid #1E293B; border-radius: 8px; color: #FFF; font-size: 13px; font-family: inherit;"></textarea>
+                    </div>
+
+                    <div style="margin-bottom: 14px;">
+                        <label style="display: block; font-size: 12px; font-weight: 700; color: #CBD5E1; margin-bottom: 6px;">AI System Prompt Instructions</label>
+                        <textarea id="orcSystemPrompt" rows="5" style="width: 100%; padding: 10px 12px; background: #080C16; border: 1px solid #1E293B; border-radius: 8px; color: #FFF; font-size: 13px; font-family: inherit;"></textarea>
+                    </div>
+
+                    <div>
+                        <label style="display: block; font-size: 12px; font-weight: 700; color: #CBD5E1; margin-bottom: 6px;">Emergency Call Transfer Number</label>
+                        <input type="text" id="orcEmergencyTransfer" placeholder="+1 (555) 987-6543" style="width: 100%; padding: 8px 12px; background: #080C16; border: 1px solid #1E293B; border-radius: 8px; color: #FFF; font-size: 13px;">
+                    </div>
+                </div>
+
+                <!-- TAB 2: Auto-SMS -->
+                <div id="orcPaneSms" style="display: none;">
+                    <div style="background: rgba(16, 185, 129, 0.08); border: 1px solid rgba(16, 185, 129, 0.25); border-radius: 8px; padding: 12px; margin-bottom: 16px; font-size: 12px; color: #CBD5E0;">
+                        <strong style="color: #10B981;">📱 Physical SIM Dispatch:</strong> Auto-SMS template is synced down to the client Android appliance on its next check-in or boot.
+                    </div>
+
+                    <div style="margin-bottom: 14px;">
+                        <label style="display: block; font-size: 12px; font-weight: 700; color: #CBD5E1; margin-bottom: 6px;">Missed Call SMS Template</label>
+                        <textarea id="orcSmsTemplate" rows="3" style="width: 100%; padding: 10px 12px; background: #080C16; border: 1px solid #1E293B; border-radius: 8px; color: #FFF; font-size: 13px; font-family: inherit;"></textarea>
+                    </div>
+
+                    <div style="margin-bottom: 14px;">
+                        <label style="display: block; font-size: 12px; font-weight: 700; color: #CBD5E1; margin-bottom: 6px;">SMS Send Delay: <strong id="orcDelayLabel" style="color: #38BDF8;">15 seconds</strong></label>
+                        <input type="range" id="orcSmsDelay" min="3" max="60" value="15" style="width: 100%; accent-color: #38BDF8;" oninput="document.getElementById('orcDelayLabel').innerText = this.value + ' seconds'">
+                    </div>
+
+                    <div style="display: flex; justify-content: space-between; align-items: center; background: #080C16; padding: 12px 14px; border: 1px solid #1E293B; border-radius: 8px;">
+                        <div>
+                            <strong style="color: #FFF; font-size: 13px;">Mute Native Auto-Reply SMS</strong>
+                            <div style="font-size: 11px; color: #94A3B8;">Suppresses local SMS if call forwarding receptionist is active</div>
+                        </div>
+                        <input type="checkbox" id="orcMuteNative" style="width: 18px; height: 18px; accent-color: #38BDF8;">
+                    </div>
+                </div>
+
+                <!-- TAB 3: Webhooks -->
+                <div id="orcPaneWebhook" style="display: none;">
+                    <div style="display: flex; justify-content: space-between; align-items: center; background: #080C16; padding: 12px 14px; border: 1px solid #1E293B; border-radius: 8px; margin-bottom: 14px;">
+                        <div>
+                            <strong style="color: #FFF; font-size: 13px;">Enable Outbound Webhooks</strong>
+                            <div style="font-size: 11px; color: #94A3B8;">Dispatches JSON payloads on missed call / SMS events</div>
+                        </div>
+                        <input type="checkbox" id="orcWebhookEnabled" checked style="width: 18px; height: 18px; accent-color: #38BDF8;">
+                    </div>
+
+                    <div>
+                        <label style="display: block; font-size: 12px; font-weight: 700; color: #CBD5E1; margin-bottom: 6px;">Central Webhook Target URL</label>
+                        <input type="url" id="orcWebhookUrl" placeholder="https://hooks.zapier.com/... or https://your-n8n.com/..." style="width: 100%; padding: 8px 12px; background: #080C16; border: 1px solid #1E293B; border-radius: 8px; color: #FFF; font-size: 13px;">
+                    </div>
+                </div>
+
+                <!-- TAB 4: Appliance Lock -->
+                <div id="orcPaneLock" style="display: none;">
+                    <div style="background: rgba(245, 158, 11, 0.08); border: 1px solid rgba(245, 158, 11, 0.25); border-radius: 8px; padding: 14px; margin-bottom: 16px;">
+                        <strong style="color: #FBBF24; font-size: 13px;">🛡️ Remote Lockout Protocol:</strong>
+                        <div style="font-size: 12px; color: #CBD5E0; margin-top: 4px; line-height: 1.5;">
+                            When enabled, the client's phone displays <strong>"Managed Remotely by Agency"</strong> and prevents local modifications on the Android screen.
+                        </div>
+                    </div>
+
+                    <div style="display: flex; justify-content: space-between; align-items: center; background: #080C16; padding: 12px 14px; border: 1px solid #1E293B; border-radius: 8px; margin-bottom: 14px;">
+                        <div>
+                            <strong style="color: #FFF; font-size: 13px;">Lock Handset Settings on Device</strong>
+                            <div style="font-size: 11px; color: #94A3B8;">Makes app configuration read-only on physical phone</div>
+                        </div>
+                        <input type="checkbox" id="orcLockHandset" style="width: 18px; height: 18px; accent-color: #F59E0B;">
+                    </div>
+
+                    <div style="font-size: 11px; color: #64748B;">
+                        Last Cloud Push: <span id="orcLastUpdatedLabel" style="color: #CBD5E1;">Never</span> • Managed By: <span id="orcUpdatedByLabel" style="color: #CBD5E1;">System</span>
+                    </div>
+                </div>
+            </div>
+
+            <div style="display: flex; justify-content: flex-end; gap: 12px; border-top: 1px solid #1E293B; padding: 16px 24px; background: #131D31;">
+                <button type="button" onclick="closeOwnerRemoteConfigModal()" style="padding: 10px 18px; border-radius: 8px; background: #1E293B; border: 1px solid #334155; color: #CBD5E1; font-weight: 600; cursor: pointer;">Cancel</button>
+                <button type="button" id="btnSaveOwnerRemoteConfig" onclick="saveOwnerRemoteConfig()" style="padding: 10px 22px; border-radius: 8px; background: #2563EB; border: none; color: #FFF; font-weight: 700; cursor: pointer;">💾 Save & Push Configuration</button>
+            </div>
         </div>
     </div>
 
@@ -2193,8 +2407,8 @@
         if (voiceEl) voiceEl.innerText = `${voiceCount} Active`;
 
         document.getElementById("countTab0").innerText = records.length;
-        const fleetNavCount = document.getElementById("countTabFleet");
-        if (fleetNavCount) fleetNavCount.innerText = (agencyCount + fleetCount);
+        const agencyNavCount = document.getElementById("countTabAgencies") || document.getElementById("countTabFleet");
+        if (agencyNavCount) agencyNavCount.innerText = agencyNavCount.innerText !== "0" ? agencyNavCount.innerText : (agencyCount + fleetCount);
 
         const pillAll = document.getElementById("filterCountAll");
         if (pillAll) pillAll.innerText = records.length;
@@ -5246,201 +5460,427 @@ OPERATIONAL PROTOCOL:
     }
 
     // =========================================================================
-    // TAB 6: AGENCY FLEET OPERATIONS & MULTI-TENANT REGISTRY
+    // TAB 7: WHITE-LABEL AGENCY MANAGEMENT & BUILD ENGINE
     // =========================================================================
-    let allFleetDataCache = null;
+    let allAgenciesCache = [];
 
     async function loadAgencyFleetTab() {
         const partnersBody = document.getElementById('agencyPartnersTableBody');
         const clientsBody = document.getElementById('fleetClientsTableBody');
         if (!partnersBody || !clientsBody) return;
 
-        partnersBody.innerHTML = '<tr><td colspan="7" style="text-align: center; color: var(--muted); padding: 24px;">Loading live agency fleet data...</td></tr>';
-        clientsBody.innerHTML = '<tr><td colspan="7" style="text-align: center; color: var(--muted); padding: 24px;">Loading deployed client appliances...</td></tr>';
+        partnersBody.innerHTML = '<tr><td colspan="7" style="text-align: center; color: var(--muted); padding: 24px;">Loading agency profiles & build statuses...</td></tr>';
+        clientsBody.innerHTML = '<tr><td colspan="6" style="text-align: center; color: var(--muted); padding: 24px;">Loading deployed client accounts...</td></tr>';
 
         try {
             const data = await safeFetchJson('/api/agency/manage', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ action: 'list_fleets' })
+                body: JSON.stringify({ action: 'list_white_label_agencies' })
             });
 
-            if (!data || !data.fleets) {
-                throw new Error('No fleet data returned from server');
+            if (!data || !data.agencies) {
+                throw new Error('No agency data returned from server');
             }
 
-            allFleetDataCache = data;
-            const fleets = data.fleets || {};
-            const revokedKeys = data.revokedKeys || [];
+            allAgenciesCache = data.agencies;
+            const agencies = data.agencies || [];
+            const stats = data.stats || { totalAgencies: 0, totalClients: 0, totalMinutes: 0 };
 
-            let totalAgencies = 0;
-            let totalSeats = 0;
-            let totalVoicePool = 0;
-            let totalVoiceUsed = 0;
-            let totalHardwareBound = 0;
+            let totalAgencies = stats.totalAgencies || agencies.length;
+            let totalClients = stats.totalClients || 0;
+            let totalMinutes = stats.totalMinutes || 0;
 
             const agencyRows = [];
             const clientRows = [];
 
-            for (const [agencyKey, agency] of Object.entries(fleets)) {
-                if (agencyKey.startsWith('_')) continue;
-                totalAgencies++;
-                const isRevoked = revokedKeys.includes(agencyKey);
-                const clients = Array.isArray(agency.clients) ? agency.clients : [];
-                totalSeats += clients.length;
-                const pool = agency.voiceMinsPool || 1250;
-                totalVoicePool += pool;
+            agencies.forEach(agency => {
+                const brandColor = agency.theme?.primaryColor || '#2563EB';
+                const isDefault = agency.id === 'default';
+                const apk = agency.apkStatus || {};
+                const ota = agency.otaStatus || {};
 
-                let tierLabel = '$349.00/mo (5-Pack)';
-                if (agency.tier === 'agency_10') tierLabel = '$649.00/mo (10-Pack)';
-                else if (agency.tier === 'agency_enterprise') tierLabel = '$1,500.00/mo (Enterprise)';
+                // APK & OTA status badge
+                let buildBadge = '';
+                if (apk.exists) {
+                    buildBadge = `
+                        <div style="margin-bottom: 4px;">
+                            <span class="badge badge-active" style="background: rgba(16,185,129,0.15); color: #10B981; border: 1px solid rgba(16,185,129,0.3);">
+                                📦 ${escapeHtml(apk.fileName)} (${apk.sizeMb} MB)
+                            </span>
+                        </div>
+                        <div style="font-size: 11px; color: var(--muted);">
+                            OTA: ${ota.versionName ? `<strong style="color: #38BDF8;">v${ota.versionName}</strong> (Build ${ota.versionCode})` : 'Synced'}
+                        </div>
+                    `;
+                } else {
+                    buildBadge = `
+                        <span class="badge" style="background: rgba(245,158,11,0.15); color: #F59E0B; border: 1px solid rgba(245,158,11,0.3);">
+                            ⚠️ Not Compiled Yet
+                        </span>
+                    `;
+                }
 
                 agencyRows.push(`
                     <tr>
                         <td>
-                            <strong>${escapeHtml(agency.agencyName || 'Agency Partner')}</strong><br>
-                            <small style="color: var(--muted);">${escapeHtml(agency.customerEmail || 'No email')}</small>
-                        </td>
-                        <td>
-                            <span style="font-family: monospace; font-size: 12px; color: #818CF8; font-weight: bold;">${agencyKey}</span>
-                            <button class="btn-action" style="padding: 2px 6px; font-size: 10px; margin-left: 6px;" onclick="copyToClipboard('${agencyKey}')">📋 Copy</button>
-                        </td>
-                        <td>
-                            <span class="badge badge-agency">${escapeHtml(agency.tier || 'agency_5').toUpperCase()}</span><br>
-                            <small style="color: #10B981; font-weight: bold;">${tierLabel}</small>
-                        </td>
-                        <td>
-                            <div style="font-size: 13px; font-weight: bold; color: ${clients.length >= (agency.quota || 5) ? 'var(--warning)' : '#FFF'};">
-                                ${clients.length} / ${agency.quota || 5} Seats Used
-                            </div>
-                            <div style="width: 120px; height: 6px; background: #21262D; border-radius: 3px; margin-top: 4px; overflow: hidden;">
-                                <div style="width: ${Math.min(100, Math.round((clients.length / (agency.quota || 5)) * 100))}%; height: 100%; background: ${clients.length >= (agency.quota || 5) ? '#F59E0B' : '#10B981'}; border-radius: 3px;"></div>
+                            <div style="display: flex; align-items: center; gap: 8px;">
+                                <div style="width: 12px; height: 12px; border-radius: 50%; background: ${brandColor}; flex-shrink: 0;" title="Theme Color: ${brandColor}"></div>
+                                <div>
+                                    <strong>${escapeHtml(agency.legalName || agency.appName || agency.id)}</strong>
+                                    ${isDefault ? '<span class="badge badge-agency" style="margin-left: 6px; font-size: 9px;">FLAGSHIP</span>' : ''}
+                                    <br>
+                                    <small style="color: var(--muted); font-family: monospace;">slug: ${escapeHtml(agency.id)}</small>
+                                </div>
                             </div>
                         </td>
                         <td>
-                            <span style="color: #A855F7; font-weight: bold;">${pool.toLocaleString()} mins</span>
+                            <strong style="color: #FFF; font-size: 14px;">${escapeHtml(agency.appName)}</strong><br>
+                            <small style="color: var(--muted);">${escapeHtml(agency.tagline || '—')}</small>
                         </td>
                         <td>
-                            <span class="badge ${isRevoked ? 'badge-revoked' : 'badge-active'}">${isRevoked ? 'REVOKED' : 'ACTIVE'}</span>
+                            <div style="font-size: 12px; color: #CBD5E1;">✉️ ${escapeHtml(agency.supportEmail || 'None')}</div>
+                            ${agency.supportPhone ? `<div style="font-size: 11px; color: var(--muted);">📞 ${escapeHtml(agency.supportPhone)}</div>` : ''}
                         </td>
                         <td>
-                            <button class="btn-action" style="color: #10B981;" onclick="quickAddSeats('${agencyKey}', ${agency.quota || 5})">+ Quota</button>
-                            <a href="/agency_dashboard.html#key=${agencyKey}" target="_blank" class="btn-action" style="color: #818CF8; text-decoration: none;">🏢 Portal</a>
-                            <button class="btn-action btn-danger" onclick="toggleRevokeFleetKey('${agencyKey}')">${isRevoked ? 'Reactivate' : 'Revoke'}</button>
+                            <span style="font-size: 12px; color: #818CF8; font-weight: 600;">${escapeHtml(agency.stripeDescriptor || 'Voice Hub Network')}</span>
+                        </td>
+                        <td>
+                            <strong style="color: #FFF; font-size: 14px;">${agency.clientCount || 0}</strong>
+                            <div style="font-size: 11px; color: #10B981; font-weight: 600;">${agency.totalMinutesBalance || 0} mins</div>
+                        </td>
+                        <td>
+                            ${buildBadge}
+                        </td>
+                        <td>
+                            <div style="display: flex; gap: 6px; flex-wrap: wrap;">
+                                <button class="btn-action" style="padding: 4px 8px; font-size: 11px; color: #38BDF8; border-color: #38BDF8;" onclick="openEditAgencyModal('${agency.id}')">✏️ Edit</button>
+                                <button class="btn-action" style="padding: 4px 8px; font-size: 11px; color: #10B981; border-color: #10B981;" onclick="triggerBuildAgency('${agency.id}')">🔨 Build</button>
+                                ${apk.exists ? `<a href="${apk.downloadUrl}" target="_blank" class="btn-action" style="padding: 4px 8px; font-size: 11px; color: #FFF; text-decoration: none;">📥 APK</a>` : ''}
+                                ${ota.downloadUrl ? `<button class="btn-action" style="padding: 4px 8px; font-size: 11px;" onclick="copyToClipboard('${ota.downloadUrl}')" title="Copy OTA Link">📡 URL</button>` : ''}
+                                ${!isDefault ? `<button class="btn-action btn-danger" style="padding: 4px 8px; font-size: 11px;" onclick="deleteAgency('${agency.id}')">🗑️</button>` : ''}
+                            </div>
                         </td>
                     </tr>
                 `);
 
-                for (const client of clients) {
-                    const clientRevoked = revokedKeys.includes(client.licenseKey);
-                    const voiceUsed = client.voiceMinsUsed || 0;
-                    totalVoiceUsed += voiceUsed;
-                    if (client.hardwareId) totalHardwareBound++;
-
-                    clientRows.push(`
-                        <tr class="fleet-client-row" data-search="${escapeHtml(client.clientName + ' ' + (client.clientContact || '') + ' ' + client.licenseKey + ' ' + (agency.agencyName || '')).toLowerCase()}">
-                            <td>
-                                <strong>${escapeHtml(client.clientName)}</strong><br>
-                                <small style="color: var(--muted);">${escapeHtml(client.clientContact || '—')}</small>
-                            </td>
-                            <td>
-                                <span class="badge badge-agency">${escapeHtml(agency.agencyName || 'Agency Partner')}</span>
-                            </td>
-                            <td>
-                                <span style="font-family: monospace; font-size: 12px; color: #38BDF8; font-weight: bold;">${client.licenseKey}</span>
-                                <button class="btn-action" style="padding: 2px 6px; font-size: 10px; margin-left: 6px;" onclick="copyToClipboard('${client.licenseKey}')">📋</button>
-                            </td>
-                            <td>
-                                ${client.hardwareId 
-                                    ? `<span style="font-family: monospace; color: var(--accent); font-size: 12px;">🔒 ${escapeHtml(client.hardwareId)}</span>`
-                                    : `<span style="color: var(--muted); font-size: 12px;">Unbound (Ready)</span>`}
-                            </td>
-                            <td>
-                                <span style="color: #C084FC; font-size: 12px; font-weight: bold;">${voiceUsed} mins</span>
-                            </td>
-                            <td>
-                                <span class="badge ${clientRevoked ? 'badge-revoked' : 'badge-active'}">${clientRevoked ? 'REVOKED' : 'ACTIVE'}</span>
-                            </td>
-                            <td>
-                                <button class="btn-action" style="color: #38BDF8;" onclick="showSetupSheetForFleetKey('${client.licenseKey}', '${escapeHtml(client.clientName)}', '${escapeHtml(agency.agencyName || 'Agency Partner')}')">📋 Setup</button>
-                                <button class="btn-action" onclick="resetFleetDevice('${client.licenseKey}', '${escapeHtml(client.clientName)}')" ${clientRevoked ? 'disabled' : ''}>🔓 Reset Lock</button>
-                                <button class="btn-action btn-danger" onclick="toggleRevokeFleetKey('${client.licenseKey}')">${clientRevoked ? 'Reactivate' : 'Revoke'}</button>
-                            </td>
-                        </tr>
-                    `);
+                // Clients list
+                if (Array.isArray(agency.clients)) {
+                    agency.clients.forEach(c => {
+                        clientRows.push(`
+                            <tr class="fleet-client-row" data-search="${escapeHtml((c.name || '') + ' ' + (c.email || '') + ' ' + (c.licenseKey || '') + ' ' + agency.appName).toLowerCase()}">
+                                <td>
+                                    <strong>${escapeHtml(c.name)}</strong><br>
+                                    <small style="color: var(--muted);">${escapeHtml(c.email || 'No email')}</small>
+                                </td>
+                                <td>
+                                    <span class="badge badge-agency">${escapeHtml(agency.appName)}</span>
+                                </td>
+                                <td>
+                                    <span style="font-family: monospace; font-size: 12px; color: #38BDF8; font-weight: bold;">${c.licenseKey}</span>
+                                    <button class="btn-action" style="padding: 2px 6px; font-size: 10px; margin-left: 6px;" onclick="copyToClipboard('${c.licenseKey}')">📋</button>
+                                </td>
+                                <td>
+                                    <span style="color: #10B981; font-weight: bold;">${c.minutes} mins</span>
+                                </td>
+                                <td>
+                                    <span class="badge badge-active">${escapeHtml(c.status || 'ACTIVE')}</span>
+                                </td>
+                                <td>
+                                    <button class="btn-action" style="padding: 4px 8px; font-size: 11px; color: #38BDF8; border-color: #38BDF8;" onclick="openOwnerRemoteConfigModal('${c.licenseKey}', '${escapeHtml(c.name)}', '${agency.id}')">⚙️ Remote Config</button>
+                                    <button class="btn-action" style="padding: 4px 8px; font-size: 11px;" onclick="copyToClipboard('${c.licenseKey}')">Copy Key</button>
+                                </td>
+                            </tr>
+                        `);
+                    });
                 }
-            }
+            });
 
             // Update stats
             document.getElementById('fleetMetricAgencies').innerText = totalAgencies;
-            document.getElementById('fleetMetricSeats').innerText = totalSeats;
-            document.getElementById('fleetMetricSeatsSub').innerText = `${totalHardwareBound} bound appliances`;
-            document.getElementById('fleetMetricVoicePool').innerText = `${totalVoiceUsed} / ${totalVoicePool.toLocaleString()}m`;
-            document.getElementById('fleetMetricVoiceSub').innerText = `${totalVoicePool - totalVoiceUsed} pooled mins remaining`;
-            document.getElementById('fleetMetricHardware').innerText = totalHardwareBound;
-
+            document.getElementById('fleetMetricSeats').innerText = totalClients;
+            document.getElementById('fleetMetricSeatsSub').innerText = `${totalClients} end-users on agency apps`;
+            document.getElementById('fleetMetricVoicePool').innerText = `${totalMinutes.toLocaleString()}m`;
+            document.getElementById('fleetMetricVoiceSub').innerText = `Across all agency subscriber pools`;
             document.getElementById('agencyPartnersCount').innerText = totalAgencies;
-            document.getElementById('allFleetClientsCount').innerText = totalSeats;
-            const countTabFleet = document.getElementById('countTabFleet');
-            if (countTabFleet) countTabFleet.innerText = (totalAgencies + totalSeats);
+            document.getElementById('allFleetClientsCount').innerText = totalClients;
+            
+            const countTabAgencies = document.getElementById('countTabAgencies');
+            if (countTabAgencies) countTabAgencies.innerText = totalAgencies;
 
-            partnersBody.innerHTML = agencyRows.length ? agencyRows.join('') : '<tr><td colspan="7" style="text-align: center; color: var(--muted); padding: 24px;">No agency partner accounts found. Click "+ Issue Agency Account" above.</td></tr>';
-            clientsBody.innerHTML = clientRows.length ? clientRows.join('') : '<tr><td colspan="7" style="text-align: center; color: var(--muted); padding: 24px;">No client appliances deployed across fleets yet.</td></tr>';
+            partnersBody.innerHTML = agencyRows.length ? agencyRows.join('') : '<tr><td colspan="7" style="text-align: center; color: var(--muted); padding: 24px;">No agency profiles found. Click "+ Onboard New Agency" above.</td></tr>';
+            clientsBody.innerHTML = clientRows.length ? clientRows.join('') : '<tr><td colspan="6" style="text-align: center; color: var(--muted); padding: 24px;">No active client accounts deployed under agencies yet.</td></tr>';
 
         } catch (e) {
-            partnersBody.innerHTML = `<tr><td colspan="7" style="text-align: center; color: var(--danger); padding: 24px;">Failed to load fleet partners: ${escapeHtml(e.message)}</td></tr>`;
-            clientsBody.innerHTML = `<tr><td colspan="7" style="text-align: center; color: var(--danger); padding: 24px;">Failed to load fleet clients: ${escapeHtml(e.message)}</td></tr>`;
+            partnersBody.innerHTML = `<tr><td colspan="7" style="text-align: center; color: var(--danger); padding: 24px;">Failed to load agency profiles: ${escapeHtml(e.message)}</td></tr>`;
+            clientsBody.innerHTML = `<tr><td colspan="6" style="text-align: center; color: var(--danger); padding: 24px;">Failed to load clients: ${escapeHtml(e.message)}</td></tr>`;
         }
     }
 
-    async function promptCreateAgencyPartner() {
-        const agencyName = prompt("Enter Agency / Reseller Partner Name (e.g. Apex Growth Agency):");
-        if (!agencyName || !agencyName.trim()) return;
+    // ─── Owner Remote Appliance & Voice Configuration ───
+    let currentOrcLicenseKey = '';
+    let currentOrcAgencyId = '';
 
-        const email = prompt(`Enter Contact Email for ${agencyName.trim()}:`, "");
-        if (!email || !email.trim()) { alert("Email is required."); return; }
+    function switchOwnerRcTab(tabId) {
+        ['Voice', 'Sms', 'Webhook', 'Lock'].forEach(t => {
+            const btn = document.getElementById(`btnOrcTab${t}`);
+            const pane = document.getElementById(`orcPane${t}`);
+            if (btn) btn.classList.remove('active');
+            if (pane) pane.style.display = 'none';
+        });
 
-        const tierChoice = prompt("Select Plan Tier:\n1 = 5-Pack ($349/mo • 1,250 Voice Mins)\n2 = 10-Pack ($649/mo • 2,500 Voice Mins)\n3 = Enterprise ($1,500/mo • Unlimited Fleets)", "1");
-        let tier = 'agency_5';
-        let quota = 5;
-        if (tierChoice === '2') {
-            tier = 'agency_10';
-            quota = 10;
-        } else if (tierChoice === '3') {
-            tier = 'agency_enterprise';
-            quota = 999;
-        }
+        const activeTitle = tabId.charAt(0).toUpperCase() + tabId.slice(1);
+        const activeBtn = document.getElementById(`btnOrcTab${activeTitle}`);
+        const activePane = document.getElementById(`orcPane${activeTitle}`);
+        if (activeBtn) activeBtn.classList.add('active');
+        if (activePane) activePane.style.display = 'block';
+    }
 
-        const nowSec = Math.floor(Date.now() / 1000);
-        const payloadStr = `${agencyName.trim()}|0|${nowSec}`;
-        const payloadHex = stringToHex(payloadStr);
-        const sigFull = await generateHmacSha256(payloadHex, SECRET_KEY);
-        const sigShort = sigFull.substring(0, 8);
-        const masterKey = `MCAS-AGENCY-${payloadHex}-${sigShort}`;
+    async function openOwnerRemoteConfigModal(licenseKey, clientName, agencyId) {
+        currentOrcLicenseKey = licenseKey;
+        currentOrcAgencyId = agencyId || '__owner__';
+
+        document.getElementById('orcClientName').innerText = clientName || 'Client Appliance';
+        document.getElementById('orcLicenseKey').innerText = licenseKey;
+        switchOwnerRcTab('voice');
 
         try {
             const res = await safeFetchJson('/api/agency/manage', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({
-                    action: 'create_agency',
-                    agencyName: agencyName.trim(),
-                    customerEmail: email.trim(),
-                    tier: tier,
-                    quota: quota,
-                    masterKey: masterKey
+                    action: 'agency_get_client_remote_config',
+                    licenseKey: licenseKey,
+                    agencyId: currentOrcAgencyId
                 })
             });
 
+            if (!res || !res.success) {
+                alert(res?.error || 'Failed to fetch client remote configuration');
+                return;
+            }
+
+            const cfg = res.config || {};
+            const voice = cfg.voice || {};
+            const handset = cfg.handset || {};
+
+            document.getElementById('orcVoiceEnabled').checked = voice.voiceReceptionistEnabled ?? true;
+            document.getElementById('orcVoiceAgentName').value = voice.voiceAgentName || 'Riley';
+            document.getElementById('orcVoiceModel').value = voice.model || 'gpt-4o-mini';
+            document.getElementById('orcCustomGreeting').value = voice.customGreeting || '';
+            document.getElementById('orcSystemPrompt').value = voice.systemPrompt || '';
+            document.getElementById('orcEmergencyTransfer').value = voice.emergencyTransferNumber || '';
+
+            document.getElementById('orcSmsTemplate').value = handset.messageTemplate || `Hey! Sorry I missed your call. How can I help you today? - ${clientName}`;
+            const delaySec = handset.jitterDelaySeconds ?? 15;
+            document.getElementById('orcSmsDelay').value = delaySec;
+            document.getElementById('orcDelayLabel').innerText = `${delaySec} seconds`;
+            document.getElementById('orcMuteNative').checked = !!handset.muteNativeAutoReply;
+
+            document.getElementById('orcWebhookEnabled').checked = handset.outboundWebhookEnabled ?? false;
+            document.getElementById('orcWebhookUrl').value = handset.selectedOutboundWebhookUrl || '';
+
+            document.getElementById('orcLockHandset').checked = !!handset.lockHandsetSettings;
+            document.getElementById('orcLastUpdatedLabel').innerText = cfg.updatedAt ? new Date(cfg.updatedAt).toLocaleString() : 'Never';
+            document.getElementById('orcUpdatedByLabel').innerText = cfg.updatedBy || 'System';
+
+            document.getElementById('ownerRemoteConfigModal').style.display = 'flex';
+        } catch (err) {
+            alert('Error loading configuration: ' + err.message);
+        }
+    }
+
+    function closeOwnerRemoteConfigModal() {
+        document.getElementById('ownerRemoteConfigModal').style.display = 'none';
+    }
+
+    async function saveOwnerRemoteConfig() {
+        if (!currentOrcLicenseKey) return;
+        const btn = document.getElementById('btnSaveOwnerRemoteConfig');
+        const origText = btn.innerText;
+        btn.disabled = true;
+        btn.innerText = 'Pushing to Vapi & Cloud... ⏳';
+
+        const voicePayload = {
+            voiceReceptionistEnabled: document.getElementById('orcVoiceEnabled').checked,
+            voiceAgentName: document.getElementById('orcVoiceAgentName').value.trim(),
+            model: document.getElementById('orcVoiceModel').value,
+            customGreeting: document.getElementById('orcCustomGreeting').value.trim(),
+            systemPrompt: document.getElementById('orcSystemPrompt').value.trim(),
+            emergencyTransferNumber: document.getElementById('orcEmergencyTransfer').value.trim()
+        };
+
+        const handsetPayload = {
+            messageTemplate: document.getElementById('orcSmsTemplate').value.trim(),
+            jitterDelaySeconds: parseInt(document.getElementById('orcSmsDelay').value, 10) || 15,
+            muteNativeAutoReply: document.getElementById('orcMuteNative').checked,
+            outboundWebhookEnabled: document.getElementById('orcWebhookEnabled').checked,
+            selectedOutboundWebhookUrl: document.getElementById('orcWebhookUrl').value.trim(),
+            lockHandsetSettings: document.getElementById('orcLockHandset').checked
+        };
+
+        try {
+            const res = await safeFetchJson('/api/agency/manage', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                    action: 'agency_save_client_remote_config',
+                    agencyId: currentOrcAgencyId || '__owner__',
+                    licenseKey: currentOrcLicenseKey,
+                    voice: voicePayload,
+                    handset: handsetPayload
+                })
+            });
+
+            btn.disabled = false;
+            btn.innerText = origText;
+
             if (res && res.success) {
-                alert(`🎉 Agency Partner Created!\n\nAgency: ${agencyName}\nMaster Key: ${masterKey}\nQuota: ${quota} Seats\n\nThe agency master has been registered and synced.`);
-                await syncMasterLicensesFromServer(true);
+                alert('✅ Appliance configuration saved live! Vapi cloud updated & Android sync scheduled.');
+                closeOwnerRemoteConfigModal();
                 loadAgencyFleetTab();
             } else {
-                alert('Creation failed: ' + (res?.error || 'Unknown error'));
+                alert(res?.error || 'Failed to save configuration');
             }
-        } catch (e) {
-            alert('Error creating agency: ' + e.message);
+        } catch (err) {
+            btn.disabled = false;
+            btn.innerText = origText;
+            alert('Error saving configuration: ' + err.message);
+        }
+    }
+
+    function openCreateAgencyModal() {
+        document.getElementById('agencyProfileForm').reset();
+        document.getElementById('agencyIsEdit').value = '0';
+        document.getElementById('agencyInputSlug').disabled = false;
+        document.getElementById('agencyModalTitle').innerText = '✨ Onboard New Agency Partner';
+        document.getElementById('agencyInputColorPicker').value = '#2563EB';
+        document.getElementById('agencyInputColorText').value = '#2563EB';
+        document.getElementById('agencyInputStripeDescriptor').value = 'Voice Hub Network';
+        document.getElementById('modalAgencyProfile').style.display = 'flex';
+    }
+
+    function openEditAgencyModal(agencyId) {
+        const agency = allAgenciesCache.find(a => a.id === agencyId);
+        if (!agency) return;
+
+        document.getElementById('agencyIsEdit').value = '1';
+        document.getElementById('agencyInputSlug').value = agency.id;
+        document.getElementById('agencyInputSlug').disabled = true;
+        document.getElementById('agencyInputLegalName').value = agency.legalName || agency.appName || agency.id;
+        document.getElementById('agencyInputAppName').value = agency.appName || '';
+        document.getElementById('agencyInputTagline').value = agency.tagline || '';
+        document.getElementById('agencyInputSupportEmail').value = agency.supportEmail || '';
+        document.getElementById('agencyInputSupportPhone').value = agency.supportPhone || '';
+        document.getElementById('agencyInputPrivacyUrl').value = agency.privacyPolicyUrl || '';
+        document.getElementById('agencyInputTermsUrl').value = agency.termsUrl || '';
+        document.getElementById('agencyInputStripeDescriptor').value = agency.stripeDescriptor || 'Voice Hub Network';
+
+        const color = agency.theme?.primaryColor || '#2563EB';
+        document.getElementById('agencyInputColorPicker').value = color;
+        document.getElementById('agencyInputColorText').value = color;
+
+        document.getElementById('agencyModalTitle').innerText = `✏️ Edit Agency Profile: ${agency.appName}`;
+        document.getElementById('modalAgencyProfile').style.display = 'flex';
+    }
+
+    function closeAgencyModal() {
+        document.getElementById('modalAgencyProfile').style.display = 'none';
+    }
+
+    async function handleSaveAgency(e) {
+        e.preventDefault();
+        const btn = document.getElementById('btnSaveAgencySubmit');
+        const oldText = btn.innerText;
+        btn.disabled = true;
+        btn.innerText = 'Saving...';
+
+        const payload = {
+            action: 'save_white_label_agency',
+            agencyId: document.getElementById('agencyInputSlug').value.trim(),
+            legalName: document.getElementById('agencyInputLegalName').value.trim(),
+            appName: document.getElementById('agencyInputAppName').value.trim(),
+            tagline: document.getElementById('agencyInputTagline').value.trim(),
+            supportEmail: document.getElementById('agencyInputSupportEmail').value.trim(),
+            supportPhone: document.getElementById('agencyInputSupportPhone').value.trim(),
+            privacyPolicyUrl: document.getElementById('agencyInputPrivacyUrl').value.trim(),
+            termsUrl: document.getElementById('agencyInputTermsUrl').value.trim(),
+            stripeDescriptor: document.getElementById('agencyInputStripeDescriptor').value.trim(),
+            primaryColor: document.getElementById('agencyInputColorText').value.trim()
+        };
+
+        try {
+            const res = await safeFetchJson('/api/agency/manage', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(payload)
+            });
+
+            if (res && res.success) {
+                alert(`🎉 Agency "${payload.appName}" saved successfully!`);
+                closeAgencyModal();
+                loadAgencyFleetTab();
+            } else {
+                alert('Save failed: ' + (res?.error || 'Unknown error'));
+            }
+        } catch (err) {
+            alert('Error saving agency: ' + err.message);
+        } finally {
+            btn.disabled = false;
+            btn.innerText = oldText;
+        }
+    }
+
+    async function triggerBuildAgency(agencyId) {
+        if (!confirm(`Compile bespoke Android APK for agency "${agencyId}"?\n\nThis runs Gradle and outputs a signed release APK + OTA manifest.`)) return;
+
+        const btn = event?.target;
+        if (btn) {
+            btn.disabled = true;
+            btn.innerText = '⏳ Building...';
+        }
+
+        try {
+            const res = await safeFetchJson('/api/agency/manage', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ action: 'trigger_agency_build', agencyId, flavor: 'standard' })
+            });
+
+            if (res && res.success) {
+                alert(`✅ Build Succeeded!\n\n${res.message}\nThe signed APK has been saved and is ready for distribution.`);
+                loadAgencyFleetTab();
+            } else {
+                alert('❌ Build Error: ' + (res?.error || res?.output || 'Check build logs'));
+            }
+        } catch (err) {
+            alert('Build failed: ' + err.message);
+        } finally {
+            if (btn) {
+                btn.disabled = false;
+                btn.innerText = '🔨 Build';
+            }
+        }
+    }
+
+    async function deleteAgency(agencyId) {
+        if (!confirm(`Are you sure you want to remove agency "${agencyId}" from active profiles?\n\nThis removes their profile from agencies.json.`)) return;
+
+        try {
+            const res = await safeFetchJson('/api/agency/manage', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ action: 'delete_white_label_agency', agencyId })
+            });
+
+            if (res && res.success) {
+                alert(`Agency "${agencyId}" has been removed.`);
+                loadAgencyFleetTab();
+            } else {
+                alert('Delete failed: ' + (res?.error || 'Unknown error'));
+            }
+        } catch (err) {
+            alert('Error removing agency: ' + err.message);
         }
     }
 

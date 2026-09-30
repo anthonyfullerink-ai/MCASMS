@@ -3,7 +3,9 @@
   "version": "1.7.0",
   "scripts": {
     "publish:ota": "node scripts/publish_ota.js",
-    "build:apk": "gradlew.bat assembleStandardRelease assembleProRelease"
+    "build:apk": "gradlew.bat assembleStandardRelease assembleProRelease",
+    "build:agency": "node scripts/build_agency.js",
+    "list:agencies": "node scripts/build_agency.js --list"
   },
   "dependencies": {
     "@google/genai": "^2.23.0",

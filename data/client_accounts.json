@@ -1,0 +1,41 @@
+[
+  {
+    "username": "goog_1790791463444",
+    "email": "goog_1790791463444@gmail.com",
+    "googleId": "goog_sub_98765",
+    "authProvider": "google",
+    "businessName": "Google Contractor",
+    "licenseKey": "MCAS-GOOGLE-1790791463444",
+    "agencyId": "default",
+    "token": "ptok_8ed780d229ca8ffc83bbe26c7f271b809ef9786a252c7206",
+    "lastLoginAt": "2026-09-30T18:04:23.447Z",
+    "createdAt": "2026-09-30T18:04:23.448Z",
+    "updatedAt": "2026-09-30T18:04:23.448Z"
+  },
+  {
+    "username": "testowner_3491",
+    "email": "testowner_3491@testbusiness.com",
+    "businessName": "Apex Plumbing & Air",
+    "licenseKey": "MCAS-PORTAL-TEST-1790791463417",
+    "agencyId": "default",
+    "salt": "87fffe0e9fc38e627fa6b8b84f373bc8",
+    "passwordHash": "6d6fa47b66ecfdb29c983793ea446cf0676a8448b4bbf5338ed6b715e972be19",
+    "token": "ptok_3edb5ff4bcb59843185aabc762fa05a2a61a97830e2b0ca9",
+    "lastLoginAt": "2026-09-30T18:04:23.432Z",
+    "createdAt": "2026-09-30T18:04:23.425Z",
+    "updatedAt": "2026-09-30T18:04:23.433Z"
+  },
+  {
+    "username": "testowner_6846",
+    "email": "testowner_6846@testbusiness.com",
+    "businessName": "Apex Plumbing & Air",
+    "licenseKey": "MCAS-PORTAL-TEST-1790791445275",
+    "agencyId": "default",
+    "salt": "326d646b69845c921f51a50e1d02fe92",
+    "passwordHash": "7064a141c97d27a61f3be3ca506a4e540dda7af01416493c253d9489a35e0fcd",
+    "token": "ptok_555be3d0a8be1e6c5bb148ac200ae1c7b0bba4b59e0b48dd",
+    "lastLoginAt": "2026-09-30T18:04:05.288Z",
+    "createdAt": "2026-09-30T18:04:05.280Z",
+    "updatedAt": "2026-09-30T18:04:05.289Z"
+  }
+]

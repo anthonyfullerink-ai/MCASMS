@@ -19,7 +19,20 @@ android {
 
 
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
-        manifestPlaceholders["appName"] = "Missed Call Auto SMS"
+        val agencyAppName = (project.findProperty("agencyAppName") as? String)?.ifBlank { null }
+        val agencyId = (project.findProperty("agencyId") as? String)?.ifBlank { null } ?: "default"
+        val agencySupportEmail = (project.findProperty("agencySupportEmail") as? String)?.ifBlank { null } ?: "support@missedcallautosms.com"
+        val agencyPrivacyUrl = (project.findProperty("agencyPrivacyUrl") as? String)?.ifBlank { null } ?: "https://missedcallautosms.com/privacy.html"
+        val agencyTermsUrl = (project.findProperty("agencyTermsUrl") as? String)?.ifBlank { null } ?: "https://missedcallautosms.com/terms.html"
+        val agencyStripeDescriptor = (project.findProperty("agencyStripeDescriptor") as? String)?.ifBlank { null } ?: "Voice Hub Network"
+
+        manifestPlaceholders["appName"] = agencyAppName ?: "Missed Call Auto SMS"
+
+        buildConfigField("String", "AGENCY_ID", "\"$agencyId\"")
+        buildConfigField("String", "AGENCY_SUPPORT_EMAIL", "\"$agencySupportEmail\"")
+        buildConfigField("String", "AGENCY_PRIVACY_URL", "\"$agencyPrivacyUrl\"")
+        buildConfigField("String", "AGENCY_TERMS_URL", "\"$agencyTermsUrl\"")
+        buildConfigField("String", "STRIPE_DESCRIPTOR", "\"$agencyStripeDescriptor\"")
     }
 
     signingConfigs {
@@ -35,17 +48,22 @@ android {
 
     flavorDimensions += "edition"
     productFlavors {
+        val agencyAppName = (project.findProperty("agencyAppName") as? String)?.ifBlank { null }
         create("standard") {
             dimension = "edition"
+            val displayName = agencyAppName ?: "Missed Call Auto-SMS"
             buildConfigField("boolean", "IS_PRO_EDITION", "false")
             buildConfigField("String", "EDITION_NAME", "\"Flagship Edition\"")
-            manifestPlaceholders["appName"] = "Missed Call Auto-SMS"
+            buildConfigField("String", "APP_DISPLAY_NAME", "\"$displayName\"")
+            manifestPlaceholders["appName"] = displayName
         }
         create("pro") {
             dimension = "edition"
+            val displayName = agencyAppName?.let { "$it Pro" } ?: "Missed Call Auto-SMS Pro"
             buildConfigField("boolean", "IS_PRO_EDITION", "true")
             buildConfigField("String", "EDITION_NAME", "\"Pro Automation Edition\"")
-            manifestPlaceholders["appName"] = "Missed Call Auto-SMS Pro"
+            buildConfigField("String", "APP_DISPLAY_NAME", "\"$displayName\"")
+            manifestPlaceholders["appName"] = displayName
         }
     }
 

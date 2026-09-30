@@ -1,0 +1,33 @@
+{
+  "MCAS-PRO-5072656D69657220526F6F66696E672047726F75707C307C31373930373835313533-61745DD5": {
+    "licenseKey": "MCAS-PRO-5072656D69657220526F6F66696E672047726F75707C307C31373930373835313533-61745DD5",
+    "agencyId": "apex_leads",
+    "updatedAt": "2026-09-30T17:11:10.748Z",
+    "updatedBy": "apex_leads",
+    "voice": {
+      "voiceReceptionistEnabled": true,
+      "voiceAgentName": "Riley",
+      "customGreeting": "Hello, welcome to Premier Roofing Group! What emergency can we assist with?",
+      "systemPrompt": "You are Riley, the friendly AI front desk receptionist for Premier Roofing Group. Answer questions about estimates and emergency leaks.",
+      "forwardingNumber": "+1 (732) 660-9121",
+      "emergencyTransferNumber": "+1 (555) 234-8910",
+      "model": "gpt-4o-mini"
+    },
+    "handset": {
+      "messageTemplate": "Premier Roofing: Sorry we missed you! Texting you right back.",
+      "jitterDelaySeconds": 10,
+      "muteNativeAutoReply": false,
+      "outboundWebhookEnabled": true,
+      "selectedOutboundWebhookUrl": "https://hooks.zapier.com/hooks/catch/sample/123",
+      "lockHandsetSettings": true
+    },
+    "heartbeat": {
+      "lastSeenAt": "2026-09-30T17:11:09.607Z",
+      "appVersion": "v1.6.0",
+      "batteryLevel": 94,
+      "isCharging": true,
+      "deviceId": null,
+      "ip": "127.0.0.1"
+    }
+  }
+}

@@ -110,7 +110,7 @@ fun PermissionOnboardingDialog(
                 Spacer(modifier = Modifier.height(4.dp))
 
                 Text(
-                    text = "Grant permissions below so Missed Call Auto SMS can detect missed calls and auto-reply via SIM.",
+                    text = "Grant permissions below so ${com.missedcall.autotext.util.AppBranding.appName} can detect missed calls and auto-reply via SIM.",
                     style = MaterialTheme.typography.bodySmall,
                     color = MaterialTheme.colorScheme.onSurfaceVariant,
                     textAlign = TextAlign.Center

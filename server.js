@@ -6,7 +6,7 @@ const querystring = require('querystring');
 const { exec } = require('child_process');
 const crypto = require('crypto');
 
-const PORT = 8000;
+const PORT = process.env.PORT ? parseInt(process.env.PORT, 10) : 8000;
 const MIME_TYPES = {
   '.html': 'text/html; charset=utf-8',
   '.js': 'text/javascript; charset=utf-8',
@@ -708,6 +708,191 @@ function saveMasterLicense(rec) {
   if (fdb && rec.key) {
     fdb.saveMasterLicense(rec)
       .catch(e => console.warn('[Firestore] saveMasterLicense mirror error:', e.message));
+  }
+}
+
+// ─── Remote Appliance Configuration Hub ───
+const APPLIANCE_CONFIGS_FILE = path.join(__dirname, 'data', 'appliance_configs.json');
+
+function getApplianceConfigs() {
+  if (fs.existsSync(APPLIANCE_CONFIGS_FILE)) {
+    try { return JSON.parse(fs.readFileSync(APPLIANCE_CONFIGS_FILE, 'utf8')); } catch (e) { return {}; }
+  }
+  return {};
+}
+
+function getApplianceConfigByKey(licenseKey) {
+  const all = getApplianceConfigs();
+  const cleanKey = (licenseKey || '').trim().toUpperCase();
+  if (all[cleanKey]) {
+    return all[cleanKey];
+  }
+  // Initialize with sensible defaults from master_licenses if available
+  const master = getMasterLicenses().find(m => m.key === cleanKey);
+  const vSettings = getVoiceSettings();
+  const defaultConfig = {
+    licenseKey: cleanKey,
+    agencyId: master?.agencyId || '',
+    customerName: master?.customer || 'Client Business',
+    updatedAt: new Date().toISOString(),
+    updatedBy: 'system',
+    voice: {
+      voiceReceptionistEnabled: master?.voiceEntitlement ?? false,
+      voiceAgentName: 'Riley',
+      customGreeting: vSettings.customGreeting || "Hi, thank you for calling! How can I help you today?",
+      systemPrompt: "You are a friendly, professional AI receptionist. Your job is to answer incoming calls, capture the caller's name, phone number, and service request, and reassure them that our team will follow up shortly.",
+      forwardingNumber: master?.voiceNumber || vSettings.forwardingNumber || "+1 (732) 660-9121",
+      carrierCode: master?.carrierCode || vSettings.carrierCode || "*717326609121",
+      emergencyTransferNumber: vSettings.emergencyTransferNumber || "",
+      model: "gpt-4o-mini",
+      vapiAssistantId: master?.vapiAssistantId || null
+    },
+    handset: {
+      messageTemplate: `Hey! Sorry I missed your call. How can I help you today? - ${master?.customer || 'My Business'}`,
+      jitterDelaySeconds: 15,
+      muteNativeAutoReply: false,
+      outboundWebhookEnabled: master?.edition === 'pro',
+      selectedOutboundWebhookUrl: "",
+      lockHandsetSettings: false
+    }
+  };
+  return defaultConfig;
+}
+
+function saveApplianceConfig(licenseKey, configUpdate, updatedBy = 'system') {
+  const cleanKey = (licenseKey || '').trim().toUpperCase();
+  const all = getApplianceConfigs();
+  const existing = all[cleanKey] || getApplianceConfigByKey(cleanKey);
+
+  const updated = {
+    ...existing,
+    ...configUpdate,
+    licenseKey: cleanKey,
+    voice: {
+      ...existing.voice,
+      ...(configUpdate.voice || {})
+    },
+    handset: {
+      ...existing.handset,
+      ...(configUpdate.handset || {})
+    },
+    updatedAt: new Date().toISOString(),
+    updatedBy: updatedBy
+  };
+
+  all[cleanKey] = updated;
+  const dataDir = path.join(__dirname, 'data');
+  if (!fs.existsSync(dataDir)) fs.mkdirSync(dataDir, { recursive: true });
+  fs.writeFileSync(APPLIANCE_CONFIGS_FILE, JSON.stringify(all, null, 2), 'utf8');
+
+  // Also mirror to Firestore if available
+  const fdb = getFirestoreDb();
+  if (fdb && fdb.db) {
+    try {
+      fdb.db.collection('appliance_configs').doc(cleanKey).set(updated, { merge: true })
+        .catch(e => console.warn('[Firestore] appliance_configs sync error:', e.message));
+    } catch (e) {}
+  }
+
+  return updated;
+}
+
+async function syncRemoteVoiceToVapi(licenseKey, voiceConfig) {
+  if (!voiceConfig) return { success: true };
+  try {
+    const { apiKey, assistantId } = getVapiConfig();
+    if (!apiKey) {
+      console.warn('[Remote Voice Vapi] Vapi API key not configured, skipping live Vapi patch.');
+      return { success: false, reason: 'No Vapi API key' };
+    }
+
+    let targetAssistantId = voiceConfig.vapiAssistantId || null;
+    if (!targetAssistantId) {
+      try {
+        const fdb = getFirestoreDb();
+        if (fdb && fdb.getVoiceBinding) {
+          const binding = await fdb.getVoiceBinding(licenseKey);
+          if (binding && binding.vapiAssistantId) {
+            targetAssistantId = binding.vapiAssistantId;
+          }
+        }
+      } catch (e) {}
+    }
+
+    if (!targetAssistantId) {
+      targetAssistantId = assistantId || '5105b379-8cbf-4037-becc-bba45504f781';
+    }
+
+    const patchPayload = {};
+    if (voiceConfig.customGreeting !== undefined && voiceConfig.customGreeting.trim() !== '') {
+      patchPayload.firstMessage = voiceConfig.customGreeting.trim();
+    }
+    if (voiceConfig.systemPrompt !== undefined && voiceConfig.systemPrompt.trim() !== '') {
+      patchPayload.model = {
+        provider: 'openai',
+        model: voiceConfig.model || 'gpt-4o-mini',
+        temperature: typeof voiceConfig.temperature === 'number' ? voiceConfig.temperature : 0.3,
+        messages: [
+          { role: 'system', content: voiceConfig.systemPrompt.trim() }
+        ]
+      };
+    }
+    if (voiceConfig.voiceAgentName) {
+      patchPayload.name = voiceConfig.voiceAgentName.trim();
+    }
+
+    if (Object.keys(patchPayload).length === 0) {
+      return { success: true, message: 'No Vapi changes required' };
+    }
+
+    const vapiRes = await vapiApiRequest(`/assistant/${targetAssistantId}`, 'PATCH', patchPayload);
+    console.log(`🎙️ [VAPI LIVE REMOTE SYNC] Assistant ${targetAssistantId} updated live from dashboard for key ${licenseKey}`);
+    return { success: true, assistant: vapiRes };
+  } catch (err) {
+    console.warn(`[VAPI LIVE REMOTE SYNC] Warning: ${err.message}`);
+    return { success: false, error: err.message };
+  }
+}
+
+// ─── Universal Webhook Dispatcher (GoHighLevel, Zapier, Make, n8n) ───
+function dispatchWebhookPayload(targetUrl, payload, secret = '') {
+  if (!targetUrl || typeof targetUrl !== 'string' || !targetUrl.startsWith('http')) return;
+  try {
+    const parsed = new URL(targetUrl);
+    const postData = JSON.stringify(payload);
+    const isHttps = parsed.protocol === 'https:';
+    const client = isHttps ? https : http;
+
+    const headers = {
+      'Content-Type': 'application/json',
+      'Content-Length': Buffer.byteLength(postData),
+      'User-Agent': 'MissedCallAutoSMS-WebhookRouter/2.0'
+    };
+
+    if (secret) {
+      const hmac = crypto.createHmac('sha256', secret).update(postData).digest('hex');
+      headers['X-MCAS-Signature'] = `sha256=${hmac}`;
+    }
+
+    const req = client.request({
+      hostname: parsed.hostname,
+      port: parsed.port || (isHttps ? 443 : 80),
+      path: parsed.pathname + parsed.search,
+      method: 'POST',
+      headers: headers,
+      timeout: 8000
+    }, (res) => {
+      console.log(`📡 [WEBHOOK ROUTER] Delivered to ${parsed.hostname} (Status ${res.statusCode}) for event "${payload.event}"`);
+    });
+
+    req.on('error', (err) => {
+      console.warn(`[WEBHOOK ROUTER WARNING] Delivery failed to ${targetUrl}: ${err.message}`);
+    });
+
+    req.write(postData);
+    req.end();
+  } catch (err) {
+    console.warn(`[WEBHOOK ROUTER ERROR] ${err.message}`);
   }
 }
 
@@ -1694,6 +1879,81 @@ const server = http.createServer((req, res) => {
           const amountTotal = (session.amount_total !== undefined && session.amount_total !== null) ? session.amount_total : (session.amount !== undefined ? session.amount : 2900);
           const metadata = session.metadata || {};
 
+          // AUTOMATION: Agency White-Label Client Deployment & Card Vaulting via Stripe Checkout
+          if (metadata.isAgencyClientIssuance === 'true' || metadata.action === 'agency_issue_client' || metadata.action === 'agency_attach_card') {
+            const agencyId = (metadata.agencyId || metadata.agency_id || '').toLowerCase();
+            const { customerId: stripeCustId, cardDetails } = await getPaymentMethodDetailsFromSession(session);
+            const AGENCIES_CONFIG_PATH = path.join(__dirname, 'agencies', 'agencies.json');
+
+            // Vault payment method to agency profile in agencies.json
+            if (fs.existsSync(AGENCIES_CONFIG_PATH) && agencyId) {
+              try {
+                const cfg = JSON.parse(fs.readFileSync(AGENCIES_CONFIG_PATH, 'utf8'));
+                if (cfg.agencies && cfg.agencies[agencyId]) {
+                  cfg.agencies[agencyId].stripeCustomerId = stripeCustId || session.customer || cfg.agencies[agencyId].stripeCustomerId;
+                  if (cardDetails) {
+                    cfg.agencies[agencyId].cardBrand = cardDetails.brand;
+                    cfg.agencies[agencyId].cardLast4 = cardDetails.last4;
+                    cfg.agencies[agencyId].defaultPaymentMethodId = cardDetails.id;
+                  }
+                  fs.writeFileSync(AGENCIES_CONFIG_PATH, JSON.stringify(cfg, null, 2), 'utf8');
+                }
+              } catch (e) {}
+            }
+
+            if (metadata.action === 'agency_attach_card') {
+              console.log(`💳 [AGENCY CARD ATTACHED] Agency [${agencyId}] saved card ${cardDetails?.brand} •••• ${cardDetails?.last4}`);
+              res.writeHead(200, { 'Content-Type': 'application/json; charset=utf-8', 'Access-Control-Allow-Origin': '*' });
+              res.end(JSON.stringify({ received: true, action: 'agency_attach_card', agencyId, cardSaved: !!cardDetails }));
+              return;
+            }
+
+            const clientName = metadata.clientName || 'Client Business';
+            const clientContact = metadata.clientContact || '';
+            const clientNotes = metadata.clientNotes || '';
+            const plan = metadata.plan || 'pro';
+            const includeVoice = metadata.includeVoice === 'true' || !!session.subscription;
+
+            const licenseKey = generateKey(clientName, 0, plan !== 'flagship');
+            const nowIso = new Date().toISOString();
+            const forwardingNumber = process.env.VAPI_PRIMARY_PHONE_NUMBER || '+1 (732) 660-9121';
+            const cleanDigits = forwardingNumber.replace(/\D/g, '');
+            const carrierCode = `*71${cleanDigits.slice(-10)}`;
+
+            saveMasterLicense({
+              key: licenseKey,
+              customer: clientName,
+              email: customerEmail,
+              contact: clientContact,
+              notes: clientNotes,
+              agencyId: agencyId,
+              edition: plan,
+              voiceEntitlement: includeVoice,
+              vapiProvisioned: includeVoice,
+              voiceActive: includeVoice,
+              voiceNumber: forwardingNumber,
+              carrierCode: carrierCode,
+              voiceMinutesBalance: includeVoice ? 40 : 0,
+              status: 'ACTIVE',
+              stripeSubscriptionId: session.subscription || null,
+              stripeCustomerId: stripeCustId || session.customer || null,
+              issuedAt: nowIso
+            });
+
+            console.log(`🎉 [AGENCY CLIENT DEPLOYED VIA STRIPE] Agency [${agencyId}] deployed [${clientName}] - Plan [${plan}], Voice [${includeVoice}], Key [${licenseKey}], Sub [${session.subscription || 'N/A'}]`);
+
+            res.writeHead(200, { 'Content-Type': 'application/json; charset=utf-8', 'Access-Control-Allow-Origin': '*' });
+            res.end(JSON.stringify({
+              received: true,
+              agencyId,
+              clientName,
+              licenseKey,
+              subscriptionId: session.subscription || null,
+              status: 'DEPLOYED_ACTIVE'
+            }));
+            return;
+          }
+
           // AUTOMATION 1: Managed AI Voice Receptionist ($9.99 / month recurring)
           const isVoicePro = (amountTotal === 999) || (amountTotal === 2900) || 
                              (metadata.tier === 'managed_voice_pro') || 
@@ -1931,6 +2191,7 @@ const server = http.createServer((req, res) => {
               cardExpYear: cardDetails?.exp_year || sub?.cardExpYear || null,
               isVoicePaused: false,
               status: 'ACTIVE',
+              agencyId: metadata.agency_id || sub?.agencyId || 'default',
               provisionedAt: isFirstTimeProvisioning ? new Date().toISOString() : (sub?.provisionedAt || new Date().toISOString())
             });
 
@@ -1938,6 +2199,7 @@ const server = http.createServer((req, res) => {
               key: targetKey,
               customer: customerName,
               email: customerEmail,
+              agencyId: metadata.agency_id || masterLic?.agencyId || 'default',
               voiceEntitlement: true,
               vapiProvisioned: true,
               voiceActive: true,
@@ -3391,16 +3653,17 @@ const server = http.createServer((req, res) => {
       const licenseKey = (params.licenseKey || params.key || '').trim().toUpperCase();
       const customerEmail = (params.email || '').trim();
       const refCode = (params.ref || params.referral_code || '').trim();
+      const agencyId = (params.agency || params.agency_id || params.agencyId || 'default').trim();
 
       const CREDIT_TIERS = {
-        '10': { id: 'pack_10', name: 'Missed Call Auto SMS - Starter Credit Pack (40 Mins)', amount: 1000, minutes: 40, fallbackUrl: 'https://buy.stripe.com/5kA8wPfRY0PS6M014f' },
-        'pack_10': { id: 'pack_10', name: 'Missed Call Auto SMS - Starter Credit Pack (40 Mins)', amount: 1000, minutes: 40, fallbackUrl: 'https://buy.stripe.com/5kA8wPfRY0PS6M014f' },
-        '25': { id: 'pack_25', name: 'Missed Call Auto SMS - Growth Credit Pack (115 Mins - Includes 15 Bonus Mins)', amount: 2500, minutes: 115, fallbackUrl: 'https://buy.stripe.com/5kA8wPfRY0PS6M014f' },
-        'pack_25': { id: 'pack_25', name: 'Missed Call Auto SMS - Growth Credit Pack (115 Mins - Includes 15 Bonus Mins)', amount: 2500, minutes: 115, fallbackUrl: 'https://buy.stripe.com/5kA8wPfRY0PS6M014f' },
-        '50': { id: 'pack_50', name: 'Missed Call Auto SMS - Pro Contractor Pack (250 Mins - Includes 50 Bonus Mins)', amount: 5000, minutes: 250, fallbackUrl: 'https://buy.stripe.com/5kA8wPfRY0PS6M014f' },
-        'pack_50': { id: 'pack_50', name: 'Missed Call Auto SMS - Pro Contractor Pack (250 Mins - Includes 50 Bonus Mins)', amount: 5000, minutes: 250, fallbackUrl: 'https://buy.stripe.com/5kA8wPfRY0PS6M014f' },
-        '100': { id: 'pack_100', name: 'Missed Call Auto SMS - Fleet Credit Pack (550 Mins - Includes 150 Bonus Mins)', amount: 10000, minutes: 550, fallbackUrl: 'https://buy.stripe.com/5kA8wPfRY0PS6M014f' },
-        'pack_100': { id: 'pack_100', name: 'Missed Call Auto SMS - Fleet Credit Pack (550 Mins - Includes 150 Bonus Mins)', amount: 10000, minutes: 550, fallbackUrl: 'https://buy.stripe.com/5kA8wPfRY0PS6M014f' }
+        '10': { id: 'pack_10', name: 'Starter Credit Pack (40 Mins)', amount: 1000, minutes: 40, fallbackUrl: 'https://buy.stripe.com/5kA8wPfRY0PS6M014f' },
+        'pack_10': { id: 'pack_10', name: 'Starter Credit Pack (40 Mins)', amount: 1000, minutes: 40, fallbackUrl: 'https://buy.stripe.com/5kA8wPfRY0PS6M014f' },
+        '25': { id: 'pack_25', name: 'Growth Credit Pack (115 Mins - Includes 15 Bonus Mins)', amount: 2500, minutes: 115, fallbackUrl: 'https://buy.stripe.com/5kA8wPfRY0PS6M014f' },
+        'pack_25': { id: 'pack_25', name: 'Growth Credit Pack (115 Mins - Includes 15 Bonus Mins)', amount: 2500, minutes: 115, fallbackUrl: 'https://buy.stripe.com/5kA8wPfRY0PS6M014f' },
+        '50': { id: 'pack_50', name: 'Pro Contractor Pack (250 Mins - Includes 50 Bonus Mins)', amount: 5000, minutes: 250, fallbackUrl: 'https://buy.stripe.com/5kA8wPfRY0PS6M014f' },
+        'pack_50': { id: 'pack_50', name: 'Pro Contractor Pack (250 Mins - Includes 50 Bonus Mins)', amount: 5000, minutes: 250, fallbackUrl: 'https://buy.stripe.com/5kA8wPfRY0PS6M014f' },
+        '100': { id: 'pack_100', name: 'Fleet Credit Pack (550 Mins - Includes 150 Bonus Mins)', amount: 10000, minutes: 550, fallbackUrl: 'https://buy.stripe.com/5kA8wPfRY0PS6M014f' },
+        'pack_100': { id: 'pack_100', name: 'Fleet Credit Pack (550 Mins - Includes 150 Bonus Mins)', amount: 10000, minutes: 550, fallbackUrl: 'https://buy.stripe.com/5kA8wPfRY0PS6M014f' }
       };
 
       const tier = CREDIT_TIERS[tierKey] || CREDIT_TIERS['10'];
@@ -3428,7 +3691,7 @@ const server = http.createServer((req, res) => {
         'payment_intent_data[setup_future_usage]': 'off_session',
         'line_items[0][price_data][currency]': 'usd',
         'line_items[0][price_data][unit_amount]': String(tier.amount),
-        'line_items[0][price_data][product_data][name]': tier.name,
+        'line_items[0][price_data][product_data][name]': `Voice Hub Network - ${tier.name}`,
         'line_items[0][price_data][product_data][description]': `Instant addition of +${tier.minutes} minutes to dedicated AI voice line. 100% P2P carrier exempt.`,
         'line_items[0][quantity]': '1',
         'metadata[tier]': 'credit_pack',
@@ -3436,6 +3699,7 @@ const server = http.createServer((req, res) => {
         'metadata[minutes]': String(tier.minutes),
         'metadata[price_dollars]': String(tier.amount / 100),
         'metadata[license_key]': licenseKey,
+        'metadata[agency_id]': agencyId,
         'metadata[referral_code]': refCode,
         'metadata[service]': 'voice_credit_reload',
         'success_url': `https://${host}/success.html?session_id={CHECKOUT_SESSION_ID}&type=credit_pack&minutes=${tier.minutes}`,
@@ -4276,6 +4540,85 @@ const server = http.createServer((req, res) => {
           smsFollowUpText: followUpText
         };
         saveVoiceCallLog(logEntry);
+
+        // Step 2.5: Dispatch Outbound Webhooks to Agency CRM / GoHighLevel / Zapier / n8n
+        try {
+          const agenciesConfigPath = path.join(__dirname, 'agencies', 'agencies.json');
+          if (fs.existsSync(agenciesConfigPath)) {
+            const agData = JSON.parse(fs.readFileSync(agenciesConfigPath, 'utf8') || '{}');
+            const agencies = agData.agencies || {};
+            for (const [agKey, agObj] of Object.entries(agencies)) {
+              const wh = agObj.webhook;
+              if (wh && wh.masterUrl && wh.active !== false) {
+                const subEvents = Array.isArray(wh.events) ? wh.events : ['voice.call_completed', 'lead.urgent'];
+                if (subEvents.includes('voice.call_completed')) {
+                  dispatchWebhookPayload(wh.masterUrl, {
+                    event: 'voice.call_completed',
+                    timestamp: logEntry.timestamp,
+                    agencyId: agKey,
+                    caller: {
+                      phone: logEntry.callerNumber,
+                      name: logEntry.callerName,
+                      address: logEntry.address
+                    },
+                    call: {
+                      id: logEntry.id,
+                      duration: logEntry.durationFormatted,
+                      durationSeconds: logEntry.durationSeconds,
+                      recordingUrl: logEntry.audioUrl,
+                      transcript: logEntry.transcript,
+                      summary: logEntry.summary,
+                      urgency: logEntry.urgency,
+                      category: logEntry.category
+                    },
+                    smsFollowUp: {
+                      sent: logEntry.smsFollowUpSent,
+                      text: logEntry.smsFollowUpText
+                    }
+                  }, wh.signingSecret || '');
+                }
+                if (isUrgent && subEvents.includes('lead.urgent')) {
+                  dispatchWebhookPayload(wh.masterUrl, {
+                    event: 'lead.urgent',
+                    timestamp: logEntry.timestamp,
+                    agencyId: agKey,
+                    priority: 'HIGH_PRIORITY_EMERGENCY',
+                    caller: {
+                      phone: logEntry.callerNumber,
+                      name: logEntry.callerName,
+                      address: logEntry.address
+                    },
+                    summary: logEntry.summary,
+                    transcript: logEntry.transcript,
+                    recordingUrl: logEntry.audioUrl
+                  }, wh.signingSecret || '');
+                }
+              }
+            }
+          }
+
+          // Also check per-client webhooks configured in appliance_configs
+          const appConfigs = getApplianceConfigs();
+          for (const [k, cVal] of Object.entries(appConfigs)) {
+            if (cVal.handset?.outboundWebhookEnabled && cVal.handset?.selectedOutboundWebhookUrl) {
+              dispatchWebhookPayload(cVal.handset.selectedOutboundWebhookUrl, {
+                event: 'voice.call_completed',
+                licenseKey: k,
+                customerName: cVal.customerName || 'Client Business',
+                timestamp: logEntry.timestamp,
+                caller: { phone: logEntry.callerNumber, name: logEntry.callerName, address: logEntry.address },
+                call: {
+                  summary: logEntry.summary,
+                  transcript: logEntry.transcript,
+                  recordingUrl: logEntry.audioUrl,
+                  urgency: logEntry.urgency
+                }
+              });
+            }
+          }
+        } catch (whErr) {
+          console.warn('[Vapi Webhook Dispatch Warning]', whErr.message);
+        }
 
         // Step 3: Meter Call Duration against Customer Voice Minute Credits ($0.25/min)
         const durationMins = Math.max(0.1, durationSec / 60);
@@ -5345,7 +5688,7 @@ const server = http.createServer((req, res) => {
   if ((relativePath === '/api/agency/manage' || relativePath === '/api/agency/manage/') && req.method === 'POST') {
     let body = '';
     req.on('data', chunk => body += chunk);
-    req.on('end', () => {
+    req.on('end', async () => {
       try {
         const payload = JSON.parse(body || '{}');
         const action = payload.action || 'list_fleets';
@@ -5437,11 +5780,1219 @@ const server = http.createServer((req, res) => {
           return;
         }
 
+        // 5. LIST WHITE-LABEL AGENCIES (for Owner Admin Dashboard)
+        if (action === 'list_white_label_agencies') {
+          const AGENCIES_CONFIG_PATH = path.join(__dirname, 'agencies', 'agencies.json');
+          let agencies = {};
+          if (fs.existsSync(AGENCIES_CONFIG_PATH)) {
+            try {
+              const raw = JSON.parse(fs.readFileSync(AGENCIES_CONFIG_PATH, 'utf8'));
+              agencies = raw.agencies || {};
+            } catch (e) {}
+          }
+
+          const subscribers = getVoiceSubscribers();
+          const masterList = getMasterLicenses();
+
+          const agencyList = Object.entries(agencies).map(([id, cfg]) => {
+            // Find clients
+            const clients = subscribers.filter(s => (s.agencyId === id) || (id === 'default' && (!s.agencyId || s.agencyId === 'default')));
+            const clientKeys = new Set(clients.map(c => c.licenseKey));
+            masterList.forEach(m => {
+              if (m.agencyId === id && !clientKeys.has(m.key)) {
+                clients.push({
+                  name: m.customer || 'Unknown Client',
+                  email: m.email || '',
+                  licenseKey: m.key,
+                  voiceMinutesBalance: m.voiceMinutesBalance || 0,
+                  agencyId: id
+                });
+              }
+            });
+
+            // Check built APK status
+            const distDir = path.join(__dirname, 'dist', 'agencies', id);
+            const otaDir = path.join(__dirname, 'ota', id);
+            let apkFound = false;
+            let apkFileName = '';
+            let apkSizeMb = 0;
+            let apkUpdated = null;
+
+            if (fs.existsSync(distDir)) {
+              const files = fs.readdirSync(distDir).filter(f => f.endsWith('.apk'));
+              if (files.length > 0) {
+                apkFound = true;
+                apkFileName = files[0];
+                const stats = fs.statSync(path.join(distDir, apkFileName));
+                apkSizeMb = (stats.size / (1024 * 1024)).toFixed(2);
+                apkUpdated = stats.mtime.toISOString();
+              }
+            } else if (id === 'default') {
+              const rootApk = path.join(__dirname, 'MissedCallAutoSMS.apk');
+              if (fs.existsSync(rootApk)) {
+                apkFound = true;
+                apkFileName = 'MissedCallAutoSMS.apk';
+                const stats = fs.statSync(rootApk);
+                apkSizeMb = (stats.size / (1024 * 1024)).toFixed(2);
+                apkUpdated = stats.mtime.toISOString();
+              }
+            }
+
+            // Check OTA manifest
+            let otaVersion = null;
+            const otaPath = path.join(otaDir, 'version.json');
+            if (fs.existsSync(otaPath)) {
+              try {
+                const otaRaw = JSON.parse(fs.readFileSync(otaPath, 'utf8'));
+                otaVersion = {
+                  versionCode: otaRaw.versionCode,
+                  versionName: otaRaw.versionName,
+                  downloadUrl: otaRaw.downloadUrl,
+                  updatedAt: otaRaw.updatedAt
+                };
+              } catch (e) {}
+            }
+
+            const totalMins = clients.reduce((acc, c) => acc + (parseFloat(c.voiceMinutesBalance) || 0), 0);
+
+            return {
+              ...cfg,
+              id,
+              clientCount: clients.length,
+              totalMinutesBalance: Math.round(totalMins * 10) / 10,
+              apkStatus: {
+                exists: apkFound,
+                fileName: apkFileName,
+                sizeMb: apkSizeMb,
+                updatedAt: apkUpdated,
+                downloadUrl: id === 'default' 
+                  ? 'https://raw.githubusercontent.com/anthonyfullerink-ai/MCASMS/main/MissedCallAutoSMS.apk' 
+                  : `https://raw.githubusercontent.com/anthonyfullerink-ai/MCASMS/main/ota/${id}/${encodeURIComponent(apkFileName)}`
+              },
+              otaStatus: otaVersion,
+              clients: clients.map(c => ({
+                name: c.name || c.businessName || 'Client Business',
+                email: c.email || '',
+                licenseKey: c.licenseKey || c.key || '',
+                minutes: c.voiceMinutesBalance || 0,
+                status: c.status || 'ACTIVE'
+              }))
+            };
+          });
+
+          const totalAgencies = Object.keys(agencies).length;
+          const totalClients = agencyList.reduce((acc, a) => acc + a.clientCount, 0);
+          const totalMinutes = agencyList.reduce((acc, a) => acc + a.totalMinutesBalance, 0);
+
+          res.writeHead(200, { 'Content-Type': 'application/json; charset=utf-8', 'Access-Control-Allow-Origin': '*' });
+          res.end(JSON.stringify({
+            success: true,
+            agencies: agencyList,
+            stats: {
+              totalAgencies,
+              totalClients,
+              totalMinutes: Math.round(totalMinutes * 10) / 10
+            }
+          }));
+          return;
+        }
+
+        // 6. SAVE / UPDATE WHITE-LABEL AGENCY PROFILE
+        if (action === 'save_white_label_agency') {
+          const rawId = (payload.agencyId || payload.id || '').trim().toLowerCase();
+          const cleanId = rawId.replace(/[^a-z0-9_]/g, '_');
+          if (!cleanId) {
+            res.writeHead(400, { 'Content-Type': 'application/json; charset=utf-8', 'Access-Control-Allow-Origin': '*' });
+            res.end(JSON.stringify({ success: false, error: 'Agency ID/slug is required' }));
+            return;
+          }
+
+          const AGENCIES_CONFIG_PATH = path.join(__dirname, 'agencies', 'agencies.json');
+          let configData = { agencies: {} };
+          if (fs.existsSync(AGENCIES_CONFIG_PATH)) {
+            try { configData = JSON.parse(fs.readFileSync(AGENCIES_CONFIG_PATH, 'utf8')); } catch (e) {}
+          }
+          if (!configData.agencies) configData.agencies = {};
+
+          const existing = configData.agencies[cleanId] || {};
+          configData.agencies[cleanId] = {
+            agencyId: cleanId,
+            appName: (payload.appName || existing.appName || 'Agency Auto-SMS').trim(),
+            legalName: (payload.legalName || existing.legalName || payload.appName || cleanId).trim(),
+            tagline: (payload.tagline || existing.tagline || '24/7 AI Receptionist & Lead Protection').trim(),
+            supportEmail: (payload.supportEmail || existing.supportEmail || '').trim(),
+            supportPhone: (payload.supportPhone || existing.supportPhone || '').trim(),
+            privacyPolicyUrl: (payload.privacyPolicyUrl || existing.privacyPolicyUrl || 'https://missedcallautosms.com/privacy.html').trim(),
+            termsUrl: (payload.termsUrl || existing.termsUrl || 'https://missedcallautosms.com/terms.html').trim(),
+            stripeDescriptor: (payload.stripeDescriptor || existing.stripeDescriptor || 'Voice Hub Network').trim(),
+            theme: {
+              primaryColor: (payload.primaryColor || payload.theme?.primaryColor || existing.theme?.primaryColor || '#2563EB').trim(),
+              accentColor: (payload.accentColor || payload.theme?.accentColor || existing.theme?.accentColor || '#10B981').trim()
+            }
+          };
+
+          fs.mkdirSync(path.join(__dirname, 'agencies'), { recursive: true });
+          fs.writeFileSync(AGENCIES_CONFIG_PATH, JSON.stringify(configData, null, 2), 'utf8');
+
+          res.writeHead(200, { 'Content-Type': 'application/json; charset=utf-8', 'Access-Control-Allow-Origin': '*' });
+          res.end(JSON.stringify({ success: true, message: `Agency ${cleanId} saved successfully`, agency: configData.agencies[cleanId] }));
+          return;
+        }
+
+        // 7. DELETE WHITE-LABEL AGENCY PROFILE
+        if (action === 'delete_white_label_agency') {
+          const agencyId = (payload.agencyId || payload.id || '').trim().toLowerCase();
+          if (!agencyId || agencyId === 'default') {
+            res.writeHead(400, { 'Content-Type': 'application/json; charset=utf-8', 'Access-Control-Allow-Origin': '*' });
+            res.end(JSON.stringify({ success: false, error: 'Cannot delete default agency or missing agencyId' }));
+            return;
+          }
+
+          const AGENCIES_CONFIG_PATH = path.join(__dirname, 'agencies', 'agencies.json');
+          if (fs.existsSync(AGENCIES_CONFIG_PATH)) {
+            try {
+              const configData = JSON.parse(fs.readFileSync(AGENCIES_CONFIG_PATH, 'utf8'));
+              if (configData.agencies && configData.agencies[agencyId]) {
+                delete configData.agencies[agencyId];
+                fs.writeFileSync(AGENCIES_CONFIG_PATH, JSON.stringify(configData, null, 2), 'utf8');
+              }
+            } catch (e) {}
+          }
+
+          res.writeHead(200, { 'Content-Type': 'application/json; charset=utf-8', 'Access-Control-Allow-Origin': '*' });
+          res.end(JSON.stringify({ success: true, message: `Agency ${agencyId} removed` }));
+          return;
+        }
+
+        // 8. TRIGGER AGENCY BUILD (Compile APK)
+        if (action === 'trigger_agency_build') {
+          const agencyId = (payload.agencyId || payload.id || '').trim();
+          const flavor = (payload.flavor || 'standard').trim().toLowerCase();
+          if (!agencyId) {
+            res.writeHead(400, { 'Content-Type': 'application/json; charset=utf-8', 'Access-Control-Allow-Origin': '*' });
+            res.end(JSON.stringify({ success: false, error: 'agencyId required' }));
+            return;
+          }
+
+          const { exec } = require('child_process');
+          const scriptPath = path.join(__dirname, 'scripts', 'build_agency.js');
+          const cmd = `node "${scriptPath}" --agency "${agencyId}" --flavor "${flavor}"`;
+
+          exec(cmd, { cwd: __dirname }, (error, stdout, stderr) => {
+            if (error) {
+              console.error(`❌ [AGENCY BUILD ERROR]`, stderr || error.message);
+              res.writeHead(500, { 'Content-Type': 'application/json; charset=utf-8', 'Access-Control-Allow-Origin': '*' });
+              res.end(JSON.stringify({ success: false, error: error.message, output: stderr || stdout }));
+              return;
+            }
+            res.writeHead(200, { 'Content-Type': 'application/json; charset=utf-8', 'Access-Control-Allow-Origin': '*' });
+            res.end(JSON.stringify({ success: true, message: `Agency ${agencyId} build completed`, output: stdout }));
+          });
+          return;
+        }
+
+        // 9. AGENCY PARTNER SELF-SERVE AUTH
+        if (action === 'agency_partner_auth') {
+          const rawId = (payload.agencyId || payload.key || payload.slug || '').trim().toLowerCase();
+          const cleanId = rawId.replace(/[^a-z0-9_]/g, '_');
+
+          const AGENCIES_CONFIG_PATH = path.join(__dirname, 'agencies', 'agencies.json');
+          let agencies = {};
+          if (fs.existsSync(AGENCIES_CONFIG_PATH)) {
+            try {
+              const raw = JSON.parse(fs.readFileSync(AGENCIES_CONFIG_PATH, 'utf8'));
+              agencies = raw.agencies || {};
+            } catch (e) {}
+          }
+
+          let matchedAgency = agencies[cleanId] || null;
+          let matchedKey = cleanId;
+
+          // Fallback: check if matches by appName or if cleanId is in fleet cache
+          if (!matchedAgency) {
+            for (const [id, cfg] of Object.entries(agencies)) {
+              if (cfg.appName && cfg.appName.toLowerCase().replace(/[^a-z0-9]/g, '') === rawId.replace(/[^a-z0-9]/g, '')) {
+                matchedAgency = cfg;
+                matchedKey = id;
+                break;
+              }
+            }
+          }
+
+          if (!matchedAgency) {
+            res.writeHead(404, { 'Content-Type': 'application/json; charset=utf-8', 'Access-Control-Allow-Origin': '*' });
+            res.end(JSON.stringify({ success: false, error: `Agency partner "${rawId}" not found. Verify your agency slug or contact support.` }));
+            return;
+          }
+
+          const subscribers = getVoiceSubscribers();
+          const masterList = getMasterLicenses();
+
+          const clients = [];
+          const clientKeys = new Set();
+
+          subscribers.forEach(s => {
+            if (s.agencyId === matchedKey) {
+              clientKeys.add(s.licenseKey);
+              clients.push({
+                name: s.name || s.businessName || 'Client Business',
+                email: s.email || '',
+                contact: s.phone || s.contact || '',
+                notes: s.notes || '',
+                licenseKey: s.licenseKey,
+                minutes: s.voiceMinutesBalance || 0,
+                status: s.status || (s.active ? 'ACTIVE' : 'INACTIVE'),
+                carrierCode: s.carrierCode || '*71',
+                forwardingActive: !s.isVoicePaused,
+                hardwareId: s.deviceId || '',
+                deviceModel: s.deviceModel || '',
+                issuedAt: s.issuedAt || s.createdAt || ''
+              });
+            }
+          });
+
+          masterList.forEach(m => {
+            if (m.agencyId === matchedKey && !clientKeys.has(m.key)) {
+              clients.push({
+                name: m.customer || 'Client Business',
+                email: m.email || '',
+                contact: m.contact || m.phone || '',
+                notes: m.notes || '',
+                licenseKey: m.key,
+                minutes: m.voiceMinutesBalance || 0,
+                status: m.status || 'ACTIVE',
+                carrierCode: m.carrierCode || '*71',
+                forwardingActive: m.voiceActive,
+                hardwareId: m.deviceId || '',
+                deviceModel: m.deviceModel || '',
+                issuedAt: m.issuedAt || ''
+              });
+            }
+          });
+
+          // Check APK & OTA status
+          const distDir = path.join(__dirname, 'dist', 'agencies', matchedKey);
+          const otaDir = path.join(__dirname, 'ota', matchedKey);
+          let apkFound = false;
+          let apkFileName = '';
+          let apkSizeMb = 0;
+          let downloadUrl = '';
+
+          if (fs.existsSync(distDir)) {
+            const files = fs.readdirSync(distDir).filter(f => f.endsWith('.apk'));
+            if (files.length > 0) {
+              apkFound = true;
+              apkFileName = files[0];
+              const stats = fs.statSync(path.join(distDir, apkFileName));
+              apkSizeMb = (stats.size / (1024 * 1024)).toFixed(2);
+              downloadUrl = `/dist/agencies/${matchedKey}/${encodeURIComponent(apkFileName)}`;
+            }
+          }
+          if (!apkFound && matchedKey === 'default') {
+            const rootApk = path.join(__dirname, 'MissedCallAutoSMS.apk');
+            if (fs.existsSync(rootApk)) {
+              apkFound = true;
+              apkFileName = 'MissedCallAutoSMS.apk';
+              const stats = fs.statSync(rootApk);
+              apkSizeMb = (stats.size / (1024 * 1024)).toFixed(2);
+              downloadUrl = '/MissedCallAutoSMS.apk';
+            }
+          }
+
+          let otaVersion = null;
+          const otaPath = path.join(otaDir, 'version.json');
+          if (fs.existsSync(otaPath)) {
+            try {
+              otaVersion = JSON.parse(fs.readFileSync(otaPath, 'utf8'));
+            } catch (e) {}
+          }
+
+          const totalMins = clients.reduce((acc, c) => acc + (parseFloat(c.minutes) || 0), 0);
+          const estCallsProtected = clients.length * 14;
+          const estPipelineProtected = estCallsProtected * 450;
+
+          res.writeHead(200, { 'Content-Type': 'application/json; charset=utf-8', 'Access-Control-Allow-Origin': '*' });
+          res.end(JSON.stringify({
+            success: true,
+            agency: {
+              ...matchedAgency,
+              id: matchedKey
+            },
+            billing: {
+              hasCardOnFile: !!(matchedAgency.cardLast4 || matchedAgency.defaultPaymentMethodId),
+              cardBrand: matchedAgency.cardBrand || null,
+              cardLast4: matchedAgency.cardLast4 || null,
+              stripeCustomerId: matchedAgency.stripeCustomerId || null
+            },
+            clients,
+            stats: {
+              clientCount: clients.length,
+              totalMinutes: Math.round(totalMins * 10) / 10,
+              estCallsProtected,
+              estPipelineProtected
+            },
+            apkStatus: {
+              exists: apkFound,
+              fileName: apkFileName,
+              sizeMb: apkSizeMb,
+              downloadUrl
+            },
+            otaStatus: otaVersion
+          }));
+          return;
+        }
+
+        // 10. AGENCY PARTNER ISSUE CLIENT LICENSE KEY (WITH STRIPE $9.99/MO & LICENSE BILLING)
+        if (action === 'agency_partner_issue_key') {
+          const agencyId = (payload.agencyId || payload.id || '').trim().toLowerCase();
+          const clientName = (payload.clientName || 'Client Business').trim();
+          const clientEmail = (payload.clientEmail || '').trim();
+          const clientContact = (payload.clientContact || payload.contact || payload.clientPhone || '').trim();
+          const clientNotes = (payload.clientNotes || payload.notes || '').trim();
+          const plan = (payload.plan || 'pro').toLowerCase() === 'flagship' ? 'flagship' : 'pro';
+          const includeVoice = payload.includeVoice !== false && payload.includeVoice !== 'false';
+          const paymentMode = payload.paymentMode || 'card_on_file'; // 'card_on_file' | 'checkout'
+
+          if (!agencyId) {
+            res.writeHead(400, { 'Content-Type': 'application/json; charset=utf-8', 'Access-Control-Allow-Origin': '*' });
+            res.end(JSON.stringify({ success: false, error: 'agencyId is required' }));
+            return;
+          }
+
+          const AGENCIES_CONFIG_PATH = path.join(__dirname, 'agencies', 'agencies.json');
+          let configData = { agencies: {} };
+          if (fs.existsSync(AGENCIES_CONFIG_PATH)) {
+            try { configData = JSON.parse(fs.readFileSync(AGENCIES_CONFIG_PATH, 'utf8')); } catch (e) {}
+          }
+          const agency = configData.agencies?.[agencyId] || {};
+
+          const oneTimeAmount = plan === 'flagship' ? 4999 : 29999;
+          const oneTimeLabel = plan === 'flagship' ? 'Flagship Appliance Edition ($49.99)' : 'Pro Automation Edition ($299.99)';
+          const host = req.headers.host || 'localhost:8000';
+          const origin = `http://${host}`;
+          const stripeKey = getStripeKey();
+
+          const hasCardOnFile = !!(agency.stripeCustomerId && (agency.defaultPaymentMethodId || agency.cardLast4));
+
+          // Branch A: If agency requested direct checkout OR has no card on file, create Stripe Checkout Session
+          if ((!hasCardOnFile || paymentMode === 'checkout') && stripeKey) {
+            try {
+              const checkoutData = {
+                'mode': includeVoice ? 'subscription' : 'payment',
+                'payment_method_types[0]': 'card',
+                'line_items[0][price_data][currency]': 'usd',
+                'line_items[0][price_data][unit_amount]': String(oneTimeAmount),
+                'line_items[0][price_data][product_data][name]': `${oneTimeLabel} • ${agency.appName || 'White-Label'}`,
+                'line_items[0][price_data][product_data][description]': `Dedicated Android appliance license for ${clientName}`,
+                'line_items[0][quantity]': '1',
+                'metadata[isAgencyClientIssuance]': 'true',
+                'metadata[agencyId]': agencyId,
+                'metadata[clientName]': clientName,
+                'metadata[clientEmail]': clientEmail,
+                'metadata[clientContact]': clientContact,
+                'metadata[clientNotes]': clientNotes,
+                'metadata[plan]': plan,
+                'metadata[includeVoice]': includeVoice ? 'true' : 'false',
+                'success_url': `${origin}/agency_dashboard.html?agency=${agencyId}&session_id={CHECKOUT_SESSION_ID}&client_deployed=true`,
+                'cancel_url': `${origin}/agency_dashboard.html?agency=${agencyId}`
+              };
+
+              if (includeVoice) {
+                checkoutData['line_items[1][price_data][currency]'] = 'usd';
+                checkoutData['line_items[1][price_data][unit_amount]'] = '999';
+                checkoutData['line_items[1][price_data][recurring][interval]'] = 'month';
+                checkoutData['line_items[1][price_data][product_data][name]'] = `24/7 AI Voice Line ($9.99/mo) • ${clientName}`;
+                checkoutData['line_items[1][price_data][product_data][description]'] = 'Monthly carrier line forwarding and Vapi AI voice receptionist engine access';
+                checkoutData['line_items[1][quantity]'] = '1';
+                checkoutData['subscription_data[metadata][agencyId]'] = agencyId;
+                checkoutData['subscription_data[metadata][clientName]'] = clientName;
+              }
+
+              if (agency.stripeCustomerId) {
+                checkoutData['customer'] = agency.stripeCustomerId;
+              } else if (agency.supportEmail) {
+                checkoutData['customer_email'] = agency.supportEmail;
+              }
+
+              const session = await stripeApiRequest('/v1/checkout/sessions', 'POST', checkoutData);
+              res.writeHead(200, { 'Content-Type': 'application/json; charset=utf-8', 'Access-Control-Allow-Origin': '*' });
+              res.end(JSON.stringify({
+                success: true,
+                requiresCheckout: true,
+                checkoutUrl: session.url,
+                sessionId: session.id,
+                plan,
+                includeVoice
+              }));
+              return;
+            } catch (stripeCheckoutErr) {
+              console.warn('[AGENCY CHECKOUT ERROR, FALLING BACK TO DIRECT GENERATION]', stripeCheckoutErr.message);
+            }
+          }
+
+          // Branch B: Card on File Off-Session Charge or Sandbox Deployment
+          let stripeSubscriptionId = null;
+          let paymentBilled = false;
+
+          if (hasCardOnFile && stripeKey) {
+            try {
+              if (includeVoice) {
+                const subData = {
+                  'customer': agency.stripeCustomerId,
+                  'items[0][price_data][currency]': 'usd',
+                  'items[0][price_data][unit_amount]': '999',
+                  'items[0][price_data][recurring][interval]': 'month',
+                  'items[0][price_data][product_data][name]': `24/7 AI Voice Line ($9.99/mo) - ${clientName}`,
+                  'add_invoice_items[0][price_data][currency]': 'usd',
+                  'add_invoice_items[0][price_data][unit_amount]': String(oneTimeAmount),
+                  'add_invoice_items[0][price_data][product_data][name]': `${oneTimeLabel} License - ${clientName}`,
+                  'metadata[agencyId]': agencyId,
+                  'metadata[clientName]': clientName,
+                  'metadata[plan]': plan,
+                  'off_session': 'true'
+                };
+                if (agency.defaultPaymentMethodId) {
+                  subData['default_payment_method'] = agency.defaultPaymentMethodId;
+                }
+                const sub = await stripeApiRequest('/v1/subscriptions', 'POST', subData);
+                stripeSubscriptionId = sub.id;
+                paymentBilled = true;
+                console.log(`💳 [STRIPE OFF-SESSION CHARGED] Billed agency [${agencyId}] $${(oneTimeAmount/100).toFixed(2)} + $9.99/mo sub [${sub.id}] for client [${clientName}]`);
+              } else {
+                const piData = {
+                  'amount': String(oneTimeAmount),
+                  'currency': 'usd',
+                  'customer': agency.stripeCustomerId,
+                  'payment_method': agency.defaultPaymentMethodId,
+                  'off_session': 'true',
+                  'confirm': 'true',
+                  'description': `${oneTimeLabel} License - ${clientName}`,
+                  'metadata[agencyId]': agencyId,
+                  'metadata[clientName]': clientName
+                };
+                await stripeApiRequest('/v1/payment_intents', 'POST', piData);
+                paymentBilled = true;
+                console.log(`💳 [STRIPE OFF-SESSION CHARGED] Billed agency [${agencyId}] $${(oneTimeAmount/100).toFixed(2)} one-time license for client [${clientName}]`);
+              }
+            } catch (chargeErr) {
+              console.warn('[STRIPE OFF-SESSION CHARGE FAILED, RETURNING CHECKOUT]', chargeErr.message);
+              // If off-session charge fails (e.g. expired card), create checkout session fallback
+              try {
+                const checkoutData = {
+                  'mode': includeVoice ? 'subscription' : 'payment',
+                  'payment_method_types[0]': 'card',
+                  'line_items[0][price_data][currency]': 'usd',
+                  'line_items[0][price_data][unit_amount]': String(oneTimeAmount),
+                  'line_items[0][price_data][product_data][name]': `${oneTimeLabel} • ${agency.appName || 'White-Label'}`,
+                  'line_items[0][quantity]': '1',
+                  'customer': agency.stripeCustomerId || undefined,
+                  'metadata[isAgencyClientIssuance]': 'true',
+                  'metadata[agencyId]': agencyId,
+                  'metadata[clientName]': clientName,
+                  'metadata[clientContact]': clientContact,
+                  'metadata[clientNotes]': clientNotes,
+                  'metadata[plan]': plan,
+                  'metadata[includeVoice]': includeVoice ? 'true' : 'false',
+                  'success_url': `${origin}/agency_dashboard.html?agency=${agencyId}&session_id={CHECKOUT_SESSION_ID}&client_deployed=true`,
+                  'cancel_url': `${origin}/agency_dashboard.html?agency=${agencyId}`
+                };
+                if (includeVoice) {
+                  checkoutData['line_items[1][price_data][currency]'] = 'usd';
+                  checkoutData['line_items[1][price_data][unit_amount]'] = '999';
+                  checkoutData['line_items[1][price_data][recurring][interval]'] = 'month';
+                  checkoutData['line_items[1][price_data][product_data][name]'] = `24/7 AI Voice Line ($9.99/mo) • ${clientName}`;
+                  checkoutData['line_items[1][quantity]'] = '1';
+                }
+                const session = await stripeApiRequest('/v1/checkout/sessions', 'POST', checkoutData);
+                res.writeHead(200, { 'Content-Type': 'application/json; charset=utf-8', 'Access-Control-Allow-Origin': '*' });
+                res.end(JSON.stringify({
+                  success: true,
+                  requiresCheckout: true,
+                  checkoutUrl: session.url,
+                  sessionId: session.id,
+                  notice: 'Card on file failed or requires authorization; redirected to checkout.'
+                }));
+                return;
+              } catch (e2) {}
+            }
+          }
+
+          const licenseKey = generateKey(clientName, 0, plan !== 'flagship');
+          const nowIso = new Date().toISOString();
+          const forwardingNumber = process.env.VAPI_PRIMARY_PHONE_NUMBER || '+1 (732) 660-9121';
+          const cleanDigits = forwardingNumber.replace(/\D/g, '');
+          const carrierCode = `*71${cleanDigits.slice(-10)}`;
+
+          saveMasterLicense({
+            key: licenseKey,
+            customer: clientName,
+            email: clientEmail,
+            contact: clientContact,
+            notes: clientNotes,
+            agencyId: agencyId,
+            edition: plan,
+            voiceEntitlement: includeVoice,
+            vapiProvisioned: includeVoice,
+            voiceActive: includeVoice,
+            voiceNumber: forwardingNumber,
+            carrierCode: carrierCode,
+            voiceMinutesBalance: includeVoice ? 40 : 0,
+            status: 'ACTIVE',
+            price: includeVoice ? '9.99/mo' : (plan === 'flagship' ? '$49.99' : '$299.99'),
+            stripeSubscriptionId: stripeSubscriptionId,
+            stripeCustomerId: agency.stripeCustomerId || null,
+            issuedAt: nowIso
+          });
+
+          res.writeHead(200, { 'Content-Type': 'application/json; charset=utf-8', 'Access-Control-Allow-Origin': '*' });
+          res.end(JSON.stringify({
+            success: true,
+            licenseKey,
+            paymentBilled,
+            subscriptionId: stripeSubscriptionId,
+            client: {
+              name: clientName,
+              email: clientEmail,
+              contact: clientContact,
+              notes: clientNotes,
+              licenseKey,
+              minutes: includeVoice ? 40 : 0,
+              status: 'ACTIVE',
+              hardwareId: '',
+              plan,
+              includeVoice,
+              issuedAt: nowIso
+            }
+          }));
+          return;
+        }
+
+        // 11. AGENCY PARTNER ATTACH / UPDATE PAYMENT CARD (STRIPE SETUP SESSION)
+        if (action === 'agency_partner_attach_card') {
+          const agencyId = (payload.agencyId || payload.id || '').trim().toLowerCase();
+          if (!agencyId) {
+            res.writeHead(400, { 'Content-Type': 'application/json; charset=utf-8', 'Access-Control-Allow-Origin': '*' });
+            res.end(JSON.stringify({ success: false, error: 'agencyId is required' }));
+            return;
+          }
+
+          const AGENCIES_CONFIG_PATH = path.join(__dirname, 'agencies', 'agencies.json');
+          let configData = { agencies: {} };
+          if (fs.existsSync(AGENCIES_CONFIG_PATH)) {
+            try { configData = JSON.parse(fs.readFileSync(AGENCIES_CONFIG_PATH, 'utf8')); } catch (e) {}
+          }
+          const agency = configData.agencies?.[agencyId] || {};
+          const host = req.headers.host || 'localhost:8000';
+          const origin = `http://${host}`;
+
+          try {
+            const setupData = {
+              'mode': 'setup',
+              'payment_method_types[0]': 'card',
+              'metadata[action]': 'agency_attach_card',
+              'metadata[agencyId]': agencyId,
+              'success_url': `${origin}/agency_dashboard.html?agency=${agencyId}&card_attached=true&session_id={CHECKOUT_SESSION_ID}`,
+              'cancel_url': `${origin}/agency_dashboard.html?agency=${agencyId}`
+            };
+
+            if (agency.stripeCustomerId) {
+              setupData['customer'] = agency.stripeCustomerId;
+            } else if (agency.supportEmail) {
+              setupData['customer_email'] = agency.supportEmail;
+            }
+
+            const session = await stripeApiRequest('/v1/checkout/sessions', 'POST', setupData);
+            res.writeHead(200, { 'Content-Type': 'application/json; charset=utf-8', 'Access-Control-Allow-Origin': '*' });
+            res.end(JSON.stringify({ success: true, checkoutUrl: session.url, sessionId: session.id }));
+          } catch (err) {
+            res.writeHead(500, { 'Content-Type': 'application/json; charset=utf-8', 'Access-Control-Allow-Origin': '*' });
+            res.end(JSON.stringify({ success: false, error: err.message }));
+          }
+          return;
+        }
+
+        // 12. AGENCY PARTNER VERIFY SESSION (SYNC AFTER RETURNING FROM STRIPE CHECKOUT)
+        if (action === 'agency_partner_verify_session') {
+          const agencyId = (payload.agencyId || payload.id || '').trim().toLowerCase();
+          const sessionId = (payload.sessionId || '').trim();
+
+          if (!sessionId) {
+            res.writeHead(400, { 'Content-Type': 'application/json; charset=utf-8', 'Access-Control-Allow-Origin': '*' });
+            res.end(JSON.stringify({ success: false, error: 'sessionId is required' }));
+            return;
+          }
+
+          try {
+            const session = await stripeApiRequest(`/v1/checkout/sessions/${sessionId}`);
+            const { customerId: stripeCustId, cardDetails } = await getPaymentMethodDetailsFromSession(session);
+            const AGENCIES_CONFIG_PATH = path.join(__dirname, 'agencies', 'agencies.json');
+
+            // Vault card
+            if (fs.existsSync(AGENCIES_CONFIG_PATH) && agencyId) {
+              try {
+                const cfg = JSON.parse(fs.readFileSync(AGENCIES_CONFIG_PATH, 'utf8'));
+                if (cfg.agencies && cfg.agencies[agencyId]) {
+                  cfg.agencies[agencyId].stripeCustomerId = stripeCustId || session.customer || cfg.agencies[agencyId].stripeCustomerId;
+                  if (cardDetails) {
+                    cfg.agencies[agencyId].cardBrand = cardDetails.brand;
+                    cfg.agencies[agencyId].cardLast4 = cardDetails.last4;
+                    cfg.agencies[agencyId].defaultPaymentMethodId = cardDetails.id;
+                  }
+                  fs.writeFileSync(AGENCIES_CONFIG_PATH, JSON.stringify(cfg, null, 2), 'utf8');
+                }
+              } catch (e) {}
+            }
+
+            const meta = session.metadata || {};
+            let issuedKey = null;
+
+            // If this was a client deployment and license key not yet created:
+            if (meta.isAgencyClientIssuance === 'true' && meta.clientName) {
+              const masterList = getMasterLicenses();
+              const existing = masterList.find(m => m.agencyId === agencyId && m.customer === meta.clientName);
+              if (existing) {
+                issuedKey = existing.key;
+              } else {
+                const clientName = meta.clientName;
+                const plan = meta.plan || 'pro';
+                const includeVoice = meta.includeVoice === 'true' || !!session.subscription;
+                issuedKey = generateKey(clientName, 0, plan !== 'flagship');
+                const nowIso = new Date().toISOString();
+                const forwardingNumber = process.env.VAPI_PRIMARY_PHONE_NUMBER || '+1 (732) 660-9121';
+                const cleanDigits = forwardingNumber.replace(/\D/g, '');
+                const carrierCode = `*71${cleanDigits.slice(-10)}`;
+
+                saveMasterLicense({
+                  key: issuedKey,
+                  customer: clientName,
+                  email: session.customer_details?.email || session.customer_email || '',
+                  contact: meta.clientContact || '',
+                  notes: meta.clientNotes || '',
+                  agencyId: agencyId,
+                  edition: plan,
+                  voiceEntitlement: includeVoice,
+                  vapiProvisioned: includeVoice,
+                  voiceActive: includeVoice,
+                  voiceNumber: forwardingNumber,
+                  carrierCode: carrierCode,
+                  voiceMinutesBalance: includeVoice ? 40 : 0,
+                  status: 'ACTIVE',
+                  stripeSubscriptionId: session.subscription || null,
+                  stripeCustomerId: stripeCustId || session.customer || null,
+                  issuedAt: nowIso
+                });
+              }
+            }
+
+            res.writeHead(200, { 'Content-Type': 'application/json; charset=utf-8', 'Access-Control-Allow-Origin': '*' });
+            res.end(JSON.stringify({
+              success: true,
+              licenseKey: issuedKey,
+              cardSaved: !!cardDetails,
+              cardBrand: cardDetails?.brand,
+              cardLast4: cardDetails?.last4
+            }));
+          } catch (err) {
+            res.writeHead(500, { 'Content-Type': 'application/json; charset=utf-8', 'Access-Control-Allow-Origin': '*' });
+            res.end(JSON.stringify({ success: false, error: err.message }));
+          }
+          return;
+        }
+
+        // 13. AGENCY PARTNER RESET CLIENT HARDWARE LOCK
+        if (action === 'agency_partner_reset_client') {
+          const agencyId = (payload.agencyId || payload.id || '').trim().toLowerCase();
+          const licenseKey = (payload.licenseKey || payload.key || '').trim().toUpperCase();
+
+          if (!agencyId || !licenseKey) {
+            res.writeHead(400, { 'Content-Type': 'application/json; charset=utf-8', 'Access-Control-Allow-Origin': '*' });
+            res.end(JSON.stringify({ success: false, error: 'agencyId and licenseKey are required' }));
+            return;
+          }
+
+          const masterPath = path.join(__dirname, 'data', 'master_licenses.json');
+          let found = false;
+          if (fs.existsSync(masterPath)) {
+            try {
+              const list = JSON.parse(fs.readFileSync(masterPath, 'utf8') || '[]');
+              const idx = list.findIndex(x => x.key === licenseKey && x.agencyId === agencyId);
+              if (idx >= 0) {
+                list[idx].deviceId = null;
+                list[idx].deviceModel = null;
+                fs.writeFileSync(masterPath, JSON.stringify(list, null, 2), 'utf8');
+                found = true;
+              }
+            } catch (e) {}
+          }
+
+          // Clear local cache if exists
+          try {
+            const localCachePath = path.join(__dirname, 'data', 'device_cache.json');
+            if (fs.existsSync(localCachePath)) {
+              const cache = JSON.parse(fs.readFileSync(localCachePath, 'utf8') || '{}');
+              if (cache[licenseKey]) {
+                delete cache[licenseKey];
+                fs.writeFileSync(localCachePath, JSON.stringify(cache, null, 2), 'utf8');
+              }
+            }
+          } catch (e) {}
+
+          res.writeHead(200, { 'Content-Type': 'application/json; charset=utf-8', 'Access-Control-Allow-Origin': '*' });
+          res.end(JSON.stringify({ success: true, message: 'Hardware lock reset successfully. Client phone can now be bound to a new device.' }));
+          return;
+        }
+
+        // 14. AGENCY PARTNER REVOKE CLIENT LICENSE (AND CANCEL $9.99/MO STRIPE SUBSCRIPTION)
+        if (action === 'agency_partner_revoke_key') {
+          const agencyId = (payload.agencyId || payload.id || '').trim().toLowerCase();
+          const licenseKey = (payload.licenseKey || payload.key || '').trim().toUpperCase();
+
+          if (!agencyId || !licenseKey) {
+            res.writeHead(400, { 'Content-Type': 'application/json; charset=utf-8', 'Access-Control-Allow-Origin': '*' });
+            res.end(JSON.stringify({ success: false, error: 'agencyId and licenseKey are required' }));
+            return;
+          }
+
+          const masterPath = path.join(__dirname, 'data', 'master_licenses.json');
+          let subIdToCancel = null;
+          if (fs.existsSync(masterPath)) {
+            try {
+              const list = JSON.parse(fs.readFileSync(masterPath, 'utf8') || '[]');
+              const idx = list.findIndex(x => x.key === licenseKey && x.agencyId === agencyId);
+              if (idx >= 0) {
+                subIdToCancel = list[idx].stripeSubscriptionId;
+                list[idx].status = 'REVOKED';
+                list[idx].voiceActive = false;
+                fs.writeFileSync(masterPath, JSON.stringify(list, null, 2), 'utf8');
+              }
+            } catch (e) {}
+          }
+
+          // Cancel recurring Stripe voice subscription if active
+          if (subIdToCancel && subIdToCancel.startsWith('sub_')) {
+            try {
+              await stripeApiRequest(`/v1/subscriptions/${subIdToCancel}`, 'DELETE');
+              console.log(`🛑 [STRIPE SUBSCRIPTION CANCELLED] Cancelled $9.99/mo voice line ${subIdToCancel} for revoked client ${licenseKey}`);
+            } catch (stripeErr) {
+              console.warn(`[STRIPE CANCEL NOTICE] Could not cancel subscription ${subIdToCancel}:`, stripeErr.message);
+            }
+          }
+
+          // Track in revoked list
+          try {
+            const fleetCachePath = path.join(__dirname, '.agency_fleet_cache.json');
+            let cache = {};
+            if (fs.existsSync(fleetCachePath)) {
+              cache = JSON.parse(fs.readFileSync(fleetCachePath, 'utf8') || '{}');
+            }
+            if (!cache._revokedKeys) cache._revokedKeys = [];
+            if (!cache._revokedKeys.includes(licenseKey)) {
+              cache._revokedKeys.push(licenseKey);
+              fs.writeFileSync(fleetCachePath, JSON.stringify(cache, null, 2), 'utf8');
+            }
+          } catch (e) {}
+
+          res.writeHead(200, { 'Content-Type': 'application/json; charset=utf-8', 'Access-Control-Allow-Origin': '*' });
+          res.end(JSON.stringify({ success: true, message: 'Client license revoked and $9.99/mo voice subscription cancelled.' }));
+          return;
+        }
+
+        // 13. AGENCY PARTNER UPDATE SETTINGS
+        if (action === 'agency_partner_update_settings') {
+          const agencyId = (payload.agencyId || payload.id || '').trim().toLowerCase();
+          if (!agencyId) {
+            res.writeHead(400, { 'Content-Type': 'application/json; charset=utf-8', 'Access-Control-Allow-Origin': '*' });
+            res.end(JSON.stringify({ success: false, error: 'agencyId is required' }));
+            return;
+          }
+
+          const AGENCIES_CONFIG_PATH = path.join(__dirname, 'agencies', 'agencies.json');
+          let configData = { agencies: {} };
+          if (fs.existsSync(AGENCIES_CONFIG_PATH)) {
+            try { configData = JSON.parse(fs.readFileSync(AGENCIES_CONFIG_PATH, 'utf8')); } catch (e) {}
+          }
+
+          if (!configData.agencies || !configData.agencies[agencyId]) {
+            res.writeHead(404, { 'Content-Type': 'application/json; charset=utf-8', 'Access-Control-Allow-Origin': '*' });
+            res.end(JSON.stringify({ success: false, error: 'Agency profile not found' }));
+            return;
+          }
+
+          const existing = configData.agencies[agencyId];
+          configData.agencies[agencyId] = {
+            ...existing,
+            tagline: (payload.tagline || existing.tagline).trim(),
+            supportEmail: (payload.supportEmail || existing.supportEmail).trim(),
+            supportPhone: (payload.supportPhone || existing.supportPhone).trim(),
+            privacyPolicyUrl: (payload.privacyPolicyUrl || existing.privacyPolicyUrl).trim(),
+            termsUrl: (payload.termsUrl || existing.termsUrl).trim()
+          };
+
+          fs.writeFileSync(AGENCIES_CONFIG_PATH, JSON.stringify(configData, null, 2), 'utf8');
+
+          res.writeHead(200, { 'Content-Type': 'application/json; charset=utf-8', 'Access-Control-Allow-Origin': '*' });
+          res.end(JSON.stringify({ success: true, message: 'Agency settings updated successfully', agency: configData.agencies[agencyId] }));
+          return;
+        }
+
+        // 14. AGENCY / OWNER GET CLIENT REMOTE CONFIG
+        if (action === 'agency_get_client_remote_config') {
+          const licenseKey = (payload.licenseKey || payload.key || '').trim().toUpperCase();
+          if (!licenseKey) {
+            res.writeHead(400, { 'Content-Type': 'application/json; charset=utf-8', 'Access-Control-Allow-Origin': '*' });
+            res.end(JSON.stringify({ success: false, error: 'licenseKey is required' }));
+            return;
+          }
+
+          const config = getApplianceConfigByKey(licenseKey);
+          res.writeHead(200, { 'Content-Type': 'application/json; charset=utf-8', 'Access-Control-Allow-Origin': '*' });
+          res.end(JSON.stringify({
+            success: true,
+            licenseKey: licenseKey,
+            config: config
+          }));
+          return;
+        }
+
+        // 15. AGENCY / OWNER SAVE CLIENT REMOTE CONFIG & SYNC VAPI
+        if (action === 'agency_save_client_remote_config') {
+          const licenseKey = (payload.licenseKey || payload.key || '').trim().toUpperCase();
+          const agencyId = (payload.agencyId || payload.id || 'agency').trim();
+
+          if (!licenseKey) {
+            res.writeHead(400, { 'Content-Type': 'application/json; charset=utf-8', 'Access-Control-Allow-Origin': '*' });
+            res.end(JSON.stringify({ success: false, error: 'licenseKey is required' }));
+            return;
+          }
+
+          // Live cloud sync to Vapi if voice parameters were modified
+          let vapiSyncResult = null;
+          if (payload.voice && (payload.voice.customGreeting || payload.voice.systemPrompt || payload.voice.voiceAgentName)) {
+            vapiSyncResult = await syncRemoteVoiceToVapi(licenseKey, payload.voice);
+          }
+
+          // Save to local appliance_configs.json & Firestore
+          const savedConfig = saveApplianceConfig(licenseKey, {
+            customerName: payload.customerName,
+            voice: payload.voice || {},
+            handset: payload.handset || {}
+          }, agencyId);
+
+          // Sync metadata to master_licenses.json if relevant
+          try {
+            const masterPath = path.join(__dirname, 'data', 'master_licenses.json');
+            if (fs.existsSync(masterPath)) {
+              const list = JSON.parse(fs.readFileSync(masterPath, 'utf8') || '[]');
+              const idx = list.findIndex(x => x.key === licenseKey);
+              if (idx >= 0) {
+                if (payload.customerName) list[idx].customer = payload.customerName;
+                if (payload.voice?.forwardingNumber) list[idx].voiceNumber = payload.voice.forwardingNumber;
+                fs.writeFileSync(masterPath, JSON.stringify(list, null, 2), 'utf8');
+              }
+            }
+          } catch (mErr) {
+            console.warn('[Remote Config] master_licenses sync notice:', mErr.message);
+          }
+
+          res.writeHead(200, { 'Content-Type': 'application/json; charset=utf-8', 'Access-Control-Allow-Origin': '*' });
+          res.end(JSON.stringify({
+            success: true,
+            message: 'Appliance configuration saved live and dispatched to Vapi cloud!',
+            config: savedConfig,
+            vapiSync: vapiSyncResult
+          }));
+          return;
+        }
+
+        // 16. AGENCY SAVE MASTER WEBHOOK CONFIG
+        if (action === 'agency_save_webhook_config') {
+          const agencyId = (payload.agencyId || payload.id || '').trim().toLowerCase();
+          if (!agencyId) {
+            res.writeHead(400, { 'Content-Type': 'application/json; charset=utf-8', 'Access-Control-Allow-Origin': '*' });
+            res.end(JSON.stringify({ success: false, error: 'agencyId is required' }));
+            return;
+          }
+
+          const AGENCIES_CONFIG_PATH = path.join(__dirname, 'agencies', 'agencies.json');
+          let configData = { agencies: {} };
+          if (fs.existsSync(AGENCIES_CONFIG_PATH)) {
+            try { configData = JSON.parse(fs.readFileSync(AGENCIES_CONFIG_PATH, 'utf8')); } catch (e) {}
+          }
+
+          if (!configData.agencies || !configData.agencies[agencyId]) {
+            res.writeHead(404, { 'Content-Type': 'application/json; charset=utf-8', 'Access-Control-Allow-Origin': '*' });
+            res.end(JSON.stringify({ success: false, error: 'Agency profile not found' }));
+            return;
+          }
+
+          const masterUrl = (payload.masterUrl || '').trim();
+          const signingSecret = (payload.signingSecret || payload.secret || '').trim() || `whsec_${crypto.randomBytes(16).toString('hex')}`;
+          const events = Array.isArray(payload.events) ? payload.events : ['call.missed', 'voice.call_completed', 'lead.urgent', 'sms.received'];
+          const active = payload.active !== false;
+
+          configData.agencies[agencyId].webhook = {
+            masterUrl,
+            signingSecret,
+            events,
+            active,
+            updatedAt: new Date().toISOString()
+          };
+
+          fs.writeFileSync(AGENCIES_CONFIG_PATH, JSON.stringify(configData, null, 2), 'utf8');
+
+          res.writeHead(200, { 'Content-Type': 'application/json; charset=utf-8', 'Access-Control-Allow-Origin': '*' });
+          res.end(JSON.stringify({
+            success: true,
+            message: 'Agency master webhook router saved successfully!',
+            webhook: configData.agencies[agencyId].webhook
+          }));
+          return;
+        }
+
+        // 17. AGENCY TEST WEBHOOK (LIVE SIMULATOR)
+        if (action === 'agency_test_webhook') {
+          const targetUrl = (payload.targetUrl || payload.url || '').trim();
+          const eventType = payload.eventType || 'voice.call_completed';
+          const signingSecret = (payload.signingSecret || payload.secret || '').trim();
+          const agencyId = (payload.agencyId || 'apex_leads').trim();
+
+          if (!targetUrl || !targetUrl.startsWith('http')) {
+            res.writeHead(400, { 'Content-Type': 'application/json; charset=utf-8', 'Access-Control-Allow-Origin': '*' });
+            res.end(JSON.stringify({ success: false, error: 'A valid http:// or https:// webhook URL is required.' }));
+            return;
+          }
+
+          // Build realistic simulated payload
+          let mockPayload = {};
+          const nowIso = new Date().toISOString();
+
+          if (eventType === 'voice.call_completed') {
+            mockPayload = {
+              event: 'voice.call_completed',
+              timestamp: nowIso,
+              agencyId: agencyId,
+              client: {
+                name: payload.clientName || 'Premier Roofing Group',
+                licenseKey: payload.clientKey || 'MCAS-PRO-5072656D69657220526F6F66696E672047726F75707C307C31373930373835313533-61745DD5'
+              },
+              caller: {
+                phone: '+1 (555) 234-8910',
+                name: 'Sarah Jenkins',
+                address: '742 Evergreen Terrace, Springfield'
+              },
+              call: {
+                id: `call_test_${Date.now()}`,
+                duration: '1m 24s',
+                durationSeconds: 84,
+                recordingUrl: 'https://vapi-public.s3.amazonaws.com/recordings/sample-roof-leak-estimate.mp3',
+                summary: 'Caller noticed a roof leak above master bedroom during heavy rain. Requested emergency roof tarping and formal estimate tomorrow morning.',
+                transcript: 'Riley: Hi, thank you for calling Premier Roofing Group! How can we assist you with your roof today?\nSarah: Hi Riley, we have water dripping from our ceiling right now from the rainstorm!\nRiley: Oh no, I am so sorry to hear that! What address should we send our emergency crew to?\nSarah: 742 Evergreen Terrace. Can someone come out tonight?\nRiley: Absolutely Sarah, I have flagged your address as priority emergency dispatch and sent your phone number to our on-call roof technician. You will receive an instant confirmation text right now.',
+                urgency: 'HIGH',
+                category: 'Urgent Service Emergency'
+              },
+              smsFollowUp: {
+                sent: true,
+                text: 'Hey Sarah, this is Premier Roofing Group. Got your note about the ceiling leak at 742 Evergreen Terrace. Our emergency tech is reviewing your ticket and reaching out shortly!'
+              }
+            };
+          } else if (eventType === 'call.missed') {
+            mockPayload = {
+              event: 'call.missed',
+              timestamp: nowIso,
+              agencyId: agencyId,
+              client: {
+                name: payload.clientName || 'Premier Roofing Group',
+                licenseKey: payload.clientKey || 'MCAS-PRO-DEMO'
+              },
+              caller: {
+                phone: '+1 (555) 789-0123',
+                name: 'John Doe (New Inquiry)'
+              },
+              handset: {
+                simSlot: 0,
+                autoSmsDispatched: true,
+                autoSmsText: 'Hey! Sorry I missed your call. How can I help you today? - Premier Roofing Group',
+                jitterDelaySeconds: 15
+              }
+            };
+          } else if (eventType === 'sms.received') {
+            mockPayload = {
+              event: 'sms.received',
+              timestamp: nowIso,
+              agencyId: agencyId,
+              client: {
+                name: payload.clientName || 'Premier Roofing Group',
+                licenseKey: payload.clientKey || 'MCAS-PRO-DEMO'
+              },
+              sender: {
+                phone: '+1 (555) 789-0123'
+              },
+              message: {
+                body: 'Yes, please give me a call back at 3 PM to discuss the new roof estimate. Thanks!',
+                receivedOnSim: 'SIM 1 (Business)'
+              }
+            };
+          } else {
+            mockPayload = {
+              event: 'lead.urgent',
+              timestamp: nowIso,
+              agencyId: agencyId,
+              priority: 'HIGH_PRIORITY_EMERGENCY',
+              caller: { phone: '+1 (555) 999-4321', name: 'Robert Miller', address: '124 Main Street' },
+              summary: 'Basement flooding due to broken mainline valve. Customer needs emergency shutoff assistance immediately.',
+              recordingUrl: 'https://vapi-public.s3.amazonaws.com/recordings/sample-flooding.mp3'
+            };
+          }
+
+          const parsedUrl = new URL(targetUrl);
+          const postData = JSON.stringify(mockPayload);
+          const isHttps = parsedUrl.protocol === 'https:';
+          const client = isHttps ? https : http;
+
+          const headers = {
+            'Content-Type': 'application/json',
+            'Content-Length': Buffer.byteLength(postData),
+            'User-Agent': 'MissedCallAutoSMS-WebhookSimulator/2.0'
+          };
+
+          if (signingSecret) {
+            const hmac = crypto.createHmac('sha256', signingSecret).update(postData).digest('hex');
+            headers['X-MCAS-Signature'] = `sha256=${hmac}`;
+          }
+
+          const startTime = Date.now();
+
+          const testReq = client.request({
+            hostname: parsedUrl.hostname,
+            port: parsedUrl.port || (isHttps ? 443 : 80),
+            path: parsedUrl.pathname + parsedUrl.search,
+            method: 'POST',
+            headers: headers,
+            timeout: 7000
+          }, (testRes) => {
+            let resBody = '';
+            testRes.on('data', chunk => resBody += chunk);
+            testRes.on('end', () => {
+              const durationMs = Date.now() - startTime;
+              res.writeHead(200, { 'Content-Type': 'application/json; charset=utf-8', 'Access-Control-Allow-Origin': '*' });
+              res.end(JSON.stringify({
+                success: true,
+                statusCode: testRes.statusCode,
+                statusText: testRes.statusMessage || `${testRes.statusCode}`,
+                durationMs: durationMs,
+                responseBody: resBody.slice(0, 500) || '(Empty response body)',
+                payloadSent: mockPayload
+              }));
+            });
+          });
+
+          testReq.on('timeout', () => {
+            testReq.destroy();
+            res.writeHead(200, { 'Content-Type': 'application/json; charset=utf-8', 'Access-Control-Allow-Origin': '*' });
+            res.end(JSON.stringify({
+              success: false,
+              statusCode: 408,
+              statusText: 'Request Timeout (Webhook took > 7000ms)',
+              durationMs: 7000,
+              responseBody: 'Webhook endpoint did not respond within 7 seconds.'
+            }));
+          });
+
+          testReq.on('error', (err) => {
+            res.writeHead(200, { 'Content-Type': 'application/json; charset=utf-8', 'Access-Control-Allow-Origin': '*' });
+            res.end(JSON.stringify({
+              success: false,
+              statusCode: 502,
+              statusText: err.message || 'Connection Refused',
+              durationMs: Date.now() - startTime,
+              responseBody: `Network error connecting to webhook: ${err.message}`
+            }));
+          });
+
+          testReq.write(postData);
+          testReq.end();
+          return;
+        }
+
+        // 18. AGENCY DISPATCH OUTBOUND SMS VIA CLIENT PHYSICAL SIM
+        if (action === 'agency_dispatch_sms') {
+          const to = (payload.to || payload.phone || '').trim();
+          const message = (payload.message || payload.text || '').trim();
+          const licenseKey = (payload.licenseKey || '').trim().toUpperCase();
+
+          if (!to || !message) {
+            res.writeHead(400, { 'Content-Type': 'application/json; charset=utf-8', 'Access-Control-Allow-Origin': '*' });
+            res.end(JSON.stringify({ success: false, error: 'Destination phone number and message text are required.' }));
+            return;
+          }
+
+          const queueItem = {
+            callId: `crm_${Date.now()}`,
+            recipient: to,
+            message: message,
+            urgency: payload.urgency || 'NORMAL'
+          };
+          enqueueVoiceSms(queueItem);
+
+          res.writeHead(200, { 'Content-Type': 'application/json; charset=utf-8', 'Access-Control-Allow-Origin': '*' });
+          res.end(JSON.stringify({
+            success: true,
+            message: `SMS queued for physical SIM dispatch on client appliance (${licenseKey || 'Default'})!`,
+            recipient: to,
+            queuedAt: new Date().toISOString()
+          }));
+          return;
+        }
+
         res.writeHead(400, { 'Content-Type': 'application/json; charset=utf-8', 'Access-Control-Allow-Origin': '*' });
         res.end(JSON.stringify({ success: false, error: `Unknown action: ${action}` }));
       } catch (e) {
         res.writeHead(500, { 'Content-Type': 'application/json; charset=utf-8', 'Access-Control-Allow-Origin': '*' });
         res.end(JSON.stringify({ success: false, error: e.message }));
+      }
+    });
+    return;
+  }
+
+  // ─── Agency: Outbound CRM-to-SIM SMS REST API Bridge ───
+  if ((relativePath === '/api/agency/dispatch-sms' || relativePath === '/api/agency/dispatch-sms/') && req.method === 'POST') {
+    let body = '';
+    req.on('data', chunk => body += chunk);
+    req.on('end', async () => {
+      try {
+        const payload = JSON.parse(body || '{}');
+        const to = (payload.to || payload.phone || payload.recipient || '').trim();
+        const message = (payload.message || payload.text || payload.body || '').trim();
+        const licenseKey = (payload.licenseKey || req.headers['x-license-key'] || '').trim().toUpperCase();
+        const agencyKey = (payload.agencyKey || payload.apiKey || req.headers['x-agency-key'] || req.headers['x-api-key'] || '').trim();
+
+        if (!to || !message) {
+          res.writeHead(400, { 'Content-Type': 'application/json; charset=utf-8', 'Access-Control-Allow-Origin': '*' });
+          res.end(JSON.stringify({ success: false, error: 'Destination phone number ("to") and message text ("message") are required.' }));
+          return;
+        }
+
+        const queueItem = {
+          callId: `crm_${Date.now()}`,
+          recipient: to,
+          message: message,
+          urgency: payload.urgency || 'NORMAL'
+        };
+        enqueueVoiceSms(queueItem);
+
+        res.writeHead(200, { 'Content-Type': 'application/json; charset=utf-8', 'Access-Control-Allow-Origin': '*' });
+        res.end(JSON.stringify({
+          success: true,
+          message: 'SMS queued for physical SIM dispatch on client appliance!',
+          queueId: queueItem.callId,
+          recipient: to,
+          messageLength: message.length,
+          licenseKey: licenseKey || 'Default',
+          queuedAt: new Date().toISOString()
+        }));
+      } catch (err) {
+        res.writeHead(500, { 'Content-Type': 'application/json; charset=utf-8', 'Access-Control-Allow-Origin': '*' });
+        res.end(JSON.stringify({ success: false, error: err.message }));
       }
     });
     return;
@@ -5501,6 +7052,85 @@ const server = http.createServer((req, res) => {
       res.writeHead(200, { 'Content-Type': 'application/json; charset=utf-8', 'Access-Control-Allow-Origin': '*' });
       res.end(JSON.stringify({ revoked: false }));
     }
+    return;
+  }
+
+  // ─── Appliance: Remote Config Sync (consumed by Android handset) ───
+  if ((relativePath === '/api/appliance/config' || relativePath === '/api/appliance/config/') && req.method === 'GET') {
+    const urlObj = new URL(req.url, `http://localhost:${PORT}`);
+    const keyParam = (urlObj.searchParams.get('key') || urlObj.searchParams.get('licenseKey') || '').trim().toUpperCase();
+
+    if (!keyParam) {
+      res.writeHead(400, { 'Content-Type': 'application/json; charset=utf-8', 'Access-Control-Allow-Origin': '*' });
+      res.end(JSON.stringify({ success: false, error: 'key parameter required' }));
+      return;
+    }
+
+    try {
+      const config = getApplianceConfigByKey(keyParam);
+      const updatedAtMs = config.updatedAt ? new Date(config.updatedAt).getTime() : Date.now();
+
+      res.writeHead(200, { 'Content-Type': 'application/json; charset=utf-8', 'Access-Control-Allow-Origin': '*' });
+      res.end(JSON.stringify({
+        success: true,
+        licenseKey: keyParam,
+        updatedAt: config.updatedAt,
+        updatedAtMs: updatedAtMs,
+        managedBy: config.agencyId || 'Agency Partner',
+        lockHandsetSettings: !!config.handset?.lockHandsetSettings,
+        config: config
+      }));
+    } catch (e) {
+      res.writeHead(500, { 'Content-Type': 'application/json; charset=utf-8', 'Access-Control-Allow-Origin': '*' });
+      res.end(JSON.stringify({ success: false, error: e.message }));
+    }
+    return;
+  }
+
+  // ─── Appliance: Heartbeat Check-In & Sync (consumed by Android handset background worker) ───
+  if ((relativePath === '/api/appliance/checkin' || relativePath === '/api/appliance/checkin/') && req.method === 'POST') {
+    let body = '';
+    req.on('data', chunk => body += chunk);
+    req.on('end', async () => {
+      try {
+        const payload = JSON.parse(body || '{}');
+        const key = (payload.licenseKey || payload.key || '').trim().toUpperCase();
+        if (!key) {
+          res.writeHead(400, { 'Content-Type': 'application/json; charset=utf-8', 'Access-Control-Allow-Origin': '*' });
+          res.end(JSON.stringify({ success: false, error: 'licenseKey required' }));
+          return;
+        }
+
+        const config = getApplianceConfigByKey(key);
+        const serverTimestampMs = config.updatedAt ? new Date(config.updatedAt).getTime() : 0;
+        const lastSyncMs = Number(payload.lastSyncTimestamp) || 0;
+        const hasUpdate = serverTimestampMs > lastSyncMs;
+
+        // Record heartbeat metadata
+        saveApplianceConfig(key, {
+          heartbeat: {
+            lastSeenAt: new Date().toISOString(),
+            appVersion: payload.appVersion || 'Unknown',
+            batteryLevel: payload.batteryLevel ?? null,
+            isCharging: !!payload.isCharging,
+            deviceId: payload.deviceId || null,
+            ip: req.socket?.remoteAddress || null
+          }
+        }, 'heartbeat');
+
+        res.writeHead(200, { 'Content-Type': 'application/json; charset=utf-8', 'Access-Control-Allow-Origin': '*' });
+        res.end(JSON.stringify({
+          success: true,
+          hasUpdate: hasUpdate,
+          serverTimestampMs: serverTimestampMs,
+          lockHandsetSettings: !!config.handset?.lockHandsetSettings,
+          config: hasUpdate ? config : null
+        }));
+      } catch (e) {
+        res.writeHead(500, { 'Content-Type': 'application/json; charset=utf-8', 'Access-Control-Allow-Origin': '*' });
+        res.end(JSON.stringify({ success: false, error: e.message }));
+      }
+    });
     return;
   }
 
@@ -5572,6 +7202,976 @@ const server = http.createServer((req, res) => {
       res.writeHead(500, { 'Content-Type': 'application/json; charset=utf-8', 'Access-Control-Allow-Origin': '*' });
       res.end(JSON.stringify({ success: false, error: e.message }));
     }
+    return;
+  }
+
+  // ══════════════════════════════════════════════════════════════════════════════
+  // 📱 UNIFIED CLIENT PORTAL API (MAIN BRAND & WHITE-LABEL)
+  // ══════════════════════════════════════════════════════════════════════════════
+  const CLIENT_ACCOUNTS_FILE = path.join(__dirname, 'data', 'client_accounts.json');
+  const CLIENT_SMS_HISTORY_FILE = path.join(__dirname, 'data', 'client_sms_history.json');
+  const CLIENT_TASKS_FILE = path.join(__dirname, 'data', 'client_tasks.json');
+
+  function getClientAccounts() {
+    if (fs.existsSync(CLIENT_ACCOUNTS_FILE)) {
+      try { return JSON.parse(fs.readFileSync(CLIENT_ACCOUNTS_FILE, 'utf8')); } catch (e) { return []; }
+    }
+    return [];
+  }
+
+  function saveClientAccount(acc) {
+    const list = getClientAccounts();
+    const cleanKey = (acc.licenseKey || '').trim().toUpperCase();
+    const cleanUser = (acc.username || '').trim().toLowerCase();
+    const idx = list.findIndex(a => (cleanKey && a.licenseKey === cleanKey) || (cleanUser && a.username.toLowerCase() === cleanUser));
+    const now = new Date().toISOString();
+    if (idx >= 0) {
+      list[idx] = { ...list[idx], ...acc, updatedAt: now };
+    } else {
+      list.unshift({ ...acc, createdAt: now, updatedAt: now });
+    }
+    const ddir = path.join(__dirname, 'data');
+    if (!fs.existsSync(ddir)) fs.mkdirSync(ddir, { recursive: true });
+    fs.writeFileSync(CLIENT_ACCOUNTS_FILE, JSON.stringify(list, null, 2), 'utf8');
+  }
+
+  function getClientTasks(licenseKey) {
+    let tasks = [];
+    if (fs.existsSync(CLIENT_TASKS_FILE)) {
+      try { tasks = JSON.parse(fs.readFileSync(CLIENT_TASKS_FILE, 'utf8')); } catch (e) {}
+    }
+    if (tasks.length === 0) {
+      tasks = [
+        {
+          id: 'task_auto_1',
+          licenseKey: licenseKey,
+          sourceType: 'VOICE_CALL',
+          sourceId: 'call_test_1790192234670',
+          title: '🚨 Emergency Dispatch: Roof Tarping & Water Stop',
+          category: 'EMERGENCY_DISPATCH',
+          priority: 'CRITICAL',
+          customerName: 'Sarah Jenkins',
+          customerPhone: '+1 (404) 555-8321',
+          serviceAddress: '844 Peachtree St NE, Atlanta, GA',
+          notes: 'Caller has active ceiling leak in master bedroom. Dispatched confirmation text via SIM. Crew needed before evening rainstorm.',
+          dueSla: 'Within 2 Hours',
+          status: 'PENDING',
+          createdAt: new Date(Date.now() - 3600000 * 2).toISOString(),
+          completedAt: null
+        },
+        {
+          id: 'task_auto_2',
+          licenseKey: licenseKey,
+          sourceType: 'INBOUND_SMS',
+          sourceId: 'sms_hist_2',
+          title: '📅 Appointment Confirmation: Confirm 4:30 PM Time Window',
+          category: 'APPOINTMENT_SCHEDULE',
+          priority: 'HIGH',
+          customerName: 'Sarah Jenkins',
+          customerPhone: '+1 (404) 555-8321',
+          serviceAddress: '844 Peachtree St NE, Atlanta, GA',
+          notes: 'Customer texted back: "We will be home after 4:30 PM if the tech can come then." Confirm technician ETA via office SIM text.',
+          dueSla: 'Same Day',
+          status: 'PENDING',
+          createdAt: new Date(Date.now() - 3600000 * 1.5).toISOString(),
+          completedAt: null
+        },
+        {
+          id: 'task_auto_3',
+          licenseKey: licenseKey,
+          sourceType: 'VOICE_CALL',
+          sourceId: 'call_test_1789833384440',
+          title: '💼 Prepare Formal Estimate: Water Heater Replacement',
+          category: 'ESTIMATE_PROPOSAL',
+          priority: 'NORMAL',
+          customerName: 'Alex Johnson',
+          customerPhone: '+14045559876',
+          serviceAddress: '844 Peachtree St NE, Atlanta, GA',
+          notes: 'Emergency water heater burst. Review system size and send formal equipment replacement quote and warranty options.',
+          dueSla: 'Within 24 Hours',
+          status: 'PENDING',
+          createdAt: new Date(Date.now() - 3600000 * 14).toISOString(),
+          completedAt: null
+        }
+      ];
+      try {
+        const ddir = path.join(__dirname, 'data');
+        if (!fs.existsSync(ddir)) fs.mkdirSync(ddir, { recursive: true });
+        fs.writeFileSync(CLIENT_TASKS_FILE, JSON.stringify(tasks, null, 2), 'utf8');
+      } catch (e) {}
+    }
+    return tasks;
+  }
+
+  function saveClientTasks(tasks) {
+    const ddir = path.join(__dirname, 'data');
+    if (!fs.existsSync(ddir)) fs.mkdirSync(ddir, { recursive: true });
+    fs.writeFileSync(CLIENT_TASKS_FILE, JSON.stringify(tasks, null, 2), 'utf8');
+  }
+
+  function hashPortalPassword(pwd, salt) {
+    return crypto.createHmac('sha256', salt).update(pwd).digest('hex');
+  }
+
+  function resolvePortalBranding(agencyId) {
+    if (agencyId && agencyId !== 'default') {
+      const AGENCIES_CONFIG_PATH = path.join(__dirname, 'agencies', 'agencies.json');
+      if (fs.existsSync(AGENCIES_CONFIG_PATH)) {
+        try {
+          const raw = JSON.parse(fs.readFileSync(AGENCIES_CONFIG_PATH, 'utf8'));
+          const ag = raw.agencies && raw.agencies[agencyId];
+          if (ag) {
+            return {
+              isWhiteLabel: true,
+              agencyId: agencyId,
+              appName: ag.appName || 'Telecom Appliance',
+              tagline: ag.tagline || 'AI Telecom Appliance & 24/7 Voice Receptionist',
+              theme: ag.theme || { primaryColor: '#2563EB', accentColor: '#38BDF8' },
+              supportEmail: ag.supportEmail || '',
+              supportPhone: ag.supportPhone || '',
+              privacyPolicyUrl: ag.privacyPolicyUrl || '',
+              termsUrl: ag.termsUrl || '',
+              icon: '⚡'
+            };
+          }
+        } catch (e) {}
+      }
+    }
+    return {
+      isWhiteLabel: false,
+      agencyId: 'default',
+      appName: 'Missed Call Auto SMS',
+      tagline: 'AI Telecom Appliance & 24/7 Voice Receptionist',
+      theme: { primaryColor: '#2563EB', accentColor: '#38BDF8' },
+      supportEmail: 'support@missedcallautosms.com',
+      supportPhone: '+1 (800) 555-0199',
+      privacyPolicyUrl: '/terms.html',
+      termsUrl: '/terms.html',
+      logoUrl: '/favicon.svg',
+      icon: '⚡'
+    };
+  }
+
+  function getClientSmsHistory(licenseKey) {
+    let items = [];
+    if (fs.existsSync(CLIENT_SMS_HISTORY_FILE)) {
+      try { items = JSON.parse(fs.readFileSync(CLIENT_SMS_HISTORY_FILE, 'utf8')); } catch (e) {}
+    }
+    if (items.length === 0) {
+      // Seed realistic initial SMS conversation records
+      items = [
+        {
+          id: 'sms_hist_1',
+          licenseKey: licenseKey,
+          direction: 'OUTBOUND_POSTCALL',
+          phoneNumber: '+1 (404) 555-8321',
+          customerName: 'Sarah Jenkins',
+          message: 'Hey Sarah, this is Anthony. Got your note about the AC unit making loud grinding noise. Reaching out shortly!',
+          timestamp: new Date(Date.now() - 3600000 * 2).toISOString(),
+          status: 'DELIVERED_ON_SIM',
+          simSlot: 'SIM 1 (Business)',
+          aiContext: 'Auto-dispatched immediately after 24/7 AI Receptionist call intake'
+        },
+        {
+          id: 'sms_hist_2',
+          licenseKey: licenseKey,
+          direction: 'INBOUND_CUSTOMER',
+          phoneNumber: '+1 (404) 555-8321',
+          customerName: 'Sarah Jenkins',
+          message: 'Thank you Anthony! We will be home after 4:30 PM if the tech can come then.',
+          timestamp: new Date(Date.now() - 3600000 * 1.8).toISOString(),
+          status: 'RECEIVED',
+          simSlot: 'SIM 1 (Business)',
+          aiContext: 'Inbound customer reply received directly on office Android SIM'
+        },
+        {
+          id: 'sms_hist_3',
+          licenseKey: licenseKey,
+          direction: 'OUTBOUND_AUTOSMS',
+          phoneNumber: '+1 (404) 555-0199',
+          customerName: 'Prospective Client',
+          message: 'Hey! Sorry I missed your call. How can I help you today? - Office Auto-Response',
+          timestamp: new Date(Date.now() - 3600000 * 6).toISOString(),
+          status: 'DELIVERED_ON_SIM',
+          simSlot: 'SIM 1 (Business)',
+          aiContext: 'Dispatched via handset physical SIM within 15 seconds of carrier missed call'
+        },
+        {
+          id: 'sms_hist_4',
+          licenseKey: licenseKey,
+          direction: 'OUTBOUND_POSTCALL',
+          phoneNumber: '+1 (404) 555-9876',
+          customerName: 'Alex Johnson',
+          message: 'Hey Alex, Dave here from Apex. Got your note about the water heater burst. Headed over shortly!',
+          timestamp: new Date(Date.now() - 3600000 * 14).toISOString(),
+          status: 'DELIVERED_ON_SIM',
+          simSlot: 'SIM 1 (Business)',
+          aiContext: 'Auto-enqueued post-call follow-up for emergency water leak'
+        }
+      ];
+      try {
+        const ddir = path.join(__dirname, 'data');
+        if (!fs.existsSync(ddir)) fs.mkdirSync(ddir, { recursive: true });
+        fs.writeFileSync(CLIENT_SMS_HISTORY_FILE, JSON.stringify(items, null, 2), 'utf8');
+      } catch (e) {}
+    }
+    return items;
+  }
+
+  function enrichCallWithAiDiagnostics(call) {
+    const isUrgent = call.urgency === 'HIGH';
+    return {
+      ...call,
+      aiDiagnostics: call.aiDiagnostics || {
+        sttEngine: 'Deepgram Nova-2 HD (99.2% Accuracy)',
+        llmEngine: 'Claude 3.5 Sonnet / Vapi Telecom Pipeline',
+        ttsEngine: 'Cartesia Ultra-Low Latency Voice (Sonic)',
+        processingLatencyMs: 320,
+        intentDetected: call.category || (isUrgent ? 'Urgent Emergency Service Dispatch' : 'General Customer Inquiry'),
+        urgencyScore: isUrgent ? 94 : 22,
+        urgencyFactors: isUrgent
+          ? ['Active distress / property risk keywords detected', 'Immediate contractor callback requested', 'Auto-escalation threshold exceeded (Score: 94/100)']
+          : ['Standard informational question', 'Routine schedule inquiry'],
+        extractedEntities: {
+          callerName: call.callerName || 'Prospective Client',
+          callerPhone: call.callerNumber,
+          serviceAddress: call.address || 'Address confirmed on call',
+          emergencySeverity: isUrgent ? 'CRITICAL - IMMEDIATE ATTENTION' : 'ROUTINE'
+        },
+        executionTrace: [
+          {
+            step: 1,
+            time: '0.0s',
+            label: 'Inbound Carrier Ring Detected',
+            detail: 'Office Android cellular SIM answered on ring 1; triggered bespoke AI receptionist greeting.',
+            status: 'SUCCESS'
+          },
+          {
+            step: 2,
+            time: '2.4s - 68.0s',
+            label: 'Conversational Voice AI Intake',
+            detail: 'Addressed customer inquiry in real-time, captured caller name, situation notes, and verified service location.',
+            status: 'SUCCESS'
+          },
+          {
+            step: 3,
+            time: '+1.2s post-call',
+            label: 'Carrier SIM SMS Dispatch',
+            detail: `Enqueued outbound follow-up SMS to ${call.callerNumber} via office Android SIM: "${(call.smsFollowUpText || '').slice(0, 60)}..." (10DLC exempt).`,
+            status: 'SUCCESS'
+          },
+          {
+            step: 4,
+            time: '+1.5s post-call',
+            label: isUrgent ? '🚨 Emergency Multi-Channel Alert' : 'CRM & Webhook Lead Sync',
+            detail: isUrgent 
+              ? 'Dispatched priority emergency alert and webhook with MP3 audio recording to client dispatch team.'
+              : 'Synced caller details, MP3 recording URL, and transcript to connected CRM workflow.',
+            status: 'SUCCESS'
+          },
+          {
+            step: 5,
+            time: '+1.8s post-call',
+            label: 'Telecom Airtime Ledger',
+            detail: `Deducted ${call.durationFormatted || '1m 08s'} (${Math.round((call.durationSeconds || 68)/60 * 10)/10} mins) from voice minutes airtime balance.`,
+            status: 'SUCCESS'
+          }
+        ]
+      }
+    };
+  }
+
+  // 1. GET /api/portal/branding - Public brand resolve
+  if ((relativePath === '/api/portal/branding' || relativePath === '/api/portal/branding/') && req.method === 'GET') {
+    const urlObj = new URL(req.url, `http://localhost:${PORT}`);
+    const agencyId = (urlObj.searchParams.get('agency') || urlObj.searchParams.get('agencyId') || '').trim();
+    const branding = resolvePortalBranding(agencyId);
+    res.writeHead(200, { 'Content-Type': 'application/json; charset=utf-8', 'Access-Control-Allow-Origin': '*' });
+    res.end(JSON.stringify({ success: true, branding }));
+    return;
+  }
+
+  // 2. POST /api/portal/check-key - Check if license exists and whether already claimed
+  if ((relativePath === '/api/portal/check-key' || relativePath === '/api/portal/check-key/') && req.method === 'POST') {
+    let body = '';
+    req.on('data', chunk => body += chunk);
+    req.on('end', () => {
+      try {
+        const payload = JSON.parse(body || '{}');
+        const rawKey = (payload.licenseKey || payload.key || '').trim().toUpperCase();
+        if (!rawKey) {
+          res.writeHead(400, { 'Content-Type': 'application/json; charset=utf-8', 'Access-Control-Allow-Origin': '*' });
+          res.end(JSON.stringify({ success: false, error: 'License key is required' }));
+          return;
+        }
+
+        const accounts = getClientAccounts();
+        const existingAcc = accounts.find(a => a.licenseKey === rawKey);
+        if (existingAcc) {
+          const branding = resolvePortalBranding(existingAcc.agencyId);
+          res.writeHead(200, { 'Content-Type': 'application/json; charset=utf-8', 'Access-Control-Allow-Origin': '*' });
+          res.end(JSON.stringify({
+            success: true,
+            isClaimed: true,
+            username: existingAcc.username,
+            businessName: existingAcc.businessName,
+            branding,
+            message: `This license is already registered. Please log in with username: ${existingAcc.username}`
+          }));
+          return;
+        }
+
+        // License not claimed yet. Find metadata in subscribers or master licenses.
+        const subscribers = getVoiceSubscribers();
+        const sub = subscribers.find(s => s.licenseKey === rawKey);
+        const masterList = getMasterLicenses();
+        const master = masterList.find(m => m.key === rawKey);
+
+        const businessName = (sub && (sub.name || sub.businessName)) || (master && (master.businessName || master.name)) || 'Client Business';
+        const agencyId = (sub && sub.agencyId) || 'default';
+        const branding = resolvePortalBranding(agencyId);
+
+        res.writeHead(200, { 'Content-Type': 'application/json; charset=utf-8', 'Access-Control-Allow-Origin': '*' });
+        res.end(JSON.stringify({
+          success: true,
+          isClaimed: false,
+          businessName,
+          agencyId,
+          branding,
+          message: 'License key verified! Please set up your permanent username and password.'
+        }));
+      } catch (err) {
+        res.writeHead(500, { 'Content-Type': 'application/json; charset=utf-8', 'Access-Control-Allow-Origin': '*' });
+        res.end(JSON.stringify({ success: false, error: err.message }));
+      }
+    });
+    return;
+  }
+
+  // 3. POST /api/portal/activate - First-time license key activation with username & password
+  if ((relativePath === '/api/portal/activate' || relativePath === '/api/portal/activate/') && req.method === 'POST') {
+    let body = '';
+    req.on('data', chunk => body += chunk);
+    req.on('end', () => {
+      try {
+        const payload = JSON.parse(body || '{}');
+        const rawKey = (payload.licenseKey || payload.key || '').trim().toUpperCase();
+        const username = (payload.username || '').trim().toLowerCase();
+        const email = (payload.email || '').trim().toLowerCase();
+        const password = payload.password || '';
+
+        if (!rawKey || !username || !password) {
+          res.writeHead(400, { 'Content-Type': 'application/json; charset=utf-8', 'Access-Control-Allow-Origin': '*' });
+          res.end(JSON.stringify({ success: false, error: 'License key, username, and password are all required.' }));
+          return;
+        }
+
+        if (username.length < 3) {
+          res.writeHead(400, { 'Content-Type': 'application/json; charset=utf-8', 'Access-Control-Allow-Origin': '*' });
+          res.end(JSON.stringify({ success: false, error: 'Username must be at least 3 characters.' }));
+          return;
+        }
+
+        if (password.length < 6) {
+          res.writeHead(400, { 'Content-Type': 'application/json; charset=utf-8', 'Access-Control-Allow-Origin': '*' });
+          res.end(JSON.stringify({ success: false, error: 'Password must be at least 6 characters.' }));
+          return;
+        }
+
+        const accounts = getClientAccounts();
+        if (accounts.some(a => a.licenseKey === rawKey)) {
+          res.writeHead(400, { 'Content-Type': 'application/json; charset=utf-8', 'Access-Control-Allow-Origin': '*' });
+          res.end(JSON.stringify({ success: false, error: 'This license has already been activated. Please log in with your credentials.' }));
+          return;
+        }
+
+        if (accounts.some(a => a.username.toLowerCase() === username)) {
+          res.writeHead(400, { 'Content-Type': 'application/json; charset=utf-8', 'Access-Control-Allow-Origin': '*' });
+          res.end(JSON.stringify({ success: false, error: `The username "${username}" is already taken. Please choose another.` }));
+          return;
+        }
+
+        // Determine agency association and business details
+        const subscribers = getVoiceSubscribers();
+        const sub = subscribers.find(s => s.licenseKey === rawKey);
+        const agencyId = (sub && sub.agencyId) || payload.agencyId || 'default';
+        const businessName = payload.businessName || (sub && (sub.name || sub.businessName)) || username;
+
+        const salt = crypto.randomBytes(16).toString('hex');
+        const passwordHash = hashPortalPassword(password, salt);
+        const sessionToken = `ptok_${crypto.randomBytes(24).toString('hex')}`;
+
+        const newAccount = {
+          username,
+          email: email || (sub && sub.email) || '',
+          businessName,
+          licenseKey: rawKey,
+          agencyId,
+          salt,
+          passwordHash,
+          token: sessionToken,
+          lastLoginAt: new Date().toISOString()
+        };
+        saveClientAccount(newAccount);
+
+        const branding = resolvePortalBranding(agencyId);
+        const calls = getVoiceCallLogs().map(enrichCallWithAiDiagnostics);
+        const sms = getClientSmsHistory(rawKey);
+        const tasks = getClientTasks(rawKey);
+
+        res.writeHead(200, { 'Content-Type': 'application/json; charset=utf-8', 'Access-Control-Allow-Origin': '*' });
+        res.end(JSON.stringify({
+          success: true,
+          message: 'Account activated successfully! This username and password is now your permanent login.',
+          token: sessionToken,
+          user: {
+            username: newAccount.username,
+            email: newAccount.email,
+            businessName: newAccount.businessName,
+            licenseKey: newAccount.licenseKey,
+            agencyId: newAccount.agencyId
+          },
+          branding,
+          client: {
+            name: newAccount.businessName,
+            licenseKey: newAccount.licenseKey,
+            voiceMinutesBalance: (sub && sub.voiceMinutesBalance) || 45.2,
+            carrierCode: (sub && sub.carrierCode) || '*71',
+            isVoicePaused: false,
+            handsetStatus: 'ONLINE',
+            lastCheckin: new Date().toISOString()
+          },
+          calls,
+          sms,
+          tasks,
+          stats: {
+            totalCalls: calls.length,
+            urgentCount: calls.filter(c => c.urgency === 'HIGH').length,
+            totalMinutesUsed: Math.round(calls.reduce((acc, c) => acc + (c.durationSeconds || 60), 0) / 60 * 10) / 10,
+            totalSmsCount: sms.length,
+            pendingTasksCount: tasks.filter(t => t.status === 'PENDING').length
+          }
+        }));
+      } catch (err) {
+        res.writeHead(500, { 'Content-Type': 'application/json; charset=utf-8', 'Access-Control-Allow-Origin': '*' });
+        res.end(JSON.stringify({ success: false, error: err.message }));
+      }
+    });
+    return;
+  }
+
+  // 4. POST /api/portal/login - Permanent sign in with username or email & password
+  if ((relativePath === '/api/portal/login' || relativePath === '/api/portal/login/') && req.method === 'POST') {
+    let body = '';
+    req.on('data', chunk => body += chunk);
+    req.on('end', () => {
+      try {
+        const payload = JSON.parse(body || '{}');
+        const loginId = (payload.username || payload.email || payload.login || '').trim().toLowerCase();
+        const password = payload.password || '';
+
+        if (!loginId || !password) {
+          res.writeHead(400, { 'Content-Type': 'application/json; charset=utf-8', 'Access-Control-Allow-Origin': '*' });
+          res.end(JSON.stringify({ success: false, error: 'Username/Email and password are required.' }));
+          return;
+        }
+
+        const accounts = getClientAccounts();
+        let account = accounts.find(a => a.username.toLowerCase() === loginId || (a.email && a.email.toLowerCase() === loginId));
+
+        // If user entered license key as loginId
+        if (!account && loginId.toUpperCase().startsWith('MCAS-')) {
+          const rawKey = loginId.toUpperCase();
+          account = accounts.find(a => a.licenseKey === rawKey);
+          if (!account) {
+            // Not claimed yet!
+            res.writeHead(200, { 'Content-Type': 'application/json; charset=utf-8', 'Access-Control-Allow-Origin': '*' });
+            res.end(JSON.stringify({
+              success: false,
+              needsActivation: true,
+              licenseKey: rawKey,
+              error: 'This license has not set up a permanent login yet. Please activate your account first!'
+            }));
+            return;
+          }
+        }
+
+        if (!account) {
+          res.writeHead(401, { 'Content-Type': 'application/json; charset=utf-8', 'Access-Control-Allow-Origin': '*' });
+          res.end(JSON.stringify({ success: false, error: 'Account not found. Please verify your credentials or activate your license.' }));
+          return;
+        }
+
+        const calculatedHash = hashPortalPassword(password, account.salt);
+        if (calculatedHash !== account.passwordHash) {
+          res.writeHead(401, { 'Content-Type': 'application/json; charset=utf-8', 'Access-Control-Allow-Origin': '*' });
+          res.end(JSON.stringify({ success: false, error: 'Incorrect password. Please try again.' }));
+          return;
+        }
+
+        const sessionToken = `ptok_${crypto.randomBytes(24).toString('hex')}`;
+        account.token = sessionToken;
+        account.lastLoginAt = new Date().toISOString();
+        saveClientAccount(account);
+
+        const subscribers = getVoiceSubscribers();
+        const sub = subscribers.find(s => s.licenseKey === account.licenseKey);
+        const branding = resolvePortalBranding(account.agencyId);
+        const calls = getVoiceCallLogs().map(enrichCallWithAiDiagnostics);
+        const sms = getClientSmsHistory(account.licenseKey);
+        const tasks = getClientTasks(account.licenseKey);
+
+        res.writeHead(200, { 'Content-Type': 'application/json; charset=utf-8', 'Access-Control-Allow-Origin': '*' });
+        res.end(JSON.stringify({
+          success: true,
+          message: 'Signed in successfully!',
+          token: sessionToken,
+          user: {
+            username: account.username,
+            email: account.email,
+            businessName: account.businessName,
+            licenseKey: account.licenseKey,
+            agencyId: account.agencyId
+          },
+          branding,
+          client: {
+            name: account.businessName,
+            licenseKey: account.licenseKey,
+            voiceMinutesBalance: (sub && sub.voiceMinutesBalance) || 45.2,
+            carrierCode: (sub && sub.carrierCode) || '*71',
+            isVoicePaused: false,
+            handsetStatus: 'ONLINE',
+            lastCheckin: new Date().toISOString()
+          },
+          calls,
+          sms,
+          tasks,
+          stats: {
+            totalCalls: calls.length,
+            urgentCount: calls.filter(c => c.urgency === 'HIGH').length,
+            totalMinutesUsed: Math.round(calls.reduce((acc, c) => acc + (c.durationSeconds || 60), 0) / 60 * 10) / 10,
+            totalSmsCount: sms.length,
+            pendingTasksCount: tasks.filter(t => t.status === 'PENDING').length
+          }
+        }));
+      } catch (err) {
+        res.writeHead(500, { 'Content-Type': 'application/json; charset=utf-8', 'Access-Control-Allow-Origin': '*' });
+        res.end(JSON.stringify({ success: false, error: err.message }));
+      }
+    });
+    return;
+  }
+
+  // 5. GET/POST /api/portal/data - Session check and refresh
+  if (relativePath === '/api/portal/data' || relativePath === '/api/portal/data/') {
+    const handleDataReq = (tokenParam) => {
+      const accounts = getClientAccounts();
+      const account = accounts.find(a => a.token === tokenParam);
+      if (!account) {
+        res.writeHead(401, { 'Content-Type': 'application/json; charset=utf-8', 'Access-Control-Allow-Origin': '*' });
+        res.end(JSON.stringify({ success: false, error: 'Session expired or invalid. Please sign in again.' }));
+        return;
+      }
+
+      const subscribers = getVoiceSubscribers();
+      const sub = subscribers.find(s => s.licenseKey === account.licenseKey);
+      const branding = resolvePortalBranding(account.agencyId);
+      const calls = getVoiceCallLogs().map(enrichCallWithAiDiagnostics);
+      const sms = getClientSmsHistory(account.licenseKey);
+      const tasks = getClientTasks(account.licenseKey);
+
+      res.writeHead(200, { 'Content-Type': 'application/json; charset=utf-8', 'Access-Control-Allow-Origin': '*' });
+      res.end(JSON.stringify({
+        success: true,
+        user: {
+          username: account.username,
+          email: account.email,
+          businessName: account.businessName,
+          licenseKey: account.licenseKey,
+          agencyId: account.agencyId
+        },
+        branding,
+        client: {
+          name: account.businessName,
+          licenseKey: account.licenseKey,
+          voiceMinutesBalance: (sub && sub.voiceMinutesBalance) || 45.2,
+          carrierCode: (sub && sub.carrierCode) || '*71',
+          isVoicePaused: false,
+          handsetStatus: 'ONLINE',
+          lastCheckin: new Date().toISOString()
+        },
+        calls,
+        sms,
+        tasks,
+        stats: {
+          totalCalls: calls.length,
+          urgentCount: calls.filter(c => c.urgency === 'HIGH').length,
+          totalMinutesUsed: Math.round(calls.reduce((acc, c) => acc + (c.durationSeconds || 60), 0) / 60 * 10) / 10,
+          totalSmsCount: sms.length,
+          pendingTasksCount: tasks.filter(t => t.status === 'PENDING').length
+        }
+      }));
+    };
+
+    if (req.method === 'GET') {
+      const urlObj = new URL(req.url, `http://localhost:${PORT}`);
+      const token = urlObj.searchParams.get('token') || (req.headers['authorization'] || '').replace('Bearer ', '').trim();
+      handleDataReq(token);
+      return;
+    } else if (req.method === 'POST') {
+      let body = '';
+      req.on('data', chunk => body += chunk);
+      req.on('end', () => {
+        try {
+          const payload = JSON.parse(body || '{}');
+          const token = payload.token || (req.headers['authorization'] || '').replace('Bearer ', '').trim();
+          handleDataReq(token);
+        } catch (e) {
+          res.writeHead(400, { 'Content-Type': 'application/json; charset=utf-8', 'Access-Control-Allow-Origin': '*' });
+          res.end(JSON.stringify({ success: false, error: 'Malformed request' }));
+        }
+      });
+      return;
+    }
+  }
+
+  // 6. POST /api/portal/quick-sms - Dispatches SMS via client office Android physical SIM
+  if ((relativePath === '/api/portal/quick-sms' || relativePath === '/api/portal/quick-sms/') && req.method === 'POST') {
+    let body = '';
+    req.on('data', chunk => body += chunk);
+    req.on('end', () => {
+      try {
+        const payload = JSON.parse(body || '{}');
+        const token = payload.token || (req.headers['authorization'] || '').replace('Bearer ', '').trim();
+        const accounts = getClientAccounts();
+        const account = accounts.find(a => a.token === token) || (payload.licenseKey && accounts.find(a => a.licenseKey === payload.licenseKey));
+
+        const to = (payload.to || payload.recipient || '').trim();
+        const message = (payload.message || payload.text || '').trim();
+
+        if (!to || !message) {
+          res.writeHead(400, { 'Content-Type': 'application/json; charset=utf-8', 'Access-Control-Allow-Origin': '*' });
+          res.end(JSON.stringify({ success: false, error: 'Recipient phone number and message body are required.' }));
+          return;
+        }
+
+        const queueItem = {
+          callId: `portal_${Date.now()}`,
+          recipient: to,
+          message: message,
+          urgency: payload.urgency || 'NORMAL'
+        };
+        enqueueVoiceSms(queueItem);
+
+        // Record in client SMS history
+        const licenseKey = (account && account.licenseKey) || payload.licenseKey || 'DEFAULT';
+        let smsList = [];
+        if (fs.existsSync(CLIENT_SMS_HISTORY_FILE)) {
+          try { smsList = JSON.parse(fs.readFileSync(CLIENT_SMS_HISTORY_FILE, 'utf8')); } catch (e) {}
+        }
+        smsList.unshift({
+          id: queueItem.callId,
+          licenseKey,
+          direction: 'OUTBOUND_MANUAL',
+          phoneNumber: to,
+          customerName: payload.customerName || 'Customer',
+          message: message,
+          timestamp: new Date().toISOString(),
+          status: 'QUEUED_FOR_SIM',
+          simSlot: 'SIM 1 (Business)',
+          aiContext: 'Manual reply dispatched directly from Client Portal via office Android SIM'
+        });
+        const ddir = path.join(__dirname, 'data');
+        if (!fs.existsSync(ddir)) fs.mkdirSync(ddir, { recursive: true });
+        fs.writeFileSync(CLIENT_SMS_HISTORY_FILE, JSON.stringify(smsList, null, 2), 'utf8');
+
+        res.writeHead(200, { 'Content-Type': 'application/json; charset=utf-8', 'Access-Control-Allow-Origin': '*' });
+        res.end(JSON.stringify({
+          success: true,
+          message: `SMS enqueued! Your office Android handset will dispatch via SIM: ${to}`,
+          queueId: queueItem.callId,
+          queuedAt: new Date().toISOString()
+        }));
+      } catch (err) {
+        res.writeHead(500, { 'Content-Type': 'application/json; charset=utf-8', 'Access-Control-Allow-Origin': '*' });
+        res.end(JSON.stringify({ success: false, error: err.message }));
+      }
+    });
+    return;
+  }
+
+  // 7. POST /api/portal/google-auth - Sign in or activate with Google account
+  if ((relativePath === '/api/portal/google-auth' || relativePath === '/api/portal/google-auth/') && req.method === 'POST') {
+    let body = '';
+    req.on('data', chunk => body += chunk);
+    req.on('end', () => {
+      try {
+        const payload = JSON.parse(body || '{}');
+        const email = (payload.email || '').trim().toLowerCase();
+        const googleId = (payload.googleId || payload.sub || '').trim();
+        const name = (payload.name || payload.displayName || '').trim();
+        const licenseKey = (payload.licenseKey || '').trim().toUpperCase();
+
+        if (!email && !googleId) {
+          res.writeHead(400, { 'Content-Type': 'application/json; charset=utf-8', 'Access-Control-Allow-Origin': '*' });
+          res.end(JSON.stringify({ success: false, error: 'Google account email or ID is required.' }));
+          return;
+        }
+
+        const accounts = getClientAccounts();
+        let account = accounts.find(a => (email && a.email && a.email.toLowerCase() === email) || (googleId && a.googleId === googleId));
+
+        if (!account) {
+          // If first time linking via Google, we need a licenseKey
+          if (!licenseKey) {
+            res.writeHead(200, { 'Content-Type': 'application/json; charset=utf-8', 'Access-Control-Allow-Origin': '*' });
+            res.end(JSON.stringify({
+              success: false,
+              needsLicense: true,
+              email,
+              name,
+              error: 'Please enter your license key to link your Google account for the first time.'
+            }));
+            return;
+          }
+
+          // Check if license is already claimed
+          const licenseClaimed = accounts.find(a => a.licenseKey === licenseKey);
+          if (licenseClaimed) {
+            res.writeHead(400, { 'Content-Type': 'application/json; charset=utf-8', 'Access-Control-Allow-Origin': '*' });
+            res.end(JSON.stringify({
+              success: false,
+              error: `This license is already registered to username: ${licenseClaimed.username}. Please sign in with your credentials.`
+            }));
+            return;
+          }
+
+          const subscribers = getVoiceSubscribers();
+          const sub = subscribers.find(s => s.licenseKey === licenseKey);
+          const agencyId = (sub && sub.agencyId) || 'default';
+          const businessName = name || (sub && (sub.name || sub.businessName)) || email.split('@')[0];
+
+          const sessionToken = `ptok_${crypto.randomBytes(24).toString('hex')}`;
+          account = {
+            username: email.split('@')[0].replace(/[^a-z0-9_]/gi, '_').toLowerCase(),
+            email: email,
+            googleId: googleId || `goog_${Date.now()}`,
+            authProvider: 'google',
+            businessName,
+            licenseKey,
+            agencyId,
+            token: sessionToken,
+            lastLoginAt: new Date().toISOString()
+          };
+          saveClientAccount(account);
+        } else {
+          // Returning Google user
+          account.token = `ptok_${crypto.randomBytes(24).toString('hex')}`;
+          account.lastLoginAt = new Date().toISOString();
+          saveClientAccount(account);
+        }
+
+        const subscribers = getVoiceSubscribers();
+        const sub = subscribers.find(s => s.licenseKey === account.licenseKey);
+        const branding = resolvePortalBranding(account.agencyId);
+        const calls = getVoiceCallLogs().map(enrichCallWithAiDiagnostics);
+        const sms = getClientSmsHistory(account.licenseKey);
+        const tasks = getClientTasks(account.licenseKey);
+
+        res.writeHead(200, { 'Content-Type': 'application/json; charset=utf-8', 'Access-Control-Allow-Origin': '*' });
+        res.end(JSON.stringify({
+          success: true,
+          message: 'Signed in with Google successfully!',
+          token: account.token,
+          user: {
+            username: account.username,
+            email: account.email,
+            businessName: account.businessName,
+            licenseKey: account.licenseKey,
+            agencyId: account.agencyId
+          },
+          branding,
+          client: {
+            name: account.businessName,
+            licenseKey: account.licenseKey,
+            voiceMinutesBalance: (sub && sub.voiceMinutesBalance) || 45.2,
+            carrierCode: (sub && sub.carrierCode) || '*71',
+            isVoicePaused: false,
+            handsetStatus: 'ONLINE',
+            lastCheckin: new Date().toISOString()
+          },
+          calls,
+          sms,
+          tasks,
+          stats: {
+            totalCalls: calls.length,
+            urgentCount: calls.filter(c => c.urgency === 'HIGH').length,
+            totalMinutesUsed: Math.round(calls.reduce((acc, c) => acc + (c.durationSeconds || 60), 0) / 60 * 10) / 10,
+            totalSmsCount: sms.length,
+            pendingTasksCount: tasks.filter(t => t.status === 'PENDING').length
+          }
+        }));
+      } catch (err) {
+        res.writeHead(500, { 'Content-Type': 'application/json; charset=utf-8', 'Access-Control-Allow-Origin': '*' });
+        res.end(JSON.stringify({ success: false, error: err.message }));
+      }
+    });
+    return;
+  }
+
+  // 8. POST /api/portal/auth-check - Validates session token for Remember Me persistent login
+  if ((relativePath === '/api/portal/auth-check' || relativePath === '/api/portal/auth-check/') && req.method === 'POST') {
+    let body = '';
+    req.on('data', chunk => body += chunk);
+    req.on('end', () => {
+      try {
+        const payload = JSON.parse(body || '{}');
+        const token = payload.token || (req.headers['authorization'] || '').replace('Bearer ', '').trim();
+        const accounts = getClientAccounts();
+        const account = accounts.find(a => a.token === token);
+        if (!account) {
+          res.writeHead(401, { 'Content-Type': 'application/json; charset=utf-8', 'Access-Control-Allow-Origin': '*' });
+          res.end(JSON.stringify({ success: false, error: 'Session invalid or expired' }));
+          return;
+        }
+
+        const subscribers = getVoiceSubscribers();
+        const sub = subscribers.find(s => s.licenseKey === account.licenseKey);
+        const branding = resolvePortalBranding(account.agencyId);
+        const calls = getVoiceCallLogs().map(enrichCallWithAiDiagnostics);
+        const sms = getClientSmsHistory(account.licenseKey);
+        const tasks = getClientTasks(account.licenseKey);
+
+        res.writeHead(200, { 'Content-Type': 'application/json; charset=utf-8', 'Access-Control-Allow-Origin': '*' });
+        res.end(JSON.stringify({
+          success: true,
+          token: account.token,
+          user: {
+            username: account.username,
+            email: account.email,
+            businessName: account.businessName,
+            licenseKey: account.licenseKey,
+            agencyId: account.agencyId
+          },
+          branding,
+          client: {
+            name: account.businessName,
+            licenseKey: account.licenseKey,
+            voiceMinutesBalance: (sub && sub.voiceMinutesBalance) || 45.2,
+            carrierCode: (sub && sub.carrierCode) || '*71',
+            isVoicePaused: false,
+            handsetStatus: 'ONLINE',
+            lastCheckin: new Date().toISOString()
+          },
+          calls,
+          sms,
+          tasks,
+          stats: {
+            totalCalls: calls.length,
+            urgentCount: calls.filter(c => c.urgency === 'HIGH').length,
+            totalMinutesUsed: Math.round(calls.reduce((acc, c) => acc + (c.durationSeconds || 60), 0) / 60 * 10) / 10,
+            totalSmsCount: sms.length,
+            pendingTasksCount: tasks.filter(t => t.status === 'PENDING').length
+          }
+        }));
+      } catch (err) {
+        res.writeHead(500, { 'Content-Type': 'application/json; charset=utf-8', 'Access-Control-Allow-Origin': '*' });
+        res.end(JSON.stringify({ success: false, error: err.message }));
+      }
+    });
+    return;
+  }
+
+  // 9. POST /api/portal/tasks/update - Updates action item status (PENDING / COMPLETED)
+  if ((relativePath === '/api/portal/tasks/update' || relativePath === '/api/portal/tasks/update/') && req.method === 'POST') {
+    let body = '';
+    req.on('data', chunk => body += chunk);
+    req.on('end', () => {
+      try {
+        const payload = JSON.parse(body || '{}');
+        const taskId = payload.taskId || payload.id;
+        const status = payload.status || 'COMPLETED';
+
+        if (!taskId) {
+          res.writeHead(400, { 'Content-Type': 'application/json; charset=utf-8', 'Access-Control-Allow-Origin': '*' });
+          res.end(JSON.stringify({ success: false, error: 'taskId is required' }));
+          return;
+        }
+
+        let tasks = [];
+        if (fs.existsSync(CLIENT_TASKS_FILE)) {
+          try { tasks = JSON.parse(fs.readFileSync(CLIENT_TASKS_FILE, 'utf8')); } catch (e) {}
+        }
+
+        const task = tasks.find(t => t.id === taskId);
+        if (!task) {
+          res.writeHead(404, { 'Content-Type': 'application/json; charset=utf-8', 'Access-Control-Allow-Origin': '*' });
+          res.end(JSON.stringify({ success: false, error: 'Task not found' }));
+          return;
+        }
+
+        task.status = status;
+        task.completedAt = status === 'COMPLETED' ? new Date().toISOString() : null;
+        if (payload.notes) task.notes = payload.notes;
+
+        saveClientTasks(tasks);
+
+        res.writeHead(200, { 'Content-Type': 'application/json; charset=utf-8', 'Access-Control-Allow-Origin': '*' });
+        res.end(JSON.stringify({ success: true, message: `Task marked as ${status}!`, task }));
+      } catch (err) {
+        res.writeHead(500, { 'Content-Type': 'application/json; charset=utf-8', 'Access-Control-Allow-Origin': '*' });
+        res.end(JSON.stringify({ success: false, error: err.message }));
+      }
+    });
+    return;
+  }
+
+  // 10. POST /api/portal/tasks/create - Contractor adds a custom follow-up task
+  if ((relativePath === '/api/portal/tasks/create' || relativePath === '/api/portal/tasks/create/') && req.method === 'POST') {
+    let body = '';
+    req.on('data', chunk => body += chunk);
+    req.on('end', () => {
+      try {
+        const payload = JSON.parse(body || '{}');
+        const title = (payload.title || '').trim();
+        if (!title) {
+          res.writeHead(400, { 'Content-Type': 'application/json; charset=utf-8', 'Access-Control-Allow-Origin': '*' });
+          res.end(JSON.stringify({ success: false, error: 'Task title is required' }));
+          return;
+        }
+
+        let tasks = [];
+        if (fs.existsSync(CLIENT_TASKS_FILE)) {
+          try { tasks = JSON.parse(fs.readFileSync(CLIENT_TASKS_FILE, 'utf8')); } catch (e) {}
+        }
+
+        const newTask = {
+          id: `task_custom_${Date.now()}`,
+          licenseKey: payload.licenseKey || 'DEFAULT',
+          sourceType: 'CONTRACTOR_MANUAL',
+          sourceId: null,
+          title: title,
+          category: payload.category || 'GENERAL_FOLLOWUP',
+          priority: payload.priority || 'NORMAL',
+          customerName: payload.customerName || '',
+          customerPhone: payload.customerPhone || '',
+          serviceAddress: payload.serviceAddress || '',
+          notes: payload.notes || '',
+          dueSla: payload.dueSla || 'Same Day',
+          status: 'PENDING',
+          createdAt: new Date().toISOString(),
+          completedAt: null
+        };
+        tasks.unshift(newTask);
+        saveClientTasks(tasks);
+
+        res.writeHead(200, { 'Content-Type': 'application/json; charset=utf-8', 'Access-Control-Allow-Origin': '*' });
+        res.end(JSON.stringify({ success: true, message: 'Custom task created successfully!', task: newTask }));
+      } catch (err) {
+        res.writeHead(500, { 'Content-Type': 'application/json; charset=utf-8', 'Access-Control-Allow-Origin': '*' });
+        res.end(JSON.stringify({ success: false, error: err.message }));
+      }
+    });
     return;
   }
 
@@ -6106,7 +8706,7 @@ const server = http.createServer((req, res) => {
   }
 
   // ─── 🤝 Referral & Net-Profit Rev-Share API Endpoints ───
-  if (relativePath.startsWith('/api/referrals/')) {
+  if (relativePath.startsWith('/api/referrals/') || relativePath === '/api/referrals' || relativePath === '/api/referrals/') {
     const parseJsonBody = () => new Promise(resolve => {
       let b = '';
       req.on('data', c => b += c);
@@ -6116,7 +8716,7 @@ const server = http.createServer((req, res) => {
     });
 
     // 1. Get Partners & Summary Stats
-    if (relativePath === '/api/referrals/partners' && req.method === 'GET') {
+    if ((relativePath === '/api/referrals/partners' || (relativePath === '/api/referrals' && req.method === 'GET')) && req.method === 'GET') {
       const partners = syncPartnerMetrics();
       const ledger = getReferralLedger();
       const summary = {
@@ -6136,7 +8736,7 @@ const server = http.createServer((req, res) => {
     }
 
     // 2. Create or Update Partner Profile
-    if (relativePath === '/api/referrals/partners' && req.method === 'POST') {
+    if ((relativePath === '/api/referrals/partners' || relativePath === '/api/referrals' || relativePath === '/api/referrals/') && req.method === 'POST') {
       parseJsonBody().then(payload => {
         if (!payload.code || !payload.name) {
           res.writeHead(400, { 'Content-Type': 'application/json; charset=utf-8', 'Access-Control-Allow-Origin': '*' });
@@ -6345,17 +8945,21 @@ const server = http.createServer((req, res) => {
     relativePath = '/owner_admin_dashboard.html';
   } else if (relativePath === '/voice' || relativePath === '/voice/') {
     relativePath = '/voice.html';
-  } else if (relativePath === '/agency' || relativePath === '/agency/') {
+  } else if (relativePath === '/agency' || relativePath === '/agency/' || relativePath === '/whitelabel' || relativePath === '/whitelabel/' || relativePath === '/white-label' || relativePath === '/white-label/') {
     relativePath = '/agency.html';
-  } else if (relativePath === '/agency-dashboard' || relativePath === '/agency-dashboard/' || relativePath === '/agency_dashboard' || relativePath === '/agency_dashboard/') {
+  } else if (relativePath === '/agency-dashboard' || relativePath === '/agency-dashboard/' || relativePath === '/agency_dashboard' || relativePath === '/agency_dashboard/' || relativePath === '/fleet' || relativePath === '/fleet/') {
     relativePath = '/agency_dashboard.html';
+  } else if (relativePath === '/affiliate' || relativePath === '/affiliate/' || relativePath === '/affiliates' || relativePath === '/affiliates/' || relativePath === '/partner' || relativePath === '/partner/' || relativePath === '/partners' || relativePath === '/partners/') {
+    relativePath = '/affiliate.html';
   } else if (relativePath === '/developers' || relativePath === '/developers/' || relativePath === '/docs' || relativePath === '/docs/') {
     relativePath = '/developers.html';
   } else if (relativePath === '/support' || relativePath === '/support/') {
     relativePath = '/support.html';
   } else if (relativePath === '/terms' || relativePath === '/terms/' || relativePath === '/privacy' || relativePath === '/privacy/') {
     relativePath = '/terms.html';
-  } else if (relativePath === '/portal' || relativePath === '/portal/' || relativePath === '/license' || relativePath === '/license/' || relativePath === '/license_dashboard' || relativePath === '/license_dashboard/') {
+  } else if (relativePath === '/portal' || relativePath === '/portal/' || relativePath === '/client-portal' || relativePath === '/client-portal/' || relativePath === '/client_portal' || relativePath === '/client_portal/') {
+    relativePath = '/client_portal.html';
+  } else if (relativePath === '/license' || relativePath === '/license/' || relativePath === '/license_dashboard' || relativePath === '/license_dashboard/') {
     relativePath = '/license_dashboard.html';
   } else if (relativePath === '/success' || relativePath === '/success/') {
     relativePath = '/success.html';

@@ -188,8 +188,9 @@ fun CustomerAccountPortalDialog(
     fun purchaseCreditPack(packTier: Int) {
         val email = customerEmailInput.trim().ifBlank { settings.customerEmail.trim() }
         val key = licenseKeyInput.trim().ifBlank { settings.licenseKey.trim() }
+        val agency = settings.agencyId.ifBlank { com.missedcall.autotext.util.AppBranding.agencyId }
         inAppPaymentTitle = "Add Minute Pack ($packTier)"
-        inAppPaymentUrl = "https://missedcallautosms.com/api/create-credit-pack-checkout?pack=$packTier&key=${Uri.encode(key)}&email=${Uri.encode(email)}"
+        inAppPaymentUrl = "https://missedcallautosms.com/api/create-credit-pack-checkout?pack=$packTier&key=${Uri.encode(key)}&email=${Uri.encode(email)}&agency=${Uri.encode(agency)}"
         showInAppPayment = true
     }
 
@@ -279,8 +280,9 @@ fun CustomerAccountPortalDialog(
     fun saveOrUpdateCard() {
         val email = customerEmailInput.trim().ifBlank { settings.customerEmail.trim() }
         val key = licenseKeyInput.trim().ifBlank { settings.licenseKey.trim() }
+        val agency = settings.agencyId.ifBlank { com.missedcall.autotext.util.AppBranding.agencyId }
         inAppPaymentTitle = "Save Payment Method"
-        inAppPaymentUrl = "https://missedcallautosms.com/api/billing/create-save-card-session?key=${Uri.encode(key)}&email=${Uri.encode(email)}"
+        inAppPaymentUrl = "https://missedcallautosms.com/api/billing/create-save-card-session?key=${Uri.encode(key)}&email=${Uri.encode(email)}&agency=${Uri.encode(agency)}"
         showInAppPayment = true
     }
 
@@ -295,8 +297,9 @@ fun CustomerAccountPortalDialog(
     fun subscribeToVoicePro() {
         val email = customerEmailInput.trim().ifBlank { settings.customerEmail.trim() }
         val key = licenseKeyInput.trim().ifBlank { settings.licenseKey.trim() }
+        val agency = settings.agencyId.ifBlank { com.missedcall.autotext.util.AppBranding.agencyId }
         inAppPaymentTitle = "Subscribe to AI Voice ($9.99/mo)"
-        inAppPaymentUrl = "https://missedcallautosms.com/api/create-voice-pro-checkout?key=${Uri.encode(key)}&email=${Uri.encode(email)}"
+        inAppPaymentUrl = "https://missedcallautosms.com/api/create-voice-pro-checkout?key=${Uri.encode(key)}&email=${Uri.encode(email)}&agency=${Uri.encode(agency)}"
         showInAppPayment = true
     }
 

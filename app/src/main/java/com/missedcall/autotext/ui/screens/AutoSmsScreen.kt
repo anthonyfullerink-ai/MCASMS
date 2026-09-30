@@ -143,23 +143,45 @@ fun AutoSmsScreen(
 
                     Spacer(modifier = Modifier.height(12.dp))
 
+                    if (settings.lockHandsetSettings) {
+                        Card(
+                            colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.5f)),
+                            border = BorderStroke(1.dp, MaterialTheme.colorScheme.primary.copy(alpha = 0.5f)),
+                            shape = RoundedCornerShape(10.dp),
+                            modifier = Modifier.fillMaxWidth().padding(bottom = 12.dp)
+                        ) {
+                            Row(modifier = Modifier.padding(12.dp), verticalAlignment = Alignment.CenterVertically) {
+                                Icon(Icons.Default.Lock, contentDescription = null, tint = MaterialTheme.colorScheme.primary, modifier = Modifier.size(20.dp))
+                                Spacer(modifier = Modifier.width(10.dp))
+                                Column {
+                                    Text("Managed Remotely by Agency", fontWeight = FontWeight.Bold, style = MaterialTheme.typography.labelMedium)
+                                    Text("SMS template is managed remotely by your administrator. Handset edits are locked.", style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
+                                }
+                            }
+                        }
+                    }
+
                     OutlinedTextField(
                         value = messageTemplateInput,
                         onValueChange = {
-                            messageTemplateInput = it
-                            onSettingsChanged(settings.copy(messageTemplate = it))
+                            if (!settings.lockHandsetSettings) {
+                                messageTemplateInput = it
+                                onSettingsChanged(settings.copy(messageTemplate = it))
+                            }
                         },
+                        readOnly = settings.lockHandsetSettings,
                         modifier = Modifier.fillMaxWidth(),
                         minLines = 3,
                         maxLines = 5,
-                        label = { Text("SMS Message Template") },
+                        label = { Text("SMS Message Template" + if (settings.lockHandsetSettings) " (Locked)" else "") },
                         placeholder = { Text("Hey! Sorry I missed your call. How can I help you today? - {business_name}") }
                     )
 
-                    Spacer(modifier = Modifier.height(10.dp))
-
-                    Text("Tap variable chip to insert:", style = MaterialTheme.typography.labelSmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
-                    Spacer(modifier = Modifier.height(6.dp))
+                    if (!settings.lockHandsetSettings) {
+                        Spacer(modifier = Modifier.height(10.dp))
+                        Text("Tap variable chip to insert:", style = MaterialTheme.typography.labelSmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
+                        Spacer(modifier = Modifier.height(6.dp))
+                    }
 
                     FlowRow(
                         horizontalArrangement = Arrangement.spacedBy(8.dp),

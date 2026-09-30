@@ -226,7 +226,7 @@ object CalendarSyncManager {
     fun insertTestEvent(context: Context, calendarId: Long, calendarTitle: String): Boolean {
         val startMs = System.currentTimeMillis() + (60 * 60 * 1000)
         val endMs = startMs + (30 * 60 * 1000)
-        val title = "⚡ Test Sync: Missed Call Auto SMS"
+        val title = "⚡ Test Sync: ${AppBranding.appName}"
         val desc = "This is a test appointment created to verify live Google Calendar synchronization with $calendarTitle."
         return insertAppointmentEvent(context, calendarId, title, desc, startMs, endMs, "Your Office / Mobile") != null
     }
