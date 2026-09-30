@@ -420,9 +420,19 @@ exports.handler = async (event) => {
     const agenciesData = getAgenciesData();
     if (agenciesData.agencies && agenciesData.agencies[agencyId]) {
       const ag = agenciesData.agencies[agencyId];
-      if (body.tagline) ag.tagline = body.tagline;
-      if (body.supportEmail) ag.supportEmail = body.supportEmail;
-      if (body.supportPhone) ag.supportPhone = body.supportPhone;
+      if (body.tagline !== undefined) ag.tagline = body.tagline;
+      if (body.supportEmail !== undefined) ag.supportEmail = body.supportEmail;
+      if (body.supportPhone !== undefined) ag.supportPhone = body.supportPhone;
+      if (body.privacyPolicyUrl !== undefined) ag.privacyPolicyUrl = body.privacyPolicyUrl;
+      if (body.termsUrl !== undefined) ag.termsUrl = body.termsUrl;
+      if (body.logoUrl !== undefined) ag.logoUrl = body.logoUrl;
+      if (body.iconUrl !== undefined) ag.iconUrl = body.iconUrl;
+      if (body.customDomain !== undefined) ag.customDomain = body.customDomain;
+      if (body.primaryColor || body.accentColor) {
+        ag.theme = ag.theme || {};
+        if (body.primaryColor) ag.theme.primaryColor = body.primaryColor;
+        if (body.accentColor) ag.theme.accentColor = body.accentColor;
+      }
       writeJsonFile(AGENCIES_CONFIG_PATH, agenciesData);
     }
     return { statusCode: 200, headers, body: JSON.stringify({ success: true, message: 'Agency settings updated!' }) };

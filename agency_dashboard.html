@@ -242,6 +242,31 @@
 
         .btn-agency-primary:hover { transform: translateY(-1px); opacity: 0.95; }
 
+        .preset-color-pill {
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+            padding: 6px 10px;
+            background: #0B0F19;
+            border: 1px solid var(--card-border, #1E293B);
+            font-size: 11px;
+            color: #94A3B8;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            border-radius: 0px !important;
+        }
+        .preset-color-pill:hover, .preset-color-pill.active {
+            border-color: #38BDF8;
+            color: #FFF;
+            background: #111827;
+        }
+        .preset-dot {
+            width: 10px;
+            height: 10px;
+            border-radius: 50%;
+            display: inline-block;
+        }
+
         /* Dashboard Header */
         .dash-header {
             display: flex;
@@ -946,18 +971,74 @@
                     </div>
                 </div>
 
-                <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 16px;">
-                    <div>
-                        <label style="display: block; font-size: 12px; font-weight: 700; color: #CBD5E1; margin-bottom: 6px;">Custom Vanity Domain / Portal URL</label>
-                        <input type="text" id="settingCustomDomain" class="input-field" placeholder="e.g. portal.youragency.com" style="border-radius: 0px !important;">
-                        <small style="font-size: 11px; color: var(--muted);">Your clients will access their dashboard at this domain or <code>/portal?agency=&lt;your_slug&gt;</code></small>
+                <div style="margin-bottom: 16px;">
+                    <label style="display: block; font-size: 12px; font-weight: 700; color: #CBD5E1; margin-bottom: 6px;">Custom Vanity Domain / Portal URL</label>
+                    <input type="text" id="settingCustomDomain" class="input-field" placeholder="e.g. portal.youragency.com" style="border-radius: 0px !important;">
+                    <small style="font-size: 11px; color: var(--muted);">Your clients will access their dashboard at this domain or <code>/portal?agency=&lt;your_slug&gt;</code></small>
+                </div>
+
+                <div style="margin-bottom: 16px;">
+                    <label style="display: block; font-size: 12px; font-weight: 700; color: #CBD5E1; margin-bottom: 8px;">Curated Brand Color Palettes</label>
+                    <div style="display: flex; flex-wrap: wrap; gap: 8px;" id="dashboardBrandPresets">
+                        <button type="button" class="preset-color-pill active" onclick="selectDashboardBrandPreset('#2563EB', '#38BDF8', this)">
+                            <span class="preset-dot" style="background: #2563EB;"></span> Sapphire Blue
+                        </button>
+                        <button type="button" class="preset-color-pill" onclick="selectDashboardBrandPreset('#059669', '#34D399', this)">
+                            <span class="preset-dot" style="background: #059669;"></span> Emerald Green
+                        </button>
+                        <button type="button" class="preset-color-pill" onclick="selectDashboardBrandPreset('#7C3AED', '#C084FC', this)">
+                            <span class="preset-dot" style="background: #7C3AED;"></span> Electric Violet
+                        </button>
+                        <button type="button" class="preset-color-pill" onclick="selectDashboardBrandPreset('#D97706', '#FBBF24', this)">
+                            <span class="preset-dot" style="background: #D97706;"></span> Sunset Amber
+                        </button>
+                        <button type="button" class="preset-color-pill" onclick="selectDashboardBrandPreset('#DC2626', '#F87171', this)">
+                            <span class="preset-dot" style="background: #DC2626;"></span> Crimson Red
+                        </button>
+                        <button type="button" class="preset-color-pill" onclick="selectDashboardBrandPreset('#0D9488', '#2DD4BF', this)">
+                            <span class="preset-dot" style="background: #0D9488;"></span> Cyber Teal
+                        </button>
+                        <button type="button" class="preset-color-pill" onclick="selectDashboardBrandPreset('#4F46E5', '#818CF8', this)">
+                            <span class="preset-dot" style="background: #4F46E5;"></span> Midnight Indigo
+                        </button>
+                        <button type="button" class="preset-color-pill" onclick="selectDashboardBrandPreset('#E11D48', '#FB7185', this)">
+                            <span class="preset-dot" style="background: #E11D48;"></span> Rose Gold
+                        </button>
+                        <button type="button" class="preset-color-pill" onclick="selectDashboardBrandPreset('#65A30D', '#A3E635', this)">
+                            <span class="preset-dot" style="background: #65A30D;"></span> Volt Lime
+                        </button>
+                        <button type="button" class="preset-color-pill" onclick="selectDashboardBrandPreset('#334155', '#94A3B8', this)">
+                            <span class="preset-dot" style="background: #334155;"></span> Slate Titanium
+                        </button>
                     </div>
+                </div>
+
+                <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(260px, 1fr)); gap: 16px; margin-bottom: 16px;">
                     <div>
                         <label style="display: block; font-size: 12px; font-weight: 700; color: #CBD5E1; margin-bottom: 6px;">Primary Brand Color</label>
                         <div style="display: flex; gap: 8px; align-items: center;">
-                            <input type="color" id="settingColorPicker" value="#2563EB" onchange="document.getElementById('settingPrimaryColor').value = this.value" style="width: 44px; height: 40px; border: 1px solid var(--card-border); border-radius: 0px !important; background: transparent; cursor: pointer;">
-                            <input type="text" id="settingPrimaryColor" value="#2563EB" onchange="document.getElementById('settingColorPicker').value = this.value" class="input-field" style="border-radius: 0px !important; font-family: monospace;">
+                            <input type="color" id="settingColorPicker" value="#2563EB" onchange="syncDashboardColor('primary', this.value)" style="width: 44px; height: 40px; border: 1px solid var(--card-border); border-radius: 0px !important; background: transparent; cursor: pointer;">
+                            <input type="text" id="settingPrimaryColor" value="#2563EB" oninput="syncDashboardHex('primary', this.value)" class="input-field" style="border-radius: 0px !important; font-family: monospace;">
                         </div>
+                    </div>
+                    <div>
+                        <label style="display: block; font-size: 12px; font-weight: 700; color: #CBD5E1; margin-bottom: 6px;">Accent / Highlight Color</label>
+                        <div style="display: flex; gap: 8px; align-items: center;">
+                            <input type="color" id="settingAccentColorPicker" value="#38BDF8" onchange="syncDashboardColor('accent', this.value)" style="width: 44px; height: 40px; border: 1px solid var(--card-border); border-radius: 0px !important; background: transparent; cursor: pointer;">
+                            <input type="text" id="settingAccentColor" value="#38BDF8" oninput="syncDashboardHex('accent', this.value)" class="input-field" style="border-radius: 0px !important; font-family: monospace;">
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Live Brand Preview Box in Dashboard -->
+                <div style="background: #080C14; border: 1px solid var(--card-border); padding: 14px 18px; margin-bottom: 18px;">
+                    <div style="font-size: 11px; text-transform: uppercase; letter-spacing: 0.5px; color: var(--muted); margin-bottom: 8px; font-weight: 700;">Live Brand Portal Theme Preview</div>
+                    <div style="display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 12px;">
+                        <div style="display: flex; align-items: center; gap: 10px;">
+                            <span id="dashPreviewBadge" style="font-size: 11px; font-weight: 800; padding: 4px 10px; border-radius: 0px; text-transform: uppercase; letter-spacing: 0.5px; border: 1px solid rgba(37,99,235,0.4); background: rgba(37,99,235,0.12); color: #38BDF8;">White-Label Active</span>
+                            <span id="dashPreviewAppName" style="font-size: 13px; font-weight: 700; color: #FFF;">Client Appliance</span>
+                        </div>
+                        <button id="dashPreviewBtn" type="button" style="border-radius: 0px !important; border: none; padding: 7px 16px; font-size: 12px; font-weight: 800; color: #FFF; background: linear-gradient(135deg, #2563EB, #38BDF8); pointer-events: none;">Client Portal CTA Button</button>
                     </div>
                 </div>
             </div>
@@ -1798,8 +1879,12 @@ Click "Send Test Payload" above to fire a sample event and inspect the HTTP stat
         document.getElementById('settingCustomDomain').value = agency.customDomain || '';
 
         const primaryColor = agency.theme?.primaryColor || '#2563EB';
+        const accentColor = agency.theme?.accentColor || '#38BDF8';
         document.getElementById('settingColorPicker').value = primaryColor;
-        document.getElementById('settingPrimaryColor').value = primaryColor;
+        document.getElementById('settingPrimaryColor').value = primaryColor.toUpperCase();
+        document.getElementById('settingAccentColorPicker').value = accentColor;
+        document.getElementById('settingAccentColor').value = accentColor.toUpperCase();
+        updateDashboardBrandPreview();
         updateSettingLogoPreview();
         updateSettingIconPreview();
 
@@ -2208,6 +2293,62 @@ ${supportPhone ? `• Phone: ${supportPhone}` : ''}
         }
     }
 
+    function selectDashboardBrandPreset(primary, accent, btn) {
+        document.querySelectorAll('#dashboardBrandPresets .preset-color-pill').forEach(p => p.classList.remove('active'));
+        if (btn) btn.classList.add('active');
+
+        document.getElementById('settingColorPicker').value = primary;
+        document.getElementById('settingPrimaryColor').value = primary.toUpperCase();
+        document.getElementById('settingAccentColorPicker').value = accent;
+        document.getElementById('settingAccentColor').value = accent.toUpperCase();
+        updateDashboardBrandPreview();
+    }
+
+    function syncDashboardColor(type, hex) {
+        if (type === 'primary') {
+            document.getElementById('settingPrimaryColor').value = hex.toUpperCase();
+        } else {
+            document.getElementById('settingAccentColor').value = hex.toUpperCase();
+        }
+        document.querySelectorAll('#dashboardBrandPresets .preset-color-pill').forEach(p => p.classList.remove('active'));
+        updateDashboardBrandPreview();
+    }
+
+    function syncDashboardHex(type, val) {
+        let clean = val.trim();
+        if (!clean.startsWith('#')) clean = '#' + clean;
+        if (/^#[0-9A-Fa-f]{6}$/.test(clean)) {
+            if (type === 'primary') {
+                document.getElementById('settingColorPicker').value = clean;
+            } else {
+                document.getElementById('settingAccentColorPicker').value = clean;
+            }
+            document.querySelectorAll('#dashboardBrandPresets .preset-color-pill').forEach(p => p.classList.remove('active'));
+            updateDashboardBrandPreview();
+        }
+    }
+
+    function updateDashboardBrandPreview() {
+        const primary = document.getElementById('settingPrimaryColor')?.value || '#2563EB';
+        const accent = document.getElementById('settingAccentColor')?.value || '#38BDF8';
+        const appName = currentAgencyData?.agency?.appName || 'Client Appliance';
+
+        const nameEl = document.getElementById('dashPreviewAppName');
+        if (nameEl) nameEl.textContent = appName;
+
+        const badgeEl = document.getElementById('dashPreviewBadge');
+        if (badgeEl) {
+            badgeEl.style.color = primary;
+            badgeEl.style.borderColor = primary + '44';
+            badgeEl.style.background = primary + '18';
+        }
+
+        const btnEl = document.getElementById('dashPreviewBtn');
+        if (btnEl) {
+            btnEl.style.background = `linear-gradient(135deg, ${primary}, ${accent})`;
+        }
+    }
+
     async function saveAgencySettings() {
         const tagline = document.getElementById('settingTagline').value.trim();
         const supportEmail = document.getElementById('settingSupportEmail').value.trim();
@@ -2218,6 +2359,7 @@ ${supportPhone ? `• Phone: ${supportPhone}` : ''}
         const iconUrl = document.getElementById('settingIconUrl').value.trim();
         const customDomain = document.getElementById('settingCustomDomain').value.trim();
         const primaryColor = document.getElementById('settingPrimaryColor').value.trim();
+        const accentColor = document.getElementById('settingAccentColor').value.trim();
 
         try {
             const res = await fetch('/api/agency/manage', {
@@ -2234,7 +2376,8 @@ ${supportPhone ? `• Phone: ${supportPhone}` : ''}
                     logoUrl,
                     iconUrl,
                     customDomain,
-                    primaryColor
+                    primaryColor,
+                    accentColor
                 })
             });
 

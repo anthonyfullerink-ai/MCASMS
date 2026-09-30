@@ -24,7 +24,7 @@
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800;900&family=JetBrains+Mono:wght@400;500;600;700&display=swap" rel="stylesheet">
-    <link rel="stylesheet" href="/assets/css/navbar.css?v=20261001">
+    <link rel="stylesheet" href="/assets/css/navbar.css?v=20261002">
 
     <style>
         :root {
@@ -634,7 +634,7 @@
             <a href="/pro" class="global-nav-link">Pro Gateway <span class="global-link-badge">API</span></a>
             <a href="/#pricing" class="global-nav-link">Pricing</a>
             <a href="/agency" class="global-nav-link active">White-Label Agency</a>
-            <a href="/affiliate" class="global-nav-link">Affiliates (25%)</a>
+            <a href="/affiliate" class="global-nav-link">Affiliates</a>
         </nav>
 
         <div class="global-nav-actions">
@@ -1239,18 +1239,88 @@
 
             <div style="margin-bottom:14px;">
                 <label style="display:block; font-size:12px; font-weight:700; color:#CBD5E1; margin-bottom:6px;">Desired White-Label App Name *</label>
-                <input type="text" id="wlAppName" required placeholder="e.g. Apex Telecom AI" style="width:100%; padding:12px 14px; background:#07090E; border:1px solid #1E293B; border-radius:8px; color:#38BDF8; font-size:14px; font-weight:800; outline:none;">
+                <input type="text" id="wlAppName" required placeholder="e.g. Apex Telecom AI" oninput="updateBrandPreview()" style="width:100%; padding:12px 14px; background:#07090E; border:1px solid #1E293B; border-radius:8px; color:#38BDF8; font-size:14px; font-weight:800; outline:none;">
                 <small style="color:#64748B; font-size:11px;">This will be the title displayed on your clients' Android handsets and portals.</small>
             </div>
 
-            <div style="display:grid; grid-template-columns:1fr 1fr; gap:12px; margin-bottom:18px;">
-                <div>
-                    <label style="display:block; font-size:12px; font-weight:700; color:#CBD5E1; margin-bottom:6px;">Primary Brand Color</label>
-                    <input type="color" id="wlColorPrimary" value="#2563EB" style="width:100%; height:42px; padding:2px; background:#07090E; border:1px solid #1E293B; border-radius:8px; cursor:pointer;">
+            <!-- Curated Brand Color Palettes & Custom Controls -->
+            <div style="margin-bottom:18px;">
+                <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:6px;">
+                    <label style="display:block; font-size:12px; font-weight:700; color:#CBD5E1; text-transform:uppercase; letter-spacing:0.5px; margin-bottom:0;">Agency Brand Colors</label>
+                    <span style="font-size:11px; color:#94A3B8;">1-Click Palettes &amp; Custom Hex</span>
                 </div>
-                <div>
-                    <label style="display:block; font-size:12px; font-weight:700; color:#CBD5E1; margin-bottom:6px;">Accent Brand Color</label>
-                    <input type="color" id="wlColorAccent" value="#38BDF8" style="width:100%; height:42px; padding:2px; background:#07090E; border:1px solid #1E293B; border-radius:8px; cursor:pointer;">
+
+                <!-- 10 Preset Brand Themes -->
+                <div style="display:grid; grid-template-columns:repeat(auto-fit, minmax(115px, 1fr)); gap:6px; margin-bottom:12px;" id="wlColorPresets">
+                    <button type="button" class="wl-preset-btn active" onclick="selectBrandPreset('#2563EB', '#38BDF8', this)" style="display:flex; align-items:center; gap:6px; background:#07090E; border:1.5px solid #38BDF8; padding:6px 8px; border-radius:6px; cursor:pointer; color:#FFF; font-size:11.5px; font-weight:700; transition:all 0.15s;">
+                        <span style="display:inline-block; width:14px; height:14px; border-radius:50%; background:linear-gradient(135deg, #2563EB 50%, #38BDF8 50%); border:1px solid rgba(255,255,255,0.2);"></span>
+                        <span>Sapphire</span>
+                    </button>
+                    <button type="button" class="wl-preset-btn" onclick="selectBrandPreset('#059669', '#34D399', this)" style="display:flex; align-items:center; gap:6px; background:#07090E; border:1px solid #1E293B; padding:6px 8px; border-radius:6px; cursor:pointer; color:#CBD5E1; font-size:11.5px; font-weight:700; transition:all 0.15s;">
+                        <span style="display:inline-block; width:14px; height:14px; border-radius:50%; background:linear-gradient(135deg, #059669 50%, #34D399 50%); border:1px solid rgba(255,255,255,0.2);"></span>
+                        <span>Emerald</span>
+                    </button>
+                    <button type="button" class="wl-preset-btn" onclick="selectBrandPreset('#7C3AED', '#C084FC', this)" style="display:flex; align-items:center; gap:6px; background:#07090E; border:1px solid #1E293B; padding:6px 8px; border-radius:6px; cursor:pointer; color:#CBD5E1; font-size:11.5px; font-weight:700; transition:all 0.15s;">
+                        <span style="display:inline-block; width:14px; height:14px; border-radius:50%; background:linear-gradient(135deg, #7C3AED 50%, #C084FC 50%); border:1px solid rgba(255,255,255,0.2);"></span>
+                        <span>Violet</span>
+                    </button>
+                    <button type="button" class="wl-preset-btn" onclick="selectBrandPreset('#D97706', '#FBBF24', this)" style="display:flex; align-items:center; gap:6px; background:#07090E; border:1px solid #1E293B; padding:6px 8px; border-radius:6px; cursor:pointer; color:#CBD5E1; font-size:11.5px; font-weight:700; transition:all 0.15s;">
+                        <span style="display:inline-block; width:14px; height:14px; border-radius:50%; background:linear-gradient(135deg, #D97706 50%, #FBBF24 50%); border:1px solid rgba(255,255,255,0.2);"></span>
+                        <span>Amber</span>
+                    </button>
+                    <button type="button" class="wl-preset-btn" onclick="selectBrandPreset('#DC2626', '#F87171', this)" style="display:flex; align-items:center; gap:6px; background:#07090E; border:1px solid #1E293B; padding:6px 8px; border-radius:6px; cursor:pointer; color:#CBD5E1; font-size:11.5px; font-weight:700; transition:all 0.15s;">
+                        <span style="display:inline-block; width:14px; height:14px; border-radius:50%; background:linear-gradient(135deg, #DC2626 50%, #F87171 50%); border:1px solid rgba(255,255,255,0.2);"></span>
+                        <span>Crimson</span>
+                    </button>
+                    <button type="button" class="wl-preset-btn" onclick="selectBrandPreset('#0D9488', '#2DD4BF', this)" style="display:flex; align-items:center; gap:6px; background:#07090E; border:1px solid #1E293B; padding:6px 8px; border-radius:6px; cursor:pointer; color:#CBD5E1; font-size:11.5px; font-weight:700; transition:all 0.15s;">
+                        <span style="display:inline-block; width:14px; height:14px; border-radius:50%; background:linear-gradient(135deg, #0D9488 50%, #2DD4BF 50%); border:1px solid rgba(255,255,255,0.2);"></span>
+                        <span>Teal</span>
+                    </button>
+                    <button type="button" class="wl-preset-btn" onclick="selectBrandPreset('#4F46E5', '#818CF8', this)" style="display:flex; align-items:center; gap:6px; background:#07090E; border:1px solid #1E293B; padding:6px 8px; border-radius:6px; cursor:pointer; color:#CBD5E1; font-size:11.5px; font-weight:700; transition:all 0.15s;">
+                        <span style="display:inline-block; width:14px; height:14px; border-radius:50%; background:linear-gradient(135deg, #4F46E5 50%, #818CF8 50%); border:1px solid rgba(255,255,255,0.2);"></span>
+                        <span>Indigo</span>
+                    </button>
+                    <button type="button" class="wl-preset-btn" onclick="selectBrandPreset('#E11D48', '#FB7185', this)" style="display:flex; align-items:center; gap:6px; background:#07090E; border:1px solid #1E293B; padding:6px 8px; border-radius:6px; cursor:pointer; color:#CBD5E1; font-size:11.5px; font-weight:700; transition:all 0.15s;">
+                        <span style="display:inline-block; width:14px; height:14px; border-radius:50%; background:linear-gradient(135deg, #E11D48 50%, #FB7185 50%); border:1px solid rgba(255,255,255,0.2);"></span>
+                        <span>Rose Gold</span>
+                    </button>
+                    <button type="button" class="wl-preset-btn" onclick="selectBrandPreset('#65A30D', '#A3E635', this)" style="display:flex; align-items:center; gap:6px; background:#07090E; border:1px solid #1E293B; padding:6px 8px; border-radius:6px; cursor:pointer; color:#CBD5E1; font-size:11.5px; font-weight:700; transition:all 0.15s;">
+                        <span style="display:inline-block; width:14px; height:14px; border-radius:50%; background:linear-gradient(135deg, #65A30D 50%, #A3E635 50%); border:1px solid rgba(255,255,255,0.2);"></span>
+                        <span>Volt Lime</span>
+                    </button>
+                    <button type="button" class="wl-preset-btn" onclick="selectBrandPreset('#334155', '#94A3B8', this)" style="display:flex; align-items:center; gap:6px; background:#07090E; border:1px solid #1E293B; padding:6px 8px; border-radius:6px; cursor:pointer; color:#CBD5E1; font-size:11.5px; font-weight:700; transition:all 0.15s;">
+                        <span style="display:inline-block; width:14px; height:14px; border-radius:50%; background:linear-gradient(135deg, #334155 50%, #94A3B8 50%); border:1px solid rgba(255,255,255,0.2);"></span>
+                        <span>Titanium</span>
+                    </button>
+                </div>
+
+                <!-- Custom Hex & Pickers Row -->
+                <div style="display:grid; grid-template-columns:1fr 1fr; gap:12px; margin-bottom:12px;">
+                    <div>
+                        <label style="display:block; font-size:11.5px; font-weight:700; color:#94A3B8; margin-bottom:4px;">Primary Brand Color</label>
+                        <div style="display:flex; gap:6px; align-items:center;">
+                            <input type="color" id="wlColorPrimary" value="#2563EB" oninput="syncColorInput('primary', this.value)" style="width:40px; height:38px; padding:2px; background:#07090E; border:1px solid #1E293B; border-radius:6px; cursor:pointer;">
+                            <input type="text" id="wlColorPrimaryHex" value="#2563EB" maxlength="7" oninput="syncHexInput('primary', this.value)" style="flex:1; padding:9px 10px; background:#07090E; border:1px solid #1E293B; border-radius:6px; color:#FFF; font-family:monospace; font-size:12.5px; font-weight:700; outline:none;">
+                        </div>
+                    </div>
+                    <div>
+                        <label style="display:block; font-size:11.5px; font-weight:700; color:#94A3B8; margin-bottom:4px;">Accent Brand Color</label>
+                        <div style="display:flex; gap:6px; align-items:center;">
+                            <input type="color" id="wlColorAccent" value="#38BDF8" oninput="syncColorInput('accent', this.value)" style="width:40px; height:38px; padding:2px; background:#07090E; border:1px solid #1E293B; border-radius:6px; cursor:pointer;">
+                            <input type="text" id="wlColorAccentHex" value="#38BDF8" maxlength="7" oninput="syncHexInput('accent', this.value)" style="flex:1; padding:9px 10px; background:#07090E; border:1px solid #1E293B; border-radius:6px; color:#FFF; font-family:monospace; font-size:12.5px; font-weight:700; outline:none;">
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Live Brand Identity Preview -->
+                <div style="background:#07090E; border:1px solid #1E293B; border-radius:8px; padding:10px 14px; display:flex; justify-content:space-between; align-items:center; gap:10px;">
+                    <div style="display:flex; align-items:center; gap:8px;">
+                        <span style="font-size:11px; color:#64748B; font-weight:700; text-transform:uppercase;">Preview:</span>
+                        <span id="previewAppBadge" style="font-size:12px; font-weight:800; color:#38BDF8; background:rgba(56,189,248,0.12); border:1px solid rgba(56,189,248,0.3); padding:3px 10px; border-radius:20px;">Apex Telecom AI</span>
+                    </div>
+                    <span id="previewAppBtn" style="padding:6px 14px; font-size:12px; font-weight:800; color:#FFF; background:linear-gradient(135deg, #2563EB, #38BDF8); border-radius:6px; box-shadow:0 2px 10px rgba(37,99,235,0.35);">
+                        Client Portal ➔
+                    </span>
                 </div>
             </div>
 
@@ -1323,6 +1393,71 @@ function switchExperienceTab(tab) {
         document.getElementById('expTabGhl').classList.add('active');
     }
 }
+
+function selectBrandPreset(primary, accent, btn) {
+    document.querySelectorAll('.preset-color-pill').forEach(p => p.classList.remove('active'));
+    if (btn) btn.classList.add('active');
+    
+    document.getElementById('wlColorPrimary').value = primary;
+    document.getElementById('wlColorPrimaryHex').value = primary.toUpperCase();
+    document.getElementById('wlColorAccent').value = accent;
+    document.getElementById('wlColorAccentHex').value = accent.toUpperCase();
+    updateBrandPreview();
+}
+
+function syncColorInput(type, hex) {
+    if (type === 'primary') {
+        document.getElementById('wlColorPrimaryHex').value = hex.toUpperCase();
+    } else {
+        document.getElementById('wlColorAccentHex').value = hex.toUpperCase();
+    }
+    document.querySelectorAll('.preset-color-pill').forEach(p => p.classList.remove('active'));
+    updateBrandPreview();
+}
+
+function syncHexInput(type, val) {
+    let clean = val.trim();
+    if (!clean.startsWith('#')) clean = '#' + clean;
+    if (/^#[0-9A-Fa-f]{6}$/.test(clean)) {
+        if (type === 'primary') {
+            document.getElementById('wlColorPrimary').value = clean;
+        } else {
+            document.getElementById('wlColorAccent').value = clean;
+        }
+        document.querySelectorAll('.preset-color-pill').forEach(p => p.classList.remove('active'));
+        updateBrandPreview();
+    }
+}
+
+function updateBrandPreview() {
+    const primary = document.getElementById('wlColorPrimary').value;
+    const accent = document.getElementById('wlColorAccent').value;
+    const appName = document.getElementById('wlAppName').value.trim() || 'ACME Auto-SMS';
+    
+    const previewAppName = document.getElementById('wlPreviewAppName');
+    if (previewAppName) previewAppName.textContent = appName;
+
+    const previewBadge = document.getElementById('wlPreviewBadge');
+    if (previewBadge) {
+        previewBadge.style.color = primary;
+        previewBadge.style.borderColor = primary + '44';
+        previewBadge.style.background = primary + '18';
+    }
+
+    const previewBtn = document.getElementById('wlPreviewBtn');
+    if (previewBtn) {
+        previewBtn.style.background = `linear-gradient(135deg, ${primary}, ${accent})`;
+    }
+}
+
+// Hook input changes to preview
+document.addEventListener('DOMContentLoaded', () => {
+    const appInput = document.getElementById('wlAppName');
+    if (appInput) {
+        appInput.addEventListener('input', updateBrandPreview);
+    }
+    updateBrandPreview();
+});
 
 async function handleWhiteLabelSubmit(e) {
     e.preventDefault();
