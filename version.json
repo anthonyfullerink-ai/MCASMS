@@ -1,10 +1,10 @@
 {
-  "versionCode": 38,
-  "versionName": "1.9.2",
+  "versionCode": 39,
+  "versionName": "1.9.3",
   "downloadUrl": "https://raw.githubusercontent.com/anthonyfullerink-ai/MCASMS/main/MissedCallAutoSMS.apk",
   "proDownloadUrl": "https://raw.githubusercontent.com/anthonyfullerink-ai/MCASMS/main/MissedCallAutoSMS-Pro.apk",
-  "releaseNotes": "🚀 v1.9.2 Release: Direct Google Account & Specific Calendar Picker\n• 👤 Google Account Discovery: Select from any Google account authenticated on your device\n• 📅 Specific Calendar Selection: Pick target booking calendar (Work, Jobs, Appointments, Primary) with native color badges\n• 🧪 Test Event Creation: 1-tap live verification inserting sample events directly into Google Calendar\n• 🔄 Automated Booking Sync: AI Receptionist and SMS agent book appointments directly into your selected calendar",
+  "releaseNotes": "🚀 v1.9.3 Release: Streamlined Call Forwarding Controls\n• 🔀 AI Call Forwarding Toggle: Replaced raw phone number display with clean ON/OFF toggle controls\n• 📞 1-Tap Carrier Activation: One-tap 'Turn ON' and 'Turn OFF' carrier forwarding setup\n• 🔒 Private Routing: Internal forwarding numbers are kept seamless and confidential under the hood\n• 🟢 Real-time Status: Visual indicator showing whether unanswered call forwarding is active or paused",
   "mandatory": false,
   "minSupportedVersion": 1,
-  "updatedAt": "2026-09-30T13:52:48.983Z"
+  "updatedAt": "2026-09-30T14:10:01.445Z"
 }

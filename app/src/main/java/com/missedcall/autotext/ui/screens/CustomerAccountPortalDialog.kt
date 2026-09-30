@@ -515,7 +515,7 @@ fun CustomerAccountPortalDialog(
 
                                 Spacer(modifier = Modifier.height(4.dp))
                                 Text(
-                                    text = "Carrier forwarding: ${liveForwardingNumber} (${liveCarrierCode} active). Unanswered calls route directly to Riley AI.",
+                                    text = "Carrier forwarding active. Unanswered calls route directly to your AI Receptionist.",
                                     fontSize = 11.sp,
                                     color = MaterialTheme.colorScheme.onSurfaceVariant
                                 )

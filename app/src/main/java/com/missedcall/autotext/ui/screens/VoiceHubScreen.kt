@@ -8,11 +8,14 @@ import android.widget.Toast
 import java.util.Locale
 import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.foundation.BorderStroke
+import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
+import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.ui.draw.clip
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.*
 import androidx.compose.material3.*
@@ -796,6 +799,7 @@ fun VoiceHubScreen(
                 modifier = Modifier.fillMaxWidth()
             ) {
                 Column(modifier = Modifier.padding(16.dp)) {
+                    // Header Row
                     Row(
                         modifier = Modifier.fillMaxWidth(),
                         horizontalArrangement = Arrangement.SpaceBetween,
@@ -807,16 +811,21 @@ fun VoiceHubScreen(
                         ) {
                             Surface(
                                 shape = RoundedCornerShape(10.dp),
-                                color = SapphireContainerSubtle,
+                                color = if (settings.voiceReceptionistEnabled && isVoiceActive) ActiveGreenContainer else SapphireContainerSubtle,
                                 modifier = Modifier.size(36.dp)
                             ) {
                                 Box(contentAlignment = Alignment.Center) {
-                                    Icon(Icons.Default.PhoneCallback, contentDescription = null, tint = SapphireLight, modifier = Modifier.size(18.dp))
+                                    Icon(
+                                        Icons.Default.PhoneForwarded,
+                                        contentDescription = null,
+                                        tint = if (settings.voiceReceptionistEnabled && isVoiceActive) ActiveGreenText else SapphireLight,
+                                        modifier = Modifier.size(18.dp)
+                                    )
                                 }
                             }
                             Spacer(modifier = Modifier.width(10.dp))
                             Text(
-                                text = "Assigned Inbound AI Line",
+                                text = "AI Call Forwarding",
                                 fontWeight = FontWeight.Bold,
                                 style = MaterialTheme.typography.titleSmall,
                                 color = TextHeading,
@@ -826,85 +835,180 @@ fun VoiceHubScreen(
                         }
                         Surface(
                             shape = RoundedCornerShape(8.dp),
-                            color = if (isVoiceActive) SapphireContainerSubtle else RedContainerSubtle
+                            color = when {
+                                !isVoiceActive -> RedContainerSubtle
+                                settings.voiceReceptionistEnabled -> ActiveGreenContainer
+                                else -> DarkCardBorder
+                            }
                         ) {
                             Text(
-                                text = if (isVoiceActive) "24/7 AI LINE" else "LOCKED",
+                                text = when {
+                                    !isVoiceActive -> "LOCKED"
+                                    settings.voiceReceptionistEnabled -> "FORWARDING ON"
+                                    else -> "FORWARDING OFF"
+                                },
                                 modifier = Modifier.padding(horizontal = 8.dp, vertical = 3.dp),
                                 style = MaterialTheme.typography.labelSmall,
                                 fontWeight = FontWeight.Bold,
-                                color = if (isVoiceActive) SapphireLight else RedError,
+                                color = when {
+                                    !isVoiceActive -> RedError
+                                    settings.voiceReceptionistEnabled -> ActiveGreenText
+                                    else -> TextMuted
+                                },
                                 softWrap = false
                             )
                         }
                     }
 
-                    Spacer(modifier = Modifier.height(10.dp))
-
-                    Text(
-                        text = if (isVoiceActive) settings.voiceReceptionistForwardingNumber.ifBlank { "+1 (732) 660-9121" } else "+1 (732) •••-•••• (Locked)",
-                        style = MaterialTheme.typography.headlineSmall,
-                        fontWeight = FontWeight.ExtraBold,
-                        color = if (isVoiceActive) TextHeading else TextMuted
-                    )
-
-                    Spacer(modifier = Modifier.height(6.dp))
-                    Text(
-                        text = "Unanswered calls forward to this line via your carrier (*71). AI answers immediately, captures customer details, and sends you instant alerts.",
-                        style = MaterialTheme.typography.bodySmall,
-                        color = TextBody
-                    )
-
                     Spacer(modifier = Modifier.height(14.dp))
 
+                    // Master Toggle Surface Box
+                    Surface(
+                        shape = RoundedCornerShape(12.dp),
+                        color = Color(0xFF0F172A),
+                        border = BorderStroke(1.dp, if (settings.voiceReceptionistEnabled && isVoiceActive) ActiveGreenText.copy(alpha = 0.4f) else DarkCardBorder),
+                        modifier = Modifier.fillMaxWidth()
+                    ) {
+                        Row(
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .padding(14.dp),
+                            verticalAlignment = Alignment.CenterVertically,
+                            horizontalArrangement = Arrangement.SpaceBetween
+                        ) {
+                            Column(modifier = Modifier.weight(1f).padding(end = 12.dp)) {
+                                Row(verticalAlignment = Alignment.CenterVertically) {
+                                    Box(
+                                        modifier = Modifier
+                                            .size(8.dp)
+                                            .clip(CircleShape)
+                                            .background(if (settings.voiceReceptionistEnabled && isVoiceActive) ActiveGreenText else Color(0xFF64748B))
+                                    )
+                                    Spacer(modifier = Modifier.width(8.dp))
+                                    Text(
+                                        text = if (settings.voiceReceptionistEnabled && isVoiceActive) "Call Forwarding Active" else "Call Forwarding Off",
+                                        fontWeight = FontWeight.Bold,
+                                        fontSize = 15.sp,
+                                        color = if (settings.voiceReceptionistEnabled && isVoiceActive) ActiveGreenText else TextHeading
+                                    )
+                                }
+                                Spacer(modifier = Modifier.height(4.dp))
+                                Text(
+                                    text = if (settings.voiceReceptionistEnabled && isVoiceActive)
+                                        "Unanswered calls forward to your AI Receptionist 24/7."
+                                    else
+                                        "Calls ring normally. Forwarding is currently paused.",
+                                    fontSize = 12.sp,
+                                    color = TextBody
+                                )
+                            }
+
+                            Switch(
+                                checked = settings.voiceReceptionistEnabled && isVoiceActive,
+                                onCheckedChange = { willEnable ->
+                                    if (!isVoiceActive) {
+                                        Toast.makeText(context, "🔒 Voice Receptionist Subscription Required ($9.99/mo)", Toast.LENGTH_LONG).show()
+                                        showAccountPortal = true
+                                        return@Switch
+                                    }
+                                    if (willEnable) {
+                                        onSettingsChanged(settings.copy(voiceReceptionistEnabled = true))
+                                        try {
+                                            val dialCode = carrierCodes.activateCode
+                                            val intent = Intent(Intent.ACTION_DIAL, Uri.parse("tel:${Uri.encode(dialCode)}"))
+                                            context.startActivity(intent)
+                                            Toast.makeText(context, "📞 Dialer opened. Tap Call to activate carrier forwarding!", Toast.LENGTH_LONG).show()
+                                        } catch (e: Exception) {
+                                            Toast.makeText(context, "Could not open dialer", Toast.LENGTH_SHORT).show()
+                                        }
+                                    } else {
+                                        onSettingsChanged(settings.copy(voiceReceptionistEnabled = false))
+                                        try {
+                                            val deactCode = carrierCodes.deactivateCode
+                                            val intent = Intent(Intent.ACTION_DIAL, Uri.parse("tel:${Uri.encode(deactCode)}"))
+                                            context.startActivity(intent)
+                                            Toast.makeText(context, "📞 Dialer opened. Tap Call to turn off carrier forwarding!", Toast.LENGTH_LONG).show()
+                                        } catch (e: Exception) {
+                                            Toast.makeText(context, "Could not open dialer", Toast.LENGTH_SHORT).show()
+                                        }
+                                    }
+                                },
+                                colors = SwitchDefaults.colors(
+                                    checkedThumbColor = Color.White,
+                                    checkedTrackColor = EmeraldSuccess,
+                                    uncheckedThumbColor = TextMuted,
+                                    uncheckedTrackColor = DarkCardBorder
+                                )
+                            )
+                        }
+                    }
+
+                    Spacer(modifier = Modifier.height(12.dp))
+
+                    // 1-Tap ON / OFF Quick Buttons
                     Row(
                         modifier = Modifier.fillMaxWidth(),
-                        horizontalArrangement = Arrangement.spacedBy(8.dp)
+                        horizontalArrangement = Arrangement.spacedBy(10.dp)
                     ) {
                         Button(
                             onClick = {
-                                if (isVoiceActive) {
-                                    try {
-                                        val dialCode = carrierCodes.activateCode
-                                        val intent = Intent(Intent.ACTION_DIAL, Uri.parse("tel:${Uri.encode(dialCode)}"))
-                                        context.startActivity(intent)
-                                        Toast.makeText(context, "📞 Dialer opened with $dialCode. Tap CALL to confirm with your carrier!", Toast.LENGTH_LONG).show()
-                                    } catch (e: Exception) {
-                                        Toast.makeText(context, "Could not open dialer", Toast.LENGTH_SHORT).show()
-                                    }
-                                } else {
+                                if (!isVoiceActive) {
                                     Toast.makeText(context, "🔒 Voice Receptionist Subscription Required ($9.99/mo)", Toast.LENGTH_LONG).show()
                                     showAccountPortal = true
+                                    return@Button
+                                }
+                                onSettingsChanged(settings.copy(voiceReceptionistEnabled = true))
+                                try {
+                                    val dialCode = carrierCodes.activateCode
+                                    val intent = Intent(Intent.ACTION_DIAL, Uri.parse("tel:${Uri.encode(dialCode)}"))
+                                    context.startActivity(intent)
+                                    Toast.makeText(context, "📞 Opening dialer... Tap Call to activate forwarding!", Toast.LENGTH_LONG).show()
+                                } catch (e: Exception) {
+                                    Toast.makeText(context, "Could not open dialer", Toast.LENGTH_SHORT).show()
                                 }
                             },
-                            colors = if (isVoiceActive) ButtonDefaults.buttonColors(containerColor = SapphirePrimary) else ButtonDefaults.buttonColors(containerColor = DarkCardBorder),
+                            colors = ButtonDefaults.buttonColors(
+                                containerColor = if (settings.voiceReceptionistEnabled && isVoiceActive) EmeraldSuccess else SapphirePrimary
+                            ),
                             shape = RoundedCornerShape(10.dp),
-                            modifier = Modifier.weight(1.2f)
+                            modifier = Modifier.weight(1f)
                         ) {
-                            Icon(if (isVoiceActive) Icons.Default.Call else Icons.Default.Lock, contentDescription = null, modifier = Modifier.size(16.dp), tint = if (isVoiceActive) Color.White else TextMuted)
+                            Icon(Icons.Default.PhoneForwarded, contentDescription = null, modifier = Modifier.size(16.dp), tint = Color.White)
                             Spacer(modifier = Modifier.width(6.dp))
                             Text(
-                                text = if (isVoiceActive) "Dial *71 Activate" else "Dial *71 (Locked)",
+                                text = "Turn ON",
                                 fontWeight = FontWeight.Bold,
-                                color = if (isVoiceActive) Color.White else TextMuted
+                                color = Color.White,
+                                fontSize = 12.sp
                             )
                         }
 
                         OutlinedButton(
                             onClick = {
+                                onSettingsChanged(settings.copy(voiceReceptionistEnabled = false))
                                 try {
                                     val deactCode = carrierCodes.deactivateCode
                                     val intent = Intent(Intent.ACTION_DIAL, Uri.parse("tel:${Uri.encode(deactCode)}"))
                                     context.startActivity(intent)
+                                    Toast.makeText(context, "📞 Opening dialer... Tap Call to turn off forwarding!", Toast.LENGTH_LONG).show()
                                 } catch (e: Exception) {
                                     Toast.makeText(context, "Could not open dialer", Toast.LENGTH_SHORT).show()
                                 }
                             },
                             shape = RoundedCornerShape(10.dp),
-                            border = BorderStroke(1.dp, DarkCardBorder),
+                            border = BorderStroke(1.dp, if (!settings.voiceReceptionistEnabled) Color(0xFFEF4444).copy(alpha = 0.5f) else DarkCardBorder),
+                            colors = ButtonDefaults.outlinedButtonColors(
+                                contentColor = if (!settings.voiceReceptionistEnabled) Color(0xFFEF4444) else TextHeading
+                            ),
                             modifier = Modifier.weight(1f)
                         ) {
-                            Text("Revert (*73)", color = TextHeading)
+                            Icon(Icons.Default.CallEnd, contentDescription = null, modifier = Modifier.size(16.dp))
+                            Spacer(modifier = Modifier.width(6.dp))
+                            Text(
+                                text = "Turn OFF",
+                                fontWeight = FontWeight.SemiBold,
+                                fontSize = 12.sp
+                            )
                         }
                     }
 
