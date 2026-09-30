@@ -6,5 +6,5 @@
   "releaseNotes": "🚀 v1.9.2 Release: Direct Google Account & Specific Calendar Picker\n• 👤 Google Account Discovery: Select from any Google account authenticated on your device\n• 📅 Specific Calendar Selection: Pick target booking calendar (Work, Jobs, Appointments, Primary) with native color badges\n• 🧪 Test Event Creation: 1-tap live verification inserting sample events directly into Google Calendar\n• 🔄 Automated Booking Sync: AI Receptionist and SMS agent book appointments directly into your selected calendar",
   "mandatory": false,
   "minSupportedVersion": 1,
-  "updatedAt": "2026-09-30T13:46:34.739Z"
+  "updatedAt": "2026-09-30T13:52:48.983Z"
 }

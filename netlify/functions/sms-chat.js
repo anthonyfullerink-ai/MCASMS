@@ -222,6 +222,12 @@ exports.handler = async (event) => {
     const shopInstructions = (payload.shopInstructions || '').trim();
     const maxReplies = parseInt(payload.maxReplies || 5, 10);
     const emergencyAlertsEnabled = payload.emergencyAlertsEnabled !== false;
+    const calendarConnected = payload.calendarConnected === true;
+    const calendarWorkingHours = payload.calendarWorkingHours || '09:00 - 18:00';
+    const calendarWorkingDays = payload.calendarWorkingDays || 'Monday through Friday';
+    const slotDurationMinutes = parseInt(payload.slotDurationMinutes || 60, 10);
+    const travelBufferMinutes = parseInt(payload.travelBufferMinutes || 30, 10);
+    const calendarDisplayName = payload.calendarDisplayName || 'Primary Calendar';
 
     // Action: Clear Takeover / Reset Queue Cooldowns
     if (payload.action === 'clear_takeover' || payload.action === 'reset_queue') {
@@ -535,6 +541,18 @@ BUSINESS TYPE: MOBILE FIELD TRADE (e.g., Plumber, Electrician, HVAC, Contractor,
     if (isEmergency) {
       systemInstruction += `
 NOTE: The customer's message indicates an urgent or emergency situation. Acknowledge the emergency with urgency, reassure them that our team is on alert, and ask for their exact address if not already provided.
+`;
+    }
+
+    if (calendarConnected) {
+      systemInstruction += `
+GOOGLE CALENDAR BOOKING RULES:
+- Target Booking Calendar: "${calendarDisplayName}"
+- Active Business Operating Window: ${calendarWorkingHours} on ${calendarWorkingDays}.
+- Appointment Duration: ${slotDurationMinutes} minutes (with ${travelBufferMinutes} min travel/padding buffer).
+- When a client asks to schedule or book, strictly propose times that fall within this operating window (${calendarWorkingHours}, ${calendarWorkingDays}).
+- Never agree to a booking outside of these active working hours.
+- When an appointment is mutually confirmed, finalize the exact day, arrival window/time, and client details so it syncs immediately to Google Calendar.
 `;
     }
 

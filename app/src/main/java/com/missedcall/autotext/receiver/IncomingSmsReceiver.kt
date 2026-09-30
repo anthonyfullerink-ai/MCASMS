@@ -232,6 +232,9 @@ class IncomingSmsReceiver : BroadcastReceiver() {
             }
             val conversationHistory = getRecentConversationThread(context, senderNumber, messageText)
 
+            val workingHoursStr = if (settings.businessHoursEnabled) "${settings.schedule.startTime} - ${settings.schedule.endTime}" else "24/7"
+            val workingDaysStr = if (settings.businessHoursEnabled) settings.schedule.activeDays.joinToString(", ") else "Every day"
+
             val payload = org.json.JSONObject().apply {
                 put("licenseKey", settings.licenseKey)
                 put("senderPhone", senderNumber)
@@ -244,6 +247,13 @@ class IncomingSmsReceiver : BroadcastReceiver() {
                 put("maxReplies", settings.aiSmsMaxRepliesPerContact)
                 put("emergencyAlertsEnabled", settings.aiSmsEmergencyAlertsEnabled)
                 put("conversationHistory", conversationHistory)
+                put("calendarConnected", settings.aiSmsCalendarConnected)
+                put("calendarAccountName", settings.aiSmsCalendarAccountName)
+                put("calendarDisplayName", settings.aiSmsCalendarDisplayName)
+                put("calendarWorkingHours", workingHoursStr)
+                put("calendarWorkingDays", workingDaysStr)
+                put("slotDurationMinutes", settings.aiSmsSlotDurationMinutes)
+                put("travelBufferMinutes", settings.aiSmsTravelBufferMinutes)
             }
             conn.outputStream.use { it.write(payload.toString().toByteArray(java.nio.charset.StandardCharsets.UTF_8)) }
             val code = conn.responseCode
