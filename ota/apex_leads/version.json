@@ -1,11 +1,11 @@
 {
   "agencyId": "apex_leads",
   "appName": "Apex CallShield",
-  "versionCode": 39,
-  "versionName": "1.9.3",
+  "versionCode": 40,
+  "versionName": "2.0.0",
   "downloadUrl": "https://raw.githubusercontent.com/anthonyfullerink-ai/MCASMS/main/ota/apex_leads/Apex_CallShield-standard.apk",
-  "releaseNotes": "🚀 Welcome to Apex CallShield (v1.9.3)\n• 24/7 Inbound Call Protection & Auto SMS\n• Dedicated Voice Receptionist & Smart Routing\n• Google Calendar Instant Scheduling",
+  "releaseNotes": "🚀 Welcome to Apex CallShield (v2.0.0)\n• 24/7 Inbound Call Protection & Auto SMS\n• Dedicated Voice Receptionist & Smart Routing\n• Google Calendar Instant Scheduling & Client Portal",
   "mandatory": false,
   "minSupportedVersion": 1,
-  "updatedAt": "2026-09-30T15:22:24.813Z"
+  "updatedAt": "2026-09-30T18:37:00.000Z"
 }

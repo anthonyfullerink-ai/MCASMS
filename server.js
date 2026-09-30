@@ -21,13 +21,13 @@ const MIME_TYPES = {
 };
 
 const LATEST_APP_VERSION = {
-  versionCode: 25,
-  versionName: '1.7.8',
+  versionCode: 40,
+  versionName: '2.0.0',
   downloadUrl: 'https://raw.githubusercontent.com/anthonyfullerink-ai/MCASMS/main/MissedCallAutoSMS.apk',
-  proDownloadUrl: 'https://raw.githubusercontent.com/anthonyfullerink-ai/MCASMS/main/MissedCallAutoSMS.apk',
-  releaseNotes: '• 💳 100% In-App Stripe Checkout (Zero Browser Redirects)\n• 🎁 10 FREE Test Minutes on $9.99/mo Voice Activation\n• 🛡️ Auto-Pause at 0.0 Mins & Auto-Resume on Reload\n• 🔒 Full Screen Paywall Gates for Voice & Automations',
-  mandatory: true,
-  minSupportedVersion: 23
+  proDownloadUrl: 'https://raw.githubusercontent.com/anthonyfullerink-ai/MCASMS/main/MissedCallAutoSMS-Pro.apk',
+  releaseNotes: '• 🚀 Major Release v2.0 (Build 40): Client Portal & Voice Automation Suite\n• 🌐 Turnkey Client Portal: Audio call logs, transcripts & interactive SMS\n• 📋 Autonomous AI Task Engine: Automatic action items from calls & SMS\n• 💼 White-Label Fleet Support & Remote Prompt Sync\n• 🛡️ Cellular P2P Carrier Reliability & Dual-SIM Optimizations',
+  mandatory: false,
+  minSupportedVersion: 1
 };
 
 
