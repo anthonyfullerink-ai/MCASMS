@@ -143,7 +143,28 @@
   to = "/.netlify/functions/support-gateway"
   status = 200
 
-# API Route: Vapi Webhook
+# API Route: GridAI Voice Webhook & Aliases
+[[redirects]]
+  from = "/api/voice/webhook"
+  to = "/.netlify/functions/vapi-webhook"
+  status = 200
+
+[[redirects]]
+  from = "/api/voice/web-token"
+  to = "/.netlify/functions/vapi-web-token"
+  status = 200
+
+[[redirects]]
+  from = "/api/voice/usage"
+  to = "/.netlify/functions/vapi-usage"
+  status = 200
+
+[[redirects]]
+  from = "/api/voice/*"
+  to = "/.netlify/functions/vapi-live"
+  status = 200
+
+# API Route: Vapi Webhook (Legacy / Direct Provider)
 [[redirects]]
   from = "/api/vapi/webhook"
   to = "/.netlify/functions/vapi-webhook"

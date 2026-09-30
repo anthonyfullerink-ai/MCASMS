@@ -2087,7 +2087,7 @@
                 <span class="faq-icon">▼</span>
             </div>
             <div class="faq-answer">
-                <strong>Yes!</strong> While Missed Call Auto SMS is built as a 100% subscription-free SMS appliance ($49.99 lifetime), we offer an optional <strong>Autonomous Front Desk bundle ($9.99/mo)</strong>. It provides both a <strong>24/7 AI Voice Receptionist</strong> (answering via carrier <code>*71</code> conditional forwarding with 15 free test minutes) and our new <strong>2-Way Conversational AI SMS Engine</strong> that holds multi-turn texting dialogues with clients from your real SIM with an automatic 30-minute Human Takeover Safeguard. You can also connect your own Vapi/Twilio credentials for <strong>$0/mo (Free BYOK)</strong>.
+                <strong>Yes!</strong> While Missed Call Auto SMS is built as a 100% subscription-free SMS appliance ($49.99 lifetime), we offer an optional <strong>Autonomous Front Desk bundle ($9.99/mo)</strong>. It provides both a <strong>24/7 AI Voice Receptionist</strong> (answering via carrier <code>*71</code> conditional forwarding with 15 free test minutes) and our new <strong>2-Way Conversational AI SMS Engine</strong> that holds multi-turn texting dialogues with clients from your real SIM with an automatic 30-minute Human Takeover Safeguard. You can also connect your own GridAI/Twilio credentials for <strong>$0/mo (Free BYOK)</strong>.
             </div>
         </div>
 
@@ -2336,7 +2336,7 @@
                     <h4 style="font-size: 18px; margin: 4px 0; color: #FFF;">Free BYOK</h4>
                     <div style="font-size: 24px; font-weight: 900; color: #FFF; margin-bottom: 8px;">$0.00 <span style="font-size: 12px; color: var(--muted);">/ month</span></div>
                     <div style="font-size: 12px; color: #CBD5E0; font-weight: 700; margin-bottom: 12px;">Bring Your Own Keys</div>
-                    <p style="font-size: 11.5px; color: #CBD5E0; margin-bottom: 16px; flex-grow: 1;">Plug in personal Vapi/OpenAI keys for raw wholesale costs with zero markup.</p>
+                    <p style="font-size: 11.5px; color: #CBD5E0; margin-bottom: 16px; flex-grow: 1;">Plug in personal GridAI/OpenAI keys for raw wholesale costs with zero markup.</p>
                     <a href="/developers" class="cta-btn" style="width: 100%; background: rgba(168, 85, 247, 0.2); border: 1px solid #A855F7; color: #D8B4FE; font-size: 13px; padding: 10px; font-weight: 800; text-decoration: none; display: block; text-align: center;">
                         View BYOK Docs
                     </a>
@@ -3039,7 +3039,7 @@
         }
 
         // 4. TELEPHONY & 24/7 AI VOICE RECEPTIONIST (*71 / *73 / BYOK / 14-DAY TRIAL)
-        if (q.includes('voice') || q.includes('receptionist') || q.includes('vapi') || q.includes('forward') || 
+        if (q.includes('voice') || q.includes('receptionist') || q.includes('gridai') || q.includes('forward') || 
             q.includes('*71') || q.includes('*73') || q.includes('##004#') || q.includes('byok') || 
             q.includes('telephony') || q.includes('minutes') || q.includes('call routing') || q.includes('29')) {
             aiPendingAction = null;
@@ -3050,7 +3050,7 @@
                    `&nbsp;&nbsp;▸ <em>T-Mobile / GSM</em>: Dial <code>**61*[Your_AI_Number]**15#</code> to activate, <code>##004#</code> to cancel.<br>` +
                     `• <strong>AI Voice Receptionist ($9.99/mo) — RECOMMENDED</strong>: In-app add-on with 24/7 voice answering, 15 free test minutes on activation, and authentic carrier SIM confirmations.<br>` +
                     `• <strong>Flexible Usage Credit Packs</strong>: Volume discounts with bonus minutes: $10 (40 mins), $25 (115 mins), $50 (250 mins), $100 (550 mins).<br>` +
-                    `• <strong>Free BYOK Option ($0/mo)</strong>: Bring your own Vapi/Twilio API keys to run 100% free with $0 platform markup!<br>` +
+                    `• <strong>Free BYOK Option ($0/mo)</strong>: Bring your own GridAI/Twilio API keys to run 100% free with $0 platform markup!<br>` +
                     `• <strong>Instant Fallback</strong>: Dial <code>*73</code> or <code>##004#</code> anytime from your phone dialer to instantly restore regular voicemail.<br><br>` +
                     `<button onclick="openVoiceAddonModal()" class="pill" style="background:linear-gradient(135deg,#A855F7,#00E676); color:#000; font-weight:800;">🎙️ Explore AI Voice Plans</button>`;
         }

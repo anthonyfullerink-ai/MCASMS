@@ -4,11 +4,11 @@
 
 The **Turnkey AI Voice Receptionist** adds an autonomous conversational voice layer to Missed Call Auto SMS.
 
-While the native Android app continues sending instant text auto-replies over the phone's physical SIM card, unanswered incoming calls automatically forward to an AI-powered voice assistant (powered by Vapi / Twilio SIP) after ringing the contractor's handset for 15 seconds.
+While the native Android app continues sending instant text auto-replies over the phone's physical SIM card, unanswered incoming calls automatically forward to an AI-powered voice assistant (powered by GridAI Voice / Carrier SIP) after ringing the contractor's handset for 15 seconds.
 
 Contractors can choose between:
 1. **Managed Pro ($29/mo with 14-Day Free Trial)**: Turnkey setup with dedicated forwarding number, 200 included monthly minutes, and automated provisioning.
-2. **BYOK ($0/mo)**: Free Bring-Your-Own-Key integration for power users supplying their own Vapi API Key and Assistant ID.
+2. **BYOK ($0/mo)**: Free Bring-Your-Own-Key integration for power users supplying their own GridAI / Voice Provider API Key and Assistant ID.
 
 ---
 
@@ -31,7 +31,7 @@ Contractors can choose between:
               at $0 additional cost             Forwarding (*71 / *004*)
                                                             │
                                                             ▼
-                                                [ Dedicated Vapi Number ]
+                                                [ Dedicated GridAI Number ]
                                                             │
                                                             ▼
                                                 [ POST /api/vapi/webhook ]
@@ -56,7 +56,7 @@ Contractors can choose between:
 
 1. **Cell Ring Window (0–15s)**: Calls ring the contractor's personal phone first. If answered, zero AI minutes or fees are consumed.
 2. **Conditional Forwarding**: If missed, busy, or rejected, the carrier switches audio to the dedicated AI receptionist number.
-3. **Context Injection**: The Vapi server contacts `/api/vapi/webhook`, fetching the contractor's business name, status dial selection, technician name, and custom greeting.
+3. **Context Injection**: The GridAI server contacts `/api/vapi/webhook`, fetching the contractor's business name, status dial selection, technician name, and custom greeting.
 4. **Conversational Guardrails**: Spoken brevity (under 20 words/sentence), mandatory phonetic street address read-back, and emergency triage.
 5. **Post-Call Dispatch**: Immediate lead text sent to the contractor, push notification posted to the app inbox, and a personalized follow-up SMS dispatched from the contractor's own SIM card.
 
@@ -117,7 +117,7 @@ Android security prevents apps from silently modifying carrier call forwarding r
 ### 2. Dynamic Call Routing & Context Injection
 - **Method**: `POST`
 - **Path**: `/api/vapi/webhook`
-- **Invoked By**: Vapi Inbound Assistant Webhook
+- **Invoked By**: GridAI Inbound Assistant Webhook
 - **Event Types**:
   - `assistant-request`: Dynamically injects business profile, status dial instructions, and trade parameters.
   - `end-of-call-report`: Delivers transcript, audio recording URI, structured lead summary, and triggers native SIM follow-up SMS queue.

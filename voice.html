@@ -8,7 +8,7 @@
     <!-- Primary Meta Tags -->
     <meta name="title" content="Autonomous Front Desk | 24/7 AI Voice Receptionist + Conversational AI SMS ($9.99/mo)">
     <meta name="description" content="Never miss another customer. 24/7 AI Voice Receptionist answers calls in 15 seconds, plus 2-Way Conversational AI SMS engages leads via your real carrier SIM, books appointments, and auto-pauses when you text directly.">
-    <meta name="keywords" content="ai phone receptionist, conversational ai sms, ai voice assistant, missed call auto text, vapi receptionist, contractor answering service, small business ai receptionist, automated front desk">
+    <meta name="keywords" content="ai phone receptionist, conversational ai sms, ai voice assistant, missed call auto text, gridai receptionist, contractor answering service, small business ai receptionist, automated front desk">
     <link rel="canonical" href="https://missedcallautosms.com/voice">
 
     <!-- Favicon & Mobile Icons -->
@@ -1348,7 +1348,7 @@
             <a href="https://buy.stripe.com/5kQ5kDbBI8hkdao8WZ2go0c" class="btn-super-cta" style="padding: 16px 36px; font-size: 16px;">
                 🎁 Start 3-Day Free Trial ($0.00 Today)
             </a>
-            <button onclick="startVapiCall()" class="btn-outline" style="padding: 16px 30px; font-size: 16px;">
+            <button onclick="startVoiceCall()" class="btn-outline" style="padding: 16px 30px; font-size: 16px;">
                 🎙️ Speak With Live Demonstration Agent
             </button>
         </div>
@@ -1372,7 +1372,7 @@
             </span>
         </div>
 
-        <!-- Integrated Live Vapi WebRTC Call Widget -->
+        <!-- Integrated Live GridAI WebRTC Call Widget -->
         <div class="call-demo-container">
             <div class="prompt-chips-title">💡 Speak Your Niche &amp; Business Name Or Click Any Example Below:</div>
             <div class="prompt-chips-grid">
@@ -1414,7 +1414,7 @@
 
                 <!-- Idle State -->
                 <div id="callIdleControls">
-                    <button class="btn-call-start" id="startCallBtn" onclick="startVapiCall()">
+                    <button class="btn-call-start" id="startCallBtn" onclick="startVoiceCall()">
                         <span>📞</span>
                         <span>Start 1-Tap Live Demo Call (Speak With Demonstration Agent)</span>
                     </button>
@@ -1428,7 +1428,7 @@
                 <!-- Connecting State -->
                 <div id="callConnectingControls" style="display: none;">
                     <p style="color: #FBBF24; font-weight: 700; margin: 10px 0;">
-                        ⏳ Connecting to Demonstration Agent via Vapi WebRTC...
+                        ⏳ Connecting to Demonstration Agent via GridAI WebRTC...
                     </p>
                 </div>
 
@@ -1445,7 +1445,7 @@
                             <span id="muteIcon">🎙️</span>
                             <span id="muteText">Mute Mic</span>
                         </button>
-                        <button class="btn-call-end" onclick="endVapiCall()">
+                        <button class="btn-call-end" onclick="endVoiceCall()">
                             <span>🔴</span>
                             <span>End Call</span>
                         </button>
@@ -1709,11 +1709,11 @@
 
                 <div class="faq-item" onclick="toggleFaq(this)">
                     <div class="faq-header">
-                        <span>Can I use my own Vapi / OpenAI keys (BYOK)?</span>
+                        <span>Can I use my own GridAI / OpenAI keys (BYOK)?</span>
                         <span class="chevron-icon">▼</span>
                     </div>
                     <div class="faq-body">
-                        Yes! If you prefer to manage your own Vapi account and telephony numbers, Missed Call Auto SMS supports Bring-Your-Own-Key (BYOK) mode. You can enter your own credentials directly inside the app settings with zero platform surcharges.
+                        Yes! If you prefer to manage your own GridAI / OpenAI account and telephony numbers, Missed Call Auto SMS supports Bring-Your-Own-Key (BYOK) mode. You can enter your own credentials directly inside the app settings with zero platform surcharges.
                     </div>
                 </div>
             </div>
@@ -1796,7 +1796,7 @@
             <span class="btn-sub">3-Day Trial</span>
             <span class="btn-main">🎁 $0 Today</span>
         </a>
-        <button class="mobile-sticky-btn btn-buy" onclick="startVapiCall()">
+        <button class="mobile-sticky-btn btn-buy" onclick="startVoiceCall()">
             <span class="btn-sub">Voice Demo</span>
             <span class="btn-main">🎙️ Call Live</span>
         </button>
@@ -1806,14 +1806,13 @@
         </button>
     </div>
 
-    <!-- Interactive Live Vapi WebRTC Script & FAQ Logic -->
+    <!-- Interactive Live GridAI WebRTC Script & FAQ Logic -->
     <script type="module">
-        import Vapi from 'https://esm.sh/@vapi-ai/web@2.7.1';
+        import VoiceClient from 'https://esm.sh/@vapi-ai/web@2.7.1';
 
-        const VAPI_PUBLIC_KEY = 'f47d5c09-6c69-4190-b35b-d32bcf00008e';
         const ASSISTANT_ID = '2e486e8a-2875-4d99-b6dd-7f1162601874';
 
-        let vapi = null;
+        let voiceClient = null;
         let callTimerInterval = null;
         let callSeconds = 0;
         const MAX_CALL_SECONDS = 240; // 4-minute interactive sales & roleplay demo cap
@@ -1901,7 +1900,7 @@
 
                 if (callSeconds >= MAX_CALL_SECONDS) {
                     addTranscriptMessage('system', 'Sample call reached the 4-minute demo limit. Disconnecting...');
-                    endVapiCall();
+                    window.endVoiceCall();
                 }
             }, 1000);
         }
@@ -1911,7 +1910,7 @@
         }
 
         // Global functions bound to window for inline onclick handlers
-        window.startVapiCall = async function() {
+        window.startVoiceCall = async function() {
             const stage = document.getElementById('callStage');
             const idleControls = document.getElementById('callIdleControls');
             const connectingControls = document.getElementById('callConnectingControls');
@@ -1928,9 +1927,9 @@
                 statusBadge.innerHTML = '<span>Connecting to Demo Agent...</span>';
 
                 // Fetch dynamic scoped JWT from secure backend
-                let tokenRes = await fetch('/.netlify/functions/vapi-web-token').catch(() => null);
+                let tokenRes = await fetch('/api/voice/web-token').catch(() => null);
                 if (!tokenRes || !tokenRes.ok) {
-                    tokenRes = await fetch('/api/vapi/web-token');
+                    tokenRes = await fetch('/.netlify/functions/vapi-web-token');
                 }
                 const tokenData = await tokenRes.json();
                 if (!tokenData.success || !tokenData.token) {
@@ -1939,14 +1938,14 @@
 
                 const targetAssistantId = tokenData.assistantId || ASSISTANT_ID;
 
-                if (vapi) {
-                    try { vapi.stop(); } catch (e) {}
-                    vapi = null;
+                if (voiceClient) {
+                    try { voiceClient.stop(); } catch (e) {}
+                    voiceClient = null;
                 }
 
-                vapi = new Vapi(tokenData.token);
+                voiceClient = new VoiceClient(tokenData.token);
 
-                vapi.on('call-start', () => {
+                voiceClient.on('call-start', () => {
                     connectingControls.style.display = 'none';
                     activeControls.style.display = 'block';
                     statusBadge.className = 'call-status-badge live';
@@ -1956,24 +1955,24 @@
                     addTranscriptMessage('system', 'Call connected! The Demonstration Agent is listening. State your industry/niche and business name to begin your live roleplay demo!');
                 });
 
-                vapi.on('call-end', () => {
+                voiceClient.on('call-end', () => {
                     handleCallFinished();
                 });
 
-                vapi.on('speech-start', () => {
+                voiceClient.on('speech-start', () => {
                     stage.classList.add('speaking');
                 });
 
-                vapi.on('speech-end', () => {
+                voiceClient.on('speech-end', () => {
                     stage.classList.remove('speaking');
                     updateWaveBars(0.1);
                 });
 
-                vapi.on('volume-level', (vol) => {
+                voiceClient.on('volume-level', (vol) => {
                     updateWaveBars(vol);
                 });
 
-                vapi.on('message', (msg) => {
+                voiceClient.on('message', (msg) => {
                     if (msg.type === 'transcript') {
                         if (msg.transcriptType === 'final') {
                             addTranscriptMessage(msg.role, msg.transcript);
@@ -1989,13 +1988,13 @@
                     }
                 });
 
-                vapi.on('error', (err) => {
-                    console.error('Vapi WebRTC Error:', err);
+                voiceClient.on('error', (err) => {
+                    console.error('GridAI WebRTC Error:', err);
                     addTranscriptMessage('system', 'Notice: ' + (err.message || 'Call connection error occurred.'));
                     handleCallFinished();
                 });
 
-                await vapi.start(targetAssistantId);
+                await voiceClient.start(targetAssistantId);
 
             } catch (err) {
                 console.error('Failed to start call:', err);
@@ -2007,10 +2006,10 @@
             }
         };
 
-        window.endVapiCall = function() {
-            if (vapi) {
+        window.endVoiceCall = function() {
+            if (voiceClient) {
                 try {
-                    vapi.stop();
+                    voiceClient.stop();
                 } catch (e) {
                     console.warn(e);
                 }
@@ -2072,10 +2071,10 @@
         };
 
         window.toggleMute = function() {
-            if (!vapi) return;
+            if (!voiceClient) return;
             isMuted = !isMuted;
             try {
-                vapi.setMuted(isMuted);
+                voiceClient.setMuted(isMuted);
                 const muteBtn = document.getElementById('muteBtn');
                 const muteIcon = document.getElementById('muteIcon');
                 const muteText = document.getElementById('muteText');

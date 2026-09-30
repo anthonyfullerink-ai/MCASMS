@@ -1490,7 +1490,7 @@ Click "Send Test Payload" above to fire a sample event and inspect the HTTP stat
                 </div>
             </div>
             <div style="display: flex; gap: 6px; flex-wrap: wrap;">
-                <span class="status-pill status-active" id="rcVapiStatusBadge">⚡ Cloud Vapi Linked</span>
+                <span class="status-pill status-active" id="rcGridAiStatusBadge">⚡ Cloud GridAI Linked</span>
                 <span class="status-pill status-active" id="rcHandsetLockBadge">🔓 Handset Unlocked</span>
             </div>
         </div>
@@ -1506,7 +1506,7 @@ Click "Send Test Payload" above to fire a sample event and inspect the HTTP stat
         <!-- TAB 1: Voice Receptionist (Cloud-Instant) -->
         <div class="rc-tab-pane active" id="paneRcVoice">
             <div style="background: rgba(56, 189, 248, 0.08); border: 1px solid rgba(56, 189, 248, 0.25); border-radius: 10px; padding: 12px 14px; margin-bottom: 16px; font-size: 12px; color: #CBD5E0; line-height: 1.5;">
-                <strong style="color: var(--agency-accent);">⚡ Instant Cloud Sync:</strong> Changes to AI Greeting and System Prompt update immediately in the Vapi voice cloud. Callers ringing the line will instantly hear your updated receptionist without requiring handset screen access.
+                <strong style="color: var(--agency-accent);">⚡ Instant Cloud Sync:</strong> Changes to AI Greeting and System Prompt update immediately in the GridAI voice cloud. Callers ringing the line will instantly hear your updated receptionist without requiring handset screen access.
             </div>
 
             <div class="switch-wrap">
@@ -2534,7 +2534,7 @@ ${supportPhone ? `• Phone: ${supportPhone}` : ''}
         const btn = document.getElementById('btnSaveRemoteConfig');
         const origText = btn.innerText;
         btn.disabled = true;
-        btn.innerText = 'Pushing to Vapi & Cloud... ⏳';
+        btn.innerText = 'Pushing to GridAI & Cloud... ⏳';
 
         const client = (currentAgencyData?.clients || []).find(c => c.licenseKey === currentRcLicenseKey);
 
@@ -2575,7 +2575,7 @@ ${supportPhone ? `• Phone: ${supportPhone}` : ''}
             btn.innerText = origText;
 
             if (data.success) {
-                showToast('Config saved! Vapi updated & handset sync scheduled.', '🚀');
+                showToast('Config saved! GridAI updated & handset sync scheduled.', '🚀');
                 closeRemoteConfigModal();
                 fetchAgencyData();
             } else {
@@ -2861,7 +2861,7 @@ ${supportPhone ? `• Phone: ${supportPhone}` : ''}
                     id: 'call_sample_98412',
                     duration: '1m 24s',
                     durationSeconds: 84,
-                    recordingUrl: 'https://vapi-public.s3.amazonaws.com/recordings/sample-roof-leak-estimate.mp3',
+                    recordingUrl: 'https://assets.missedcallautosms.com/recordings/sample-roof-leak-estimate.mp3',
                     summary: 'Caller noticed a roof leak above master bedroom during heavy rain. Requested emergency roof tarping and formal estimate tomorrow morning.',
                     transcript: 'Riley: Hi, thank you for calling Premier Roofing Group! How can we assist you with your roof today?\nSarah: Hi Riley, we have water dripping from our ceiling right now from the rainstorm!\nRiley: Oh no, I am so sorry to hear that! What address should we send our emergency crew to?\nSarah: 742 Evergreen Terrace. Can someone come out tonight?\nRiley: Absolutely Sarah, I have flagged your address as priority emergency dispatch and sent your phone number to our on-call roof technician.',
                     urgency: 'HIGH',
@@ -2906,7 +2906,7 @@ ${supportPhone ? `• Phone: ${supportPhone}` : ''}
                 priority: 'HIGH_PRIORITY_EMERGENCY',
                 caller: { phone: '+1 (555) 999-4321', name: 'Robert Miller', address: '124 Main Street' },
                 summary: 'Basement flooding due to broken mainline valve. Customer needs emergency shutoff assistance immediately.',
-                recordingUrl: 'https://vapi-public.s3.amazonaws.com/recordings/sample-flooding.mp3'
+                recordingUrl: 'https://assets.missedcallautosms.com/recordings/sample-flooding.mp3'
             };
         }
     }
