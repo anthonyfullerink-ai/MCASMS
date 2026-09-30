@@ -1856,37 +1856,68 @@
                     <input type="text" id="agencyInputTagline" placeholder="e.g. 24/7 AI Receptionist & Instant Lead Protection" style="width: 100%; padding: 10px 12px; background: #080C16; border: 1px solid #1E293B; border-radius: 8px; color: #FFF; font-size: 13px;">
                 </div>
 
+                <div style="background: rgba(37, 99, 235, 0.05); border: 1px solid #1E293B; border-radius: 0px !important; padding: 14px;">
+                    <div style="font-size: 12px; font-weight: 800; color: #38BDF8; margin-bottom: 10px; display: flex; align-items: center; gap: 6px;">
+                        <span>🎨</span> Agency White-Label Branding Assets (Logo &amp; Favicon)
+                    </div>
+                    <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 14px; margin-bottom: 12px;">
+                        <div>
+                            <label style="display: block; font-size: 12px; font-weight: 700; color: #CBD5E1; margin-bottom: 6px;">Brand Logo URL</label>
+                            <input type="url" id="agencyInputLogoUrl" placeholder="https://agency.com/logo.png or /assets/logo.png" oninput="updateAgencyLogoPreview()" style="width: 100%; padding: 10px 12px; background: #080C16; border: 1px solid #1E293B; border-radius: 0px !important; color: #FFF; font-size: 13px;">
+                            <small style="font-size: 10px; color: #64748B;">Replaces brand headers in Client Portal, App &amp; Invoices</small>
+                            <div id="agencyLogoPreviewBox" style="margin-top: 8px; height: 42px; background: #07090E; border: 1px dashed #334155; border-radius: 0px !important; display: flex; align-items: center; justify-content: center; padding: 4px;">
+                                <span style="font-size: 11px; color: #64748B;" id="agencyLogoPreviewPlaceholder">No logo configured (uses app title)</span>
+                                <img id="agencyLogoPreviewImg" src="" alt="Logo Preview" style="display: none; max-height: 34px; max-width: 100%; object-fit: contain;">
+                            </div>
+                        </div>
+                        <div>
+                            <label style="display: block; font-size: 12px; font-weight: 700; color: #CBD5E1; margin-bottom: 6px;">App Icon / Favicon URL</label>
+                            <input type="url" id="agencyInputIconUrl" placeholder="https://agency.com/favicon.png" oninput="updateAgencyIconPreview()" style="width: 100%; padding: 10px 12px; background: #080C16; border: 1px solid #1E293B; border-radius: 0px !important; color: #FFF; font-size: 13px;">
+                            <small style="font-size: 10px; color: #64748B;">Browser tab favicon &amp; Android app icon</small>
+                            <div id="agencyIconPreviewBox" style="margin-top: 8px; height: 42px; background: #07090E; border: 1px dashed #334155; border-radius: 0px !important; display: flex; align-items: center; justify-content: center; padding: 4px;">
+                                <span style="font-size: 11px; color: #64748B;" id="agencyIconPreviewPlaceholder">No custom icon (uses default)</span>
+                                <img id="agencyIconPreviewImg" src="" alt="Icon Preview" style="display: none; max-height: 30px; width: 30px; object-fit: contain;">
+                            </div>
+                        </div>
+                    </div>
+                    <div>
+                        <label style="display: block; font-size: 12px; font-weight: 700; color: #CBD5E1; margin-bottom: 6px;">Custom Vanity Domain / Portal Subdomain</label>
+                        <input type="text" id="agencyInputCustomDomain" placeholder="e.g. portal.apexleads.io or client.youragency.com" style="width: 100%; padding: 10px 12px; background: #080C16; border: 1px solid #1E293B; border-radius: 0px !important; color: #FFF; font-size: 13px;">
+                        <small style="font-size: 10px; color: #64748B;">White-label clients access portal at this host or <code>/portal?agency=&lt;slug&gt;</code></small>
+                    </div>
+                </div>
+
                 <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 14px;">
                     <div>
                         <label style="display: block; font-size: 12px; font-weight: 700; color: #CBD5E1; margin-bottom: 6px;">Support Email *</label>
-                        <input type="email" id="agencyInputSupportEmail" required placeholder="support@agency.com" style="width: 100%; padding: 10px 12px; background: #080C16; border: 1px solid #1E293B; border-radius: 8px; color: #FFF; font-size: 13px;">
+                        <input type="email" id="agencyInputSupportEmail" required placeholder="support@agency.com" style="width: 100%; padding: 10px 12px; background: #080C16; border: 1px solid #1E293B; border-radius: 0px !important; color: #FFF; font-size: 13px;">
                     </div>
                     <div>
                         <label style="display: block; font-size: 12px; font-weight: 700; color: #CBD5E1; margin-bottom: 6px;">Support Phone</label>
-                        <input type="text" id="agencyInputSupportPhone" placeholder="+1 (800) 555-0199" style="width: 100%; padding: 10px 12px; background: #080C16; border: 1px solid #1E293B; border-radius: 8px; color: #FFF; font-size: 13px;">
+                        <input type="text" id="agencyInputSupportPhone" placeholder="+1 (800) 555-0199" style="width: 100%; padding: 10px 12px; background: #080C16; border: 1px solid #1E293B; border-radius: 0px !important; color: #FFF; font-size: 13px;">
                     </div>
                 </div>
 
                 <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 14px;">
                     <div>
                         <label style="display: block; font-size: 12px; font-weight: 700; color: #CBD5E1; margin-bottom: 6px;">Privacy Policy URL</label>
-                        <input type="url" id="agencyInputPrivacyUrl" placeholder="https://agency.com/privacy" style="width: 100%; padding: 10px 12px; background: #080C16; border: 1px solid #1E293B; border-radius: 8px; color: #FFF; font-size: 13px;">
+                        <input type="url" id="agencyInputPrivacyUrl" placeholder="https://agency.com/privacy" style="width: 100%; padding: 10px 12px; background: #080C16; border: 1px solid #1E293B; border-radius: 0px !important; color: #FFF; font-size: 13px;">
                     </div>
                     <div>
                         <label style="display: block; font-size: 12px; font-weight: 700; color: #CBD5E1; margin-bottom: 6px;">Terms of Service URL</label>
-                        <input type="url" id="agencyInputTermsUrl" placeholder="https://agency.com/terms" style="width: 100%; padding: 10px 12px; background: #080C16; border: 1px solid #1E293B; border-radius: 8px; color: #FFF; font-size: 13px;">
+                        <input type="url" id="agencyInputTermsUrl" placeholder="https://agency.com/terms" style="width: 100%; padding: 10px 12px; background: #080C16; border: 1px solid #1E293B; border-radius: 0px !important; color: #FFF; font-size: 13px;">
                     </div>
                 </div>
 
                 <div>
                     <label style="display: block; font-size: 12px; font-weight: 700; color: #CBD5E1; margin-bottom: 6px;">Stripe Checkout Descriptor</label>
-                    <input type="text" id="agencyInputStripeDescriptor" value="Voice Hub Network" required style="width: 100%; padding: 10px 12px; background: #080C16; border: 1px solid #1E293B; border-radius: 8px; color: #FFF; font-size: 13px;">
+                    <input type="text" id="agencyInputStripeDescriptor" value="Voice Hub Network" required style="width: 100%; padding: 10px 12px; background: #080C16; border: 1px solid #1E293B; border-radius: 0px !important; color: #FFF; font-size: 13px;">
                     <small style="font-size: 10px; color: #64748B;">Shown on in-app minute checkouts (keeps carrier neutrality)</small>
                 </div>
 
                 <div style="display: flex; justify-content: flex-end; gap: 12px; margin-top: 10px; border-top: 1px solid #1E293B; padding-top: 16px;">
-                    <button type="button" onclick="closeAgencyModal()" style="padding: 10px 18px; border-radius: 8px; background: #1E293B; border: 1px solid #334155; color: #CBD5E1; font-weight: 600; cursor: pointer;">Cancel</button>
-                    <button type="submit" id="btnSaveAgencySubmit" style="padding: 10px 22px; border-radius: 8px; background: #2563EB; border: none; color: #FFF; font-weight: 700; cursor: pointer;">💾 Save Agency Profile</button>
+                    <button type="button" onclick="closeAgencyModal()" style="padding: 10px 18px; border-radius: 0px !important; background: #1E293B; border: 1px solid #334155; color: #CBD5E1; font-weight: 600; cursor: pointer;">Cancel</button>
+                    <button type="submit" id="btnSaveAgencySubmit" style="padding: 10px 22px; border-radius: 0px !important; background: #2563EB; border: none; color: #FFF; font-weight: 700; cursor: pointer;">💾 Save Agency Profile</button>
                 </div>
             </form>
         </div>
@@ -5532,13 +5563,17 @@ OPERATIONAL PROTOCOL:
                 agencyRows.push(`
                     <tr>
                         <td>
-                            <div style="display: flex; align-items: center; gap: 8px;">
-                                <div style="width: 12px; height: 12px; border-radius: 50%; background: ${brandColor}; flex-shrink: 0;" title="Theme Color: ${brandColor}"></div>
+                            <div style="display: flex; align-items: center; gap: 10px;">
+                                ${agency.logoUrl
+                                    ? `<img src="${escapeHtml(agency.logoUrl)}" alt="Logo" style="width: 32px; height: 32px; object-fit: contain; background: #07090E; border: 1px solid #1E293B; border-radius: 0px !important; padding: 2px; flex-shrink: 0;">`
+                                    : `<div style="width: 32px; height: 32px; border-radius: 0px !important; background: ${brandColor}; display: flex; align-items: center; justify-content: center; font-size: 14px; font-weight: 800; color: #FFF; flex-shrink: 0;" title="Theme Color: ${brandColor}">${escapeHtml((agency.appName || agency.id).charAt(0).toUpperCase())}</div>`
+                                }
                                 <div>
                                     <strong>${escapeHtml(agency.legalName || agency.appName || agency.id)}</strong>
-                                    ${isDefault ? '<span class="badge badge-agency" style="margin-left: 6px; font-size: 9px;">FLAGSHIP</span>' : ''}
+                                    ${isDefault ? '<span class="badge badge-agency" style="margin-left: 6px; font-size: 9px; border-radius: 0px !important;">FLAGSHIP</span>' : ''}
                                     <br>
                                     <small style="color: var(--muted); font-family: monospace;">slug: ${escapeHtml(agency.id)}</small>
+                                    ${agency.customDomain ? `<br><small style="color: #38BDF8; font-size: 11px;">🌐 ${escapeHtml(agency.customDomain)}</small>` : ''}
                                 </div>
                             </div>
                         </td>
@@ -5562,12 +5597,13 @@ OPERATIONAL PROTOCOL:
                         </td>
                         <td>
                             <div style="display: flex; gap: 6px; flex-wrap: wrap;">
-                                <a href="/agency-dashboard?agency=${encodeURIComponent(agency.id)}&impersonate=owner" target="_blank" class="btn-action" style="padding: 4px 8px; font-size: 11px; color: #F59E0B; border-color: #F59E0B; text-decoration: none;" title="Open Agency Dashboard as this Agency">👁️ View as Agency</a>
-                                <button class="btn-action" style="padding: 4px 8px; font-size: 11px; color: #38BDF8; border-color: #38BDF8;" onclick="openEditAgencyModal('${agency.id}')">✏️ Edit</button>
-                                <button class="btn-action" style="padding: 4px 8px; font-size: 11px; color: #10B981; border-color: #10B981;" onclick="triggerBuildAgency('${agency.id}')">🔨 Build</button>
-                                ${apk.exists ? `<a href="${apk.downloadUrl}" target="_blank" class="btn-action" style="padding: 4px 8px; font-size: 11px; color: #FFF; text-decoration: none;">📥 APK</a>` : ''}
-                                ${ota.downloadUrl ? `<button class="btn-action" style="padding: 4px 8px; font-size: 11px;" onclick="copyToClipboard('${ota.downloadUrl}')" title="Copy OTA Link">📡 URL</button>` : ''}
-                                ${!isDefault ? `<button class="btn-action btn-danger" style="padding: 4px 8px; font-size: 11px;" onclick="deleteAgency('${agency.id}')">🗑️</button>` : ''}
+                                <a href="/agency-dashboard?agency=${encodeURIComponent(agency.id)}&impersonate=owner" target="_blank" class="btn-action" style="padding: 4px 8px; font-size: 11px; color: #F59E0B; border-color: #F59E0B; text-decoration: none; border-radius: 0px !important;" title="Open Agency Dashboard as this Agency">👁️ Agency View</a>
+                                <a href="/portal?agency=${encodeURIComponent(agency.id)}&impersonate=owner" target="_blank" class="btn-action" style="padding: 4px 8px; font-size: 11px; color: #38BDF8; border-color: #38BDF8; text-decoration: none; border-radius: 0px !important;" title="Test White-Label Client Portal for this Agency">🌐 Client Portal</a>
+                                <button class="btn-action" style="padding: 4px 8px; font-size: 11px; color: #38BDF8; border-color: #38BDF8; border-radius: 0px !important;" onclick="openEditAgencyModal('${agency.id}')">✏️ Edit</button>
+                                <button class="btn-action" style="padding: 4px 8px; font-size: 11px; color: #10B981; border-color: #10B981; border-radius: 0px !important;" onclick="triggerBuildAgency('${agency.id}')">🔨 Build</button>
+                                ${apk.exists ? `<a href="${apk.downloadUrl}" target="_blank" class="btn-action" style="padding: 4px 8px; font-size: 11px; color: #FFF; text-decoration: none; border-radius: 0px !important;">📥 APK</a>` : ''}
+                                ${ota.downloadUrl ? `<button class="btn-action" style="padding: 4px 8px; font-size: 11px; border-radius: 0px !important;" onclick="copyToClipboard('${ota.downloadUrl}')" title="Copy OTA Link">📡 URL</button>` : ''}
+                                ${!isDefault ? `<button class="btn-action btn-danger" style="padding: 4px 8px; font-size: 11px; border-radius: 0px !important;" onclick="deleteAgency('${agency.id}')">🗑️</button>` : ''}
                             </div>
                         </td>
                     </tr>
@@ -5761,6 +5797,36 @@ OPERATIONAL PROTOCOL:
         }
     }
 
+    function updateAgencyLogoPreview() {
+        const url = (document.getElementById('agencyInputLogoUrl')?.value || '').trim();
+        const img = document.getElementById('agencyLogoPreviewImg');
+        const ph = document.getElementById('agencyLogoPreviewPlaceholder');
+        if (url) {
+            img.src = url;
+            img.style.display = 'block';
+            ph.style.display = 'none';
+        } else {
+            img.src = '';
+            img.style.display = 'none';
+            ph.style.display = 'inline';
+        }
+    }
+
+    function updateAgencyIconPreview() {
+        const url = (document.getElementById('agencyInputIconUrl')?.value || '').trim();
+        const img = document.getElementById('agencyIconPreviewImg');
+        const ph = document.getElementById('agencyIconPreviewPlaceholder');
+        if (url) {
+            img.src = url;
+            img.style.display = 'block';
+            ph.style.display = 'none';
+        } else {
+            img.src = '';
+            img.style.display = 'none';
+            ph.style.display = 'inline';
+        }
+    }
+
     function openCreateAgencyModal() {
         document.getElementById('agencyProfileForm').reset();
         document.getElementById('agencyIsEdit').value = '0';
@@ -5769,6 +5835,11 @@ OPERATIONAL PROTOCOL:
         document.getElementById('agencyInputColorPicker').value = '#2563EB';
         document.getElementById('agencyInputColorText').value = '#2563EB';
         document.getElementById('agencyInputStripeDescriptor').value = 'Voice Hub Network';
+        document.getElementById('agencyInputLogoUrl').value = '';
+        document.getElementById('agencyInputIconUrl').value = '';
+        document.getElementById('agencyInputCustomDomain').value = '';
+        updateAgencyLogoPreview();
+        updateAgencyIconPreview();
         document.getElementById('modalAgencyProfile').style.display = 'flex';
     }
 
@@ -5787,6 +5858,11 @@ OPERATIONAL PROTOCOL:
         document.getElementById('agencyInputPrivacyUrl').value = agency.privacyPolicyUrl || '';
         document.getElementById('agencyInputTermsUrl').value = agency.termsUrl || '';
         document.getElementById('agencyInputStripeDescriptor').value = agency.stripeDescriptor || 'Voice Hub Network';
+        document.getElementById('agencyInputLogoUrl').value = agency.logoUrl || '';
+        document.getElementById('agencyInputIconUrl').value = agency.iconUrl || '';
+        document.getElementById('agencyInputCustomDomain').value = agency.customDomain || '';
+        updateAgencyLogoPreview();
+        updateAgencyIconPreview();
 
         const color = agency.theme?.primaryColor || '#2563EB';
         document.getElementById('agencyInputColorPicker').value = color;
@@ -5818,6 +5894,9 @@ OPERATIONAL PROTOCOL:
             privacyPolicyUrl: document.getElementById('agencyInputPrivacyUrl').value.trim(),
             termsUrl: document.getElementById('agencyInputTermsUrl').value.trim(),
             stripeDescriptor: document.getElementById('agencyInputStripeDescriptor').value.trim(),
+            logoUrl: document.getElementById('agencyInputLogoUrl').value.trim(),
+            iconUrl: document.getElementById('agencyInputIconUrl').value.trim(),
+            customDomain: document.getElementById('agencyInputCustomDomain').value.trim(),
             primaryColor: document.getElementById('agencyInputColorText').value.trim()
         };
 

@@ -118,9 +118,15 @@ function getClientTasks(licenseKey) {
 function resolvePortalBranding(agencySlug) {
   const defaultBranding = {
     appName: 'Missed Call Auto SMS',
+    legalName: 'Missed Call Auto SMS',
     tagline: 'Client Call, SMS & AI Tasks Portal',
     supportEmail: 'support@missedcallautosms.com',
     supportPhone: '+1 (732) 660-9121',
+    logoUrl: '/favicon.svg',
+    iconUrl: '/favicon.svg',
+    customDomain: 'missedcallautosms.com',
+    privacyPolicyUrl: 'https://missedcallautosms.com/privacy.html',
+    termsUrl: 'https://missedcallautosms.com/terms.html',
     theme: {
       primaryColor: '#2563EB',
       accentColor: '#38BDF8'
@@ -135,9 +141,15 @@ function resolvePortalBranding(agencySlug) {
 
   return {
     appName: ag.appName || ag.legalName || 'Agency Partner',
+    legalName: ag.legalName || ag.appName || 'Agency Partner',
     tagline: ag.tagline || 'AI Telecom Appliance & 24/7 Voice Receptionist',
     supportEmail: ag.supportEmail || 'support@missedcallautosms.com',
     supportPhone: ag.supportPhone || '',
+    logoUrl: ag.logoUrl || '',
+    iconUrl: ag.iconUrl || '',
+    customDomain: ag.customDomain || '',
+    privacyPolicyUrl: ag.privacyPolicyUrl || '',
+    termsUrl: ag.termsUrl || '',
     theme: ag.theme || { primaryColor: '#2563EB', accentColor: '#38BDF8' }
   };
 }

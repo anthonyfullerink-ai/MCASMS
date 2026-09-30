@@ -10,6 +10,9 @@
       "privacyPolicyUrl": "https://missedcallautosms.com/privacy.html",
       "termsUrl": "https://missedcallautosms.com/terms.html",
       "stripeDescriptor": "Voice Hub Network",
+      "logoUrl": "/favicon.svg",
+      "iconUrl": "/favicon.svg",
+      "customDomain": "missedcallautosms.com",
       "theme": {
         "primaryColor": "#2563EB",
         "accentColor": "#10B981"
@@ -24,6 +27,9 @@
       "privacyPolicyUrl": "https://apexleads.io/privacy",
       "termsUrl": "https://apexleads.io/terms",
       "stripeDescriptor": "Voice Hub Network",
+      "logoUrl": "https://raw.githubusercontent.com/anthonyfullerink-ai/MCASMS/main/favicon.svg",
+      "iconUrl": "https://raw.githubusercontent.com/anthonyfullerink-ai/MCASMS/main/favicon-32x32.png",
+      "customDomain": "portal.apexleads.io",
       "theme": {
         "primaryColor": "#0F52BA",
         "accentColor": "#00E676"

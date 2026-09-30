@@ -876,39 +876,83 @@
         </div>
 
         <!-- Section: Self-Serve In-App Brand Settings -->
-        <div class="panel-card" id="sectionSettings" style="margin-bottom: 24px;">
+        <div class="panel-card" id="sectionSettings" style="margin-bottom: 24px; border-radius: 0px !important;">
             <h2 class="panel-title">
-                <span>🏷️</span> In-App Brand Settings
+                <span>🏷️</span> White-Label Brand &amp; Appliance Settings
             </h2>
             <p class="panel-sub">
-                Configure what your clients see inside the Android app under Settings → About & Support. Changes update dynamically across all client handsets.
+                Configure your agency's white-label identity. Changes dynamically propagate to your White-Label Client Portal, your branded APK manifest, and all deployed client Android handsets.
             </p>
+
+            <div style="background: rgba(37, 99, 235, 0.05); border: 1px solid var(--card-border); border-radius: 0px !important; padding: 16px; margin-bottom: 20px;">
+                <div style="font-size: 13px; font-weight: 800; color: var(--agency-accent); margin-bottom: 12px; display: flex; align-items: center; gap: 8px;">
+                    <span>🎨</span> Visual Assets (Brand Logo &amp; Favicon)
+                </div>
+                <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 16px; margin-bottom: 14px;">
+                    <div>
+                        <label style="display: block; font-size: 12px; font-weight: 700; color: #CBD5E1; margin-bottom: 6px;">Brand Logo URL</label>
+                        <input type="url" id="settingLogoUrl" class="input-field" placeholder="https://youragency.com/logo.png" oninput="updateSettingLogoPreview()" style="border-radius: 0px !important;">
+                        <small style="font-size: 11px; color: var(--muted);">Displays in Client Portal top navbar, welcome modal, and invoice headers</small>
+                        <div id="settingLogoPreviewBox" style="margin-top: 8px; height: 48px; background: #07090E; border: 1px dashed var(--card-border); border-radius: 0px !important; display: flex; align-items: center; justify-content: center; padding: 6px;">
+                            <span style="font-size: 11px; color: var(--muted);" id="settingLogoPreviewPlaceholder">No logo configured (uses app name)</span>
+                            <img id="settingLogoPreviewImg" src="" alt="Logo Preview" style="display: none; max-height: 38px; max-width: 100%; object-fit: contain;">
+                        </div>
+                    </div>
+                    <div>
+                        <label style="display: block; font-size: 12px; font-weight: 700; color: #CBD5E1; margin-bottom: 6px;">App Icon / Favicon URL</label>
+                        <input type="url" id="settingIconUrl" class="input-field" placeholder="https://youragency.com/favicon.png" oninput="updateSettingIconPreview()" style="border-radius: 0px !important;">
+                        <small style="font-size: 11px; color: var(--muted);">Client browser tab favicon and Android app shortcut icon</small>
+                        <div id="settingIconPreviewBox" style="margin-top: 8px; height: 48px; background: #07090E; border: 1px dashed var(--card-border); border-radius: 0px !important; display: flex; align-items: center; justify-content: center; padding: 6px;">
+                            <span style="font-size: 11px; color: var(--muted);" id="settingIconPreviewPlaceholder">No custom icon (uses default)</span>
+                            <img id="settingIconPreviewImg" src="" alt="Icon Preview" style="display: none; max-height: 34px; width: 34px; object-fit: contain;">
+                        </div>
+                    </div>
+                </div>
+
+                <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 16px;">
+                    <div>
+                        <label style="display: block; font-size: 12px; font-weight: 700; color: #CBD5E1; margin-bottom: 6px;">Custom Vanity Domain / Portal URL</label>
+                        <input type="text" id="settingCustomDomain" class="input-field" placeholder="e.g. portal.youragency.com" style="border-radius: 0px !important;">
+                        <small style="font-size: 11px; color: var(--muted);">Your clients will access their dashboard at this domain or <code>/portal?agency=&lt;your_slug&gt;</code></small>
+                    </div>
+                    <div>
+                        <label style="display: block; font-size: 12px; font-weight: 700; color: #CBD5E1; margin-bottom: 6px;">Primary Brand Color</label>
+                        <div style="display: flex; gap: 8px; align-items: center;">
+                            <input type="color" id="settingColorPicker" value="#2563EB" onchange="document.getElementById('settingPrimaryColor').value = this.value" style="width: 44px; height: 40px; border: 1px solid var(--card-border); border-radius: 0px !important; background: transparent; cursor: pointer;">
+                            <input type="text" id="settingPrimaryColor" value="#2563EB" onchange="document.getElementById('settingColorPicker').value = this.value" class="input-field" style="border-radius: 0px !important; font-family: monospace;">
+                        </div>
+                    </div>
+                </div>
+            </div>
 
             <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(240px, 1fr)); gap: 16px; margin-bottom: 20px;">
                 <div class="input-group" style="margin-bottom: 0;">
                     <label>App Tagline / Subtitle</label>
-                    <input type="text" id="settingTagline" class="input-field" placeholder="Instant 24/7 AI Receptionist & Inbound Lead Capture">
+                    <input type="text" id="settingTagline" class="input-field" placeholder="Instant 24/7 AI Receptionist &amp; Inbound Lead Capture" style="border-radius: 0px !important;">
                 </div>
                 <div class="input-group" style="margin-bottom: 0;">
                     <label>Support Email (Shown in App)</label>
-                    <input type="email" id="settingSupportEmail" class="input-field" placeholder="support@youragency.com">
+                    <input type="email" id="settingSupportEmail" class="input-field" placeholder="support@youragency.com" style="border-radius: 0px !important;">
                 </div>
                 <div class="input-group" style="margin-bottom: 0;">
                     <label>Support Phone Number</label>
-                    <input type="text" id="settingSupportPhone" class="input-field" placeholder="+1 (800) 555-0199">
+                    <input type="text" id="settingSupportPhone" class="input-field" placeholder="+1 (800) 555-0199" style="border-radius: 0px !important;">
                 </div>
                 <div class="input-group" style="margin-bottom: 0;">
                     <label>Privacy Policy URL</label>
-                    <input type="url" id="settingPrivacyUrl" class="input-field" placeholder="https://youragency.com/privacy">
+                    <input type="url" id="settingPrivacyUrl" class="input-field" placeholder="https://youragency.com/privacy" style="border-radius: 0px !important;">
                 </div>
                 <div class="input-group" style="margin-bottom: 0;">
                     <label>Terms of Service URL</label>
-                    <input type="url" id="settingTermsUrl" class="input-field" placeholder="https://youragency.com/terms">
+                    <input type="url" id="settingTermsUrl" class="input-field" placeholder="https://youragency.com/terms" style="border-radius: 0px !important;">
                 </div>
             </div>
 
-            <div style="display: flex; justify-content: flex-end;">
-                <button class="btn-agency-primary" onclick="saveAgencySettings()">
+            <div style="display: flex; justify-content: flex-end; gap: 12px; align-items: center;">
+                <a id="btnTestAgencyPortal" href="#" target="_blank" class="btn-sm" style="padding: 10px 18px; border-radius: 0px !important; text-decoration: none; display: inline-flex; align-items: center; gap: 6px;">
+                    🌐 Open Client Portal Preview ➔
+                </a>
+                <button class="btn-agency-primary" onclick="saveAgencySettings()" style="border-radius: 0px !important;">
                     💾 Save Brand Settings ✓
                 </button>
             </div>
@@ -1709,6 +1753,40 @@ Click "Send Test Payload" above to fire a sample event and inspect the HTTP stat
         document.getElementById('settingSupportPhone').value = agency.supportPhone || '';
         document.getElementById('settingPrivacyUrl').value = agency.privacyPolicyUrl || '';
         document.getElementById('settingTermsUrl').value = agency.termsUrl || '';
+        document.getElementById('settingLogoUrl').value = agency.logoUrl || '';
+        document.getElementById('settingIconUrl').value = agency.iconUrl || '';
+        document.getElementById('settingCustomDomain').value = agency.customDomain || '';
+
+        const primaryColor = agency.theme?.primaryColor || '#2563EB';
+        document.getElementById('settingColorPicker').value = primaryColor;
+        document.getElementById('settingPrimaryColor').value = primaryColor;
+        updateSettingLogoPreview();
+        updateSettingIconPreview();
+
+        // Update Nav & Page Favicon with Agency Brand if present
+        if (agency.logoUrl) {
+            const navIconBox = document.getElementById('navIconBox');
+            if (navIconBox) {
+                navIconBox.innerHTML = `<img src="${agency.logoUrl}" alt="${escapeHtml(appName)}" style="max-height: 28px; max-width: 90px; object-fit: contain;">`;
+                navIconBox.style.background = 'transparent';
+                navIconBox.style.boxShadow = 'none';
+            }
+        }
+        if (agency.iconUrl) {
+            let link = document.querySelector("link[rel*='icon']");
+            if (!link) {
+                link = document.createElement('link');
+                link.rel = 'icon';
+                document.getElementsByTagName('head')[0].appendChild(link);
+            }
+            link.href = agency.iconUrl;
+        }
+
+        // Test Client Portal Preview Link
+        const portalPreviewBtn = document.getElementById('btnTestAgencyPortal');
+        if (portalPreviewBtn) {
+            portalPreviewBtn.href = `/portal?agency=${encodeURIComponent(agency.id || currentAgencySlug)}`;
+        }
 
         // Clients Table
         renderClientsTable();
@@ -2060,12 +2138,46 @@ ${supportPhone ? `• Phone: ${supportPhone}` : ''}
         }
     }
 
+    function updateSettingLogoPreview() {
+        const url = (document.getElementById('settingLogoUrl')?.value || '').trim();
+        const img = document.getElementById('settingLogoPreviewImg');
+        const ph = document.getElementById('settingLogoPreviewPlaceholder');
+        if (url) {
+            img.src = url;
+            img.style.display = 'block';
+            ph.style.display = 'none';
+        } else {
+            img.src = '';
+            img.style.display = 'none';
+            ph.style.display = 'inline';
+        }
+    }
+
+    function updateSettingIconPreview() {
+        const url = (document.getElementById('settingIconUrl')?.value || '').trim();
+        const img = document.getElementById('settingIconPreviewImg');
+        const ph = document.getElementById('settingIconPreviewPlaceholder');
+        if (url) {
+            img.src = url;
+            img.style.display = 'block';
+            ph.style.display = 'none';
+        } else {
+            img.src = '';
+            img.style.display = 'none';
+            ph.style.display = 'inline';
+        }
+    }
+
     async function saveAgencySettings() {
         const tagline = document.getElementById('settingTagline').value.trim();
         const supportEmail = document.getElementById('settingSupportEmail').value.trim();
         const supportPhone = document.getElementById('settingSupportPhone').value.trim();
         const privacyPolicyUrl = document.getElementById('settingPrivacyUrl').value.trim();
         const termsUrl = document.getElementById('settingTermsUrl').value.trim();
+        const logoUrl = document.getElementById('settingLogoUrl').value.trim();
+        const iconUrl = document.getElementById('settingIconUrl').value.trim();
+        const customDomain = document.getElementById('settingCustomDomain').value.trim();
+        const primaryColor = document.getElementById('settingPrimaryColor').value.trim();
 
         try {
             const res = await fetch('/api/agency/manage', {
@@ -2078,13 +2190,17 @@ ${supportPhone ? `• Phone: ${supportPhone}` : ''}
                     supportEmail,
                     supportPhone,
                     privacyPolicyUrl,
-                    termsUrl
+                    termsUrl,
+                    logoUrl,
+                    iconUrl,
+                    customDomain,
+                    primaryColor
                 })
             });
 
             const data = await res.json();
             if (data.success) {
-                showToast('In-app brand settings saved successfully!');
+                showToast('White-label brand & in-app settings saved successfully!');
                 await fetchAgencyData();
             } else {
                 showToast(data.error || 'Failed to save settings', '⚠️');

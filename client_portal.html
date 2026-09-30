@@ -1719,6 +1719,32 @@
         document.getElementById('navBrandSub').innerText = branding.tagline || 'Calls, SMS, Tasks & AI Intelligence';
         document.getElementById('authCardTitle').innerText = `${appName} Sign In`;
         document.getElementById('textSupportContact').innerText = branding.supportEmail || 'support@missedcallautosms.com';
+
+        // White-Label Brand Logo Dynamic Rendering
+        if (branding.logoUrl) {
+            const navIconBox = document.getElementById('navIconBox');
+            if (navIconBox) {
+                navIconBox.innerHTML = `<img id="navLogoImg" src="${branding.logoUrl}" alt="${appName}" style="max-height: 28px; max-width: 120px; object-fit: contain;">`;
+                navIconBox.style.background = 'transparent';
+                navIconBox.style.boxShadow = 'none';
+            }
+            const authLogoIcon = document.getElementById('authLogoIcon');
+            if (authLogoIcon) {
+                authLogoIcon.innerHTML = `<img id="authLogoImg" src="${branding.logoUrl}" alt="${appName}" style="max-height: 52px; max-width: 220px; object-fit: contain; margin-bottom: 8px;">`;
+                authLogoIcon.style.fontSize = 'inherit';
+            }
+        }
+
+        // White-Label Favicon Dynamic Rendering
+        if (branding.iconUrl) {
+            let link = document.querySelector("link[rel*='icon']");
+            if (!link) {
+                link = document.createElement('link');
+                link.rel = 'icon';
+                document.getElementsByTagName('head')[0].appendChild(link);
+            }
+            link.href = branding.iconUrl;
+        }
     }
 
     // ─── Auth Tab Switching (Sign In vs Activation) ───

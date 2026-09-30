@@ -5925,6 +5925,9 @@ const server = http.createServer((req, res) => {
             privacyPolicyUrl: (payload.privacyPolicyUrl || existing.privacyPolicyUrl || 'https://missedcallautosms.com/privacy.html').trim(),
             termsUrl: (payload.termsUrl || existing.termsUrl || 'https://missedcallautosms.com/terms.html').trim(),
             stripeDescriptor: (payload.stripeDescriptor || existing.stripeDescriptor || 'Voice Hub Network').trim(),
+            logoUrl: (payload.logoUrl !== undefined ? payload.logoUrl : (existing.logoUrl || '')).trim(),
+            iconUrl: (payload.iconUrl !== undefined ? payload.iconUrl : (existing.iconUrl || '')).trim(),
+            customDomain: (payload.customDomain !== undefined ? payload.customDomain : (existing.customDomain || '')).trim(),
             theme: {
               primaryColor: (payload.primaryColor || payload.theme?.primaryColor || existing.theme?.primaryColor || '#2563EB').trim(),
               accentColor: (payload.accentColor || payload.theme?.accentColor || existing.theme?.accentColor || '#10B981').trim()
@@ -6621,11 +6624,18 @@ const server = http.createServer((req, res) => {
           const existing = configData.agencies[agencyId];
           configData.agencies[agencyId] = {
             ...existing,
-            tagline: (payload.tagline || existing.tagline).trim(),
-            supportEmail: (payload.supportEmail || existing.supportEmail).trim(),
-            supportPhone: (payload.supportPhone || existing.supportPhone).trim(),
-            privacyPolicyUrl: (payload.privacyPolicyUrl || existing.privacyPolicyUrl).trim(),
-            termsUrl: (payload.termsUrl || existing.termsUrl).trim()
+            tagline: (payload.tagline !== undefined ? payload.tagline : existing.tagline).trim(),
+            supportEmail: (payload.supportEmail !== undefined ? payload.supportEmail : existing.supportEmail).trim(),
+            supportPhone: (payload.supportPhone !== undefined ? payload.supportPhone : existing.supportPhone).trim(),
+            privacyPolicyUrl: (payload.privacyPolicyUrl !== undefined ? payload.privacyPolicyUrl : existing.privacyPolicyUrl).trim(),
+            termsUrl: (payload.termsUrl !== undefined ? payload.termsUrl : existing.termsUrl).trim(),
+            logoUrl: (payload.logoUrl !== undefined ? payload.logoUrl : (existing.logoUrl || '')).trim(),
+            iconUrl: (payload.iconUrl !== undefined ? payload.iconUrl : (existing.iconUrl || '')).trim(),
+            customDomain: (payload.customDomain !== undefined ? payload.customDomain : (existing.customDomain || '')).trim(),
+            theme: {
+              ...(existing.theme || {}),
+              primaryColor: (payload.primaryColor || payload.theme?.primaryColor || existing.theme?.primaryColor || '#2563EB').trim()
+            }
           };
 
           fs.writeFileSync(AGENCIES_CONFIG_PATH, JSON.stringify(configData, null, 2), 'utf8');
@@ -7325,13 +7335,17 @@ const server = http.createServer((req, res) => {
               isWhiteLabel: true,
               agencyId: agencyId,
               appName: ag.appName || 'Telecom Appliance',
+              legalName: ag.legalName || ag.appName || 'Agency Partner',
               tagline: ag.tagline || 'AI Telecom Appliance & 24/7 Voice Receptionist',
               theme: ag.theme || { primaryColor: '#2563EB', accentColor: '#38BDF8' },
               supportEmail: ag.supportEmail || '',
               supportPhone: ag.supportPhone || '',
               privacyPolicyUrl: ag.privacyPolicyUrl || '',
               termsUrl: ag.termsUrl || '',
-              icon: '⚡'
+              logoUrl: ag.logoUrl || '',
+              iconUrl: ag.iconUrl || '',
+              customDomain: ag.customDomain || '',
+              icon: ag.logoUrl ? '' : '⚡'
             };
           }
         } catch (e) {}
@@ -7341,6 +7355,7 @@ const server = http.createServer((req, res) => {
       isWhiteLabel: false,
       agencyId: 'default',
       appName: 'Missed Call Auto SMS',
+      legalName: 'Missed Call Auto SMS',
       tagline: 'AI Telecom Appliance & 24/7 Voice Receptionist',
       theme: { primaryColor: '#2563EB', accentColor: '#38BDF8' },
       supportEmail: 'support@missedcallautosms.com',
@@ -7348,6 +7363,8 @@ const server = http.createServer((req, res) => {
       privacyPolicyUrl: '/terms.html',
       termsUrl: '/terms.html',
       logoUrl: '/favicon.svg',
+      iconUrl: '/favicon.svg',
+      customDomain: 'missedcallautosms.com',
       icon: '⚡'
     };
   }
