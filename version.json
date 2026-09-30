@@ -6,5 +6,5 @@
   "releaseNotes": "🚀 v1.9.3 Release: Streamlined Call Forwarding Controls\n• 🔀 AI Call Forwarding Toggle: Replaced raw phone number display with clean ON/OFF toggle controls\n• 📞 1-Tap Carrier Activation: One-tap 'Turn ON' and 'Turn OFF' carrier forwarding setup\n• 🔒 Private Routing: Internal forwarding numbers are kept seamless and confidential under the hood\n• 🟢 Real-time Status: Visual indicator showing whether unanswered call forwarding is active or paused",
   "mandatory": false,
   "minSupportedVersion": 1,
-  "updatedAt": "2026-09-30T14:10:01.445Z"
+  "updatedAt": "2026-09-30T18:33:50.275Z"
 }
