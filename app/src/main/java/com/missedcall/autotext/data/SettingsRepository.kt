@@ -92,6 +92,10 @@ class SettingsRepository(private val context: Context) {
         val AI_SMS_SHOP_INSTRUCTIONS = stringPreferencesKey("ai_sms_shop_instructions")
         val AI_SMS_CALENDAR_CONNECTED = booleanPreferencesKey("ai_sms_calendar_connected")
         val AI_SMS_CALENDAR_EMAIL = stringPreferencesKey("ai_sms_calendar_email")
+        val AI_SMS_CALENDAR_ACCOUNT_NAME = stringPreferencesKey("ai_sms_calendar_account_name")
+        val AI_SMS_CALENDAR_ID = longPreferencesKey("ai_sms_calendar_id")
+        val AI_SMS_CALENDAR_DISPLAY_NAME = stringPreferencesKey("ai_sms_calendar_display_name")
+        val AI_SMS_CALENDAR_COLOR = intPreferencesKey("ai_sms_calendar_color")
         val AI_SMS_CALENDAR_WORKING_HOURS = stringPreferencesKey("ai_sms_calendar_working_hours")
         val AI_SMS_SLOT_DURATION_MINUTES = intPreferencesKey("ai_sms_slot_duration_minutes")
         val AI_SMS_TRAVEL_BUFFER_MINUTES = intPreferencesKey("ai_sms_travel_buffer_minutes")
@@ -195,6 +199,10 @@ class SettingsRepository(private val context: Context) {
             aiSmsShopInstructions = preferences[AI_SMS_SHOP_INSTRUCTIONS] ?: "",
             aiSmsCalendarConnected = preferences[AI_SMS_CALENDAR_CONNECTED] ?: false,
             aiSmsCalendarEmail = preferences[AI_SMS_CALENDAR_EMAIL] ?: "",
+            aiSmsCalendarAccountName = preferences[AI_SMS_CALENDAR_ACCOUNT_NAME] ?: "",
+            aiSmsCalendarId = preferences[AI_SMS_CALENDAR_ID] ?: -1L,
+            aiSmsCalendarDisplayName = preferences[AI_SMS_CALENDAR_DISPLAY_NAME] ?: "",
+            aiSmsCalendarColor = preferences[AI_SMS_CALENDAR_COLOR] ?: 0,
             aiSmsCalendarWorkingHours = preferences[AI_SMS_CALENDAR_WORKING_HOURS] ?: "08:00 - 17:00",
             aiSmsSlotDurationMinutes = preferences[AI_SMS_SLOT_DURATION_MINUTES] ?: 60,
             aiSmsTravelBufferMinutes = preferences[AI_SMS_TRAVEL_BUFFER_MINUTES] ?: 30,
@@ -316,6 +324,10 @@ class SettingsRepository(private val context: Context) {
             preferences[AI_SMS_SHOP_INSTRUCTIONS] = settings.aiSmsShopInstructions
             preferences[AI_SMS_CALENDAR_CONNECTED] = settings.aiSmsCalendarConnected
             preferences[AI_SMS_CALENDAR_EMAIL] = settings.aiSmsCalendarEmail
+            preferences[AI_SMS_CALENDAR_ACCOUNT_NAME] = settings.aiSmsCalendarAccountName
+            preferences[AI_SMS_CALENDAR_ID] = settings.aiSmsCalendarId
+            preferences[AI_SMS_CALENDAR_DISPLAY_NAME] = settings.aiSmsCalendarDisplayName
+            preferences[AI_SMS_CALENDAR_COLOR] = settings.aiSmsCalendarColor
             preferences[AI_SMS_CALENDAR_WORKING_HOURS] = settings.aiSmsCalendarWorkingHours
             preferences[AI_SMS_SLOT_DURATION_MINUTES] = settings.aiSmsSlotDurationMinutes
             preferences[AI_SMS_TRAVEL_BUFFER_MINUTES] = settings.aiSmsTravelBufferMinutes

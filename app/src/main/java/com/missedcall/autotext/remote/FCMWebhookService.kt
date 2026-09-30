@@ -194,6 +194,32 @@ class FCMWebhookService : FirebaseMessagingService() {
                 dateTimeStr = dateTimeStr,
                 address = address
             )
+
+            serviceScope.launch {
+                try {
+                    val app = applicationContext as? App
+                    val settings = app?.settingsRepository?.getSettings()
+                    if (settings != null && settings.aiSmsCalendarConnected && settings.aiSmsCalendarId > 0) {
+                        val epochMs = data["epoch_ms"]?.toLongOrNull()
+                            ?: (System.currentTimeMillis() + (2 * 60 * 60 * 1000L))
+                        val slotMins = settings.aiSmsSlotDurationMinutes.coerceAtLeast(15)
+                        val endMs = epochMs + (slotMins * 60 * 1000L)
+                        val title = "Job: $customerName ($callerPhone)"
+                        val desc = "Automated Booking via Missed Call Auto SMS AI Assistant.\nCustomer: $customerName\nPhone: $callerPhone\nTime: $dateTimeStr\nLocation: $address"
+                        com.missedcall.autotext.util.CalendarSyncManager.insertAppointmentEvent(
+                            context = applicationContext,
+                            calendarId = settings.aiSmsCalendarId,
+                            title = title,
+                            description = desc,
+                            startMs = epochMs,
+                            endMs = endMs,
+                            location = address
+                        )
+                    }
+                } catch (calErr: Exception) {
+                    Log.w(TAG, "Notice adding appointment to Google Calendar: ${calErr.message}")
+                }
+            }
             return
         }
 

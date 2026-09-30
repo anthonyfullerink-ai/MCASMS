@@ -1487,8 +1487,10 @@ fun VoiceHubScreen(
                                         color = if (settings.aiSmsCalendarConnected) ActiveGreenText else MaterialTheme.colorScheme.onSurface
                                     )
                                     val calDesc = if (settings.aiSmsCalendarConnected) {
-                                        val email = settings.aiSmsCalendarEmail.ifBlank { settings.customerEmail.ifBlank { "Primary Calendar" } }
-                                        "$email • ${settings.aiSmsSlotDurationMinutes}m slots"
+                                        val calName = settings.aiSmsCalendarDisplayName.ifBlank { "Primary Calendar" }
+                                        val email = settings.aiSmsCalendarAccountName.ifBlank { settings.aiSmsCalendarEmail.ifBlank { settings.customerEmail.ifBlank { "" } } }
+                                        val accountStr = if (email.isNotBlank()) " ($email)" else ""
+                                        "$calName$accountStr • ${settings.aiSmsSlotDurationMinutes}m slots"
                                     } else {
                                         "Direct live appointment booking & slot lookup"
                                     }
@@ -1772,6 +1774,12 @@ fun VoiceHubScreen(
                                     put("aiSmsShopAddress", aiSmsShopAddressInput)
                                     put("aiSmsShopInstructions", aiSmsShopInstructionsInput)
                                     put("aiSmsCalendarConnected", aiSmsCalendarConnected)
+                                    put("aiSmsCalendarEmail", settings.aiSmsCalendarEmail)
+                                    put("aiSmsCalendarAccountName", settings.aiSmsCalendarAccountName)
+                                    put("aiSmsCalendarId", settings.aiSmsCalendarId)
+                                    put("aiSmsCalendarDisplayName", settings.aiSmsCalendarDisplayName)
+                                    put("aiSmsSlotDurationMinutes", settings.aiSmsSlotDurationMinutes)
+                                    put("aiSmsTravelBufferMinutes", settings.aiSmsTravelBufferMinutes)
                                     val masterWorkingHours = if (settings.businessHoursEnabled) "${settings.schedule.startTime} - ${settings.schedule.endTime}" else "24/7"
                                     put("aiSmsCalendarWorkingHours", masterWorkingHours)
                                     put("aiSmsAutoPauseOnHumanReply", aiSmsAutoPauseOnHumanReply)

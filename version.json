@@ -1,10 +1,10 @@
 {
-  "versionCode": 37,
-  "versionName": "1.9.1",
+  "versionCode": 38,
+  "versionName": "1.9.2",
   "downloadUrl": "https://raw.githubusercontent.com/anthonyfullerink-ai/MCASMS/main/MissedCallAutoSMS.apk",
   "proDownloadUrl": "https://raw.githubusercontent.com/anthonyfullerink-ai/MCASMS/main/MissedCallAutoSMS-Pro.apk",
-  "releaseNotes": "🚀 v1.9.1 Release: Interactive Calendar Setup & Unified Business Hours\n• 📅 Interactive Google Calendar Setup: Configure account, appointment duration chips, and travel buffers\n• ⏰ Unified Master Business Hours: Single master schedule with 1-tap presets and 7-day capsule selector\n• 🛡️ Anti-Loop SMS Protections: Automated safeguards against shortcodes, 2FA/OTP codes, and automated bot loops\n• 📱 Fully Responsive Layout: Optimized for mobile, tablet, and desktop views",
+  "releaseNotes": "🚀 v1.9.2 Release: Direct Google Account & Specific Calendar Picker\n• 👤 Google Account Discovery: Select from any Google account authenticated on your device\n• 📅 Specific Calendar Selection: Pick target booking calendar (Work, Jobs, Appointments, Primary) with native color badges\n• 🧪 Test Event Creation: 1-tap live verification inserting sample events directly into Google Calendar\n• 🔄 Automated Booking Sync: AI Receptionist and SMS agent book appointments directly into your selected calendar",
   "mandatory": false,
   "minSupportedVersion": 1,
-  "updatedAt": "2026-09-26T20:47:04.669Z"
+  "updatedAt": "2026-09-30T13:46:34.739Z"
 }
