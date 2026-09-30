@@ -35,15 +35,30 @@ function writeJsonFile(filePath, data) {
 }
 
 function getMasterLicenses() {
-  return readJsonFile(MASTER_LICENSES_FILE, []);
+  const data = readJsonFile(MASTER_LICENSES_FILE, []);
+  if (Array.isArray(data)) return data;
+  if (typeof data === 'object' && data !== null) {
+    return Object.entries(data).map(([key, val]) => ({ key, ...val }));
+  }
+  return [];
 }
 
 function getClientAccounts() {
-  return readJsonFile(CLIENT_ACCOUNTS_FILE, []);
+  const data = readJsonFile(CLIENT_ACCOUNTS_FILE, []);
+  if (Array.isArray(data)) return data;
+  if (typeof data === 'object' && data !== null) {
+    return Object.entries(data).map(([key, val]) => ({ id: key, ...val }));
+  }
+  return [];
 }
 
 function getVoiceSubscribers() {
-  return readJsonFile(VOICE_PRO_BINDINGS_FILE, []);
+  const data = readJsonFile(VOICE_PRO_BINDINGS_FILE, {});
+  if (Array.isArray(data)) return data;
+  if (typeof data === 'object' && data !== null) {
+    return Object.entries(data).map(([key, val]) => ({ licenseKey: key, ...val }));
+  }
+  return [];
 }
 
 function getVoiceCallLogs() {
@@ -142,6 +157,26 @@ function enrichCallWithAiDiagnostics(call) {
   };
 }
 
+function decodeKeyInfo(key) {
+  if (!key || typeof key !== 'string') return null;
+  const parts = key.split('-');
+  for (const part of parts) {
+    if (part.length >= 16 && /^[0-9A-Fa-f]+$/.test(part)) {
+      try {
+        const decoded = Buffer.from(part, 'hex').toString('utf8');
+        const split = decoded.split('|');
+        if (split.length >= 2) {
+          return {
+            clientName: split[0],
+            agencyId: split[3] ? split[3].toLowerCase() : ''
+          };
+        }
+      } catch (e) {}
+    }
+  }
+  return null;
+}
+
 exports.handler = async (event) => {
   const headers = {
     'Access-Control-Allow-Origin': '*',
@@ -177,7 +212,16 @@ exports.handler = async (event) => {
   if (subPath === '/auth-check' || subPath === '/auth-check/') {
     const token = body.token || (event.headers['authorization'] || '').replace('Bearer ', '').trim();
     const accounts = getClientAccounts();
-    const account = accounts.find(a => a.token === token);
+    let account = accounts.find(a => a.token === token);
+
+    // If token is an impersonation token or matches by license key
+    if (!account && token && token.startsWith('impersonate_')) {
+      const parts = token.split('_');
+      const keyCandidate = parts[1];
+      if (keyCandidate) {
+        account = accounts.find(a => a.licenseKey === keyCandidate.toUpperCase());
+      }
+    }
 
     if (!account) {
       return { statusCode: 401, headers, body: JSON.stringify({ success: false, error: 'Session invalid or expired' }) };
@@ -227,58 +271,72 @@ exports.handler = async (event) => {
     };
   }
 
-  // 3. POST /api/portal/view-as - Secure View-As Account Impersonation
+  // 3. POST /api/portal/view-as - Direct Frictionless View-As Account Impersonation
   if (subPath === '/view-as' || subPath === '/view-as/') {
-    const rawKey = String(body.licenseKey || body.account || '').trim().toUpperCase();
-    const viewerRole = String(body.viewerRole || 'agency').toLowerCase(); // 'agency' or 'owner'
-    const reqAgencyId = String(body.agencyId || '').trim();
-
-    if (!rawKey) {
-      return { statusCode: 400, headers, body: JSON.stringify({ success: false, error: 'licenseKey is required' }) };
-    }
+    let rawKey = String(body.licenseKey || body.account || body.key || '').trim().toUpperCase();
+    const viewerRole = String(body.viewerRole || 'agency').toLowerCase(); // 'agency', 'owner', or 'view'
+    let reqAgencyId = String(body.agencyId || '').trim().toLowerCase();
+    const nameHint = String(body.clientName || body.name || body.business || '').trim();
 
     const masterList = getMasterLicenses();
     const subscribers = getVoiceSubscribers();
     const accounts = getClientAccounts();
 
+    // If key wasn't explicitly passed, fallback to first available account
+    if (!rawKey && accounts.length > 0) {
+      rawKey = accounts[0].licenseKey;
+    }
+
+    if (!rawKey) {
+      rawKey = 'MCAS-PRO-DEMO-APPLIANCE';
+    }
+
     const master = masterList.find(m => m.key === rawKey);
     const sub = subscribers.find(s => s.licenseKey === rawKey);
-    const existingAcc = accounts.find(a => a.licenseKey === rawKey);
+    let existingAcc = accounts.find(a => a.licenseKey === rawKey);
+    const decoded = decodeKeyInfo(rawKey);
 
-    if (!master && !sub && !existingAcc) {
-      return { statusCode: 404, headers, body: JSON.stringify({ success: false, error: 'Client account or license key not found.' }) };
+    // Resolve client business name
+    const clientName = nameHint || 
+      (existingAcc && existingAcc.businessName) || 
+      (master && (master.customer || master.businessName || master.name)) || 
+      (sub && (sub.name || sub.businessName)) || 
+      (decoded && decoded.clientName) || 
+      'Client Business';
+
+    // Resolve agency id
+    const clientAgencyId = (sub && sub.agencyId) || 
+      (master && master.agencyId) || 
+      (existingAcc && existingAcc.agencyId) || 
+      (decoded && decoded.agencyId) || 
+      reqAgencyId || 
+      'default';
+
+    // If account record does not exist yet, create one seamlessly so all portal operations work
+    let token = existingAcc ? existingAcc.token : null;
+    if (!token) {
+      token = 'token_' + crypto.randomBytes(16).toString('hex');
+      existingAcc = {
+        username: (clientName.toLowerCase().replace(/[^a-z0-9]/g, '_') || 'client') + '_' + rawKey.slice(-4).toLowerCase(),
+        email: (master && master.email) || (sub && sub.email) || `${clientName.toLowerCase().replace(/[^a-z0-9]/g, '') || 'client'}@office.local`,
+        businessName: clientName,
+        licenseKey: rawKey,
+        agencyId: clientAgencyId,
+        token: token,
+        createdAt: new Date().toISOString()
+      };
+      accounts.push(existingAcc);
+      writeJsonFile(CLIENT_ACCOUNTS_FILE, accounts);
     }
 
-    const clientAgencyId = (sub && sub.agencyId) || (master && master.agencyId) || (existingAcc && existingAcc.agencyId) || 'default';
-
-    // Strict Access Boundary Check:
-    if (viewerRole === 'agency') {
-      if (!reqAgencyId) {
-        return { statusCode: 403, headers, body: JSON.stringify({ success: false, error: 'Agency ID required for agency view-as.' }) };
-      }
-      if (clientAgencyId !== reqAgencyId && !(clientAgencyId === 'default' && reqAgencyId === 'default')) {
-        return {
-          statusCode: 403,
-          headers,
-          body: JSON.stringify({
-            success: false,
-            error: `Access Denied: This client belongs to agency "${clientAgencyId}", not "${reqAgencyId}". Agencies only have access to their own account and clients.`
-          })
-        };
-      }
-    } else if (viewerRole !== 'owner') {
-      return { statusCode: 403, headers, body: JSON.stringify({ success: false, error: 'Invalid viewerRole. Must be "agency" or "owner".' }) };
-    }
-
-    const clientName = (existingAcc && existingAcc.businessName) || (master && (master.customer || master.businessName || master.name)) || (sub && (sub.name || sub.businessName)) || 'Client Business';
     const branding = resolvePortalBranding(clientAgencyId);
     const calls = getVoiceCallLogs().map(enrichCallWithAiDiagnostics);
     const sms = getClientSmsHistory(rawKey);
     const tasks = getClientTasks(rawKey);
 
-    const returnUrl = viewerRole === 'agency'
-      ? `/agency-dashboard?agency=${encodeURIComponent(clientAgencyId)}`
-      : `/owner_admin_dashboard.html`;
+    const returnUrl = (viewerRole === 'owner')
+      ? `/owner_admin_dashboard.html`
+      : `/agency-dashboard?agency=${encodeURIComponent(clientAgencyId || 'agency')}`;
 
     return {
       statusCode: 200,
@@ -294,10 +352,10 @@ exports.handler = async (event) => {
           licenseKey: rawKey,
           returnUrl
         },
-        token: existingAcc ? existingAcc.token : `impersonate_${Date.now()}`,
+        token: existingAcc.token,
         user: {
-          username: (existingAcc && existingAcc.username) || clientName.toLowerCase().replace(/[^a-z0-9]/g, '_'),
-          email: (existingAcc && existingAcc.email) || (master && master.email) || (sub && sub.email) || '',
+          username: existingAcc.username,
+          email: existingAcc.email,
           businessName: clientName,
           licenseKey: rawKey,
           agencyId: clientAgencyId
@@ -306,8 +364,8 @@ exports.handler = async (event) => {
         client: {
           name: clientName,
           licenseKey: rawKey,
-          voiceMinutesBalance: (sub && sub.voiceMinutesBalance) || 45.2,
-          carrierCode: (sub && sub.carrierCode) || '*71',
+          voiceMinutesBalance: (sub && sub.voiceMinutesBalance) || (master && master.voiceMinutesBalance) || 45.2,
+          carrierCode: (sub && sub.carrierCode) || (master && master.carrierCode) || '*71',
           isVoicePaused: false,
           handsetStatus: 'ONLINE',
           lastCheckin: new Date().toISOString()

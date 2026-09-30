@@ -37,5 +37,23 @@
     "lastLoginAt": "2026-09-30T18:04:05.288Z",
     "createdAt": "2026-09-30T18:04:05.280Z",
     "updatedAt": "2026-09-30T18:04:05.289Z"
+  },
+  {
+    "username": "premier_roofing_group_5dd5",
+    "email": "john@premierroofing.com",
+    "businessName": "Premier Roofing Group",
+    "licenseKey": "MCAS-PRO-5072656D69657220526F6F66696E672047726F75707C307C31373930373835313533-61745DD5",
+    "agencyId": "apex_leads",
+    "token": "token_703215dce6d3e71eecdcbaee41bc0970",
+    "createdAt": "2026-09-30T19:46:08.751Z"
+  },
+  {
+    "username": "apex_plumbing___heating_8888",
+    "email": "dave.contractor@testdomain.com",
+    "businessName": "Apex Plumbing & Heating",
+    "licenseKey": "MCAS-COMPTEST-VOICE-8888",
+    "agencyId": "default",
+    "token": "token_5498818a62c034d7a75c4600a318f43f",
+    "createdAt": "2026-09-30T19:46:31.038Z"
   }
 ]

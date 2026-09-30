@@ -1814,7 +1814,7 @@ Click "Send Test Payload" above to fire a sample event and inspect the HTTP stat
                     <td style="color: var(--muted); font-size: 12px;">${dateStr}</td>
                     <td>
                         <div class="action-btns">
-                            <a href="/portal?account=${encodeURIComponent(c.licenseKey)}&agency=${encodeURIComponent(currentAgencySlug)}&impersonate=agency" target="_blank" class="btn-sm" style="background: rgba(56, 189, 248, 0.15); border-color: var(--agency-accent); color: var(--agency-accent); font-weight: 800; text-decoration: none;" title="Open and preview the Client Portal exactly as this client experiences it">👁️ View as Client</a>
+                            <a href="/portal?account=${encodeURIComponent(c.licenseKey)}&agency=${encodeURIComponent(currentAgencySlug)}&impersonate=agency&name=${encodeURIComponent(c.name || '')}" target="_blank" class="btn-sm" style="background: rgba(56, 189, 248, 0.15); border-color: var(--agency-accent); color: var(--agency-accent); font-weight: 800; text-decoration: none;" title="Open and preview the Client Portal exactly as this client experiences it">👁️ View as Client</a>
                             <button class="btn-sm" style="border-color: var(--agency-accent); color: var(--agency-accent); font-weight: 700;" onclick="openRemoteConfigModal('${escapeHtml(c.licenseKey)}')">⚙️ Remote Config</button>
                             <button class="btn-sm" onclick="showClientSheet('${escapeHtml(c.licenseKey)}')">Setup Guide</button>
                             <button class="btn-sm" onclick="resetClientDevice('${escapeHtml(c.licenseKey)}')">Reset Lock</button>

@@ -2507,7 +2507,7 @@
             } else if (isFleetClient) {
                 actionButtons = `
                     <div class="action-button-grid">
-                        <a href="/portal?account=${encodeURIComponent(r.key)}&agency=${encodeURIComponent(r.agencyId || '')}&impersonate=owner" target="_blank" class="btn-action" style="color: #38BDF8; font-weight: bold; text-decoration:none;" title="Open Client Portal as this Client">👁️ View as Client</a>
+                        <a href="/portal?account=${encodeURIComponent(r.key)}&agency=${encodeURIComponent(r.agencyId || '')}&impersonate=owner&name=${encodeURIComponent(r.name || r.customer || '')}" target="_blank" class="btn-action" style="color: #38BDF8; font-weight: bold; text-decoration:none;" title="Open Client Portal as this Client">👁️ View as Client</a>
                         <button class="btn-action" style="color: #38BDF8;" onclick="showSetupSheetForFleetKey('${r.key}', '${escapeHtml(r.name)}', '${escapeHtml(r.agencyName || 'Agency')}')">📋 Setup Sheet</button>
                         <button class="btn-action" onclick="resetDevice('${r.key}')" ${isRevoked ? 'disabled' : ''}>Reset Lock</button>
                         <button class="btn-action btn-danger" onclick="toggleRevokeKey('${r.key}')">${isRevoked ? 'Reactivate' : 'Revoke'}</button>
@@ -2516,7 +2516,7 @@
             } else {
                 actionButtons = `
                     <div class="action-button-grid">
-                        <a href="/portal?account=${encodeURIComponent(r.key)}&impersonate=owner" target="_blank" class="btn-action" style="color: #38BDF8; font-weight: bold; text-decoration:none;" title="Open Client Portal as this Client">👁️ View as Client</a>
+                        <a href="/portal?account=${encodeURIComponent(r.key)}&impersonate=owner&name=${encodeURIComponent(r.name || r.customer || '')}" target="_blank" class="btn-action" style="color: #38BDF8; font-weight: bold; text-decoration:none;" title="Open Client Portal as this Client">👁️ View as Client</a>
                         <button class="btn-action" style="color: #10B981; font-weight: bold;" onclick="openMembershipManageModal('${r.key}')">⚙️ Manage Sub</button>
                         <button class="btn-action" style="color: ${isPro ? '#C084FC' : 'var(--primary)'};" onclick="triggerEmailForKey('${r.key}')">📧 Email APK</button>
                         <button class="btn-action" onclick="resetDevice('${r.key}')" ${isRevoked ? 'disabled' : ''}>Reset Lock</button>
@@ -5592,7 +5592,7 @@ OPERATIONAL PROTOCOL:
                                 </td>
                                 <td>
                                     <div style="display: flex; gap: 4px; flex-wrap: wrap;">
-                                        <a href="/portal?account=${encodeURIComponent(c.licenseKey)}&agency=${encodeURIComponent(agency.id)}&impersonate=owner" target="_blank" class="btn-action" style="padding: 4px 8px; font-size: 11px; color: #38BDF8; border-color: #38BDF8; text-decoration: none;" title="Open Client Portal as this Client">👁️ View as Client</a>
+                                        <a href="/portal?account=${encodeURIComponent(c.licenseKey)}&agency=${encodeURIComponent(agency.id)}&impersonate=owner&name=${encodeURIComponent(c.name || '')}" target="_blank" class="btn-action" style="padding: 4px 8px; font-size: 11px; color: #38BDF8; border-color: #38BDF8; text-decoration: none;" title="Open Client Portal as this Client">👁️ View as Client</a>
                                         <button class="btn-action" style="padding: 4px 8px; font-size: 11px; color: #38BDF8; border-color: #38BDF8;" onclick="openOwnerRemoteConfigModal('${c.licenseKey}', '${escapeHtml(c.name)}', '${agency.id}')">⚙️ Remote Config</button>
                                         <button class="btn-action" style="padding: 4px 8px; font-size: 11px;" onclick="copyToClipboard('${c.licenseKey}')">Copy Key</button>
                                     </div>
