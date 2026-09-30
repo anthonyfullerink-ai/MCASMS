@@ -37,7 +37,11 @@
             border-radius: 0px !important;
         }
 
-        body {
+        html, body {
+            overflow-x: hidden !important;
+            max-width: 100% !important;
+            width: 100% !important;
+            position: relative;
             font-family: 'Plus Jakarta Sans', -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
             background-color: var(--bg);
             color: var(--text);
@@ -513,16 +517,19 @@
             left: 0;
             right: 0;
             bottom: 0;
-            background: rgba(0,0,0,0.8);
+            background: rgba(4, 6, 12, 0.88);
             display: flex;
-            align-items: center;
+            align-items: flex-start;
             justify-content: center;
-            z-index: 200;
-            padding: 20px;
+            z-index: 99999;
+            padding: 24px 16px;
+            overflow-y: auto;
+            -webkit-overflow-scrolling: touch;
             visibility: hidden;
             opacity: 0;
-            transition: all 0.2s;
-            backdrop-filter: blur(5px);
+            transition: opacity 0.2s ease, visibility 0.2s ease;
+            backdrop-filter: blur(8px);
+            -webkit-backdrop-filter: blur(8px);
         }
 
         .modal-overlay.active {
@@ -533,11 +540,41 @@
         .modal-box {
             background: var(--card-bg);
             border: 1px solid var(--card-border);
-            border-radius: 20px;
-            max-width: 600px;
+            border-radius: 18px;
+            max-width: 620px;
             width: 100%;
-            padding: 30px;
-            box-shadow: 0 20px 60px rgba(0,0,0,0.7);
+            padding: 28px 24px;
+            box-shadow: 0 24px 70px rgba(0,0,0,0.85);
+            margin: auto;
+            max-height: calc(100vh - 48px);
+            overflow-y: auto;
+            position: relative;
+            box-sizing: border-box;
+        }
+
+        .modal-close-icon {
+            position: absolute;
+            top: 18px;
+            right: 18px;
+            background: rgba(255, 255, 255, 0.06);
+            border: 1px solid var(--card-border);
+            color: var(--muted);
+            width: 32px;
+            height: 32px;
+            border-radius: 8px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 20px;
+            cursor: pointer;
+            transition: all 0.2s;
+            z-index: 10;
+        }
+
+        .modal-close-icon:hover {
+            background: rgba(255, 255, 255, 0.15);
+            color: #FFF;
+            border-color: rgba(255, 255, 255, 0.3);
         }
 
         .modal-title {
@@ -1240,6 +1277,7 @@ Click "Send Test Payload" above to fire a sample event and inspect the HTTP stat
 <!-- Modal: Issue Client License -->
 <div id="deployModal" class="modal-overlay">
     <div class="modal-box" style="max-width: 620px;">
+        <button class="modal-close-icon" onclick="closeDeployModal()" aria-label="Close modal">&times;</button>
         <h2 class="modal-title">Deploy Client Appliance</h2>
         <p class="modal-desc">Issue a dedicated Android telecom appliance license for your client's office smartphone.</p>
 
@@ -1343,6 +1381,7 @@ Click "Send Test Payload" above to fire a sample event and inspect the HTTP stat
 <!-- Modal: 1-Click Client Onboarding Sheet -->
 <div id="sheetModal" class="modal-overlay">
     <div class="modal-box" style="max-width: 640px;">
+        <button class="modal-close-icon" onclick="closeSheetModal()" aria-label="Close modal">&times;</button>
         <h2 class="modal-title">Client Appliance Onboarding Sheet</h2>
         <p class="modal-desc">Forward this complete setup guide directly to your client or field technician.</p>
 
@@ -1359,7 +1398,8 @@ Click "Send Test Payload" above to fire a sample event and inspect the HTTP stat
 <!-- Modal: Remote Appliance & Voice Configuration -->
 <div id="remoteConfigModal" class="modal-overlay">
     <div class="modal-box" style="max-width: 680px; max-height: 90vh; overflow-y: auto;">
-        <div style="display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 12px;">
+        <button class="modal-close-icon" onclick="closeRemoteConfigModal()" aria-label="Close modal">&times;</button>
+        <div style="display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 12px; padding-right: 32px;">
             <div>
                 <h2 class="modal-title" style="display: flex; align-items: center; gap: 8px;">
                     <span>⚙️</span> Remote Client Appliance Config

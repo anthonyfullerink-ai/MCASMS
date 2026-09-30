@@ -15,7 +15,7 @@
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800;900&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
-    <link rel="stylesheet" href="/assets/css/navbar.css">
+    <link rel="stylesheet" href="/assets/css/navbar.css?v=20261001">
 
     <style>
         :root {
@@ -48,64 +48,7 @@
             padding: 0 24px;
         }
 
-        /* Navbar */
-        nav {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            padding: 16px 24px;
-            background: rgba(9, 11, 14, 0.95);
-            border-bottom: 1px solid var(--card-border);
-            position: sticky;
-            top: 0;
-            z-index: 100;
-            backdrop-filter: blur(10px);
-        }
 
-        .logo {
-            font-size: 18px;
-            font-weight: 900;
-            color: #FFF;
-            text-decoration: none;
-            display: flex;
-            align-items: center;
-            gap: 8px;
-        }
-
-        .logo span { color: var(--agency-accent); }
-
-        .nav-links {
-            display: flex;
-            gap: 20px;
-            align-items: center;
-        }
-
-        .nav-links a {
-            color: var(--muted);
-            text-decoration: none;
-            font-size: 14px;
-            font-weight: 600;
-            transition: color 0.2s;
-        }
-
-        .nav-links a:hover { color: #FFF; }
-
-        .btn-nav-portal {
-            background: rgba(56, 189, 248, 0.15);
-            color: var(--agency-accent);
-            border: 1px solid rgba(56, 189, 248, 0.35);
-            padding: 7px 16px;
-            border-radius: 0px !important;
-            font-size: 12px;
-            font-weight: 700;
-            text-decoration: none;
-            transition: all 0.2s;
-        }
-
-        .btn-nav-portal:hover {
-            background: var(--agency-accent);
-            color: #0F172A;
-        }
 
         /* Hero */
         .hero {

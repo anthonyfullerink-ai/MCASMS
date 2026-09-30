@@ -68,14 +68,16 @@ pre, code {
 }
 
 .global-nav-container {
-    max-width: 1240px;
+    max-width: 1360px;
     margin: 0 auto;
-    padding: 0 24px;
+    padding: 0 20px;
     height: 70px;
     display: flex;
     align-items: center;
     justify-content: space-between;
-    gap: 16px;
+    gap: 14px;
+    width: 100%;
+    box-sizing: border-box;
 }
 
 /* Brand Logo */
@@ -120,10 +122,12 @@ pre, code {
 .global-nav-links {
     display: flex;
     align-items: center;
-    gap: 20px;
+    gap: 16px;
     list-style: none;
     margin: 0;
     padding: 0;
+    flex-shrink: 1;
+    min-width: 0;
 }
 
 .global-nav-link {
@@ -375,7 +379,11 @@ pre, code {
 }
 
 /* Breakpoint Logic (Desktop, Tablet & Mobile) */
-@media (max-width: 1240px) {
+@media (max-width: 1360px) {
+    .global-nav-container {
+        padding: 0 16px !important;
+        gap: 10px !important;
+    }
     .global-nav-links {
         gap: 10px !important;
     }
@@ -383,9 +391,26 @@ pre, code {
         font-size: 13px !important;
         padding: 6px 2px !important;
     }
+    .global-btn-trial {
+        padding: 7px 12px !important;
+        font-size: 12.5px !important;
+    }
 }
 
-@media (max-width: 1120px) {
+@media (max-width: 1300px) {
+    /* Below 1300px, tuck desktop login pills into the drawer to guarantee ample breathing room */
+    .global-btn-login {
+        display: none !important;
+    }
+    .global-nav-links {
+        gap: 10px !important;
+    }
+    .global-nav-link {
+        font-size: 12.5px !important;
+    }
+}
+
+@media (max-width: 1140px) {
     .global-nav-links {
         display: none !important;
     }
@@ -407,8 +432,9 @@ pre, code {
         display: none !important;
     }
     .global-nav-container {
-        padding: 0 16px !important;
+        padding: 0 14px !important;
         height: 62px !important;
+        gap: 8px !important;
     }
     .global-logo-text {
         font-size: 15px !important;
@@ -418,8 +444,9 @@ pre, code {
         height: 28px !important;
     }
     .global-btn-trial {
-        padding: 7px 12px !important;
-        font-size: 12px !important;
+        padding: 6px 10px !important;
+        font-size: 11.5px !important;
+        white-space: nowrap !important;
     }
     .footer-grid {
         grid-template-columns: 1fr !important;
@@ -432,6 +459,27 @@ pre, code {
         flex-direction: column !important;
         text-align: center !important;
         gap: 16px !important;
+    }
+}
+
+@media (max-width: 480px) {
+    .global-nav-container {
+        padding: 0 10px !important;
+    }
+    .global-logo-text {
+        font-size: 13.5px !important;
+    }
+    .global-logo {
+        gap: 6px !important;
+    }
+    .global-btn-trial {
+        padding: 6px 8px !important;
+        font-size: 11px !important;
+    }
+    .global-mobile-menu-btn {
+        width: 38px !important;
+        height: 38px !important;
+        padding: 8px 6px !important;
     }
 }
 

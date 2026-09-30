@@ -18,7 +18,7 @@
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800;900&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
-    <link rel="stylesheet" href="/assets/css/navbar.css">
+    <link rel="stylesheet" href="/assets/css/navbar.css?v=20261001">
 
     <style>
         :root {
@@ -48,71 +48,7 @@
             -webkit-font-smoothing: antialiased;
         }
 
-        /* Top Navbar */
-        nav {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            padding: 16px 24px;
-            background: rgba(8, 12, 22, 0.95);
-            backdrop-filter: blur(12px);
-            border-bottom: 1px solid var(--card-border);
-            position: sticky;
-            top: 0;
-            z-index: 1000;
-        }
 
-        .nav-inner {
-            width: 100%;
-            max-width: 1200px;
-            margin: 0 auto;
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-        }
-
-        .logo {
-            font-size: 18px;
-            font-weight: 800;
-            color: #FFF;
-            display: flex;
-            align-items: center;
-            gap: 8px;
-            text-decoration: none;
-        }
-
-        .nav-links {
-            display: flex;
-            gap: 20px;
-            align-items: center;
-        }
-
-        .nav-links a {
-            color: var(--muted);
-            text-decoration: none;
-            font-size: 14px;
-            font-weight: 600;
-            transition: color 0.2s;
-        }
-
-        .nav-links a:hover { color: #FFF; }
-
-        .btn-pro-nav {
-            background: linear-gradient(135deg, #7E22CE, #9333EA);
-            color: #FFF;
-            border: 1px solid #C084FC;
-            padding: 8px 18px;
-            border-radius: 0px !important;
-            font-weight: 800;
-            font-size: 13px;
-            text-decoration: none;
-            transition: all 0.2s;
-        }
-
-        .btn-pro-nav:hover {
-            transform: translateY(-1px);
-            box-shadow: 0 4px 15px rgba(147, 51, 234, 0.4);
-        }
 
         /* Layout */
         .container {
@@ -467,7 +403,7 @@
                 <span>🏢 Agency Login</span>
             </a>
             <a href="https://buy.stripe.com/6oU9ATbBIeFI8U86OR2go0g" class="global-btn-trial" style="background: linear-gradient(135deg, #7C3AED 0%, #6D28D9 100%);">
-                Get Pro Gateway ($299.99) &rarr;
+                Get Pro ($299.99) &rarr;
             </a>
             <button id="globalMobileMenuBtn" class="global-mobile-menu-btn" onclick="toggleGlobalMobileMenu()" aria-label="Toggle navigation">
                 <span></span>
