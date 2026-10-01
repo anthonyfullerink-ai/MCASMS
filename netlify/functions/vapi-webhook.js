@@ -31,6 +31,24 @@ function getLocalToken(licenseKey) {
   return null;
 }
 
+const LOCAL_VOICE_BINDINGS_PATH = path.join(__dirname, '../../.voice_pro_bindings.json');
+function getLocalVoiceBinding(keyOrNum) {
+  try {
+    if (fsModule.existsSync(LOCAL_VOICE_BINDINGS_PATH)) {
+      const cache = JSON.parse(fsModule.readFileSync(LOCAL_VOICE_BINDINGS_PATH, 'utf8') || '{}');
+      if (cache[keyOrNum]) return cache[keyOrNum];
+      const cleanTarget = String(keyOrNum).replace(/\D/g, '').slice(-10);
+      for (const k of Object.keys(cache)) {
+        const item = cache[k];
+        const numClean = String(item.forwardingNumber || item.phone || item.contact || '').replace(/\D/g, '').slice(-10);
+        if (cleanTarget && numClean === cleanTarget) return item;
+        if (item.vapiAssistantId === keyOrNum || item.carrierCode?.includes(keyOrNum)) return item;
+      }
+    }
+  } catch (e) {}
+  return null;
+}
+
 const STRIPE_SECRET_KEY = process.env.STRIPE_SECRET_KEY || '';
 
 // In-Memory Shared Phone Number Routing Caches
@@ -269,23 +287,49 @@ exports.handler = async (event) => {
       const diversionHeader = sipHeaders['diversion'] || sipHeaders['Diversion'] || sipHeaders['x-diversion'] || '';
       let matchedSub = null;
 
-      if (diversionHeader && fs && fs.getVoiceBinding) {
+      if (diversionHeader) {
         const divDigits = String(diversionHeader).replace(/\D/g, '').slice(-10);
         if (divDigits) {
           console.log(`📞 [SIP DIVERSION DETECTED] Forwarded from: ${divDigits}`);
-          matchedSub = await fs.getVoiceBinding(divDigits);
+          if (fs && fs.getVoiceBinding) matchedSub = await fs.getVoiceBinding(divDigits);
+          if (!matchedSub) matchedSub = getLocalVoiceBinding(divDigits);
         }
       }
 
       // If pulse matched, load the subscriber's full binding
-      if (matchedPulse && fs && fs.getVoiceBinding) {
-        matchedSub = await fs.getVoiceBinding(matchedPulse.licenseKey);
+      if (matchedPulse) {
+        if (fs && fs.getVoiceBinding) matchedSub = await fs.getVoiceBinding(matchedPulse.licenseKey);
+        if (!matchedSub) matchedSub = getLocalVoiceBinding(matchedPulse.licenseKey);
       }
 
       // Fallback: Check by inbound number or default active subscriber
-      if (!matchedSub && fs && fs.getVoiceBinding) {
-        if (inboundNumber) matchedSub = await fs.getVoiceBinding(inboundNumber);
-        if (!matchedSub) matchedSub = await fs.getVoiceBinding('MCAS-PRO-TRIAL-001');
+      if (!matchedSub) {
+        if (inboundNumber && fs && fs.getVoiceBinding) matchedSub = await fs.getVoiceBinding(inboundNumber);
+        if (!matchedSub && inboundNumber) matchedSub = getLocalVoiceBinding(inboundNumber);
+        if (!matchedSub && fs && fs.getVoiceBinding) matchedSub = await fs.getVoiceBinding('MCAS-PRO-TRIAL-001');
+        if (!matchedSub) matchedSub = getLocalVoiceBinding('MCAS-PRO-TRIAL-001');
+      }
+
+      // Route Anthony Fuller / Owner cell phone or dedicated company assistant directly
+      const isOwnerCall = (diversionHeader && String(diversionHeader).replace(/\D/g, '').includes('7325523896')) ||
+                          (cleanCallerDigits === '7325523896') ||
+                          (matchedPulse?.callerPhone && String(matchedPulse.callerPhone).replace(/\D/g, '').includes('7325523896')) ||
+                          (matchedPulse?.licenseKey && (matchedPulse.licenseKey.includes('OWNER') || matchedPulse.licenseKey.includes('ANTHONY'))) ||
+                          (matchedSub?.licenseKey && (matchedSub.licenseKey.includes('OWNER') || matchedSub.licenseKey.includes('ANTHONY')));
+
+      const dedicatedAssistantId = isOwnerCall
+        ? '5ad3f565-09a4-4eac-b632-bae823fea118'
+        : (matchedSub?.vapiAssistantId || matchedSub?.assistantId || null);
+
+      if (dedicatedAssistantId) {
+        console.log(`🎯 [VAPI DEDICATED ASSISTANT ROUTED] Call ${callId} directly routed to assistant ${dedicatedAssistantId} (isOwner: ${isOwnerCall})`);
+        return {
+          statusCode: 200,
+          headers,
+          body: JSON.stringify({
+            assistantId: dedicatedAssistantId
+          })
+        };
       }
 
       const licenseKey = matchedPulse?.licenseKey || matchedSub?.licenseKey || 'MCAS-PRO-TRIAL-001';
@@ -493,11 +537,23 @@ Key Objectives:
           const recipient = (args.recipient || callerNum || '').trim();
           const businessName = (args.business_name || 'Your Business').trim();
           const industry = (args.industry || 'Contractor / Business').trim();
+          const requestedPlan = (args.plan || 'bundle').toLowerCase().trim();
 
-          console.log(`🛒 [VAPI TOOL CALL] send_checkout_link requested via ${contactType} to ${recipient} for "${businessName}" (${industry})`);
+          console.log(`🛒 [VAPI TOOL CALL] send_checkout_link requested plan=${requestedPlan} via ${contactType} to ${recipient} for "${businessName}" (${industry})`);
 
           let checkoutUrl = "https://missedcallautosms.com/voice#pricing";
-          if (STRIPE_SECRET_KEY) {
+          let planTitle = "Founder's Flagship + AI Voice Receptionist ($59.98 today)";
+
+          if (requestedPlan === 'trial' || requestedPlan.includes('trial')) {
+            checkoutUrl = "https://buy.stripe.com/5kQ5kDbBI8hkdao8WZ2go0c";
+            planTitle = "3-Day Free Trial ($0.00 today, converts to $49.99 lifetime after day 3)";
+          } else if (requestedPlan === 'pro' || requestedPlan.includes('pro') || requestedPlan.includes('gateway')) {
+            checkoutUrl = "https://buy.stripe.com/6oU9ATbBIeFI8U86OR2go0g";
+            planTitle = "Perpetual Pro Gateway Edition ($299.99 lifetime)";
+          } else if (requestedPlan === 'flagship' || requestedPlan.includes('flagship') || requestedPlan === 'lifetime') {
+            checkoutUrl = "https://buy.stripe.com/3cI9AT49g2X07Q41ux2go0a";
+            planTitle = "Founder's Flagship Edition ($49.99 lifetime)";
+          } else if (STRIPE_SECRET_KEY) {
             try {
               const sessionPostData = {
                 'mode': 'subscription',
@@ -540,64 +596,37 @@ Key Objectives:
 
           if (contactType === 'email' && recipient.includes('@') && process.env.RESEND_API_KEY) {
             try {
-              const resendPayload = JSON.stringify({
-                from: process.env.FROM_EMAIL || 'Missed Call Auto SMS <support@missedcallautosms.com>',
-                to: [recipient],
-                subject: `🚀 Your Missed Call Auto SMS Setup Link for ${businessName}`,
-                html: `
-                  <div style="font-family: -apple-system, BlinkMacSystemFont, sans-serif; background: #090B0E; color: #FFFFFF; padding: 32px; border-radius: 12px; max-width: 600px; margin: 0 auto; border: 1px solid #222836;">
-                    <div style="text-align: center; margin-bottom: 24px;">
-                      <span style="font-size: 24px; font-weight: 900; color: #00E676;">Missed Call Auto SMS</span>
-                      <p style="color: #94A3B8; font-size: 14px; margin-top: 4px;">24/7 AI Voice Receptionist + Native SIM Auto-Text</p>
-                    </div>
-                    <div style="background: #131720; padding: 24px; border-radius: 10px; border: 1px solid #222836;">
-                      <h2 style="color: #FFF; margin-top: 0; font-size: 18px;">Hello from your Demo Agent!</h2>
-                      <p style="color: #CBD5E1; font-size: 14px; line-height: 1.6;">
-                        Thank you for trying our live interactive voice demonstration for <strong>${businessName}</strong> (${industry}).
-                      </p>
-                      <p style="color: #CBD5E1; font-size: 14px; line-height: 1.6;">
-                        Here is your direct setup link for the <strong>$59.98 bundle</strong> ($49.99 Founder's Flagship lifetime APK + $9.99/mo 24/7 AI Voice Receptionist add-on):
-                      </p>
-                      <div style="text-align: center; margin: 28px 0;">
-                        <a href="${checkoutUrl}" style="background: #00E676; color: #000; font-weight: 800; font-size: 15px; padding: 14px 28px; border-radius: 8px; text-decoration: none; display: inline-block;">
-                          Complete Setup ($59.98 Today, then $9.99/mo) ➔
-                        </a>
-                      </div>
-                      <ul style="color: #94A3B8; font-size: 13px; line-height: 1.8; padding-left: 20px;">
-                        <li>Lifetime Android APK License bound to your phone</li>
-                        <li>100% Authentic Carrier SIM auto-texts (Zero 10DLC fees)</li>
-                        <li>24/7 AI Voice Phone Receptionist with 15 free test minutes</li>
-                        <li>Instant calendar booking & *71 conditional call forwarding</li>
-                      </ul>
-                    </div>
+              const resendPayload = `
+                <div style="font-family: -apple-system, BlinkMacSystemFont, sans-serif; background: #090B0E; color: #FFFFFF; padding: 32px; border-radius: 12px; max-width: 600px; margin: 0 auto; border: 1px solid #222836;">
+                  <div style="text-align: center; margin-bottom: 24px;">
+                    <span style="font-size: 24px; font-weight: 900; color: #00E676;">Missed Call Auto SMS</span>
+                    <p style="color: #94A3B8; font-size: 14px; margin-top: 4px;">24/7 AI Voice Receptionist + Native SIM Auto-Text</p>
                   </div>
-                `
-              });
-              await new Promise((res, rej) => {
-                const rReq = https.request({
-                  hostname: 'api.resend.com',
-                  path: '/emails',
-                  method: 'POST',
-                  headers: {
-                    'Authorization': `Bearer ${process.env.RESEND_API_KEY}`,
-                    'Content-Type': 'application/json',
-                    'Content-Length': Buffer.byteLength(resendPayload)
-                  }
-                }, rRes => {
-                  let b = '';
-                  rRes.on('data', c => b += c);
-                  rRes.on('end', () => res(b));
-                });
-                rReq.on('error', rej);
-                rReq.write(resendPayload);
-                rReq.end();
-              });
+                  <div style="background: #131720; padding: 24px; border-radius: 10px; border: 1px solid #222836;">
+                    <h2 style="color: #FFF; margin-top: 0; font-size: 18px;">Your Setup Link for ${businessName}</h2>
+                    <p style="color: #CBD5E1; font-size: 14px; line-height: 1.6;">
+                      Here is your direct setup link for <strong>${planTitle}</strong>:
+                    </p>
+                    <div style="text-align: center; margin: 28px 0;">
+                      <a href="${checkoutUrl}" style="background: #00E676; color: #000; font-weight: 800; font-size: 15px; padding: 14px 28px; border-radius: 8px; text-decoration: none; display: inline-block;">
+                        Complete Setup ➔
+                      </a>
+                    </div>
+                    <ul style="color: #94A3B8; font-size: 13px; line-height: 1.8; padding-left: 20px;">
+                      <li>Lifetime Android APK License bound to your phone</li>
+                      <li>100% Authentic Carrier SIM auto-texts (Zero 10DLC fees)</li>
+                      <li>Instant automated lead recovery in under 3 seconds</li>
+                    </ul>
+                  </div>
+                </div>
+              `;
+              await sendResendEmail(process.env.RESEND_API_KEY, recipient, process.env.FROM_EMAIL, `🚀 Your Missed Call Auto SMS Checkout Link: ${planTitle}`, resendPayload);
               console.log(`✉️ [EMAIL SENT] Checkout link emailed to ${recipient}`);
             } catch (emailErr) {
               console.error('❌ [EMAIL SEND FAILED]:', emailErr.message);
             }
           } else {
-            const smsMessage = `Here is your link to get Missed Call Auto SMS ($59.98 today: $49.99 Flagship APK + $9.99/mo 24/7 AI Voice Receptionist): ${checkoutUrl} - Download your APK immediately after checkout!`;
+            const smsMessage = `Here is your Missed Call Auto SMS setup link for ${planTitle}: ${checkoutUrl} - Download your APK and activate immediately!`;
             if (fs && msg) {
               try {
                 let sub = await fs.getVoiceBinding('MCAS-PRO-TRIAL-001');
@@ -632,7 +661,124 @@ Key Objectives:
 
           results.push({
             toolCallId: tc.id,
-            result: `The $59.98 bundle checkout link (${checkoutUrl}) was successfully dispatched to ${recipient} via ${contactType}. Tell the customer you have sent the link and they can complete checkout anytime.`
+            result: `The checkout link for ${planTitle} (${checkoutUrl}) was successfully dispatched to ${recipient} via ${contactType}. Tell the customer you have sent the link and they can complete checkout anytime.`
+          });
+        }
+
+        if (fnName === 'send_support_link') {
+          let args = {};
+          try {
+            args = typeof tc.function?.arguments === 'string'
+              ? JSON.parse(tc.function.arguments)
+              : (tc.function?.arguments || tc.parameters || {});
+          } catch (e) {
+            args = {};
+          }
+
+          const resourceType = (args.resource_type || 'apk_download').toLowerCase().trim();
+          const recipient = (args.recipient || callerNum || '').trim();
+
+          let targetUrl = 'https://missedcallautosms.com/MissedCallAutoSMS.apk';
+          let resourceTitle = 'Missed Call Auto SMS APK Download Link';
+
+          if (resourceType === 'license_portal' || resourceType.includes('license')) {
+            targetUrl = 'https://missedcallautosms.com/license_dashboard.html';
+            resourceTitle = 'Customer License & Device Dashboard';
+          } else if (resourceType === 'support_ticket' || resourceType.includes('ticket')) {
+            targetUrl = 'https://missedcallautosms.com/support.html';
+            resourceTitle = 'Technical Support Desk';
+          }
+
+          const smsMessage = `Here is your Missed Call Auto SMS link for ${resourceTitle}: ${targetUrl} - Reach back out if you have any questions!`;
+
+          if (fs && msg && recipient && !recipient.includes('@')) {
+            try {
+              let sub = await fs.getVoiceBinding('MCAS-PRO-TRIAL-001');
+              let targetFcmToken = null;
+              if (sub?.licenseKey) {
+                const dev = await fs.getDeviceBinding(sub.licenseKey);
+                targetFcmToken = dev?.fcm_token;
+              }
+              if (!targetFcmToken) {
+                const localCache = getLocalToken('MCAS-PRO-TRIAL-001');
+                targetFcmToken = localCache?.fcm_token;
+              }
+              if (targetFcmToken) {
+                await msg.send({
+                  token: targetFcmToken,
+                  data: {
+                    phone: recipient,
+                    message: smsMessage,
+                    sim_slot: '1',
+                    timestamp: String(Date.now()),
+                    source: 'central_cloud_relay'
+                  },
+                  android: { priority: 'high' }
+                });
+                console.log(`📱 [SUPPORT SMS DISPATCHED] ${resourceTitle} link sent to ${recipient}`);
+              }
+            } catch (smsErr) {
+              console.error('❌ [SUPPORT SMS DISPATCH FAILED]:', smsErr.message);
+            }
+          }
+
+          results.push({
+            toolCallId: tc.id,
+            result: `The ${resourceTitle} link (${targetUrl}) was successfully sent to ${recipient}. Advise the caller to check their messages.`
+          });
+        }
+
+        if (fnName === 'escalate_to_anthony') {
+          let args = {};
+          try {
+            args = typeof tc.function?.arguments === 'string'
+              ? JSON.parse(tc.function.arguments)
+              : (tc.function?.arguments || tc.parameters || {});
+          } catch (e) {
+            args = {};
+          }
+
+          const callerName = args.caller_name || 'Prospective Client / Partner';
+          const callerPhone = args.caller_phone || callerNum || 'Unknown Phone';
+          const inquiryDetails = args.inquiry_details || 'High priority inquiry regarding Missed Call Auto SMS';
+          const urgency = args.urgency || 'HIGH';
+
+          console.log(`🚨 [ESCALATION TO ANTHONY] ${callerName} (${callerPhone}): ${inquiryDetails} [Urgency: ${urgency}]`);
+
+          if (process.env.RESEND_API_KEY) {
+            try {
+              const htmlContent = `
+                <div style="font-family: -apple-system, BlinkMacSystemFont, sans-serif; background: #090B0E; color: #FFFFFF; padding: 24px;">
+                  <div style="max-width: 600px; margin: 0 auto; background: #131720; border: 1px solid #EF4444; border-radius: 12px; padding: 24px;">
+                    <h2 style="color: #EF4444; margin-top: 0;">🚨 Urgent Caller Escalation for Anthony Fuller</h2>
+                    <p style="color: #CBD5E1; font-size: 15px;">A caller on the company phone line requested direct contact with you:</p>
+                    <ul style="color: #FFFFFF; font-size: 14px; line-height: 1.8;">
+                      <li><strong>Caller Name:</strong> ${callerName}</li>
+                      <li><strong>Phone Number:</strong> <a href="tel:${callerPhone}" style="color: #00E676;">${callerPhone}</a></li>
+                      <li><strong>Urgency:</strong> ${urgency}</li>
+                      <li><strong>Inquiry / Notes:</strong> ${inquiryDetails}</li>
+                      <li><strong>Time:</strong> ${new Date().toLocaleString('en-US', { timeZone: 'America/New_York' })} EST</li>
+                    </ul>
+                    <p style="color: #94A3B8; font-size: 13px;">Received via Alex (MCAS - Company Sales & Support Agent) on inbound line +1 (732) 660-9121.</p>
+                  </div>
+                </div>
+              `;
+              await sendResendEmail(
+                process.env.RESEND_API_KEY,
+                'contactus@offgridmediagroup.com',
+                process.env.FROM_EMAIL || 'Missed Call Auto SMS <support@missedcallautosms.com>',
+                `🚨 [URGENT CALLER] ${callerName} (${callerPhone}) requested Anthony Fuller`,
+                htmlContent
+              );
+              console.log(`✉️ [ESCALATION EMAIL SENT] Alert delivered to contactus@offgridmediagroup.com`);
+            } catch (emailErr) {
+              console.error('❌ [ESCALATION EMAIL FAILED]:', emailErr.message);
+            }
+          }
+
+          results.push({
+            toolCallId: tc.id,
+            result: `The inquiry from ${callerName} (${callerPhone}) was immediately flagged and dispatched directly to founder Anthony Fuller's priority inbox with urgency ${urgency}. Reassure the caller that Anthony has received their details and will follow up shortly.`
           });
         }
       }

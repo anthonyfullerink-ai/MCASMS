@@ -1,4 +1,35 @@
 {
+  "MCAS-OWNER-ANTHONY": {
+    "licenseKey": "MCAS-OWNER-ANTHONY",
+    "agencyId": "founder",
+    "updatedAt": "2026-10-01T19:00:00.000Z",
+    "updatedBy": "anthony",
+    "voice": {
+      "voiceReceptionistEnabled": true,
+      "voiceAgentName": "Alex",
+      "customGreeting": "Thanks for calling Missed Call Auto SMS! Anthony is currently assisting a customer or in product development. Are you looking to set up an Android lead recovery appliance for your business, or do you have a question about your software license?",
+      "systemPrompt": "Senior Technical Solutions and Product Specialist for Missed Call Auto SMS representing company and founder Anthony Fuller.",
+      "forwardingNumber": "+1 (732) 660-9121",
+      "emergencyTransferNumber": "+1 (732) 552-3896",
+      "vapiAssistantId": "5ad3f565-09a4-4eac-b632-bae823fea118",
+      "model": "gpt-4o-mini"
+    },
+    "handset": {
+      "messageTemplate": "Hey! Thanks for reaching out to Missed Call Auto SMS. Anthony is currently on a client deployment. How can we help you today?",
+      "jitterDelaySeconds": 3,
+      "muteNativeAutoReply": false,
+      "outboundWebhookEnabled": true,
+      "lockHandsetSettings": false
+    },
+    "heartbeat": {
+      "lastSeenAt": "2026-10-01T19:00:00.000Z",
+      "appVersion": "v1.6.0",
+      "batteryLevel": 100,
+      "isCharging": true,
+      "deviceId": "OWNER-DEVICE-ANTHONY",
+      "ip": "127.0.0.1"
+    }
+  },
   "MCAS-PRO-5072656D69657220526F6F66696E672047726F75707C307C31373930373835313533-61745DD5": {
     "licenseKey": "MCAS-PRO-5072656D69657220526F6F66696E672047726F75707C307C31373930373835313533-61745DD5",
     "agencyId": "apex_leads",

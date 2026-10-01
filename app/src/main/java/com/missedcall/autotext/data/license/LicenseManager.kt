@@ -44,11 +44,13 @@ object LicenseManager {
         }
         if (trimmedKey == "MCAS-PRO-DEMO-89F2" ||
             trimmedKey == "MCAT-PRO-DEMO-89F2" ||
-            trimmedKey == "MCAS-PRO-DEMO-TRIAL-89F2") {
+            trimmedKey == "MCAS-PRO-DEMO-TRIAL-89F2" ||
+            trimmedKey == "MCAS-OWNER-ANTHONY" ||
+            trimmedKey == "MCAS-PRO-OWNER-ANTHONY") {
             return LicenseInfo(
                 status = LicenseStatus.ACTIVE_LIFETIME,
                 licenseKey = trimmedKey,
-                licensedTo = "Owner & Reviewer Master Pro Demo",
+                licensedTo = "Anthony Fuller (Owner & Founder)",
                 expiryTimestamp = 0L,
                 checksum = "89F2",
                 tier = LicenseTier.PRO

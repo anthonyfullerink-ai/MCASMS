@@ -4985,6 +4985,24 @@ const server = http.createServer((req, res) => {
             }
           } catch (e) {}
 
+          // Check local bindings cache if Firestore has no match
+          if (!targetAssistantId) {
+            try {
+              const localBindingPath = path.join(__dirname, '.voice_pro_bindings.json');
+              if (fs.existsSync(localBindingPath)) {
+                const localCache = JSON.parse(fs.readFileSync(localBindingPath, 'utf8') || '{}');
+                if (localCache[key]?.vapiAssistantId) {
+                  targetAssistantId = localCache[key].vapiAssistantId;
+                  binding = localCache[key];
+                }
+              }
+            } catch (e) {}
+          }
+
+          if (!targetAssistantId && (key === 'MCAS-OWNER-ANTHONY' || key.includes('OWNER') || key.includes('ANTHONY') || key === 'MCAS-PRO-416E74686F6E792046756C6C65727C307C31373930383830303030-0C72EF35')) {
+            targetAssistantId = '5ad3f565-09a4-4eac-b632-bae823fea118';
+          }
+
           if (!targetAssistantId) {
             targetAssistantId = assistantId || '5105b379-8cbf-4037-becc-bba45504f781';
           }
