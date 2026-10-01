@@ -2854,7 +2854,7 @@
                 `;
             }
             if (firstMsg) {
-                firstMsg.innerHTML = `👋 Hello! I'm your <strong>Missed Call Auto SMS AI Support & Voice Assistant</strong>. I have full product and telephony expertise—ask me about our <strong>14-day free trial</strong>, the <strong>$29/mo Turnkey Voice Receptionist</strong>, <strong>*71 carrier forwarding</strong>, the <strong>Contractor Status Dial</strong>, or how we compare to <strong>GoHighLevel & Twilio</strong>. I can also reset device locks, cancel trials, or connect you directly with <strong>Anthony Fuller</strong>.<br><br>How can I help you today?`;
+                firstMsg.innerHTML = `👋 Hello! I'm your <strong>Missed Call Auto SMS AI Support & Voice Assistant</strong>. I have full product and telephony expertise—ask me about our <strong>3-day free trial</strong>, the <strong>$9.99/mo 24/7 AI Voice Receptionist Add-On</strong>, <strong>*71 carrier forwarding</strong>, the <strong>Contractor Status Dial</strong>, or how we compare to <strong>GoHighLevel & Twilio</strong>. I can also reset device locks, cancel trials, or connect you directly with <strong>Anthony Fuller</strong>.<br><br>How can I help you today?`;
             }
             if (inputEl) {
                 inputEl.placeholder = "Type your question or request help...";
@@ -3175,9 +3175,11 @@
             }
             return;
         }
-        if (err) err.style.display = "none";
-
-        window.location.href = "https://buy.stripe.com/4gMeVdcFMaps6M0b572go0f?client_reference_id=" + encodeURIComponent(val);
+        if (err) {
+            err.style.color = "#10B981";
+            err.innerHTML = "✅ Valid License Key! To activate the 24/7 AI Voice Receptionist ($9.99/mo with 15 free test minutes), open the Missed Call Auto SMS app on your phone and tap <strong>Settings ➔ AI Voice Receptionist</strong>.";
+            err.style.display = "block";
+        }
     }
 </script>
 
@@ -3203,11 +3205,11 @@
             <!-- Option A: Existing Appliance Owner -->
             <div style="background: #090B0E; border: 1px solid #222836; border-radius: 12px; padding: 18px;">
                 <div style="font-size: 13px; font-weight: 800; color: #00E676; margin-bottom: 4px;">Option A: Already Own an Appliance?</div>
-                <div style="font-size: 12px; color: #949BAE; margin-bottom: 12px;">Enter your License Key to bind your $9.99/mo Voice Receptionist subscription:</div>
+                <div style="font-size: 12px; color: #949BAE; margin-bottom: 12px;">Activate the $9.99/mo Voice Add-On directly inside your installed app under <strong>Settings ➔ AI Voice Receptionist</strong>. Verify your key here:</div>
                 <div style="display: flex; gap: 8px; flex-wrap: wrap;">
                     <input type="text" id="voiceModalProKey" placeholder="MCAS-XXXX-XXXX" style="flex: 1; min-width: 180px; background: #161B22; border: 1px solid #30363D; border-radius: 8px; color: #FFF; padding: 10px 12px; font-family: monospace; font-size: 13px; text-transform: uppercase;">
                     <button onclick="submitVoiceModalProKey()" style="background: linear-gradient(135deg, #00E676, #00B0FF); color: #000; font-weight: 900; padding: 10px 16px; border: none; border-radius: 8px; cursor: pointer; font-size: 12px; white-space: nowrap;">
-                        Bind &amp; Activate ($9.99/mo) ➔
+                        Verify &amp; Activate ➔
                     </button>
                 </div>
                 <div id="voiceModalProKeyErr" style="display: none; color: #EF4444; font-size: 11px; margin-top: 6px; font-weight: 600;"></div>

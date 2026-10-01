@@ -1,10 +1,10 @@
 {
-  "productId": "prod_VI0YjmSg3Nymju",
-  "productName": "Missed Call Auto SMS - Managed AI Voice Receptionist",
-  "priceId": "price_1UHQXPHTAeWgMAo2x50q02XU",
-  "amount": 29,
+  "productName": "Missed Call Auto SMS - 24/7 AI Voice Receptionist Add-On",
+  "amount": 9.99,
   "currency": "usd",
   "interval": "month",
-  "paymentLinkUrl": "https://buy.stripe.com/4gMeVdcFMaps6M0b572go0f",
-  "updatedAt": "2026-09-19T15:50:53.132Z"
+  "type": "in_app_add_on",
+  "activation": "In-app via Settings -> AI Voice Receptionist or bundled at checkout ($9.99/mo + metered usage)",
+  "status": "obsolete_standalone_link_deprecated",
+  "updatedAt": "2026-09-30T20:07:00.000Z"
 }

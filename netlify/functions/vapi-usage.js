@@ -131,7 +131,7 @@ exports.handler = async (event) => {
           proUpgradePrice: 249.99,
           proUpgradeUrl: 'https://buy.stripe.com/bJe14neNU9loc6kehj2go0h',
           voiceSubscriptionPrice: 9.99,
-          voiceSubscriptionUrl: 'https://buy.stripe.com/4gMeVdcFMaps6M0b572go0f',
+          voiceActivationMethod: 'in_app_settings',
           creditPacks: [
             { pack: 10, minutes: 40, price: 10.00, label: '$10 Starter (40m)' },
             { pack: 25, minutes: 115, price: 25.00, label: '$25 Growth (115m)' },

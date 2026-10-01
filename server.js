@@ -1832,7 +1832,6 @@ const server = http.createServer((req, res) => {
           checkoutTrialUrl: 'https://buy.stripe.com/5kQ5kDbBI8hkdao8WZ2go0c',
           checkoutLifetimeUrl: 'https://buy.stripe.com/3cI9AT49g2X07Q41ux2go0a',
           checkoutProUrl: 'https://buy.stripe.com/6oU9ATbBIeFI8U86OR2go0g',
-          checkoutVoiceProUrl: 'https://buy.stripe.com/4gMeVdcFMaps6M0b572go0f',
           message: 'Stripe API connection verified and active'
         }));
       })
@@ -5406,7 +5405,7 @@ const server = http.createServer((req, res) => {
             proUpgradePrice: 249.99,
             proUpgradeUrl: 'https://buy.stripe.com/bJe14neNU9loc6kehj2go0h',
             voiceSubscriptionPrice: 9.99,
-            voiceSubscriptionUrl: 'https://buy.stripe.com/4gMeVdcFMaps6M0b572go0f',
+            voiceActivationMethod: 'in_app_settings',
             creditPacks: [
               { pack: 10, minutes: 40, price: 10.00, label: '$10 Starter (40m)' },
               { pack: 25, minutes: 115, price: 25.00, label: '$25 Growth (115m)' },

@@ -72,7 +72,17 @@ exports.handler = async (event) => {
     const FLAGSHIP_DIRECT_LINK = "https://buy.stripe.com/3cI9AT49g2X07Q41ux2go0a";
     const PRO_DIRECT_LINK = "https://buy.stripe.com/6oU9ATbBIeFI8U86OR2go0g";
     const PRO_UPGRADE_DIRECT_LINK = "https://buy.stripe.com/bJe14neNU9loc6kehj2go0h";
-    const VOICE_ONLY_LINK = "https://buy.stripe.com/4gMeVdcFMaps6M0b572go0f";
+
+    if (plan === 'voice_only') {
+      return {
+        statusCode: 400,
+        headers,
+        body: JSON.stringify({
+          success: false,
+          error: 'AI Voice Receptionist ($9.99/mo) is an in-app add-on and requires an active Base Appliance or Pro Gateway license.'
+        })
+      };
+    }
 
     // If no voice bump requested and standard flagship or pro plan, return direct Stripe links immediately
     if (!includeVoice && plan === 'flagship') {
@@ -108,7 +118,6 @@ exports.handler = async (event) => {
     // Fallback if Stripe key is not configured in environment
     if (!activeStripeKey) {
       let fallbackUrl = plan === 'flagship' ? FLAGSHIP_DIRECT_LINK : PRO_DIRECT_LINK;
-      if (includeVoice && plan === 'voice_only') fallbackUrl = VOICE_ONLY_LINK;
       return {
         statusCode: 200,
         headers,

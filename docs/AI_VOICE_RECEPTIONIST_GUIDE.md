@@ -1,4 +1,4 @@
-# Turnkey AI Voice Receptionist ($29/mo) & BYOK Engine — Integration & Telephony Guide
+# Turnkey AI Voice Receptionist ($9.99/mo Add-On) & BYOK Engine — Integration & Telephony Guide
 
 ## Overview
 
@@ -7,7 +7,7 @@ The **Turnkey AI Voice Receptionist** adds an autonomous conversational voice la
 While the native Android app continues sending instant text auto-replies over the phone's physical SIM card, unanswered incoming calls automatically forward to an AI-powered voice assistant (powered by GridAI Voice / Carrier SIP) after ringing the contractor's handset for 15 seconds.
 
 Contractors can choose between:
-1. **Managed Pro ($29/mo with 14-Day Free Trial)**: Turnkey setup with dedicated forwarding number, 200 included monthly minutes, and automated provisioning.
+1. **Managed Pro ($9.99/mo In-App Add-On)**: Turnkey setup with dedicated forwarding number, metered usage via flexible credit packs ($0.25/min), and automated provisioning.
 2. **BYOK ($0/mo)**: Free Bring-Your-Own-Key integration for power users supplying their own GridAI / Voice Provider API Key and Assistant ID.
 
 ---
@@ -112,7 +112,7 @@ Android security prevents apps from silently modifying carrier call forwarding r
     "licenseKey": "MCAS-PRO-DEMO-2026"
   }
   ```
-- **Behavior**: Creates a Stripe Checkout Session with `subscription_data[trial_period_days] = 14`. $0 is billed at checkout; auto-bills $29/mo after 14 days.
+- **Behavior**: Activates the $9.99/mo AI Voice Receptionist Add-On with metered credit usage ($0.25/min) and 15 free test minutes.
 
 ### 2. Dynamic Call Routing & Context Injection
 - **Method**: `POST`
