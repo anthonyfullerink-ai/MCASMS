@@ -99,15 +99,25 @@ exports.handler = async (event) => {
       console.warn('[verify-license] Voice binding check notice:', e.message);
     }
 
-    // Master Demo bypass
-    if (key === 'MCAS-PRO-DEMO-89F2') {
+    // Master Demo & Owner bypass
+    const isOwnerKey = key === 'MCAS-PRO-DEMO-89F2' ||
+      key === 'MCAS-DEMO-TRIAL-89F2' ||
+      key === 'MCAS-OWNER-ANTHONY' ||
+      key === 'MCAS-PRO-OWNER-ANTHONY' ||
+      key === 'MCAS-PRO-416E74686F6E792046756C6C65727C307C31373930383830303030-0C72EF35' ||
+      key.includes('OWNER') || key.includes('ANTHONY') ||
+      (incomingDeviceId && incomingDeviceId.toUpperCase().includes('1F3C6BF3C9'));
+
+    if (isOwnerKey || key === 'MCAS-PRO-DEMO-89F2') {
       voiceEntitlement = true;
       vapiProvisioned = true;
       voiceForwardingNumber = voiceForwardingNumber || '+1 (732) 660-9121';
       voiceCarrierCode = voiceCarrierCode || '*717326609121';
-      voiceMinutesBalance = 50.0;
+      vapiAssistantId = '5ad3f565-09a4-4eac-b632-bae823fea118';
+      voiceMinutesBalance = 999999.0;
       voiceActive = true;
       isPaused = false;
+      voiceSubWaived = true;
     }
 
     // Device Hardware Binding Check & Activation
@@ -245,10 +255,10 @@ exports.handler = async (event) => {
         perpetualPro: isPro && !key.includes('TRIAL'),
         voiceEligible: true,
         voiceEntitlement: voiceEntitlement,
-        voiceSubActive: voiceEntitlement && !voiceSubWaived,
+        voiceSubActive: voiceEntitlement || voiceActive || voiceSubWaived,
         voiceSubWaived: voiceSubWaived,
         vapiProvisioned: vapiProvisioned,
-        voiceActive: voiceActive,
+        voiceActive: voiceActive || voiceEntitlement || voiceSubWaived,
         aiSmsActive: aiSmsActive,
         voiceForwardingNumber: voiceForwardingNumber,
         carrierCode: voiceCarrierCode,

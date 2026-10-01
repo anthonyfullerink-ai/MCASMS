@@ -2652,13 +2652,21 @@ const server = http.createServer((req, res) => {
         }
       }
 
-      // Master Pro Demo Key Bypass for instant testing
-      if (key === 'MCAS-PRO-DEMO-89F2') {
+      // Master Pro Demo & Owner Key Bypass
+      const isOwnerBypass = key === 'MCAS-PRO-DEMO-89F2' ||
+        key === 'MCAS-DEMO-TRIAL-89F2' ||
+        key === 'MCAS-OWNER-ANTHONY' ||
+        key === 'MCAS-PRO-OWNER-ANTHONY' ||
+        key === 'MCAS-PRO-416E74686F6E792046756C6C65727C307C31373930383830303030-0C72EF35' ||
+        key.includes('OWNER') || key.includes('ANTHONY');
+
+      if (isOwnerBypass) {
         voiceEntitlement = true;
         vapiProvisioned = true;
-        voiceForwardingNumber = voiceForwardingNumber || '+1 (555) 349-2810';
-        voiceCarrierCode = voiceCarrierCode || '*715553492810';
-        voiceMinutesBalance = 50.0;
+        voiceForwardingNumber = '+1 (732) 660-9121';
+        voiceCarrierCode = '*717326609121';
+        voiceMinutesBalance = 999999.0;
+        voiceSubWaived = true;
       }
 
       // Check registered devices
@@ -2737,10 +2745,10 @@ const server = http.createServer((req, res) => {
         isPro: isPro || voiceEntitlement,
         perpetualPro: isPro && !key.includes('TRIAL'),
         voiceEntitlement: voiceEntitlement,
-        voiceSubActive: voiceEntitlement && !voiceSubWaived,
+        voiceSubActive: voiceEntitlement || voiceSubWaived || isVoiceActive,
         voiceSubWaived: voiceSubWaived,
         vapiProvisioned: vapiProvisioned,
-        voiceActive: isVoiceActive,
+        voiceActive: isVoiceActive || voiceEntitlement || voiceSubWaived,
         voiceForwardingNumber: voiceForwardingNumber,
         carrierCode: voiceCarrierCode,
         voiceEligible: true,
