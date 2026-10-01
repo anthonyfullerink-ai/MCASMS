@@ -314,8 +314,8 @@ exports.handler = async (event) => {
       const isOwnerCall = (diversionHeader && String(diversionHeader).replace(/\D/g, '').includes('7325523896')) ||
                           (cleanCallerDigits === '7325523896') ||
                           (matchedPulse?.callerPhone && String(matchedPulse.callerPhone).replace(/\D/g, '').includes('7325523896')) ||
-                          (matchedPulse?.licenseKey && (matchedPulse.licenseKey.includes('OWNER') || matchedPulse.licenseKey.includes('ANTHONY'))) ||
-                          (matchedSub?.licenseKey && (matchedSub.licenseKey.includes('OWNER') || matchedSub.licenseKey.includes('ANTHONY')));
+                          (matchedPulse?.licenseKey && (matchedPulse.licenseKey.includes('OWNER') || matchedPulse.licenseKey.includes('ANTHONY') || matchedPulse.licenseKey === 'MCAS-PRO-DEMO-89F2')) ||
+                          (matchedSub?.licenseKey && (matchedSub.licenseKey.includes('OWNER') || matchedSub.licenseKey.includes('ANTHONY') || matchedSub.licenseKey === 'MCAS-PRO-DEMO-89F2'));
 
       const dedicatedAssistantId = isOwnerCall
         ? '5ad3f565-09a4-4eac-b632-bae823fea118'

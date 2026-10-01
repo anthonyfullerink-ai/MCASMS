@@ -217,7 +217,7 @@ exports.handler = async (event) => {
           } catch (e) {}
         }
 
-        if (!targetAssistantId && (key === 'MCAS-OWNER-ANTHONY' || key.includes('OWNER') || key.includes('ANTHONY') || key === 'MCAS-PRO-416E74686F6E792046756C6C65727C307C31373930383830303030-0C72EF35')) {
+        if (!targetAssistantId && (key === 'MCAS-OWNER-ANTHONY' || key === 'MCAS-PRO-DEMO-89F2' || key.includes('OWNER') || key.includes('ANTHONY') || key === 'MCAS-PRO-416E74686F6E792046756C6C65727C307C31373930383830303030-0C72EF35')) {
           targetAssistantId = '5ad3f565-09a4-4eac-b632-bae823fea118';
         }
 
