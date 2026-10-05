@@ -119,6 +119,17 @@ function postGraphApi(endpoint, postData) {
 }
 
 async function publishToSocial(article) {
+  const settingsPath = path.join(__dirname, '../data/content_engine_settings.json');
+  if (fs.existsSync(settingsPath)) {
+    try {
+      const s = JSON.parse(fs.readFileSync(settingsPath, 'utf8'));
+      if (s.autoPostingEnabled === false && !process.argv.includes('--force')) {
+        console.log('🛑 [Social Publisher] Auto-posting is TURNED OFF by owner in settings. Halting execution.');
+        return { facebook: { success: false, disabled: true }, instagram: { success: false, disabled: true } };
+      }
+    } catch (e) {}
+  }
+
   if (!TOKEN) {
     console.warn('⚠️ META_PAGE_ACCESS_TOKEN not found. Skipping social media distribution.');
     return { skipped: true, reason: 'No access token' };
@@ -205,6 +216,9 @@ if (require.main === module) {
       const posts = JSON.parse(fs.readFileSync(postsJsonPath, 'utf8'));
       if (posts.length > 0) {
         publishToSocial(posts[0]).then(res => {
+          if (res && (res.skipped || (res.facebook && res.facebook.disabled))) {
+            process.exit(0);
+          }
           if (res && res.facebook && !res.facebook.success && res.instagram && !res.instagram.success) {
             console.error('❌ Social cross-posting failed for both platforms.');
             process.exit(1);

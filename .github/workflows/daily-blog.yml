@@ -1,10 +1,8 @@
 name: Daily Autonomous AI Blog Publisher
 
+# Omnichannel & autonomous posting engine completely disabled by owner request.
+# Scheduled daily crons removed and job execution halted.
 on:
-  schedule:
-    # Runs daily at 12:25 UTC (8:25 AM EDT) with 18:25 UTC (2:25 PM EDT) backup window
-    - cron: '25 12 * * *'
-    - cron: '25 18 * * *'
   workflow_dispatch:
     inputs:
       category:
@@ -25,6 +23,8 @@ permissions:
 jobs:
   publish-blog:
     name: Generate & Publish Daily Blog Article
+    # Disabled by owner request
+    if: false
     runs-on: ubuntu-latest
     steps:
       - name: Checkout Repository

@@ -203,8 +203,26 @@ function markdownToHtml(markdown) {
   return htmlBlocks.filter(Boolean).join('\n\n');
 }
 
+function isAutoPostingDisabled() {
+  const settingsPath = path.join(__dirname, '../data/content_engine_settings.json');
+  if (fs.existsSync(settingsPath)) {
+    try {
+      const s = JSON.parse(fs.readFileSync(settingsPath, 'utf8'));
+      if (s.autoPostingEnabled === false && !process.argv.includes('--force')) {
+        return true;
+      }
+    } catch (e) {}
+  }
+  return false;
+}
+
 // 1. Morning Slot: Publish Blog to Website
 async function publishMorningBlog(bundle, isDryRun) {
+  if (isAutoPostingDisabled()) {
+    console.log('🛑 [Omnichannel Engine] Auto-posting is TURNED OFF by owner. Halting execution.');
+    return { status: 'disabled' };
+  }
+
   console.log('\n====================================================');
   console.log('🌅 [MORNING SLOT: 8:00 AM] PUBLISHING DAILY BLOG');
   console.log('====================================================');
@@ -336,6 +354,11 @@ async function publishMorningBlog(bundle, isDryRun) {
 
 // 2. Lunch Slot: Publish 1:1 Feed Post (FB & IG)
 async function publishLunchFeedPost(bundle, isDryRun) {
+  if (isAutoPostingDisabled()) {
+    console.log('🛑 [Omnichannel Engine] Auto-posting is TURNED OFF by owner. Halting execution.');
+    return { status: 'disabled' };
+  }
+
   console.log('\n====================================================');
   console.log('☀️ [LUNCH SLOT: 12:30 PM] PUBLISHING 1:1 FEED POST');
   console.log('====================================================');
@@ -396,6 +419,11 @@ async function publishLunchFeedPost(bundle, isDryRun) {
 
 // 3. Evening Slot: Publish 9:16 Vertical Reel & Story (FB & IG)
 async function publishEveningReelAndStory(bundle, isDryRun) {
+  if (isAutoPostingDisabled()) {
+    console.log('🛑 [Omnichannel Engine] Auto-posting is TURNED OFF by owner. Halting execution.');
+    return { status: 'disabled' };
+  }
+
   console.log('\n====================================================');
   console.log('🌙 [EVENING SLOT: 5:30 PM] PUBLISHING 9:16 REEL & STORY');
   console.log('====================================================');
