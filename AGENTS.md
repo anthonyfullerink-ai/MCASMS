@@ -25,3 +25,13 @@
   https://buy.stripe.com/3cI9AT49g2X07Q41ux2go0a
 - **Pro Automation Edition Direct Buy ($299.99)**:
   https://buy.stripe.com/6oU9ATbBIeFI8U86OR2go0g
+
+---
+
+## 4. Mandatory Automatic OTA & APK Deployment (STRICT MANDATE)
+- **Zero Manual Reminders**: NEVER require the user to ask for OTA updates or APK builds. Whenever ANY code or UI changes are made to the Android application, you MUST automatically:
+  1. Increment `versionCode` (and update `versionName` if appropriate) in `app/build.gradle.kts`.
+  2. Compile release APKs: `./gradlew assembleStandardRelease assembleProRelease`.
+  3. Overwrite the public root binaries (`MissedCallAutoSMS.apk` and `MissedCallAutoSMS-Pro.apk`) from `app/build/outputs/apk/...`.
+  4. Run `node scripts/publish_ota.js` to synchronize `version.json`, update `server.js`, and broadcast high-priority FCM push alerts to all client devices.
+  5. Commit and push the updated APKs, `version.json`, and all associated files to `main`.
