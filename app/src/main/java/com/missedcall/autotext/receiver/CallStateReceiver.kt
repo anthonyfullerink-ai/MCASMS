@@ -270,6 +270,9 @@ class CallStateReceiver : BroadcastReceiver() {
     }
 
     private fun enqueueAutoTextWorker(context: Context, phoneNumber: String) {
+        val cleanDigits = phoneNumber.filter { it.isDigit() }.takeLast(10)
+        val uniqueWorkName = if (cleanDigits.isNotEmpty()) "autotext_$cleanDigits" else "autotext_$phoneNumber"
+
         val inputData = Data.Builder()
             .putString(SendAutoTextWorker.KEY_PHONE_NUMBER, phoneNumber)
             .build()
@@ -278,6 +281,11 @@ class CallStateReceiver : BroadcastReceiver() {
             .setInputData(inputData)
             .build()
 
-        WorkManager.getInstance(context.applicationContext).enqueue(workRequest)
+        WorkManager.getInstance(context.applicationContext).enqueueUniqueWork(
+            uniqueWorkName,
+            ExistingWorkPolicy.KEEP,
+            workRequest
+        )
     }
 }
+

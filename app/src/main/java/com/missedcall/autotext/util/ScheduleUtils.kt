@@ -57,21 +57,21 @@ object ScheduleUtils {
         try {
             val now = LocalTime.now()
             val today = LocalDate.now().dayOfWeek.name.uppercase() // e.g. "SATURDAY"
-            val isDayActive = schedule.activeDays.map { it.uppercase() }.contains(today)
+            val dayConfig = schedule.getDaySchedule(today)
             val currentTimeStr = now.format(DateTimeFormatter.ofPattern("h:mm a", Locale.US))
 
-            if (!isDayActive) {
+            if (!dayConfig.isEnabled) {
                 return ScheduleCheckResult(
                     isWithinHours = false,
                     currentDay = today,
                     isDayActive = false,
                     formattedCurrentTime = currentTimeStr,
-                    reason = "$today is not an active business day"
+                    reason = "$today is closed / not an active operating day"
                 )
             }
 
-            val startTime = parseTimeFlexible(schedule.startTime, 9, 0)
-            val endTime = parseTimeFlexible(schedule.endTime, 18, 0)
+            val startTime = parseTimeFlexible(dayConfig.startTime, 9, 0)
+            val endTime = parseTimeFlexible(dayConfig.endTime, 18, 0)
 
             val withinTime = if (endTime.isAfter(startTime)) {
                 !now.isBefore(startTime) && !now.isAfter(endTime)
@@ -80,10 +80,13 @@ object ScheduleUtils {
                 !now.isBefore(startTime) || !now.isAfter(endTime)
             }
 
+            val startFmt = format12Hour(dayConfig.startTime, 9)
+            val endFmt = format12Hour(dayConfig.endTime, 18)
+
             val reason = if (withinTime) {
-                "Within business hours (${schedule.startTime} - ${schedule.endTime})"
+                "Within business hours ($startFmt - $endFmt)"
             } else {
-                "Outside business hours (${schedule.startTime} - ${schedule.endTime})"
+                "Outside business hours ($startFmt - $endFmt)"
             }
 
             return ScheduleCheckResult(
@@ -115,5 +118,34 @@ object ScheduleUtils {
         } catch (e: Exception) {
             time24
         }
+    }
+
+    fun getFormattedSummary(schedule: AppSchedule): String {
+        val days = listOf("MONDAY", "TUESDAY", "WEDNESDAY", "THURSDAY", "FRIDAY", "SATURDAY", "SUNDAY")
+        val openDays = days.map { it to schedule.getDaySchedule(it) }.filter { it.second.isEnabled }
+        if (openDays.isEmpty()) return "All Days Closed"
+        if (openDays.size == 7) {
+            val allSame = openDays.all { it.second.startTime == openDays[0].second.startTime && it.second.endTime == openDays[0].second.endTime }
+            if (allSame) {
+                val s = format12Hour(openDays[0].second.startTime, 9)
+                val e = format12Hour(openDays[0].second.endTime, 18)
+                return "7 Days ($s - $e)"
+            }
+        }
+        val weekdays = listOf("MONDAY", "TUESDAY", "WEDNESDAY", "THURSDAY", "FRIDAY")
+        val weekdaysOpen = weekdays.all { schedule.getDaySchedule(it).isEnabled }
+        val weekendClosed = !schedule.getDaySchedule("SATURDAY").isEnabled && !schedule.getDaySchedule("SUNDAY").isEnabled
+        if (weekdaysOpen && weekendClosed) {
+            val allWeekdaysSame = weekdays.all {
+                schedule.getDaySchedule(it).startTime == schedule.getDaySchedule("MONDAY").startTime &&
+                schedule.getDaySchedule(it).endTime == schedule.getDaySchedule("MONDAY").endTime
+            }
+            if (allWeekdaysSame) {
+                val s = format12Hour(schedule.getDaySchedule("MONDAY").startTime, 9)
+                val e = format12Hour(schedule.getDaySchedule("MONDAY").endTime, 17)
+                return "Mon-Fri ($s - $e)"
+            }
+        }
+        return "${openDays.size} Days Active"
     }
 }

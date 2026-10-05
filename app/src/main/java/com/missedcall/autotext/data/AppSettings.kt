@@ -1,10 +1,47 @@
 package com.missedcall.autotext.data
 
+data class DaySchedule(
+    val isEnabled: Boolean = true,
+    val startTime: String = "09:00",
+    val endTime: String = "18:00"
+)
+
 data class AppSchedule(
     val startTime: String = "09:00",
     val endTime: String = "18:00",
-    val activeDays: List<String> = listOf("MONDAY", "TUESDAY", "WEDNESDAY", "THURSDAY", "FRIDAY")
-)
+    val activeDays: List<String> = listOf("MONDAY", "TUESDAY", "WEDNESDAY", "THURSDAY", "FRIDAY"),
+    val daySchedules: Map<String, DaySchedule> = emptyMap()
+) {
+    fun getDaySchedule(day: String): DaySchedule {
+        val key = day.uppercase()
+        val explicit = daySchedules[key]
+        if (explicit != null) return explicit
+        val isDayActive = activeDays.map { it.uppercase() }.contains(key)
+        return DaySchedule(
+            isEnabled = isDayActive,
+            startTime = startTime,
+            endTime = endTime
+        )
+    }
+
+    fun withUpdatedDay(day: String, isEnabled: Boolean, start: String, end: String): AppSchedule {
+        val key = day.uppercase()
+        val allDays = listOf("MONDAY", "TUESDAY", "WEDNESDAY", "THURSDAY", "FRIDAY", "SATURDAY", "SUNDAY")
+        val newMap = mutableMapOf<String, DaySchedule>()
+        allDays.forEach { d ->
+            if (d == key) {
+                newMap[d] = DaySchedule(isEnabled = isEnabled, startTime = start, endTime = end)
+            } else {
+                newMap[d] = getDaySchedule(d)
+            }
+        }
+        val active = newMap.filter { it.value.isEnabled }.keys.toList()
+        return copy(
+            activeDays = active,
+            daySchedules = newMap
+        )
+    }
+}
 
 data class AppSettings(
     val masterEnabled: Boolean = true,

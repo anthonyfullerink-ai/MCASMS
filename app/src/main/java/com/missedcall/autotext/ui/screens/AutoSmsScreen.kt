@@ -374,14 +374,25 @@ fun AutoSmsScreen(
 
         // 5. Unified Master Business Hours & Operating Schedule Card
         item {
+            var selectedDayKey by remember {
+                val todayName = try {
+                    java.time.LocalDate.now().dayOfWeek.name.uppercase()
+                } catch (e: Exception) {
+                    "MONDAY"
+                }
+                mutableStateOf(if (daysOfWeek.contains(todayName)) todayName else "MONDAY")
+            }
+
             var showStartTimeDialog by remember { mutableStateOf(false) }
             var showEndTimeDialog by remember { mutableStateOf(false) }
+            var showWeeklyBreakdown by remember { mutableStateOf(false) }
 
-            val formattedStart = remember(settings.schedule.startTime) {
-                com.missedcall.autotext.util.ScheduleUtils.format12Hour(settings.schedule.startTime, 9)
+            val activeDayConfig = settings.schedule.getDaySchedule(selectedDayKey)
+            val formattedStart = remember(activeDayConfig.startTime) {
+                com.missedcall.autotext.util.ScheduleUtils.format12Hour(activeDayConfig.startTime, 9)
             }
-            val formattedEnd = remember(settings.schedule.endTime) {
-                com.missedcall.autotext.util.ScheduleUtils.format12Hour(settings.schedule.endTime, 18)
+            val formattedEnd = remember(activeDayConfig.endTime) {
+                com.missedcall.autotext.util.ScheduleUtils.format12Hour(activeDayConfig.endTime, 18)
             }
 
             Card(
@@ -427,16 +438,21 @@ fun AutoSmsScreen(
                             ) {
                                 val standardDays = listOf("MONDAY", "TUESDAY", "WEDNESDAY", "THURSDAY", "FRIDAY")
                                 val sixDays = listOf("MONDAY", "TUESDAY", "WEDNESDAY", "THURSDAY", "FRIDAY", "SATURDAY")
-                                val allSevenDays = daysOfWeek
 
                                 Button(
                                     onClick = {
+                                        val newMap = mutableMapOf<String, com.missedcall.autotext.data.DaySchedule>()
+                                        daysOfWeek.forEach { d ->
+                                            val isMonFri = standardDays.contains(d)
+                                            newMap[d] = com.missedcall.autotext.data.DaySchedule(isEnabled = isMonFri, startTime = "09:00", endTime = "17:00")
+                                        }
                                         onSettingsChanged(
                                             settings.copy(
                                                 schedule = settings.schedule.copy(
                                                     activeDays = standardDays,
                                                     startTime = "09:00",
-                                                    endTime = "17:00"
+                                                    endTime = "17:00",
+                                                    daySchedules = newMap
                                                 )
                                             )
                                         )
@@ -451,12 +467,18 @@ fun AutoSmsScreen(
 
                                 Button(
                                     onClick = {
+                                        val newMap = mutableMapOf<String, com.missedcall.autotext.data.DaySchedule>()
+                                        daysOfWeek.forEach { d ->
+                                            val isMonSat = sixDays.contains(d)
+                                            newMap[d] = com.missedcall.autotext.data.DaySchedule(isEnabled = isMonSat, startTime = "08:00", endTime = "18:00")
+                                        }
                                         onSettingsChanged(
                                             settings.copy(
                                                 schedule = settings.schedule.copy(
                                                     activeDays = sixDays,
                                                     startTime = "08:00",
-                                                    endTime = "18:00"
+                                                    endTime = "18:00",
+                                                    daySchedules = newMap
                                                 )
                                             )
                                         )
@@ -471,12 +493,17 @@ fun AutoSmsScreen(
 
                                 Button(
                                     onClick = {
+                                        val newMap = mutableMapOf<String, com.missedcall.autotext.data.DaySchedule>()
+                                        daysOfWeek.forEach { d ->
+                                            newMap[d] = com.missedcall.autotext.data.DaySchedule(isEnabled = true, startTime = "08:00", endTime = "20:00")
+                                        }
                                         onSettingsChanged(
                                             settings.copy(
                                                 schedule = settings.schedule.copy(
-                                                    activeDays = allSevenDays,
+                                                    activeDays = daysOfWeek,
                                                     startTime = "08:00",
-                                                    endTime = "20:00"
+                                                    endTime = "20:00",
+                                                    daySchedules = newMap
                                                 )
                                             )
                                         )
@@ -492,32 +519,51 @@ fun AutoSmsScreen(
 
                             Spacer(modifier = Modifier.height(14.dp))
 
-                            // Responsive 7-Day Badges (Guaranteed to fit without clipping)
-                            Text("Active Operating Days:", style = MaterialTheme.typography.labelMedium, fontWeight = FontWeight.SemiBold)
+                            // Day Selector Row
+                            Row(
+                                modifier = Modifier.fillMaxWidth(),
+                                horizontalArrangement = Arrangement.SpaceBetween,
+                                verticalAlignment = Alignment.CenterVertically
+                            ) {
+                                Text("Select Day to Customize:", style = MaterialTheme.typography.labelMedium, fontWeight = FontWeight.SemiBold)
+                                Text(
+                                    com.missedcall.autotext.util.ScheduleUtils.getFormattedSummary(settings.schedule),
+                                    fontSize = 11.sp,
+                                    color = MaterialTheme.colorScheme.primary,
+                                    fontWeight = FontWeight.Bold
+                                )
+                            }
                             Spacer(modifier = Modifier.height(8.dp))
 
+                            // 7 Day Badges
                             Row(
                                 modifier = Modifier.fillMaxWidth(),
                                 horizontalArrangement = Arrangement.spacedBy(4.dp)
                             ) {
                                 daysOfWeek.forEach { day ->
-                                    val isSelected = settings.schedule.activeDays.contains(day)
+                                    val isFocused = day == selectedDayKey
+                                    val dayConfig = settings.schedule.getDaySchedule(day)
+                                    val isOpen = dayConfig.isEnabled
+
                                     Surface(
                                         shape = RoundedCornerShape(10.dp),
-                                        color = if (isSelected) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.45f),
+                                        color = when {
+                                            isFocused && isOpen -> MaterialTheme.colorScheme.primary
+                                            isFocused && !isOpen -> MaterialTheme.colorScheme.error.copy(alpha = 0.85f)
+                                            isOpen -> MaterialTheme.colorScheme.primary.copy(alpha = 0.25f)
+                                            else -> MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.35f)
+                                        },
                                         border = BorderStroke(
-                                            1.dp,
-                                            if (isSelected) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.outline.copy(alpha = 0.2f)
+                                            width = if (isFocused) 2.dp else 1.dp,
+                                            color = when {
+                                                isFocused -> MaterialTheme.colorScheme.primary
+                                                isOpen -> MaterialTheme.colorScheme.primary.copy(alpha = 0.5f)
+                                                else -> MaterialTheme.colorScheme.outline.copy(alpha = 0.2f)
+                                            }
                                         ),
                                         modifier = Modifier
                                             .weight(1f)
-                                            .clickable {
-                                                val currentDays = settings.schedule.activeDays.toMutableList()
-                                                if (isSelected) currentDays.remove(day) else currentDays.add(day)
-                                                onSettingsChanged(
-                                                    settings.copy(schedule = settings.schedule.copy(activeDays = currentDays))
-                                                )
-                                            }
+                                            .clickable { selectedDayKey = day }
                                     ) {
                                         Column(
                                             modifier = Modifier.padding(vertical = 8.dp),
@@ -527,13 +573,24 @@ fun AutoSmsScreen(
                                                 dayLabels[day]?.take(1) ?: "",
                                                 fontWeight = FontWeight.Black,
                                                 fontSize = 13.sp,
-                                                color = if (isSelected) MaterialTheme.colorScheme.onPrimary else MaterialTheme.colorScheme.onSurface
+                                                color = if (isFocused) Color.White else MaterialTheme.colorScheme.onSurface
                                             )
                                             Text(
                                                 dayLabels[day] ?: "",
-                                                fontWeight = if (isSelected) FontWeight.Bold else FontWeight.Normal,
+                                                fontWeight = if (isFocused) FontWeight.Bold else FontWeight.Normal,
                                                 fontSize = 9.sp,
-                                                color = if (isSelected) MaterialTheme.colorScheme.onPrimary.copy(alpha = 0.85f) else MaterialTheme.colorScheme.onSurfaceVariant
+                                                color = if (isFocused) Color.White.copy(alpha = 0.9f) else MaterialTheme.colorScheme.onSurfaceVariant
+                                            )
+                                            Spacer(modifier = Modifier.height(2.dp))
+                                            Text(
+                                                if (isOpen) "ON" else "OFF",
+                                                fontWeight = FontWeight.ExtraBold,
+                                                fontSize = 8.sp,
+                                                color = when {
+                                                    isFocused -> Color.White
+                                                    isOpen -> MaterialTheme.colorScheme.primary
+                                                    else -> GrayPaused
+                                                }
                                             )
                                         }
                                     }
@@ -542,38 +599,236 @@ fun AutoSmsScreen(
 
                             Spacer(modifier = Modifier.height(14.dp))
 
-                            // Interactive Time Pickers with 12-Hour Display
-                            Row(
-                                modifier = Modifier.fillMaxWidth(),
-                                horizontalArrangement = Arrangement.spacedBy(12.dp)
+                            // Active Selected Day Configuration Box
+                            Surface(
+                                shape = RoundedCornerShape(12.dp),
+                                color = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.35f),
+                                border = BorderStroke(1.dp, MaterialTheme.colorScheme.outline.copy(alpha = 0.25f)),
+                                modifier = Modifier.fillMaxWidth()
                             ) {
-                                Surface(
-                                    shape = RoundedCornerShape(10.dp),
-                                    color = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.45f),
-                                    border = BorderStroke(1.dp, MaterialTheme.colorScheme.outline.copy(alpha = 0.25f)),
-                                    modifier = Modifier
-                                        .weight(1f)
-                                        .clickable { showStartTimeDialog = true }
-                                ) {
-                                    Column(modifier = Modifier.padding(12.dp)) {
-                                        Text("Opening Time", fontSize = 11.sp, color = MaterialTheme.colorScheme.onSurfaceVariant)
-                                        Spacer(modifier = Modifier.height(2.dp))
-                                        Text(formattedStart, fontWeight = FontWeight.Bold, fontSize = 16.sp, color = MaterialTheme.colorScheme.primary)
+                                Column(modifier = Modifier.padding(14.dp)) {
+                                    val fullDayName = when (selectedDayKey) {
+                                        "MONDAY" -> "Monday"
+                                        "TUESDAY" -> "Tuesday"
+                                        "WEDNESDAY" -> "Wednesday"
+                                        "THURSDAY" -> "Thursday"
+                                        "FRIDAY" -> "Friday"
+                                        "SATURDAY" -> "Saturday"
+                                        else -> "Sunday"
+                                    }
+
+                                    Row(
+                                        modifier = Modifier.fillMaxWidth(),
+                                        horizontalArrangement = Arrangement.SpaceBetween,
+                                        verticalAlignment = Alignment.CenterVertically
+                                    ) {
+                                        Row(verticalAlignment = Alignment.CenterVertically) {
+                                            Icon(
+                                                Icons.Default.DateRange,
+                                                contentDescription = null,
+                                                tint = MaterialTheme.colorScheme.primary,
+                                                modifier = Modifier.size(18.dp)
+                                            )
+                                            Spacer(modifier = Modifier.width(6.dp))
+                                            Text(
+                                                "$fullDayName Schedule",
+                                                fontWeight = FontWeight.Bold,
+                                                style = MaterialTheme.typography.titleSmall
+                                            )
+                                        }
+
+                                        Row(verticalAlignment = Alignment.CenterVertically) {
+                                            Text(
+                                                if (activeDayConfig.isEnabled) "Open" else "Closed",
+                                                fontSize = 12.sp,
+                                                fontWeight = FontWeight.SemiBold,
+                                                color = if (activeDayConfig.isEnabled) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.error
+                                            )
+                                            Spacer(modifier = Modifier.width(6.dp))
+                                            Switch(
+                                                checked = activeDayConfig.isEnabled,
+                                                onCheckedChange = { isEnabled ->
+                                                    val updated = settings.schedule.withUpdatedDay(
+                                                        selectedDayKey,
+                                                        isEnabled,
+                                                        activeDayConfig.startTime,
+                                                        activeDayConfig.endTime
+                                                    )
+                                                    onSettingsChanged(settings.copy(schedule = updated))
+                                                }
+                                            )
+                                        }
+                                    }
+
+                                    if (activeDayConfig.isEnabled) {
+                                        Spacer(modifier = Modifier.height(12.dp))
+
+                                        // Opening & Closing Time Pickers
+                                        Row(
+                                            modifier = Modifier.fillMaxWidth(),
+                                            horizontalArrangement = Arrangement.spacedBy(10.dp)
+                                        ) {
+                                            Surface(
+                                                shape = RoundedCornerShape(10.dp),
+                                                color = MaterialTheme.colorScheme.surface,
+                                                border = BorderStroke(1.dp, MaterialTheme.colorScheme.outline.copy(alpha = 0.3f)),
+                                                modifier = Modifier
+                                                    .weight(1f)
+                                                    .clickable { showStartTimeDialog = true }
+                                            ) {
+                                                Column(modifier = Modifier.padding(10.dp)) {
+                                                    Text("Opening Time", fontSize = 11.sp, color = MaterialTheme.colorScheme.onSurfaceVariant)
+                                                    Spacer(modifier = Modifier.height(2.dp))
+                                                    Text(formattedStart, fontWeight = FontWeight.Bold, fontSize = 16.sp, color = MaterialTheme.colorScheme.primary)
+                                                }
+                                            }
+
+                                            Surface(
+                                                shape = RoundedCornerShape(10.dp),
+                                                color = MaterialTheme.colorScheme.surface,
+                                                border = BorderStroke(1.dp, MaterialTheme.colorScheme.outline.copy(alpha = 0.3f)),
+                                                modifier = Modifier
+                                                    .weight(1f)
+                                                    .clickable { showEndTimeDialog = true }
+                                            ) {
+                                                Column(modifier = Modifier.padding(10.dp)) {
+                                                    Text("Closing Time", fontSize = 11.sp, color = MaterialTheme.colorScheme.onSurfaceVariant)
+                                                    Spacer(modifier = Modifier.height(2.dp))
+                                                    Text(formattedEnd, fontWeight = FontWeight.Bold, fontSize = 16.sp, color = MaterialTheme.colorScheme.primary)
+                                                }
+                                            }
+                                        }
+
+                                        Spacer(modifier = Modifier.height(10.dp))
+
+                                        // Copy shortcuts
+                                        Row(
+                                            modifier = Modifier.fillMaxWidth(),
+                                            horizontalArrangement = Arrangement.spacedBy(6.dp)
+                                        ) {
+                                            OutlinedButton(
+                                                onClick = {
+                                                    val weekdays = listOf("MONDAY", "TUESDAY", "WEDNESDAY", "THURSDAY", "FRIDAY")
+                                                    var current = settings.schedule
+                                                    weekdays.forEach { wd ->
+                                                        current = current.withUpdatedDay(wd, true, activeDayConfig.startTime, activeDayConfig.endTime)
+                                                    }
+                                                    onSettingsChanged(settings.copy(schedule = current))
+                                                    Toast.makeText(context, "Copied $formattedStart - $formattedEnd to Mon-Fri", Toast.LENGTH_SHORT).show()
+                                                },
+                                                contentPadding = PaddingValues(horizontal = 6.dp, vertical = 2.dp),
+                                                modifier = Modifier.weight(1f)
+                                            ) {
+                                                Text("Copy to Mon-Fri", fontSize = 10.sp)
+                                            }
+
+                                            OutlinedButton(
+                                                onClick = {
+                                                    var current = settings.schedule
+                                                    daysOfWeek.forEach { d ->
+                                                        val wasOpen = settings.schedule.getDaySchedule(d).isEnabled
+                                                        current = current.withUpdatedDay(d, wasOpen, activeDayConfig.startTime, activeDayConfig.endTime)
+                                                    }
+                                                    onSettingsChanged(settings.copy(schedule = current))
+                                                    Toast.makeText(context, "Applied $formattedStart - $formattedEnd to all days", Toast.LENGTH_SHORT).show()
+                                                },
+                                                contentPadding = PaddingValues(horizontal = 6.dp, vertical = 2.dp),
+                                                modifier = Modifier.weight(1f)
+                                            ) {
+                                                Text("Apply to All Days", fontSize = 10.sp)
+                                            }
+                                        }
+                                    } else {
+                                        Spacer(modifier = Modifier.height(8.dp))
+                                        Text(
+                                            "$fullDayName is marked Closed. Inbound missed calls and AI voice receptionist will operate in After-Hours / Emergency mode all day.",
+                                            fontSize = 11.sp,
+                                            color = MaterialTheme.colorScheme.onSurfaceVariant
+                                        )
                                     }
                                 }
+                            }
 
-                                Surface(
-                                    shape = RoundedCornerShape(10.dp),
-                                    color = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.45f),
-                                    border = BorderStroke(1.dp, MaterialTheme.colorScheme.outline.copy(alpha = 0.25f)),
+                            Spacer(modifier = Modifier.height(12.dp))
+
+                            // Weekly Overview Accordion
+                            Row(
+                                modifier = Modifier
+                                    .fillMaxWidth()
+                                    .clickable { showWeeklyBreakdown = !showWeeklyBreakdown }
+                                    .padding(vertical = 4.dp),
+                                horizontalArrangement = Arrangement.SpaceBetween,
+                                verticalAlignment = Alignment.CenterVertically
+                            ) {
+                                Text("Weekly Schedule Overview", style = MaterialTheme.typography.labelMedium, fontWeight = FontWeight.SemiBold)
+                                Row(verticalAlignment = Alignment.CenterVertically) {
+                                    Text(if (showWeeklyBreakdown) "Hide" else "Show All", fontSize = 11.sp, color = MaterialTheme.colorScheme.primary)
+                                    Icon(
+                                        if (showWeeklyBreakdown) Icons.Default.ExpandLess else Icons.Default.ExpandMore,
+                                        contentDescription = null,
+                                        modifier = Modifier.size(16.dp),
+                                        tint = MaterialTheme.colorScheme.primary
+                                    )
+                                }
+                            }
+
+                            AnimatedVisibility(visible = showWeeklyBreakdown) {
+                                Column(
                                     modifier = Modifier
-                                        .weight(1f)
-                                        .clickable { showEndTimeDialog = true }
+                                        .fillMaxWidth()
+                                        .padding(top = 4.dp),
+                                    verticalArrangement = Arrangement.spacedBy(4.dp)
                                 ) {
-                                    Column(modifier = Modifier.padding(12.dp)) {
-                                        Text("Closing Time", fontSize = 11.sp, color = MaterialTheme.colorScheme.onSurfaceVariant)
-                                        Spacer(modifier = Modifier.height(2.dp))
-                                        Text(formattedEnd, fontWeight = FontWeight.Bold, fontSize = 16.sp, color = MaterialTheme.colorScheme.primary)
+                                    daysOfWeek.forEach { dayKey ->
+                                        val conf = settings.schedule.getDaySchedule(dayKey)
+                                        val dayName = when (dayKey) {
+                                            "MONDAY" -> "Monday"
+                                            "TUESDAY" -> "Tuesday"
+                                            "WEDNESDAY" -> "Wednesday"
+                                            "THURSDAY" -> "Thursday"
+                                            "FRIDAY" -> "Friday"
+                                            "SATURDAY" -> "Saturday"
+                                            else -> "Sunday"
+                                        }
+                                        val startFmt = com.missedcall.autotext.util.ScheduleUtils.format12Hour(conf.startTime, 9)
+                                        val endFmt = com.missedcall.autotext.util.ScheduleUtils.format12Hour(conf.endTime, 18)
+                                        val isSelected = dayKey == selectedDayKey
+
+                                        Surface(
+                                            shape = RoundedCornerShape(8.dp),
+                                            color = if (isSelected) MaterialTheme.colorScheme.primary.copy(alpha = 0.12f) else MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.25f),
+                                            modifier = Modifier
+                                                .fillMaxWidth()
+                                                .clickable { selectedDayKey = dayKey }
+                                        ) {
+                                            Row(
+                                                modifier = Modifier.padding(horizontal = 10.dp, vertical = 6.dp),
+                                                horizontalArrangement = Arrangement.SpaceBetween,
+                                                verticalAlignment = Alignment.CenterVertically
+                                            ) {
+                                                Text(
+                                                    dayName,
+                                                    fontWeight = if (isSelected) FontWeight.Bold else FontWeight.Medium,
+                                                    fontSize = 12.sp,
+                                                    color = if (isSelected) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.onSurface
+                                                )
+                                                if (conf.isEnabled) {
+                                                    Text(
+                                                        "$startFmt – $endFmt",
+                                                        fontSize = 12.sp,
+                                                        fontWeight = FontWeight.SemiBold,
+                                                        color = MaterialTheme.colorScheme.primary
+                                                    )
+                                                } else {
+                                                    Text(
+                                                        "Closed",
+                                                        fontSize = 12.sp,
+                                                        fontWeight = FontWeight.Medium,
+                                                        color = MaterialTheme.colorScheme.error.copy(alpha = 0.8f)
+                                                    )
+                                                }
+                                            }
+                                        }
                                     }
                                 }
                             }
@@ -582,30 +837,65 @@ fun AutoSmsScreen(
                             if (showStartTimeDialog) {
                                 AlertDialog(
                                     onDismissRequest = { showStartTimeDialog = false },
-                                    title = { Text("Select Opening Time") },
+                                    title = { Text("Opening Time: ${dayLabels[selectedDayKey] ?: ""}") },
                                     text = {
                                         Column(modifier = Modifier.fillMaxWidth()) {
-                                            val options = listOf("06:00", "07:00", "07:30", "08:00", "08:30", "09:00", "09:30", "10:00")
+                                            val options = listOf("06:00", "07:00", "07:30", "08:00", "08:30", "09:00", "09:30", "10:00", "10:30", "11:00")
                                             options.chunked(2).forEach { rowOptions ->
                                                 Row(
-                                                    modifier = Modifier.fillMaxWidth().padding(vertical = 4.dp),
+                                                    modifier = Modifier.fillMaxWidth().padding(vertical = 3.dp),
                                                     horizontalArrangement = Arrangement.spacedBy(8.dp)
                                                 ) {
                                                     rowOptions.forEach { opt ->
                                                         val label12 = com.missedcall.autotext.util.ScheduleUtils.format12Hour(opt, 9)
-                                                        val isCurr = settings.schedule.startTime == opt
+                                                        val isCurr = activeDayConfig.startTime == opt
                                                         Button(
                                                             onClick = {
-                                                                onSettingsChanged(settings.copy(schedule = settings.schedule.copy(startTime = opt)))
+                                                                val updated = settings.schedule.withUpdatedDay(
+                                                                    selectedDayKey,
+                                                                    activeDayConfig.isEnabled,
+                                                                    opt,
+                                                                    activeDayConfig.endTime
+                                                                )
+                                                                onSettingsChanged(settings.copy(schedule = updated))
                                                                 showStartTimeDialog = false
                                                             },
                                                             modifier = Modifier.weight(1f),
                                                             colors = if (isCurr) ButtonDefaults.buttonColors() else ButtonDefaults.buttonColors(containerColor = MaterialTheme.colorScheme.surfaceVariant)
                                                         ) {
-                                                            Text(label12, fontSize = 13.sp, color = if (isCurr) MaterialTheme.colorScheme.onPrimary else MaterialTheme.colorScheme.onSurface)
+                                                            Text(label12, fontSize = 12.sp, color = if (isCurr) MaterialTheme.colorScheme.onPrimary else MaterialTheme.colorScheme.onSurface)
                                                         }
                                                     }
                                                 }
+                                            }
+
+                                            Spacer(modifier = Modifier.height(10.dp))
+                                            OutlinedButton(
+                                                onClick = {
+                                                    val curr = com.missedcall.autotext.util.ScheduleUtils.parseTimeFlexible(activeDayConfig.startTime, 9, 0)
+                                                    android.app.TimePickerDialog(
+                                                        context,
+                                                        { _, hourOfDay, minute ->
+                                                            val formatted = String.format(java.util.Locale.US, "%02d:%02d", hourOfDay, minute)
+                                                            val updated = settings.schedule.withUpdatedDay(
+                                                                selectedDayKey,
+                                                                activeDayConfig.isEnabled,
+                                                                formatted,
+                                                                activeDayConfig.endTime
+                                                            )
+                                                            onSettingsChanged(settings.copy(schedule = updated))
+                                                            showStartTimeDialog = false
+                                                        },
+                                                        curr.hour,
+                                                        curr.minute,
+                                                        false
+                                                    ).show()
+                                                },
+                                                modifier = Modifier.fillMaxWidth()
+                                            ) {
+                                                Icon(Icons.Default.Schedule, contentDescription = null, modifier = Modifier.size(16.dp))
+                                                Spacer(modifier = Modifier.width(6.dp))
+                                                Text("Custom Clock Time...", fontSize = 12.sp)
                                             }
                                         }
                                     },
@@ -621,30 +911,65 @@ fun AutoSmsScreen(
                             if (showEndTimeDialog) {
                                 AlertDialog(
                                     onDismissRequest = { showEndTimeDialog = false },
-                                    title = { Text("Select Closing Time") },
+                                    title = { Text("Closing Time: ${dayLabels[selectedDayKey] ?: ""}") },
                                     text = {
                                         Column(modifier = Modifier.fillMaxWidth()) {
-                                            val options = listOf("16:00", "17:00", "17:30", "18:00", "18:30", "19:00", "20:00", "21:00")
+                                            val options = listOf("15:00", "16:00", "17:00", "17:30", "18:00", "18:30", "19:00", "20:00", "21:00", "22:00")
                                             options.chunked(2).forEach { rowOptions ->
                                                 Row(
-                                                    modifier = Modifier.fillMaxWidth().padding(vertical = 4.dp),
+                                                    modifier = Modifier.fillMaxWidth().padding(vertical = 3.dp),
                                                     horizontalArrangement = Arrangement.spacedBy(8.dp)
                                                 ) {
                                                     rowOptions.forEach { opt ->
                                                         val label12 = com.missedcall.autotext.util.ScheduleUtils.format12Hour(opt, 18)
-                                                        val isCurr = settings.schedule.endTime == opt
+                                                        val isCurr = activeDayConfig.endTime == opt
                                                         Button(
                                                             onClick = {
-                                                                onSettingsChanged(settings.copy(schedule = settings.schedule.copy(endTime = opt)))
+                                                                val updated = settings.schedule.withUpdatedDay(
+                                                                    selectedDayKey,
+                                                                    activeDayConfig.isEnabled,
+                                                                    activeDayConfig.startTime,
+                                                                    opt
+                                                                )
+                                                                onSettingsChanged(settings.copy(schedule = updated))
                                                                 showEndTimeDialog = false
                                                             },
                                                             modifier = Modifier.weight(1f),
                                                             colors = if (isCurr) ButtonDefaults.buttonColors() else ButtonDefaults.buttonColors(containerColor = MaterialTheme.colorScheme.surfaceVariant)
                                                         ) {
-                                                            Text(label12, fontSize = 13.sp, color = if (isCurr) MaterialTheme.colorScheme.onPrimary else MaterialTheme.colorScheme.onSurface)
+                                                            Text(label12, fontSize = 12.sp, color = if (isCurr) MaterialTheme.colorScheme.onPrimary else MaterialTheme.colorScheme.onSurface)
                                                         }
                                                     }
                                                 }
+                                            }
+
+                                            Spacer(modifier = Modifier.height(10.dp))
+                                            OutlinedButton(
+                                                onClick = {
+                                                    val curr = com.missedcall.autotext.util.ScheduleUtils.parseTimeFlexible(activeDayConfig.endTime, 18, 0)
+                                                    android.app.TimePickerDialog(
+                                                        context,
+                                                        { _, hourOfDay, minute ->
+                                                            val formatted = String.format(java.util.Locale.US, "%02d:%02d", hourOfDay, minute)
+                                                            val updated = settings.schedule.withUpdatedDay(
+                                                                selectedDayKey,
+                                                                activeDayConfig.isEnabled,
+                                                                activeDayConfig.startTime,
+                                                                formatted
+                                                            )
+                                                            onSettingsChanged(settings.copy(schedule = updated))
+                                                            showEndTimeDialog = false
+                                                        },
+                                                        curr.hour,
+                                                        curr.minute,
+                                                        false
+                                                    ).show()
+                                                },
+                                                modifier = Modifier.fillMaxWidth()
+                                            ) {
+                                                Icon(Icons.Default.Schedule, contentDescription = null, modifier = Modifier.size(16.dp))
+                                                Spacer(modifier = Modifier.width(6.dp))
+                                                Text("Custom Clock Time...", fontSize = 12.sp)
                                             }
                                         }
                                     },

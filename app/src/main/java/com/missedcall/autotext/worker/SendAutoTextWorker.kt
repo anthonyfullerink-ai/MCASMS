@@ -57,15 +57,19 @@ class SendAutoTextWorker(
             return Result.success()
         }
 
-        // Deduplication safeguard: Prevent duplicate dispatch if both direct HTTP and FCM trigger
-        val dedupKey = "$targetNumber:${overrideMessage?.hashCode() ?: 0}"
+        val cleanDigits = targetNumber.filter { it.isDigit() }
+        val clean10 = if (cleanDigits.length >= 10) cleanDigits.takeLast(10) else cleanDigits.ifEmpty { targetNumber }
+        val clean7 = if (cleanDigits.length >= 7) cleanDigits.takeLast(7) else clean10
         val now = System.currentTimeMillis()
-        val lastDispatched = recentDispatches[dedupKey] ?: 0L
-        if (now - lastDispatched < 20_000L) {
-            Log.i(TAG, "Suppressing duplicate SMS dispatch for $targetNumber within 20s window.")
+
+        // Deduplication safeguard: Prevent duplicate dispatch if back-to-back calls or triggers arrive concurrently
+        val lastDispatched = recentDispatches[clean10] ?: 0L
+        if (now - lastDispatched < 30_000L) {
+            Log.i(TAG, "Suppressing duplicate SMS dispatch for $targetNumber ($clean10) within 30s in-flight/dedup window.")
             return Result.success()
         }
-        recentDispatches[dedupKey] = now
+        // Immediately record in-flight timestamp to lock against race conditions while delaying or dispatching
+        recentDispatches[clean10] = now
 
         val app = applicationContext as App
         val settingsRepo = app.settingsRepository
@@ -78,6 +82,7 @@ class SendAutoTextWorker(
         val licenseInfo = LicenseManager.verifyLicenseKey(settings.licenseKey)
         val isRevoked = LicenseManager.checkOnlineRevocation(settings.licenseKey, settings.revocationManifestUrl)
         if (licenseInfo.status == LicenseStatus.UNLICENSED || licenseInfo.status == LicenseStatus.EXPIRED || isRevoked) {
+            recentDispatches.remove(clean10)
             val reason = if (isRevoked) "License Revoked" else if (licenseInfo.status == LicenseStatus.EXPIRED) "License Expired" else "Appliance Unlicensed"
             Log.w(TAG, "SMS dispatch locked: $reason for $targetNumber")
             dao.insertLog(
@@ -93,6 +98,7 @@ class SendAutoTextWorker(
 
         // 1. Check Master Switch (Skip for explicit remote webhook triggers)
         if (!isRemoteTrigger && !settings.masterEnabled) {
+            recentDispatches.remove(clean10)
             Log.d(TAG, "Master switch is disabled. Skipping auto-text for $targetNumber")
             return Result.success()
         }
@@ -100,6 +106,7 @@ class SendAutoTextWorker(
         // 2. Check Exclude Saved Contacts (Only for automatic missed call triggers, skip if remote override message is explicit)
         val contactName = ContactUtils.getContactName(applicationContext, targetNumber)
         if (!isRemoteTrigger && settings.excludeSavedContacts && contactName != null) {
+            recentDispatches.remove(clean10)
             Log.d(TAG, "Number $targetNumber is in contacts ($contactName). Skipping.")
             dao.insertLog(
                 CallLogEvent(
@@ -118,13 +125,21 @@ class SendAutoTextWorker(
 
         // 3. Check Cooldown Window (Skip for explicit remote webhook triggers)
         if (!isRemoteTrigger && settings.cooldownHours > 0) {
-            val lastSentTimestamp = dao.getLastSentTimestamp(targetNumber)
-            if (lastSentTimestamp != null) {
+            val lastSentTimestamp = dao.getLastSentTimestampFlexible(targetNumber, clean7)
+            val effectiveLastSent = if (lastSentTimestamp != null && lastSentTimestamp > 0L) {
+                lastSentTimestamp
+            } else if (lastDispatched > 0L) {
+                lastDispatched
+            } else {
+                null
+            }
+
+            if (effectiveLastSent != null) {
                 val cooldownMillis = settings.cooldownHours * 3600 * 1000L
-                val timeElapsed = System.currentTimeMillis() - lastSentTimestamp
-                if (timeElapsed < cooldownMillis) {
+                val timeElapsed = now - effectiveLastSent
+                if (timeElapsed < cooldownMillis && timeElapsed >= 0L) {
                     val remainingMins = ((cooldownMillis - timeElapsed) / 60000L).coerceAtLeast(1L)
-                    Log.d(TAG, "Cooldown active for $targetNumber. Time elapsed: ${timeElapsed / 1000}s, Cooldown: ${settings.cooldownHours}h")
+                    Log.d(TAG, "Cooldown active for $targetNumber ($clean10). Time elapsed: ${timeElapsed / 1000}s, Cooldown: ${settings.cooldownHours}h")
                     dao.insertLog(
                         CallLogEvent(
                             phoneNumber = targetNumber,
@@ -144,6 +159,7 @@ class SendAutoTextWorker(
 
         // 4. Check Business Hours / Day of Week (Skip for explicit remote webhook triggers)
         if (!isRemoteTrigger && settings.businessHoursEnabled && !ScheduleUtils.isWithinBusinessHours(settings.schedule)) {
+            recentDispatches.remove(clean10)
             Log.d(TAG, "Outside business hours. Skipping auto-text for $targetNumber")
             dao.insertLog(
                 CallLogEvent(
@@ -242,6 +258,7 @@ class SendAutoTextWorker(
         if (!isRemoteTrigger) {
             val wasAnswered = isCallAnsweredInCallLog(applicationContext, targetNumber)
             if (wasAnswered) {
+                recentDispatches.remove(clean10)
                 Log.w(TAG, "Safety Safeguard Triggered: Call from $targetNumber was confirmed ANSWERED in CallLog. Suppressing SMS dispatch!")
                 dao.insertLog(
                     CallLogEvent(
@@ -272,6 +289,7 @@ class SendAutoTextWorker(
             }
 
             Log.i(TAG, "SMS successfully dispatched to $targetNumber via SIM slot $effectiveSimSlot")
+            recentDispatches[clean10] = System.currentTimeMillis()
             dao.insertLog(
                 CallLogEvent(
                     phoneNumber = targetNumber,
@@ -302,6 +320,7 @@ class SendAutoTextWorker(
 
             Result.success()
         } catch (e: Exception) {
+            recentDispatches.remove(clean10)
             Log.e(TAG, "Failed to send SMS to $targetNumber", e)
             dao.insertLog(
                 CallLogEvent(

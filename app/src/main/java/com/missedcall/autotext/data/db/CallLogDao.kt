@@ -12,10 +12,10 @@ interface CallLogDao {
     @Insert(onConflict = OnConflictStrategy.REPLACE)
     suspend fun insertLog(event: CallLogEvent): Long
 
-    @Query("SELECT MAX(timestamp) FROM call_log_events WHERE phone_number = :phoneNumber AND status = 'SENT'")
+    @Query("SELECT MAX(timestamp) FROM call_log_events WHERE phone_number = :phoneNumber AND status IN ('SENT', 'REMOTE_SENT')")
     suspend fun getLastSentTimestamp(phoneNumber: String): Long?
 
-    @Query("SELECT MAX(timestamp) FROM call_log_events WHERE (phone_number = :phoneNumber OR phone_number LIKE '%' || :last7Digits) AND status = 'SENT'")
+    @Query("SELECT MAX(timestamp) FROM call_log_events WHERE (phone_number = :phoneNumber OR phone_number LIKE '%' || :last7Digits) AND status IN ('SENT', 'REMOTE_SENT')")
     suspend fun getLastSentTimestampFlexible(phoneNumber: String, last7Digits: String): Long?
 
     @Query("SELECT * FROM call_log_events WHERE (phone_number = :phoneNumber OR phone_number LIKE '%' || :last7Digits) AND status IN ('SENT', 'REMOTE_SENT') AND timestamp > :cutoffTime ORDER BY timestamp DESC")
