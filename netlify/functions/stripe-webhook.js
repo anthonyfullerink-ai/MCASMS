@@ -1899,7 +1899,72 @@ exports.handler = async (event) => {
     return { statusCode: 200, body: JSON.stringify({ received: true, note: 'Non-conversion invoice recorded' }) };
   }
 
-  // ── Item 5: Subscription Cancellation / Voice Deactivation ────────────────
+  // ── Item 4.5: Payment Failed (Trial Conversion Failed or Subscription Renewal Failed) ──
+  if (eventObj.type === 'invoice.payment_failed') {
+    const invoice = eventObj.data.object;
+    const subId = invoice.subscription;
+    const customerEmail = invoice.customer_email;
+    const customerName = invoice.customer_name || 'Valued Customer';
+    const amountDue = ((invoice.amount_due || 0) / 100).toFixed(2);
+    console.warn(`⚠️ [PAYMENT FAILED] Invoice failed for ${customerEmail || subId} ($${amountDue}). Suspending license...`);
+
+    const dbFail = getFirestore();
+    let suspendedKeys = [];
+    if (dbFail && subId) {
+      try {
+        if (typeof dbFail.suspendSubscriptionLicenses === 'function') {
+          suspendedKeys = await dbFail.suspendSubscriptionLicenses(subId, 'PAYMENT_FAILED');
+        } else {
+          await dbFail.deactivateVoiceSubscriber(subId).catch(() => {});
+        }
+        console.log(`🔒 [LICENSE SUSPENDED] Suspended keys for sub ${subId}:`, suspendedKeys);
+      } catch (err) {
+        console.error('[stripe-webhook] Error suspending failed payment license:', err.message);
+      }
+    }
+
+    if (RESEND_API_KEY && customerEmail) {
+      const failedSubject = `⚠️ Payment Failed - Your Missed Call Auto SMS Access Is Suspended`;
+      const failedHtml = `<!DOCTYPE html>
+<html>
+<head><meta charset="utf-8"><title>Payment Failed</title></head>
+<body style="font-family: -apple-system, BlinkMacSystemFont, Arial, sans-serif; background:#090B0E; color:#FFF; padding:24px; margin:0;">
+  <div style="max-width:600px; margin:0 auto; background:#131720; border:1px solid #EF4444; border-radius:16px; padding:32px;">
+    <div style="text-align:center; margin-bottom:24px;">
+      <div style="font-size:44px;">⚠️</div>
+      <h1 style="color:#EF4444; margin:8px 0; font-size:22px;">Payment Failed — Access Suspended</h1>
+    </div>
+    <p>Hi ${customerName},</p>
+    <p>Your payment of <strong>$${amountDue}</strong> could not be processed. Your Missed Call Auto SMS appliance license has been temporarily suspended.</p>
+    <div style="background:#1E293B; border-radius:8px; padding:16px; margin:20px 0; border-left: 4px solid #EF4444;">
+      <p style="margin:0 0 8px; font-weight:bold; color:#FFF;">To reactivate your automated SMS & AI answering:</p>
+      <p style="margin:0; font-size:14px; color:#94A3B8;">Please update your payment method or complete your lifetime purchase at the link below:</p>
+      <div style="text-align:center; margin-top:16px;">
+        <a href="https://buy.stripe.com/3cI9AT49g2X07Q41ux2go0a" style="background:#00E676; color:#000; padding:12px 24px; border-radius:8px; font-weight:bold; text-decoration:none; display:inline-block;">Reactivate License ($49.99 Lifetime)</a>
+      </div>
+    </div>
+  </div>
+</body>
+</html>`;
+      sendEmail(RESEND_API_KEY, customerEmail, failedSubject, failedHtml).catch(() => {});
+    }
+
+    if (RESEND_API_KEY && OWNER_NOTIFY_EMAIL) {
+      sendEmail(
+        RESEND_API_KEY,
+        OWNER_NOTIFY_EMAIL,
+        `⚠️ Payment Failed (License Suspended): ${customerName || customerEmail}`,
+        `<p>Payment failed on invoice for subscription: <code>${subId}</code></p>
+         <p><strong>Customer:</strong> ${customerName} (${customerEmail})</p>
+         <p><strong>Amount Due:</strong> $${amountDue}</p>
+         <p><strong>Suspended License Keys:</strong> <code>${suspendedKeys.join(', ') || 'N/A'}</code></p>`
+      ).catch(() => {});
+    }
+
+    return { statusCode: 200, body: JSON.stringify({ received: true, action: 'license_suspended', subId, suspendedKeys }) };
+  }
+
+  // ── Item 5: Subscription Cancellation / Deactivation ────────────────
   if (eventObj.type === 'customer.subscription.deleted') {
     const subscription = eventObj.data.object;
     const subId = subscription.id;
@@ -1913,10 +1978,13 @@ exports.handler = async (event) => {
     let customerName = null;
     let forwardingNumber = null;
 
-    // 1. Deactivate in Firestore — find the binding by subscription ID and flip voiceActive=false
+    // 1. Deactivate in Firestore — cancel voice binding and suspend trial/base license
     const dbCancel = getFirestore();
     if (dbCancel) {
       try {
+        if (typeof dbCancel.suspendSubscriptionLicenses === 'function') {
+          await dbCancel.suspendSubscriptionLicenses(subId, 'SUBSCRIPTION_CANCELLED');
+        }
         deactivatedKey = await dbCancel.deactivateVoiceSubscriber(subId);
 
         // 2. Update global voice_settings to OFF

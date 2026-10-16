@@ -110,7 +110,17 @@ class MainActivity : ComponentActivity() {
                         outputStream.use { it.write(payload.toString().toByteArray(java.nio.charset.StandardCharsets.UTF_8)) }
                     }
                     val code = conn.responseCode
-                    android.util.Log.i("MainActivity", "Auto-binding hardware check on startup: code $code for device $deviceId")
+                    val stream = if (code in 200..299) conn.inputStream else conn.errorStream
+                    val respText = stream?.bufferedReader()?.use { it.readText() } ?: "{}"
+                    val json = org.json.JSONObject(respText)
+                    val status = json.optString("status", "").uppercase()
+                    val isSuspended = json.optBoolean("suspended", false) || status == "SUSPENDED" || status == "CANCELLED" || code == 403
+                    if (isSuspended && currentSettings.subscriptionStatus != "SUSPENDED") {
+                        settingsRepo.updateSettings(currentSettings.copy(subscriptionStatus = "SUSPENDED"))
+                    } else if (code == 200 && json.optBoolean("valid", false) && currentSettings.subscriptionStatus == "SUSPENDED") {
+                        settingsRepo.updateSettings(currentSettings.copy(subscriptionStatus = "ACTIVE"))
+                    }
+                    android.util.Log.i("MainActivity", "Auto-binding check on startup: code $code, status: $status")
                 }
             } catch (e: Exception) {
                 android.util.Log.w("MainActivity", "Hardware binding startup check notice: ${e.message}")
@@ -131,12 +141,22 @@ class MainActivity : ComponentActivity() {
                     val notifDao = app.database.appNotificationDao()
                     val notifications by notifDao.getAllNotificationsFlow().collectAsState(initial = emptyList())
 
-                    if (settings.licenseKey.isBlank()) {
+                    val licenseInfo = remember(settings.licenseKey) {
+                        com.missedcall.autotext.data.license.LicenseManager.verifyLicenseKey(settings.licenseKey)
+                    }
+                    val isExpiredOrSuspended = settings.licenseKey.isNotBlank() && (
+                        licenseInfo.status == com.missedcall.autotext.data.license.LicenseStatus.EXPIRED ||
+                        settings.subscriptionStatus.equals("SUSPENDED", ignoreCase = true) ||
+                        settings.subscriptionStatus.equals("CANCELLED", ignoreCase = true)
+                    )
+
+                    if (settings.licenseKey.isBlank() || isExpiredOrSuspended) {
                         com.missedcall.autotext.ui.screens.LicenseGateScreen(
-                            initialLicenseKey = deepLinkLicenseKey,
+                            initialLicenseKey = deepLinkLicenseKey ?: settings.licenseKey,
+                            isExpiredOrSuspended = isExpiredOrSuspended,
                             onActivationSuccess = { updater ->
                                 lifecycleScope.launch {
-                                    settingsRepo.updateSettings(settings.updater())
+                                    settingsRepo.updateSettings(settings.updater().copy(subscriptionStatus = "ACTIVE"))
                                 }
                             }
                         )

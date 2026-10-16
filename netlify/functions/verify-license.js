@@ -44,6 +44,66 @@ exports.handler = async (event) => {
     const isPro = key.startsWith('MCAS-PRO-') || key.startsWith('MCAT-PRO-') || key.includes('PRO-DEMO');
     const isAgency = key.startsWith('MCAS-AGENCY-') || key.startsWith('MCAT-AGENCY-');
 
+    // Cryptographic HMAC Signature & Expiry Check
+    const prefix = key.startsWith('MCAS-PRO-') ? 'MCAS-PRO-' : (key.startsWith('MCAT-PRO-') ? 'MCAT-PRO-' : (key.startsWith('MCAS-') ? 'MCAS-' : 'MCAT-'));
+    const parts = key.substring(prefix.length).split('-');
+    if (parts.length >= 2 && !key.includes('DEMO') && !key.includes('OWNER')) {
+      const payloadHex = parts[0];
+      const expectedSig = parts[1];
+      const hmac = crypto.createHmac('sha256', LICENSE_SECRET);
+      hmac.update(payloadHex);
+      const calculatedSig = hmac.digest('hex').substring(0, expectedSig.length).toUpperCase();
+
+      if (calculatedSig !== expectedSig.toUpperCase()) {
+        return {
+          statusCode: 200,
+          headers,
+          body: JSON.stringify({ valid: false, error: 'Cryptographic signature verification failed.' })
+        };
+      }
+
+      try {
+        const payloadStr = Buffer.from(payloadHex, 'hex').toString('utf8');
+        const fields = payloadStr.split('|');
+        const expiryTimeRaw = parseInt(fields[1], 10) || 0;
+        const nowSec = Math.floor(Date.now() / 1000);
+
+        if (expiryTimeRaw > 0 && nowSec > expiryTimeRaw) {
+          return {
+            statusCode: 403,
+            headers,
+            body: JSON.stringify({
+              valid: false,
+              expired: true,
+              error: 'Your 3-Day Free Trial has expired. Please upgrade to a lifetime license to resume auto SMS answering.',
+              upgradeUrl: 'https://buy.stripe.com/3cI9AT49g2X07Q41ux2go0a'
+            })
+          };
+        }
+      } catch (decErr) {}
+    }
+
+    // Check Master License record for explicit SUSPENDED / CANCELLED status
+    try {
+      let _fsCheck = null;
+      try { _fsCheck = require('../../lib/firestore'); } catch (e) {}
+      if (_fsCheck && (process.env.FIREBASE_SERVICE_ACCOUNT_KEY || process.env.FIREBASE_SERVICE_ACCOUNT)) {
+        const licDoc = await _fsCheck.getMasterLicense(key);
+        if (licDoc && (licDoc.status === 'SUSPENDED' || licDoc.status === 'CANCELLED' || licDoc.status === 'REVOKED')) {
+          return {
+            statusCode: 403,
+            headers,
+            body: JSON.stringify({
+              valid: false,
+              suspended: true,
+              error: `License is ${licDoc.status.toLowerCase()} (${licDoc.suspensionReason || 'Payment failed or subscription ended'}). Please upgrade to reactivate.`,
+              upgradeUrl: 'https://buy.stripe.com/3cI9AT49g2X07Q41ux2go0a'
+            })
+          };
+        }
+      }
+    } catch (licErr) {}
+
     // Check Voice Pro Bindings (Cloud Firestore with local JSON fallback)
     let voiceActive = false;
     let voiceForwardingNumber = null;

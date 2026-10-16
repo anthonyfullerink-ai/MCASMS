@@ -34,13 +34,19 @@ import java.net.URL
 @Composable
 fun LicenseGateScreen(
     initialLicenseKey: String? = null,
+    isExpiredOrSuspended: Boolean = false,
     onActivationSuccess: (AppSettings.() -> AppSettings) -> Unit
 ) {
     val context = LocalContext.current
     val coroutineScope = rememberCoroutineScope()
     var licenseInput by remember { mutableStateOf(initialLicenseKey?.trim()?.uppercase() ?: "") }
     var isLoading by remember { mutableStateOf(false) }
-    var errorMessage by remember { mutableStateOf<String?>(null) }
+    var errorMessage by remember { 
+        mutableStateOf<String?>(
+            if (isExpiredOrSuspended) "Your 3-day free trial has expired or payment was suspended. Please enter a valid lifetime key or upgrade below." 
+            else null
+        ) 
+    }
     var clipboardKey by remember { mutableStateOf<String?>(null) }
 
     val clipboardManager = remember {
@@ -179,20 +185,37 @@ fun LicenseGateScreen(
             Spacer(modifier = Modifier.height(16.dp))
 
             Text(
-                text = "Activate Your Software",
+                text = if (isExpiredOrSuspended) "Trial Expired / Access Suspended" else "Activate Your Software",
                 style = MaterialTheme.typography.headlineMedium,
                 fontWeight = FontWeight.Bold,
-                color = MaterialTheme.colorScheme.onBackground
+                color = if (isExpiredOrSuspended) MaterialTheme.colorScheme.error else MaterialTheme.colorScheme.onBackground
             )
 
             Spacer(modifier = Modifier.height(8.dp))
 
             Text(
-                text = "Enter your License Key from your confirmation email, or tap below to paste automatically.",
+                text = if (isExpiredOrSuspended) 
+                    "Your 3-day access has ended. Upgrade to the Lifetime Edition to immediately unlock unlimited automated SMS and AI answering." 
+                    else "Enter your License Key from your confirmation email, or tap below to paste automatically.",
                 style = MaterialTheme.typography.bodyMedium,
                 color = MaterialTheme.colorScheme.onSurfaceVariant,
                 textAlign = TextAlign.Center
             )
+
+            if (isExpiredOrSuspended) {
+                Spacer(modifier = Modifier.height(16.dp))
+                Button(
+                    onClick = {
+                        val intent = Intent(Intent.ACTION_VIEW, Uri.parse("https://buy.stripe.com/3cI9AT49g2X07Q41ux2go0a"))
+                        context.startActivity(intent)
+                    },
+                    modifier = Modifier.fillMaxWidth().height(48.dp),
+                    colors = ButtonDefaults.buttonColors(containerColor = Color(0xFF00E676)),
+                    shape = RoundedCornerShape(10.dp)
+                ) {
+                    Text("⚡ Upgrade to Lifetime License ($49.99)", fontWeight = FontWeight.Bold, color = Color.Black)
+                }
+            }
 
             Spacer(modifier = Modifier.height(28.dp))
 
