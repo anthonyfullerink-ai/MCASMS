@@ -1659,6 +1659,28 @@ exports.handler = async (event) => {
         }
       }
 
+      // 3. Persist Trial License to Database (Firestore & Master Licenses)
+      const dbTrial = getFirestore();
+      if (dbTrial) {
+        try {
+          await dbTrial.saveMasterLicense({
+            key: trialLicenseKey,
+            customer: customerName,
+            email: customerEmail,
+            tier: 'TRIAL',
+            type: 'SUBSCRIPTION',
+            price: '0.00',
+            status: 'ACTIVE',
+            stripeSubscriptionId: session.subscription || null,
+            stripeCustomerId: session.customer || null,
+            date: new Date().toISOString()
+          });
+          console.log(`💾 [TRIAL LICENSE PERSISTED TO FIRESTORE] ${trialLicenseKey}`);
+        } catch (fErr) {
+          console.warn('[stripe-webhook] Firestore trial saveMasterLicense error:', fErr.message);
+        }
+      }
+
       return {
         statusCode: 200,
         headers: { 'Content-Type': 'application/json' },
