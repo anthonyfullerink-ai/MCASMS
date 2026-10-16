@@ -8161,9 +8161,9 @@ const server = http.createServer((req, res) => {
             }));
             return;
           }
-        } else if (viewerRole !== 'owner') {
+        } else if (viewerRole !== 'owner' && viewerRole !== 'client') {
           res.writeHead(403, { 'Content-Type': 'application/json; charset=utf-8', 'Access-Control-Allow-Origin': '*' });
-          res.end(JSON.stringify({ success: false, error: 'Invalid viewerRole. Must be "agency" or "owner".' }));
+          res.end(JSON.stringify({ success: false, error: 'Invalid viewerRole. Must be "agency", "owner", or "client".' }));
           return;
         }
 
@@ -8175,7 +8175,7 @@ const server = http.createServer((req, res) => {
 
         const returnUrl = viewerRole === 'agency'
           ? `/agency-dashboard?agency=${encodeURIComponent(clientAgencyId)}`
-          : `/owner_admin_dashboard.html`;
+          : (viewerRole === 'owner' ? `/owner_admin_dashboard.html` : null);
 
         res.writeHead(200, { 'Content-Type': 'application/json; charset=utf-8', 'Access-Control-Allow-Origin': '*' });
         res.end(JSON.stringify({

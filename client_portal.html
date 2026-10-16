@@ -1496,17 +1496,31 @@
             await fetchPublicBranding(vanityAgency);
         }
 
-        // Direct View-As Check:
-        // When an agency or owner selects "View as Client", they shouldn't need to login.
-        // It puts them directly into the client account immediately.
         const impersonate = urlParams.get('impersonate');
         const viewAccount = urlParams.get('account') || urlParams.get('license') || urlParams.get('key') || urlParams.get('client');
         const nameHint = urlParams.get('name') || urlParams.get('client_name') || urlParams.get('business') || '';
+        const isActivate = urlParams.get('activate') === 'true';
 
-        if (viewAccount || impersonate) {
-            const effectiveAccount = viewAccount || 'MCAS-PRO-CLIENT-APPLIANCE';
-            const viewerRole = impersonate || (vanityAgency ? 'agency' : 'owner');
+        if (viewAccount) {
+            if (isActivate) {
+                document.getElementById('authSection').style.display = 'block';
+                switchAuthTab('activate');
+                const keyInput = document.getElementById('actLicenseKey');
+                if (keyInput) {
+                    keyInput.value = viewAccount;
+                    verifyLicenseKey();
+                }
+                return;
+            }
+            const effectiveAccount = viewAccount;
+            const viewerRole = impersonate ? impersonate : 'client';
             await handleViewAsMode(effectiveAccount, vanityAgency, viewerRole, nameHint);
+            return;
+        }
+
+        if (impersonate) {
+            const effectiveAccount = 'MCAS-PRO-CLIENT-APPLIANCE';
+            await handleViewAsMode(effectiveAccount, vanityAgency, impersonate, nameHint);
             return;
         }
 
@@ -1523,14 +1537,14 @@
         document.getElementById('authSection').style.display = 'none';
 
         try {
-            showToast('Opening client account...', '👁️');
+            showToast(viewerRole === 'client' ? 'Loading your client portal...' : 'Opening client account...', viewerRole === 'client' ? '⚡' : '👁️');
             const res = await fetch('/api/portal/view-as', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({
                     licenseKey: licenseKey,
                     agencyId: agencySlug,
-                    viewerRole: viewerRole || 'agency',
+                    viewerRole: viewerRole || 'client',
                     clientName: clientNameHint
                 })
             });
@@ -1540,12 +1554,12 @@
                 currentImpersonation = data.impersonation;
                 if (data.token) {
                     currentAuthToken = data.token;
-                    sessionStorage.setItem('mcas_portal_token', data.token);
+                    saveSessionToken(data.token);
                 }
 
                 renderImpersonationBanner(data.impersonation, data.client);
                 renderPortal(data);
-                showToast(`Now viewing as ${data.client.name}!`, '👁️');
+                showToast(viewerRole === 'client' ? `Welcome, ${data.client.name}!` : `Now viewing as ${data.client.name}!`, viewerRole === 'client' ? '👋' : '👁️');
                 return;
             }
         } catch (err) {
@@ -1556,14 +1570,19 @@
         const fallback = generateDirectClientData(licenseKey, agencySlug, viewerRole, clientNameHint);
         currentImpersonation = fallback.impersonation;
         currentAuthToken = fallback.token;
+        saveSessionToken(fallback.token);
         renderImpersonationBanner(fallback.impersonation, fallback.client);
         renderPortal(fallback);
-        showToast(`Now viewing as ${fallback.client.name}!`, '👁️');
+        showToast(viewerRole === 'client' ? `Welcome, ${fallback.client.name}!` : `Now viewing as ${fallback.client.name}!`, viewerRole === 'client' ? '👋' : '👁️');
     }
 
     function renderImpersonationBanner(impersonation, client) {
         const banner = document.getElementById('impersonationBanner');
         if (!banner) return;
+        if (!impersonation || impersonation.viewerRole === 'client') {
+            banner.style.display = 'none';
+            return;
+        }
         banner.style.display = 'block';
         const clientName = (client && client.name) || (impersonation && impersonation.clientName) || 'Client Business';
         const licenseKey = (client && client.licenseKey) || (impersonation && impersonation.licenseKey) || 'Active Account';

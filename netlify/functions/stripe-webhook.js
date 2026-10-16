@@ -91,6 +91,23 @@ function generateEmailHtml(customerName, licenseKey, apkDownloadUrl, amountPaid,
             <div style="font-size: 12px; color: #949BAE; margin-top: 8px;">Direct Link: <a href="${apkDownloadUrl}" style="color:${themeTextColor};">${apkDownloadUrl}</a></div>
         </div>
 
+        <!-- Live Client Dashboard Access Card -->
+        <div style="background: linear-gradient(180deg, #0F172A 0%, #1E293B 100%); border: 1px solid #38BDF8; border-radius: 14px; padding: 22px; text-align: center; margin-bottom: 24px; box-shadow: 0 4px 18px rgba(56, 189, 248, 0.15);">
+            <div style="display: inline-block; font-size: 11px; font-weight: 800; color: #38BDF8; background: rgba(56, 189, 248, 0.12); border: 1px solid rgba(56, 189, 248, 0.3); border-radius: 20px; padding: 3px 12px; margin-bottom: 8px; text-transform: uppercase; letter-spacing: 0.5px;">
+                🌐 Web Dashboard Access
+            </div>
+            <h3 style="color: #FFFFFF; font-size: 18px; margin: 0 0 8px 0; font-weight: 800;">Your Real-Time Client Portal</h3>
+            <p style="color: #94A3B8; font-size: 13px; line-height: 1.5; margin: 0 0 16px 0;">
+                Access live call transcripts, view two-way SMS conversations from your device SIM, track autonomous action items, and manage appliance settings from any browser.
+            </p>
+            <a href="https://missedcallautosms.com/client_portal.html?key=${encodeURIComponent(licenseKey)}" style="display: inline-block; background: #2563EB; color: #FFFFFF; font-weight: 800; font-size: 15px; padding: 13px 32px; border-radius: 30px; text-decoration: none; box-shadow: 0 4px 14px rgba(37, 99, 235, 0.4);">
+                ⚡ Open Your Client Dashboard →
+            </a>
+            <div style="margin-top: 12px; font-size: 11px; color: #64748B;">
+                Direct Link: <a href="https://missedcallautosms.com/client_portal.html?key=${encodeURIComponent(licenseKey)}" style="color: #38BDF8;">missedcallautosms.com/client_portal.html?key=${licenseKey}</a>
+            </div>
+        </div>
+
         ${isPro ? `
         <!-- n8n Workflow Template Bonus for Pro -->
         <div style="background: linear-gradient(180deg, #181126 0%, #0D1016 100%); border: 1px solid #7928CA; border-radius: 12px; padding: 18px; text-align: center; margin-bottom: 24px;">
@@ -133,7 +150,7 @@ function generateEmailHtml(customerName, licenseKey, apkDownloadUrl, amountPaid,
         </div>
 
         <div style="border-top: 1px solid #222836; padding-top: 18px; text-align: center; font-size: 12px; color: #718096;">
-            Need help or device transfer? Visit <a href="https://missedcallautosms.com/license_dashboard.html" style="color: ${themeTextColor};">Customer License Portal</a> or reply directly to this email.
+            Need help or device transfer? Visit your <a href="https://missedcallautosms.com/client_portal.html?key=${encodeURIComponent(licenseKey)}" style="color: ${themeTextColor}; font-weight: 700;">Client Dashboard</a> or reply directly to this email.
         </div>
     </div>
 </body>
@@ -212,6 +229,23 @@ function generateComboEmailHtml(customerName, licenseKey, apkDownloadUrl, amount
             <div style="font-size: 12px; color: #949BAE; margin-top: 8px;">Direct Link: <a href="${apkDownloadUrl}" style="color:${themeTextColor};">${apkDownloadUrl}</a></div>
         </div>
 
+        <!-- Live Client Dashboard Access Card -->
+        <div style="background: linear-gradient(180deg, #0F172A 0%, #1E293B 100%); border: 1px solid #38BDF8; border-radius: 14px; padding: 22px; text-align: center; margin-bottom: 24px; box-shadow: 0 4px 18px rgba(56, 189, 248, 0.15);">
+            <div style="display: inline-block; font-size: 11px; font-weight: 800; color: #38BDF8; background: rgba(56, 189, 248, 0.12); border: 1px solid rgba(56, 189, 248, 0.3); border-radius: 20px; padding: 3px 12px; margin-bottom: 8px; text-transform: uppercase; letter-spacing: 0.5px;">
+                🌐 Web Dashboard Access
+            </div>
+            <h3 style="color: #FFFFFF; font-size: 18px; margin: 0 0 8px 0; font-weight: 800;">Your Real-Time Client Portal</h3>
+            <p style="color: #94A3B8; font-size: 13px; line-height: 1.5; margin: 0 0 16px 0;">
+                Listen to call recordings, read full conversation transcripts, monitor authentic SIM text conversations, and view pending follow-ups.
+            </p>
+            <a href="https://missedcallautosms.com/client_portal.html?key=${encodeURIComponent(licenseKey)}" style="display: inline-block; background: #2563EB; color: #FFFFFF; font-weight: 800; font-size: 15px; padding: 13px 32px; border-radius: 30px; text-decoration: none; box-shadow: 0 4px 14px rgba(37, 99, 235, 0.4);">
+                ⚡ Open Your Client Dashboard →
+            </a>
+            <div style="margin-top: 12px; font-size: 11px; color: #64748B;">
+                Direct Link: <a href="https://missedcallautosms.com/client_portal.html?key=${encodeURIComponent(licenseKey)}" style="color: #38BDF8;">missedcallautosms.com/client_portal.html?key=${licenseKey}</a>
+            </div>
+        </div>
+
         <!-- 3-Step Quick Start -->
         <div style="border-top: 1px solid #222836; padding-top: 20px; margin-bottom: 24px;">
             <h3 style="color: #FFF; font-size: 16px; margin: 0 0 12px 0;">🚀 3-Step Instant Activation</h3>
@@ -223,7 +257,7 @@ function generateComboEmailHtml(customerName, licenseKey, apkDownloadUrl, amount
         </div>
 
         <div style="border-top: 1px solid #222836; padding-top: 18px; text-align: center; font-size: 12px; color: #718096;">
-            Need help or device transfer? Visit <a href="https://missedcallautosms.com/license_dashboard.html" style="color: ${themeTextColor};">Customer License Portal</a> or reply directly to this email.
+            Need help or device transfer? Visit your <a href="https://missedcallautosms.com/client_portal.html?key=${encodeURIComponent(licenseKey)}" style="color: ${themeTextColor}; font-weight: 700;">Client Dashboard</a> or reply directly to this email.
         </div>
     </div>
 </body>
@@ -305,8 +339,25 @@ function generateProPlusVoiceEmailHtml(customerName, licenseKey, apkDownloadUrl,
             </a>
         </div>
 
+        <!-- Live Client Dashboard Access Card -->
+        <div style="background: linear-gradient(180deg, #0F172A 0%, #1E293B 100%); border: 1px solid #C084FC; border-radius: 14px; padding: 22px; text-align: center; margin-bottom: 24px; box-shadow: 0 4px 18px rgba(168, 85, 247, 0.15);">
+            <div style="display: inline-block; font-size: 11px; font-weight: 800; color: #C084FC; background: rgba(168, 85, 247, 0.12); border: 1px solid rgba(168, 85, 247, 0.3); border-radius: 20px; padding: 3px 12px; margin-bottom: 8px; text-transform: uppercase; letter-spacing: 0.5px;">
+                🌐 Client Web Portal
+            </div>
+            <h3 style="color: #FFFFFF; font-size: 18px; margin: 0 0 8px 0; font-weight: 800;">Your Real-Time Voice &amp; Gateway Portal</h3>
+            <p style="color: #94A3B8; font-size: 13px; line-height: 1.5; margin: 0 0 16px 0;">
+                Listen to call audio recordings, review live conversation transcripts, monitor dual-SIM SMS triggers, and inspect automated lead handoffs.
+            </p>
+            <a href="https://missedcallautosms.com/client_portal.html?key=${encodeURIComponent(licenseKey)}" style="display: inline-block; background: #9333EA; color: #FFFFFF; font-weight: 800; font-size: 15px; padding: 13px 32px; border-radius: 30px; text-decoration: none; box-shadow: 0 4px 14px rgba(147, 51, 234, 0.4);">
+                ⚡ Open Your Client Dashboard →
+            </a>
+            <div style="margin-top: 12px; font-size: 11px; color: #64748B;">
+                Direct Link: <a href="https://missedcallautosms.com/client_portal.html?key=${encodeURIComponent(licenseKey)}" style="color: #C084FC;">missedcallautosms.com/client_portal.html?key=${licenseKey}</a>
+            </div>
+        </div>
+
         <div style="border-top: 1px solid #222836; padding-top: 18px; text-align: center; font-size: 12px; color: #718096;">
-            Need help? Reply directly to this email or visit our <a href="https://missedcallautosms.com/owner_admin_dashboard.html" style="color: #A855F7;">Owner Portal</a>.
+            Need help? Reply directly to this email or visit your <a href="https://missedcallautosms.com/client_portal.html?key=${encodeURIComponent(licenseKey)}" style="color: #C084FC; font-weight: 700;">Client Dashboard</a>.
         </div>
     </div>
 </body>
@@ -508,16 +559,25 @@ function generateVoiceProEmailHtml(customerName, licenseKey, forwardingNumber, c
             </p>
         </div>
 
-        <!-- Post-Call SMS & Portal -->
-        <div style="border-top: 1px solid #222836; padding-top: 20px; margin-bottom: 24px;">
-            <h3 style="color: #FFF; font-size: 15px; margin: 0 0 10px 0;">⚡ Post-Call Authentic SIM SMS</h3>
-            <p style="color: #CBD5E0; font-size: 13px; line-height: 1.5; margin: 0 0 12px 0;">
-                The second your AI assistant finishes a call, your phone fires an authentic text from your real carrier SIM.
-            </p>
-            <div style="background: #090B0E; padding: 12px; border-radius: 8px; border: 1px solid #222836; font-size: 12px; color: #CBD5E0;">
-                <strong>License Key:</strong> <code style="color:#00E676;">${licenseKey}</code><br>
-                <strong>Admin Portal:</strong> <a href="https://missedcallautosms.com/owner_admin_dashboard.html" style="color: #38BDF8;">missedcallautosms.com/owner_admin_dashboard.html</a>
+        <!-- Live Client Dashboard Access -->
+        <div style="background: linear-gradient(180deg, #0F172A 0%, #1E293B 100%); border: 1px solid #00E676; border-radius: 14px; padding: 22px; text-align: center; margin-bottom: 24px; box-shadow: 0 4px 18px rgba(0, 230, 118, 0.15);">
+            <div style="display: inline-block; font-size: 11px; font-weight: 800; color: #00E676; background: rgba(0, 230, 118, 0.12); border: 1px solid rgba(0, 230, 118, 0.3); border-radius: 20px; padding: 3px 12px; margin-bottom: 8px; text-transform: uppercase; letter-spacing: 0.5px;">
+                🌐 Client Web Portal
             </div>
+            <h3 style="color: #FFFFFF; font-size: 18px; margin: 0 0 8px 0; font-weight: 800;">Your Real-Time Voice &amp; SMS Dashboard</h3>
+            <p style="color: #94A3B8; font-size: 13px; line-height: 1.5; margin: 0 0 16px 0;">
+                Listen to full call audio recordings, inspect live AI conversation transcripts, view automated SIM texts, and monitor your monthly minute balance.
+            </p>
+            <a href="https://missedcallautosms.com/client_portal.html?key=${encodeURIComponent(licenseKey)}" style="display: inline-block; background: #00E676; color: #000000; font-weight: 800; font-size: 15px; padding: 13px 32px; border-radius: 30px; text-decoration: none; box-shadow: 0 4px 14px rgba(0, 230, 118, 0.35);">
+                ⚡ Open Your Client Dashboard →
+            </a>
+            <div style="margin-top: 12px; font-size: 11px; color: #64748B;">
+                Direct Link: <a href="https://missedcallautosms.com/client_portal.html?key=${encodeURIComponent(licenseKey)}" style="color: #38BDF8;">missedcallautosms.com/client_portal.html?key=${licenseKey}</a>
+            </div>
+        </div>
+
+        <div style="border-top: 1px solid #222836; padding-top: 18px; text-align: center; font-size: 12px; color: #718096;">
+            Need help or device settings? Visit your <a href="https://missedcallautosms.com/client_portal.html?key=${encodeURIComponent(licenseKey)}" style="color: #00E676; font-weight: 700;">Client Dashboard</a> or reply directly to this email.
         </div>
     </div>
 </body>

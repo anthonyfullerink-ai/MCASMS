@@ -1,6 +1,7 @@
 const fs = require('fs');
 const path = require('path');
 const crypto = require('crypto');
+const https = require('https');
 
 const ROOT_DIR = path.resolve(__dirname, '..', '..');
 const DATA_DIR = path.join(ROOT_DIR, 'data');
@@ -157,6 +158,140 @@ function decodeKeyInfo(key) {
     }
   }
   return null;
+}
+
+function sendResendEmail(apiKey, toEmail, subject, htmlContent) {
+  return new Promise((resolve, reject) => {
+    const payload = JSON.stringify({
+      from: process.env.FROM_EMAIL || 'Missed Call Auto SMS <support@missedcallautosms.com>',
+      to: [toEmail],
+      subject: subject,
+      html: htmlContent
+    });
+
+    const options = {
+      hostname: 'api.resend.com',
+      port: 443,
+      path: '/emails',
+      method: 'POST',
+      headers: {
+        'Authorization': `Bearer ${apiKey}`,
+        'Content-Type': 'application/json',
+        'Content-Length': Buffer.byteLength(payload)
+      }
+    };
+
+    const req = https.request(options, res => {
+      let body = '';
+      res.on('data', d => body += d);
+      res.on('end', () => {
+        try {
+          const json = JSON.parse(body);
+          if (res.statusCode >= 200 && res.statusCode < 300) {
+            resolve(json);
+          } else {
+            reject(new Error(`Resend API HTTP ${res.statusCode}: ${body}`));
+          }
+        } catch (e) {
+          reject(new Error(`Resend Response Parse Error: ${body}`));
+        }
+      });
+    });
+
+    req.on('error', reject);
+    req.write(payload);
+    req.end();
+  });
+}
+
+function generatePortalWelcomeHtml(customerName, licenseKey) {
+  const portalUrl = `https://missedcallautosms.com/client_portal.html?key=${encodeURIComponent(licenseKey)}`;
+  return `<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="utf-8">
+    <title>Your Missed Call Auto SMS Web Dashboard Access</title>
+</head>
+<body style="font-family: -apple-system, BlinkMacSystemFont, Arial, sans-serif; background-color: #090B0E; color: #FFFFFF; margin: 0; padding: 24px;">
+    <div style="max-width: 600px; margin: 0 auto; background: #131720; border: 1px solid #222836; border-radius: 16px; padding: 32px;">
+        <div style="text-align: center; margin-bottom: 24px;">
+            <div style="font-size: 44px; margin-bottom: 8px;">🌐⚡</div>
+            <h1 style="color: #38BDF8; margin: 0; font-size: 24px; font-weight: 900;">Missed Call Auto SMS</h1>
+            <div style="display: inline-block; margin-top: 6px; padding: 4px 14px; border-radius: 20px; font-size: 11px; font-weight: 800; background: rgba(56, 189, 248, 0.15); color: #38BDF8; border: 1px solid rgba(56, 189, 248, 0.35);">
+                LIVE CLIENT WEB PORTAL
+            </div>
+        </div>
+
+        <div style="background: #1A202C; border-left: 4px solid #38BDF8; padding: 16px; border-radius: 8px; margin-bottom: 24px;">
+            <h2 style="margin: 0 0 6px 0; font-size: 18px; color: #FFF;">Welcome to your Web Dashboard, ${customerName}!</h2>
+            <p style="margin: 0; color: #CBD5E0; font-size: 14px; line-height: 1.5;">
+                In addition to your Android appliance, you have full 24/7 web access to monitor your call activity, review SMS conversations, and track urgent leads from any computer, tablet, or smartphone.
+            </p>
+        </div>
+
+        <!-- 1-Click Access Card -->
+        <div style="background: linear-gradient(180deg, #0F172A 0%, #1E293B 100%); border: 1px solid #38BDF8; border-radius: 14px; padding: 24px; text-align: center; margin-bottom: 24px; box-shadow: 0 4px 20px rgba(56, 189, 248, 0.2);">
+            <div style="font-size: 12px; color: #94A3B8; text-transform: uppercase; font-weight: bold; margin-bottom: 8px;">Direct 1-Click Dashboard Link</div>
+            <a href="${portalUrl}" style="display: inline-block; background: #2563EB; color: #FFFFFF; font-weight: 800; font-size: 16px; padding: 14px 36px; border-radius: 30px; text-decoration: none; box-shadow: 0 6px 20px rgba(37, 99, 235, 0.45); margin-bottom: 12px;">
+                ⚡ Open Your Client Dashboard →
+            </a>
+            <div style="font-size: 11px; color: #64748B;">
+                Direct URL: <a href="${portalUrl}" style="color: #38BDF8; word-break: break-all;">${portalUrl}</a>
+            </div>
+        </div>
+
+        <!-- License Key Box -->
+        <div style="background: #090B0E; border: 1px dashed #38BDF8; border-radius: 12px; padding: 16px; text-align: center; margin-bottom: 24px;">
+            <div style="font-size: 11px; color: #949BAE; text-transform: uppercase; font-weight: bold; margin-bottom: 6px;">Your Master License Key</div>
+            <div style="font-family: monospace; font-size: 18px; color: #38BDF8; font-weight: bold; word-break: break-all; letter-spacing: 0.5px;">
+                ${licenseKey}
+            </div>
+            <div style="font-size: 11px; color: #64748B; margin-top: 6px;">Use this key to sign in anytime or set a custom password in your dashboard.</div>
+        </div>
+
+        <!-- Dashboard Capabilities -->
+        <div style="border-top: 1px solid #222836; padding-top: 20px; margin-bottom: 24px;">
+            <h3 style="color: #FFF; font-size: 16px; margin: 0 0 14px 0;">✨ What You Can Do in Your Portal:</h3>
+            
+            <div style="display: flex; gap: 12px; margin-bottom: 12px; align-items: flex-start;">
+                <div style="font-size: 20px;">📞</div>
+                <div>
+                    <div style="color: #FFF; font-size: 14px; font-weight: 700;">Live Call Feed &amp; Audio Transcripts</div>
+                    <div style="color: #94A3B8; font-size: 12px; line-height: 1.4;">Review incoming calls, read full AI conversation transcripts, and see urgency ratings and caller requests.</div>
+                </div>
+            </div>
+
+            <div style="display: flex; gap: 12px; margin-bottom: 12px; align-items: flex-start;">
+                <div style="font-size: 20px;">💬</div>
+                <div>
+                    <div style="color: #FFF; font-size: 14px; font-weight: 700;">Authentic SIM SMS History</div>
+                    <div style="color: #94A3B8; font-size: 12px; line-height: 1.4;">Monitor every automated text and inbound response routed through your cellular phone's SIM.</div>
+                </div>
+            </div>
+
+            <div style="display: flex; gap: 12px; margin-bottom: 12px; align-items: flex-start;">
+                <div style="font-size: 20px;">📋</div>
+                <div>
+                    <div style="color: #FFF; font-size: 14px; font-weight: 700;">Autonomous Action Items</div>
+                    <div style="color: #94A3B8; font-size: 12px; line-height: 1.4;">Keep track of emergency service calls, quote proposals, and technician dispatches automatically extracted by the system.</div>
+                </div>
+            </div>
+
+            <div style="display: flex; gap: 12px; margin-bottom: 12px; align-items: flex-start;">
+                <div style="font-size: 20px;">🔐</div>
+                <div>
+                    <div style="color: #FFF; font-size: 14px; font-weight: 700;">Permanent Sign-In &amp; Google Single Sign-On</div>
+                    <div style="color: #94A3B8; font-size: 12px; line-height: 1.4;">Create a permanent username and password or activate 1-click Google Sign-In on the portal login screen.</div>
+                </div>
+            </div>
+        </div>
+
+        <div style="border-top: 1px solid #222836; padding-top: 18px; text-align: center; font-size: 12px; color: #718096;">
+            Need assistance? Simply reply to this email or reach us at <a href="mailto:support@missedcallautosms.com" style="color: #38BDF8;">support@missedcallautosms.com</a>.
+        </div>
+    </div>
+</body>
+</html>`;
 }
 
 exports.handler = async (event) => {
@@ -318,7 +453,7 @@ exports.handler = async (event) => {
 
     const returnUrl = (viewerRole === 'owner')
       ? `/owner_admin_dashboard.html`
-      : `/agency-dashboard?agency=${encodeURIComponent(clientAgencyId || 'agency')}`;
+      : (viewerRole === 'client' ? null : `/agency-dashboard?agency=${encodeURIComponent(clientAgencyId || 'agency')}`);
 
     return {
       statusCode: 200,
@@ -549,6 +684,52 @@ exports.handler = async (event) => {
     writeJsonFile(CLIENT_TASKS_FILE, tasks);
 
     return { statusCode: 200, headers, body: JSON.stringify({ success: true, message: 'Custom task created!', task: newTask }) };
+  }
+
+  // 9. POST /api/portal/send-welcome-email
+  if (subPath === '/send-welcome-email' || subPath === '/send-welcome-email/') {
+    const targetEmail = (body.email || '').trim().toLowerCase();
+    const customerName = (body.customerName || body.name || 'Valued Customer').trim();
+    const licenseKey = (body.licenseKey || body.key || '').trim().toUpperCase();
+
+    if (!targetEmail || !licenseKey) {
+      return {
+        statusCode: 400,
+        headers,
+        body: JSON.stringify({ success: false, error: 'Email and licenseKey are required' })
+      };
+    }
+
+    const resendApiKey = process.env.RESEND_API_KEY || body.apiKey || '';
+    if (!resendApiKey) {
+      return {
+        statusCode: 500,
+        headers,
+        body: JSON.stringify({ success: false, error: 'RESEND_API_KEY is not configured in Netlify environment' })
+      };
+    }
+
+    const emailSubject = `🌐 Your Missed Call Auto SMS Client Dashboard Access is Ready`;
+    const emailHtml = generatePortalWelcomeHtml(customerName, licenseKey);
+
+    try {
+      const sendResult = await sendResendEmail(resendApiKey, targetEmail, emailSubject, emailHtml);
+      return {
+        statusCode: 200,
+        headers,
+        body: JSON.stringify({
+          success: true,
+          message: `Welcome email with dashboard access successfully dispatched to ${targetEmail}`,
+          deliveryId: sendResult.id
+        })
+      };
+    } catch (err) {
+      return {
+        statusCode: 500,
+        headers,
+        body: JSON.stringify({ success: false, error: 'Failed to send email via Resend: ' + err.message })
+      };
+    }
   }
 
   // Default catch-all

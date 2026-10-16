@@ -51,6 +51,23 @@ function generateEmailHtml(name, licenseKey, apkDownloadUrl, isFree) {
             <div style="font-size: 11px; color: #949BAE; margin-top: 6px;">(Tap after installing to auto-activate without typing)</div>
         </div>
 
+        <!-- Live Client Dashboard Access Card -->
+        <div style="background: linear-gradient(180deg, #0F172A 0%, #1E293B 100%); border: 1px solid #38BDF8; border-radius: 14px; padding: 22px; text-align: center; margin-bottom: 24px; box-shadow: 0 4px 18px rgba(56, 189, 248, 0.15);">
+            <div style="display: inline-block; font-size: 11px; font-weight: 800; color: #38BDF8; background: rgba(56, 189, 248, 0.12); border: 1px solid rgba(56, 189, 248, 0.3); border-radius: 20px; padding: 3px 12px; margin-bottom: 8px; text-transform: uppercase; letter-spacing: 0.5px;">
+                🌐 Web Dashboard Access
+            </div>
+            <h3 style="color: #FFFFFF; font-size: 18px; margin: 0 0 8px 0; font-weight: 800;">Your Real-Time Client Portal</h3>
+            <p style="color: #94A3B8; font-size: 13px; line-height: 1.5; margin: 0 0 16px 0;">
+                Track every incoming call transcript, monitor authentic SIM text conversations, and manage autonomous AI dispatch tasks from any desktop or mobile browser.
+            </p>
+            <a href="https://missedcallautosms.com/client_portal.html?key=${encodeURIComponent(licenseKey)}" style="display: inline-block; background: #2563EB; color: #FFFFFF; font-weight: 800; font-size: 15px; padding: 13px 32px; border-radius: 30px; text-decoration: none; box-shadow: 0 4px 14px rgba(37, 99, 235, 0.4);">
+                ⚡ Open Your Client Dashboard →
+            </a>
+            <div style="margin-top: 12px; font-size: 11px; color: #64748B;">
+                Direct Link: <a href="https://missedcallautosms.com/client_portal.html?key=${encodeURIComponent(licenseKey)}" style="color: #38BDF8;">missedcallautosms.com/client_portal.html?key=${licenseKey}</a>
+            </div>
+        </div>
+
         <!-- 3-Step Quick Start -->
         <div style="border-top: 1px solid #222836; padding-top: 24px;">
             <h3 style="color: #FFF; font-size: 16px; margin: 0 0 16px 0;">🚀 Super-Fast Activation Guide</h3>
@@ -62,7 +79,97 @@ function generateEmailHtml(name, licenseKey, apkDownloadUrl, isFree) {
         </div>
 
         <div style="margin-top: 30px; border-top: 1px solid #222836; padding-top: 20px; text-align: center; font-size: 12px; color: #718096;">
-            Need help? Visit <a href="https://missedcallautosms.com/" style="color: #00E676;">missedcallautosms.com</a> or reply to this email.
+            Need help? Visit your <a href="https://missedcallautosms.com/client_portal.html?key=${encodeURIComponent(licenseKey)}" style="color: #00E676; font-weight: 700;">Client Dashboard</a> or reply to this email.
+        </div>
+    </div>
+</body>
+</html>`;
+}
+
+function generatePortalWelcomeHtml(name, licenseKey) {
+  const portalUrl = `https://missedcallautosms.com/client_portal.html?key=${encodeURIComponent(licenseKey)}`;
+  return `<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="utf-8">
+    <title>Your Missed Call Auto SMS Web Dashboard Access</title>
+</head>
+<body style="font-family: -apple-system, BlinkMacSystemFont, Arial, sans-serif; background-color: #090B0E; color: #FFFFFF; margin: 0; padding: 24px;">
+    <div style="max-width: 600px; margin: 0 auto; background: #131720; border: 1px solid #222836; border-radius: 16px; padding: 32px;">
+        <div style="text-align: center; margin-bottom: 24px;">
+            <div style="font-size: 44px; margin-bottom: 8px;">🌐⚡</div>
+            <h1 style="color: #38BDF8; margin: 0; font-size: 24px; font-weight: 900;">Missed Call Auto SMS</h1>
+            <div style="display: inline-block; margin-top: 6px; padding: 4px 14px; border-radius: 20px; font-size: 11px; font-weight: 800; background: rgba(56, 189, 248, 0.15); color: #38BDF8; border: 1px solid rgba(56, 189, 248, 0.35);">
+                LIVE CLIENT WEB PORTAL
+            </div>
+        </div>
+
+        <div style="background: #1A202C; border-left: 4px solid #38BDF8; padding: 16px; border-radius: 8px; margin-bottom: 24px;">
+            <h2 style="margin: 0 0 6px 0; font-size: 18px; color: #FFF;">Welcome to your Web Dashboard, ${name || 'Valued Customer'}!</h2>
+            <p style="margin: 0; color: #CBD5E0; font-size: 14px; line-height: 1.5;">
+                In addition to your Android appliance, you have full 24/7 web access to monitor your call activity, review SMS conversations, and track urgent leads from any computer, tablet, or smartphone.
+            </p>
+        </div>
+
+        <!-- 1-Click Access Card -->
+        <div style="background: linear-gradient(180deg, #0F172A 0%, #1E293B 100%); border: 1px solid #38BDF8; border-radius: 14px; padding: 24px; text-align: center; margin-bottom: 24px; box-shadow: 0 4px 20px rgba(56, 189, 248, 0.2);">
+            <div style="font-size: 12px; color: #94A3B8; text-transform: uppercase; font-weight: bold; margin-bottom: 8px;">Direct 1-Click Dashboard Link</div>
+            <a href="${portalUrl}" style="display: inline-block; background: #2563EB; color: #FFFFFF; font-weight: 800; font-size: 16px; padding: 14px 36px; border-radius: 30px; text-decoration: none; box-shadow: 0 6px 20px rgba(37, 99, 235, 0.45); margin-bottom: 12px;">
+                ⚡ Open Your Client Dashboard →
+            </a>
+            <div style="font-size: 11px; color: #64748B;">
+                Direct URL: <a href="${portalUrl}" style="color: #38BDF8; word-break: break-all;">${portalUrl}</a>
+            </div>
+        </div>
+
+        <!-- License Key Box -->
+        <div style="background: #090B0E; border: 1px dashed #38BDF8; border-radius: 12px; padding: 16px; text-align: center; margin-bottom: 24px;">
+            <div style="font-size: 11px; color: #949BAE; text-transform: uppercase; font-weight: bold; margin-bottom: 6px;">Your Master License Key</div>
+            <div style="font-family: monospace; font-size: 18px; color: #38BDF8; font-weight: bold; word-break: break-all; letter-spacing: 0.5px;">
+                ${licenseKey}
+            </div>
+            <div style="font-size: 11px; color: #64748B; margin-top: 6px;">Use this key to sign in anytime or set a custom password in your dashboard.</div>
+        </div>
+
+        <!-- Dashboard Capabilities -->
+        <div style="border-top: 1px solid #222836; padding-top: 20px; margin-bottom: 24px;">
+            <h3 style="color: #FFF; font-size: 16px; margin: 0 0 14px 0;">✨ What You Can Do in Your Portal:</h3>
+            
+            <div style="display: flex; gap: 12px; margin-bottom: 12px; align-items: flex-start;">
+                <div style="font-size: 20px;">📞</div>
+                <div>
+                    <div style="color: #FFF; font-size: 14px; font-weight: 700;">Live Call Feed &amp; Audio Transcripts</div>
+                    <div style="color: #94A3B8; font-size: 12px; line-height: 1.4;">Review incoming calls, read full AI conversation transcripts, and see urgency ratings and caller requests.</div>
+                </div>
+            </div>
+
+            <div style="display: flex; gap: 12px; margin-bottom: 12px; align-items: flex-start;">
+                <div style="font-size: 20px;">💬</div>
+                <div>
+                    <div style="color: #FFF; font-size: 14px; font-weight: 700;">Authentic SIM SMS History</div>
+                    <div style="color: #94A3B8; font-size: 12px; line-height: 1.4;">Monitor every automated text and inbound response routed through your cellular phone's SIM.</div>
+                </div>
+            </div>
+
+            <div style="display: flex; gap: 12px; margin-bottom: 12px; align-items: flex-start;">
+                <div style="font-size: 20px;">📋</div>
+                <div>
+                    <div style="color: #FFF; font-size: 14px; font-weight: 700;">Autonomous Action Items</div>
+                    <div style="color: #94A3B8; font-size: 12px; line-height: 1.4;">Keep track of emergency service calls, quote proposals, and technician dispatches automatically extracted by the system.</div>
+                </div>
+            </div>
+
+            <div style="display: flex; gap: 12px; margin-bottom: 12px; align-items: flex-start;">
+                <div style="font-size: 20px;">🔐</div>
+                <div>
+                    <div style="color: #FFF; font-size: 14px; font-weight: 700;">Permanent Sign-In &amp; Google Single Sign-On</div>
+                    <div style="color: #94A3B8; font-size: 12px; line-height: 1.4;">Create a permanent username and password or activate 1-click Google Sign-In on the portal login screen.</div>
+                </div>
+            </div>
+        </div>
+
+        <div style="border-top: 1px solid #222836; padding-top: 18px; text-align: center; font-size: 12px; color: #718096;">
+            Need assistance? Simply reply to this email or reach us at <a href="mailto:support@missedcallautosms.com" style="color: #38BDF8;">support@missedcallautosms.com</a>.
         </div>
     </div>
 </body>
@@ -165,8 +272,13 @@ exports.handler = async (event) => {
 
     const resendKey = reqHeaders['x-resend-key'] || RESEND_API_KEY;
 
-    const emailSubject = `Your Missed Call Auto SMS License Key & Setup Guide`;
-    const emailHtml = generateEmailHtml(customerName, licenseKey, apkDownloadUrl, isFree);
+    const isPortalAccess = payload.emailType === 'PORTAL_ACCESS' || payload.emailType === 'DASHBOARD_WELCOME';
+    const emailSubject = isPortalAccess
+      ? `🌐 Your Missed Call Auto SMS Client Dashboard Access is Ready`
+      : `Your Missed Call Auto SMS License Key & Setup Guide`;
+    const emailHtml = isPortalAccess
+      ? generatePortalWelcomeHtml(customerName, licenseKey)
+      : generateEmailHtml(customerName, licenseKey, apkDownloadUrl, isFree);
 
     let cloudSent = false;
     let cloudResult = null;
