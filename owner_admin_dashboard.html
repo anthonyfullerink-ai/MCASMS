@@ -2305,6 +2305,24 @@
             voiceMinutesBalance: 0.0,
             voiceActive: false,
             voiceNumber: null
+        },
+        {
+            id: "mcas-tahmid-ahmed-trial",
+            date: "Oct 16, 2026",
+            name: "Tahmid Ahmed",
+            email: "ahmed.tahmid8204@gmail.com",
+            key: "MCAS-5461686D69642041686D65647C313739323438323530387C31373932313336393038-28D17A34",
+            tier: "TRIAL",
+            deviceId: null,
+            status: "ACTIVE",
+            price: 0.00,
+            type: "SUBSCRIPTION",
+            voiceEntitlement: false,
+            voiceSubWaived: false,
+            vapiProvisioned: false,
+            voiceMinutesBalance: 0.0,
+            voiceActive: false,
+            voiceNumber: null
         }
     ];
 
@@ -2327,6 +2345,10 @@
         // Ensure Master Standard Demo Key is always present
         if (!list.some(r => r.key === "MCAS-DEMO-TRIAL-89F2")) {
             list.push(INITIAL_RECORDS[1]);
+        }
+        // Ensure Tahmid Ahmed Trial Key is present
+        if (!list.some(r => r.key === "MCAS-5461686D69642041686D65647C313739323438323530387C31373932313336393038-28D17A34")) {
+            list.push(INITIAL_RECORDS[2]);
         }
         localStorage.setItem("mcas_master_licenses", JSON.stringify(list));
         return list;

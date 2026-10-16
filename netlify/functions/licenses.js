@@ -55,6 +55,23 @@ exports.handler = async (event) => {
         date: new Date().toISOString()
       });
     }
+    if (!masterList.some(r => r.key === 'MCAS-5461686D69642041686D65647C313739323438323530387C31373932313336393038-28D17A34')) {
+      masterList.push({
+        key: 'MCAS-5461686D69642041686D65647C313739323438323530387C31373932313336393038-28D17A34',
+        customer: 'Tahmid Ahmed',
+        email: 'ahmed.tahmid8204@gmail.com',
+        tier: 'TRIAL',
+        type: 'SUBSCRIPTION',
+        price: '0.00',
+        voiceEntitlement: false,
+        voiceActive: false,
+        status: 'ACTIVE',
+        stripeSubscriptionId: 'sub_1UR5sMHTAeWgMAo2C4LvSp7u',
+        stripeCustomerId: 'cus_VRzsyq77o7RIr9',
+        date: '2026-10-16T07:48:28.000Z',
+        issuedAt: '2026-10-16T07:48:28.000Z'
+      });
+    }
 
     let voiceBindings = [];
     if (fs.existsSync(bindingsPath)) {
