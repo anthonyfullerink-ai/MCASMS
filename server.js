@@ -570,10 +570,14 @@ function saveVoiceSettings(settings) {
 }
 
 
-function getVoiceCallLogs() {
+function getVoiceCallLogs(licenseKey) {
   if (fs.existsSync(VOICE_CALL_LOGS_FILE)) {
     try {
-      return JSON.parse(fs.readFileSync(VOICE_CALL_LOGS_FILE, 'utf8'));
+      const logs = JSON.parse(fs.readFileSync(VOICE_CALL_LOGS_FILE, 'utf8'));
+      if (licenseKey) {
+        return logs.filter(c => c.licenseKey === licenseKey);
+      }
+      return logs;
     } catch (e) {
       return [];
     }
@@ -7275,65 +7279,8 @@ const server = http.createServer((req, res) => {
     if (fs.existsSync(CLIENT_TASKS_FILE)) {
       try { tasks = JSON.parse(fs.readFileSync(CLIENT_TASKS_FILE, 'utf8')); } catch (e) {}
     }
-    if (tasks.length === 0) {
-      tasks = [
-        {
-          id: 'task_auto_1',
-          licenseKey: licenseKey,
-          sourceType: 'VOICE_CALL',
-          sourceId: 'call_test_1790192234670',
-          title: '🚨 Emergency Dispatch: Roof Tarping & Water Stop',
-          category: 'EMERGENCY_DISPATCH',
-          priority: 'CRITICAL',
-          customerName: 'Sarah Jenkins',
-          customerPhone: '+1 (404) 555-8321',
-          serviceAddress: '844 Peachtree St NE, Atlanta, GA',
-          notes: 'Caller has active ceiling leak in master bedroom. Dispatched confirmation text via SIM. Crew needed before evening rainstorm.',
-          dueSla: 'Within 2 Hours',
-          status: 'PENDING',
-          createdAt: new Date(Date.now() - 3600000 * 2).toISOString(),
-          completedAt: null
-        },
-        {
-          id: 'task_auto_2',
-          licenseKey: licenseKey,
-          sourceType: 'INBOUND_SMS',
-          sourceId: 'sms_hist_2',
-          title: '📅 Appointment Confirmation: Confirm 4:30 PM Time Window',
-          category: 'APPOINTMENT_SCHEDULE',
-          priority: 'HIGH',
-          customerName: 'Sarah Jenkins',
-          customerPhone: '+1 (404) 555-8321',
-          serviceAddress: '844 Peachtree St NE, Atlanta, GA',
-          notes: 'Customer texted back: "We will be home after 4:30 PM if the tech can come then." Confirm technician ETA via office SIM text.',
-          dueSla: 'Same Day',
-          status: 'PENDING',
-          createdAt: new Date(Date.now() - 3600000 * 1.5).toISOString(),
-          completedAt: null
-        },
-        {
-          id: 'task_auto_3',
-          licenseKey: licenseKey,
-          sourceType: 'VOICE_CALL',
-          sourceId: 'call_test_1789833384440',
-          title: '💼 Prepare Formal Estimate: Water Heater Replacement',
-          category: 'ESTIMATE_PROPOSAL',
-          priority: 'NORMAL',
-          customerName: 'Alex Johnson',
-          customerPhone: '+14045559876',
-          serviceAddress: '844 Peachtree St NE, Atlanta, GA',
-          notes: 'Emergency water heater burst. Review system size and send formal equipment replacement quote and warranty options.',
-          dueSla: 'Within 24 Hours',
-          status: 'PENDING',
-          createdAt: new Date(Date.now() - 3600000 * 14).toISOString(),
-          completedAt: null
-        }
-      ];
-      try {
-        const ddir = path.join(__dirname, 'data');
-        if (!fs.existsSync(ddir)) fs.mkdirSync(ddir, { recursive: true });
-        fs.writeFileSync(CLIENT_TASKS_FILE, JSON.stringify(tasks, null, 2), 'utf8');
-      } catch (e) {}
+    if (licenseKey) {
+      return tasks.filter(t => t.licenseKey === licenseKey);
     }
     return tasks;
   }
@@ -7399,63 +7346,8 @@ const server = http.createServer((req, res) => {
     if (fs.existsSync(CLIENT_SMS_HISTORY_FILE)) {
       try { items = JSON.parse(fs.readFileSync(CLIENT_SMS_HISTORY_FILE, 'utf8')); } catch (e) {}
     }
-    if (items.length === 0) {
-      // Seed realistic initial SMS conversation records
-      items = [
-        {
-          id: 'sms_hist_1',
-          licenseKey: licenseKey,
-          direction: 'OUTBOUND_POSTCALL',
-          phoneNumber: '+1 (404) 555-8321',
-          customerName: 'Sarah Jenkins',
-          message: 'Hey Sarah, this is Anthony. Got your note about the AC unit making loud grinding noise. Reaching out shortly!',
-          timestamp: new Date(Date.now() - 3600000 * 2).toISOString(),
-          status: 'DELIVERED_ON_SIM',
-          simSlot: 'SIM 1 (Business)',
-          aiContext: 'Auto-dispatched immediately after 24/7 AI Receptionist call intake'
-        },
-        {
-          id: 'sms_hist_2',
-          licenseKey: licenseKey,
-          direction: 'INBOUND_CUSTOMER',
-          phoneNumber: '+1 (404) 555-8321',
-          customerName: 'Sarah Jenkins',
-          message: 'Thank you Anthony! We will be home after 4:30 PM if the tech can come then.',
-          timestamp: new Date(Date.now() - 3600000 * 1.8).toISOString(),
-          status: 'RECEIVED',
-          simSlot: 'SIM 1 (Business)',
-          aiContext: 'Inbound customer reply received directly on office Android SIM'
-        },
-        {
-          id: 'sms_hist_3',
-          licenseKey: licenseKey,
-          direction: 'OUTBOUND_AUTOSMS',
-          phoneNumber: '+1 (404) 555-0199',
-          customerName: 'Prospective Client',
-          message: 'Hey! Sorry I missed your call. How can I help you today? - Office Auto-Response',
-          timestamp: new Date(Date.now() - 3600000 * 6).toISOString(),
-          status: 'DELIVERED_ON_SIM',
-          simSlot: 'SIM 1 (Business)',
-          aiContext: 'Dispatched via handset physical SIM within 15 seconds of carrier missed call'
-        },
-        {
-          id: 'sms_hist_4',
-          licenseKey: licenseKey,
-          direction: 'OUTBOUND_POSTCALL',
-          phoneNumber: '+1 (404) 555-9876',
-          customerName: 'Alex Johnson',
-          message: 'Hey Alex, Dave here from Apex. Got your note about the water heater burst. Headed over shortly!',
-          timestamp: new Date(Date.now() - 3600000 * 14).toISOString(),
-          status: 'DELIVERED_ON_SIM',
-          simSlot: 'SIM 1 (Business)',
-          aiContext: 'Auto-enqueued post-call follow-up for emergency water leak'
-        }
-      ];
-      try {
-        const ddir = path.join(__dirname, 'data');
-        if (!fs.existsSync(ddir)) fs.mkdirSync(ddir, { recursive: true });
-        fs.writeFileSync(CLIENT_SMS_HISTORY_FILE, JSON.stringify(items, null, 2), 'utf8');
-      } catch (e) {}
+    if (licenseKey) {
+      return items.filter(s => s.licenseKey === licenseKey);
     }
     return items;
   }
@@ -7657,7 +7549,7 @@ const server = http.createServer((req, res) => {
         saveClientAccount(newAccount);
 
         const branding = resolvePortalBranding(agencyId);
-        const calls = getVoiceCallLogs().map(enrichCallWithAiDiagnostics);
+        const calls = getVoiceCallLogs(rawKey).map(enrichCallWithAiDiagnostics);
         const sms = getClientSmsHistory(rawKey);
         const tasks = getClientTasks(rawKey);
 
@@ -7759,7 +7651,7 @@ const server = http.createServer((req, res) => {
         const subscribers = getVoiceSubscribers();
         const sub = subscribers.find(s => s.licenseKey === account.licenseKey);
         const branding = resolvePortalBranding(account.agencyId);
-        const calls = getVoiceCallLogs().map(enrichCallWithAiDiagnostics);
+        const calls = getVoiceCallLogs(account.licenseKey).map(enrichCallWithAiDiagnostics);
         const sms = getClientSmsHistory(account.licenseKey);
         const tasks = getClientTasks(account.licenseKey);
 
@@ -7818,7 +7710,7 @@ const server = http.createServer((req, res) => {
       const subscribers = getVoiceSubscribers();
       const sub = subscribers.find(s => s.licenseKey === account.licenseKey);
       const branding = resolvePortalBranding(account.agencyId);
-      const calls = getVoiceCallLogs().map(enrichCallWithAiDiagnostics);
+      const calls = getVoiceCallLogs(account.licenseKey).map(enrichCallWithAiDiagnostics);
       const sms = getClientSmsHistory(account.licenseKey);
       const tasks = getClientTasks(account.licenseKey);
 
@@ -8016,7 +7908,7 @@ const server = http.createServer((req, res) => {
         const subscribers = getVoiceSubscribers();
         const sub = subscribers.find(s => s.licenseKey === account.licenseKey);
         const branding = resolvePortalBranding(account.agencyId);
-        const calls = getVoiceCallLogs().map(enrichCallWithAiDiagnostics);
+        const calls = getVoiceCallLogs(account.licenseKey).map(enrichCallWithAiDiagnostics);
         const sms = getClientSmsHistory(account.licenseKey);
         const tasks = getClientTasks(account.licenseKey);
 
@@ -8080,7 +7972,7 @@ const server = http.createServer((req, res) => {
         const subscribers = getVoiceSubscribers();
         const sub = subscribers.find(s => s.licenseKey === account.licenseKey);
         const branding = resolvePortalBranding(account.agencyId);
-        const calls = getVoiceCallLogs().map(enrichCallWithAiDiagnostics);
+        const calls = getVoiceCallLogs(account.licenseKey).map(enrichCallWithAiDiagnostics);
         const sms = getClientSmsHistory(account.licenseKey);
         const tasks = getClientTasks(account.licenseKey);
 
@@ -8277,7 +8169,7 @@ const server = http.createServer((req, res) => {
 
         const clientName = (existingAcc && existingAcc.businessName) || (master && (master.customer || master.businessName || master.name)) || (sub && (sub.name || sub.businessName)) || 'Client Business';
         const branding = resolvePortalBranding(clientAgencyId);
-        const calls = getVoiceCallLogs().map(enrichCallWithAiDiagnostics);
+        const calls = getVoiceCallLogs(rawKey).map(enrichCallWithAiDiagnostics);
         const sms = getClientSmsHistory(rawKey);
         const tasks = getClientTasks(rawKey);
 

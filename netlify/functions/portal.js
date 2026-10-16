@@ -61,56 +61,26 @@ function getVoiceSubscribers() {
   return [];
 }
 
-function getVoiceCallLogs() {
+function getVoiceCallLogs(licenseKey) {
   const logs = readJsonFile(VOICE_LOGS_FILE, []);
-  if (!logs.length) {
-    return [
-      {
-        id: 'call_demo_1790790100',
-        timestamp: new Date().toISOString(),
-        customerPhone: '+1 (555) 789-0123',
-        customerName: 'Sarah Jenkins',
-        durationSeconds: 145,
-        status: 'COMPLETED',
-        urgency: 'HIGH',
-        recordingUrl: 'https://vapi-public.s3.amazonaws.com/recordings/sample-roof-leak.mp3',
-        transcript: 'Customer called inquiring about commercial roofing repair. Immediate estimate requested.',
-        summary: 'Emergency leak repair inquiry in northern industrial district.',
-        aiDiagnostics: {
-          sttEngine: 'Deepgram Nova-2 HD (99.2% Accuracy)',
-          llmModel: 'Claude 3.5 Sonnet / Vapi Telecom Pipeline',
-          ttsEngine: 'Cartesia Sonic (110ms Latency)',
-          carrierRoute: 'Verizon Physical SIM (Slot 1)',
-          pstnStatus: 'Carrier *71 Conditional Forward Active',
-          callLatencyMs: 142
-        }
-      }
-    ];
+  if (licenseKey) {
+    return logs.filter(c => c.licenseKey === licenseKey);
   }
   return logs;
 }
 
 function getClientSmsHistory(licenseKey) {
-  return readJsonFile(CLIENT_SMS_FILE, []);
+  const items = readJsonFile(CLIENT_SMS_FILE, []);
+  if (licenseKey) {
+    return items.filter(s => s.licenseKey === licenseKey);
+  }
+  return items;
 }
 
 function getClientTasks(licenseKey) {
   const tasks = readJsonFile(CLIENT_TASKS_FILE, []);
-  if (!tasks.length) {
-    return [
-      {
-        id: 'task_demo_101',
-        licenseKey: licenseKey || 'DEFAULT',
-        title: 'Send formal quote for commercial roof repair',
-        category: 'ESTIMATE_DISPATCH',
-        priority: 'HIGH',
-        customerName: 'Sarah Jenkins',
-        customerPhone: '+1 (555) 789-0123',
-        dueSla: 'Today by 5:00 PM',
-        status: 'PENDING',
-        createdAt: new Date().toISOString()
-      }
-    ];
+  if (licenseKey) {
+    return tasks.filter(t => t.licenseKey === licenseKey);
   }
   return tasks;
 }
@@ -242,7 +212,7 @@ exports.handler = async (event) => {
     const subscribers = getVoiceSubscribers();
     const sub = subscribers.find(s => s.licenseKey === account.licenseKey);
     const branding = resolvePortalBranding(account.agencyId);
-    const calls = getVoiceCallLogs().map(enrichCallWithAiDiagnostics);
+    const calls = getVoiceCallLogs(account.licenseKey).map(enrichCallWithAiDiagnostics);
     const sms = getClientSmsHistory(account.licenseKey);
     const tasks = getClientTasks(account.licenseKey);
 
@@ -342,7 +312,7 @@ exports.handler = async (event) => {
     }
 
     const branding = resolvePortalBranding(clientAgencyId);
-    const calls = getVoiceCallLogs().map(enrichCallWithAiDiagnostics);
+    const calls = getVoiceCallLogs(rawKey).map(enrichCallWithAiDiagnostics);
     const sms = getClientSmsHistory(rawKey);
     const tasks = getClientTasks(rawKey);
 
@@ -422,7 +392,7 @@ exports.handler = async (event) => {
     }
 
     const branding = resolvePortalBranding(account.agencyId);
-    const calls = getVoiceCallLogs().map(enrichCallWithAiDiagnostics);
+    const calls = getVoiceCallLogs(account.licenseKey).map(enrichCallWithAiDiagnostics);
     const sms = getClientSmsHistory(account.licenseKey);
     const tasks = getClientTasks(account.licenseKey);
 
@@ -527,7 +497,7 @@ exports.handler = async (event) => {
         user: newAcc,
         branding: resolvePortalBranding(newAcc.agencyId),
         client: { name: newAcc.businessName, licenseKey, voiceMinutesBalance: 50.0, carrierCode: '*71' },
-        calls: getVoiceCallLogs().map(enrichCallWithAiDiagnostics),
+        calls: getVoiceCallLogs(licenseKey).map(enrichCallWithAiDiagnostics),
         sms: getClientSmsHistory(licenseKey),
         tasks: getClientTasks(licenseKey)
       })
