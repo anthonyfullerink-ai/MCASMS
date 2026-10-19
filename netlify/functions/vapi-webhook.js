@@ -42,7 +42,7 @@ function getLocalVoiceBinding(keyOrNum) {
         const item = cache[k];
         const numClean = String(item.forwardingNumber || item.phone || item.contact || '').replace(/\D/g, '').slice(-10);
         if (cleanTarget && numClean === cleanTarget) return item;
-        if (item.vapiAssistantId === keyOrNum || item.carrierCode?.includes(keyOrNum)) return item;
+        if (item.vapiAssistantId === keyOrNum || item.vapiPhoneNumberId === keyOrNum || item.phoneNumberId === keyOrNum || item.carrierCode?.includes(keyOrNum)) return item;
       }
     }
   } catch (e) {}
@@ -948,15 +948,45 @@ Key Objectives:
     const sessionPush = CALL_LICENSE_MAP.get(callId) || (fs && fs.getCallSession ? await fs.getCallSession(callId) : null);
     const resolvedPushKey = callObj.metadata?.licenseKey || message.metadata?.licenseKey || sessionPush?.licenseKey;
 
-    if (fs && msg) {
+    if (msg) {
       try {
         let sub = null;
-        if (resolvedPushKey) sub = await fs.getVoiceBinding(resolvedPushKey);
-        if (!sub && inboundNumber) sub = await fs.getVoiceBinding(inboundNumber);
-        if (!sub) sub = await fs.getVoiceBinding('MCAS-PRO-TRIAL-001');
+        if (resolvedPushKey) {
+          if (fs && fs.getVoiceBinding) sub = await fs.getVoiceBinding(resolvedPushKey);
+          if (!sub) sub = getLocalVoiceBinding(resolvedPushKey);
+        }
+
+        const asstId = callObj.assistantId || message.assistantId || payload.assistantId || null;
+        const phoneId = callObj.phoneNumberId || payload.phoneNumberId || inboundNumber || null;
+
+        if (!sub && asstId) {
+          if (fs && fs.getVoiceBinding) sub = await fs.getVoiceBinding(asstId);
+          if (!sub) sub = getLocalVoiceBinding(asstId);
+        }
+        if (!sub && phoneId) {
+          if (fs && fs.getVoiceBinding) sub = await fs.getVoiceBinding(phoneId);
+          if (!sub) sub = getLocalVoiceBinding(phoneId);
+        }
+        if (!sub && matchedSub) {
+          sub = matchedSub;
+        }
+        if (!sub && (asstId === '5105b379-8cbf-4037-becc-bba45504f781' || phoneId === 'b16ab805-d29b-4635-8740-338abeda3abf' || String(inboundNumber).includes('7326609121'))) {
+          sub = getLocalVoiceBinding('MCAS-OWNER-ANTHONY') || getLocalVoiceBinding('7325523896');
+        }
+        if (!sub) {
+          if (fs && fs.getVoiceBinding) sub = await fs.getVoiceBinding('MCAS-PRO-TRIAL-001');
+          if (!sub) sub = getLocalVoiceBinding('MCAS-PRO-TRIAL-001');
+        }
 
         if (sub && sub.licenseKey) {
-          const deviceRecord = await fs.getDeviceBinding(sub.licenseKey);
+          let deviceRecord = (fs && fs.getDeviceBinding) ? await fs.getDeviceBinding(sub.licenseKey) : null;
+          if (!deviceRecord || !deviceRecord.fcm_token) {
+            deviceRecord = getLocalToken(sub.licenseKey);
+          }
+          if ((!deviceRecord || !deviceRecord.fcm_token) && (sub.licenseKey.includes('OWNER') || sub.licenseKey.includes('ANTHONY') || sub.licenseKey.includes('89F2'))) {
+            deviceRecord = getLocalToken('MCAS-PRO-DEMO-89F2') || getLocalToken('MCAS-PRO-416E74686F6E792046756C6C65727C307C31373930383830303030-0C72EF35');
+          }
+
           if (deviceRecord && deviceRecord.fcm_token) {
             await msg.send({
               token: deviceRecord.fcm_token,

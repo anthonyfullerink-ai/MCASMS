@@ -3,7 +3,7 @@
   functions = "netlify/functions"
 
 [functions]
-  included_files = ["data/**", "blog/posts.json", "agencies/**"]
+  included_files = ["data/**", "blog/posts.json", "agencies/**", ".voice_pro_bindings.json", ".device_tokens_cache.json"]
 
 [build.environment]
   SECRETS_SCAN_SMART_DETECTION_ENABLED = "false"

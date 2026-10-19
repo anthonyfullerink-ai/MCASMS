@@ -37,7 +37,7 @@
   "subscriberName": "",
   "stripeSubscriptionId": "",
   "activatedAt": "2026-09-20T00:15:00.000Z",
-  "customGreeting": "Hi, thank you for calling! This is Riley, the AI front desk assistant for our team. Whether you need emergency dispatch, a service estimate, or want to book an appointment, how can I help you today?",
+  "customGreeting": "Hey there, thanks for calling! You’ve reached Anthony’s office. He’s tied up at the moment, but this is Riley, his assistant. How can I help you out today?",
   "vapiProvisioned": true,
   "autoBillingThresholdMinutes": 20
 }
