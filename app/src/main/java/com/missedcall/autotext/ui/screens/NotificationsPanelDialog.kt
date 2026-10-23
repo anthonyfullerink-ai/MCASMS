@@ -71,6 +71,7 @@ fun NotificationsPanelDialog(
                 modifier = Modifier
                     .fillMaxSize()
                     .padding(16.dp)
+                    .navigationBarsPadding()
             ) {
                 // Header
                 Row(
@@ -133,59 +134,93 @@ fun NotificationsPanelDialog(
 
                 Spacer(modifier = Modifier.height(14.dp))
 
-                // Action Bar (Mark All Read / Clear)
+                // Filter Chips
+                LazyRow(
+                    modifier = Modifier.fillMaxWidth(),
+                    horizontalArrangement = Arrangement.spacedBy(8.dp)
+                ) {
+                    item {
+                        FilterChip(
+                            selected = selectedFilter == "ALL",
+                            onClick = { selectedFilter = "ALL" },
+                            label = { Text("All (${notifications.size})", fontSize = 11.sp) }
+                        )
+                    }
+                    item {
+                        FilterChip(
+                            selected = selectedFilter == "BOOKINGS",
+                            onClick = { selectedFilter = "BOOKINGS" },
+                            label = { Text("📅 Bookings", fontSize = 11.sp) }
+                        )
+                    }
+                    item {
+                        FilterChip(
+                            selected = selectedFilter == "CALLS",
+                            onClick = { selectedFilter = "CALLS" },
+                            label = { Text("🎙️ Calls", fontSize = 11.sp) }
+                        )
+                    }
+                    item {
+                        FilterChip(
+                            selected = selectedFilter == "SMS",
+                            onClick = { selectedFilter = "SMS" },
+                            label = { Text("💬 SMS", fontSize = 11.sp) }
+                        )
+                    }
+                    item {
+                        FilterChip(
+                            selected = selectedFilter == "ALERTS",
+                            onClick = { selectedFilter = "ALERTS" },
+                            label = { Text("🚨 Alerts", fontSize = 11.sp) }
+                        )
+                    }
+                }
+
+                Spacer(modifier = Modifier.height(8.dp))
+
+                // Action Bar (Reset Queue, Mark Read, Clear Feed)
                 Row(
                     modifier = Modifier.fillMaxWidth(),
                     horizontalArrangement = Arrangement.SpaceBetween,
                     verticalAlignment = Alignment.CenterVertically
                 ) {
-                    // Filter Chips
-                    LazyRow(
-                        horizontalArrangement = Arrangement.spacedBy(8.dp),
-                        modifier = Modifier.weight(1f)
+                    TextButton(
+                        onClick = {
+                            AiNotificationManager.clearTakeoverAndResetQueue(context, "ALL") {
+                                Toast.makeText(context, "⚡ AI Queue & Takeovers Reset!", Toast.LENGTH_SHORT).show()
+                            }
+                        },
+                        contentPadding = PaddingValues(horizontal = 6.dp, vertical = 2.dp)
                     ) {
-                        item {
-                            FilterChip(
-                                selected = selectedFilter == "ALL",
-                                onClick = { selectedFilter = "ALL" },
-                                label = { Text("All (${notifications.size})", fontSize = 11.sp) }
-                            )
-                        }
-                        item {
-                            FilterChip(
-                                selected = selectedFilter == "BOOKINGS",
-                                onClick = { selectedFilter = "BOOKINGS" },
-                                label = { Text("📅 Bookings", fontSize = 11.sp) }
-                            )
-                        }
-                        item {
-                            FilterChip(
-                                selected = selectedFilter == "CALLS",
-                                onClick = { selectedFilter = "CALLS" },
-                                label = { Text("🎙️ Calls", fontSize = 11.sp) }
-                            )
-                        }
-                        item {
-                            FilterChip(
-                                selected = selectedFilter == "SMS",
-                                onClick = { selectedFilter = "SMS" },
-                                label = { Text("💬 SMS", fontSize = 11.sp) }
-                            )
-                        }
-                        item {
-                            FilterChip(
-                                selected = selectedFilter == "ALERTS",
-                                onClick = { selectedFilter = "ALERTS" },
-                                label = { Text("🚨 Alerts", fontSize = 11.sp) }
-                            )
-                        }
+                        Icon(Icons.Default.Refresh, contentDescription = null, tint = Color(0xFF38BDF8), modifier = Modifier.size(15.dp))
+                        Spacer(modifier = Modifier.width(4.dp))
+                        Text("Reset AI Queue & Pauses", color = Color(0xFF38BDF8), fontSize = 11.sp, fontWeight = FontWeight.SemiBold)
                     }
 
-                    Spacer(modifier = Modifier.width(8.dp))
+                    Row(
+                        horizontalArrangement = Arrangement.spacedBy(4.dp),
+                        verticalAlignment = Alignment.CenterVertically
+                    ) {
+                        if (unreadCount > 0) {
+                            TextButton(
+                                onClick = onMarkAllRead,
+                                contentPadding = PaddingValues(horizontal = 6.dp, vertical = 2.dp)
+                            ) {
+                                Icon(Icons.Default.DoneAll, contentDescription = null, tint = Color(0xFF38BDF8), modifier = Modifier.size(15.dp))
+                                Spacer(modifier = Modifier.width(4.dp))
+                                Text("Mark Read", color = Color(0xFF38BDF8), fontSize = 11.sp, fontWeight = FontWeight.SemiBold)
+                            }
+                        }
 
-                    if (notifications.isNotEmpty()) {
-                        TextButton(onClick = onMarkAllRead) {
-                            Text("Mark Read", fontSize = 11.sp, color = Color(0xFF38BDF8))
+                        if (notifications.isNotEmpty()) {
+                            TextButton(
+                                onClick = onClearAll,
+                                contentPadding = PaddingValues(horizontal = 6.dp, vertical = 2.dp)
+                            ) {
+                                Icon(Icons.Default.DeleteOutline, contentDescription = null, tint = Color(0xFFEF4444), modifier = Modifier.size(15.dp))
+                                Spacer(modifier = Modifier.width(4.dp))
+                                Text("Clear Feed", color = Color(0xFFEF4444), fontSize = 11.sp, fontWeight = FontWeight.SemiBold)
+                            }
                         }
                     }
                 }
@@ -240,30 +275,7 @@ fun NotificationsPanelDialog(
                             )
                         }
 
-                        item {
-                            Spacer(modifier = Modifier.height(8.dp))
-                            Row(
-                                modifier = Modifier.fillMaxWidth(),
-                                horizontalArrangement = Arrangement.SpaceEvenly,
-                                verticalAlignment = Alignment.CenterVertically
-                            ) {
-                                TextButton(onClick = {
-                                    AiNotificationManager.clearTakeoverAndResetQueue(context, "ALL") {
-                                        Toast.makeText(context, "⚡ AI Queue & Takeovers Reset!", Toast.LENGTH_SHORT).show()
-                                    }
-                                }) {
-                                    Icon(Icons.Default.Refresh, contentDescription = null, tint = Color(0xFF38BDF8), modifier = Modifier.size(16.dp))
-                                    Spacer(modifier = Modifier.width(4.dp))
-                                    Text("Reset AI Queue & Pauses", color = Color(0xFF38BDF8), fontSize = 12.sp)
-                                }
 
-                                TextButton(onClick = onClearAll) {
-                                    Icon(Icons.Default.DeleteOutline, contentDescription = null, tint = Color(0xFFEF4444), modifier = Modifier.size(16.dp))
-                                    Spacer(modifier = Modifier.width(4.dp))
-                                    Text("Clear Feed", color = Color(0xFFEF4444), fontSize = 12.sp)
-                                }
-                            }
-                        }
                     }
                 }
             }
