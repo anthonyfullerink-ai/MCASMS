@@ -35,6 +35,7 @@ import java.net.URL
 fun LicenseGateScreen(
     initialLicenseKey: String? = null,
     isExpiredOrSuspended: Boolean = false,
+    isUnbound: Boolean = false,
     onActivationSuccess: (AppSettings.() -> AppSettings) -> Unit
 ) {
     val context = LocalContext.current
@@ -43,7 +44,8 @@ fun LicenseGateScreen(
     var isLoading by remember { mutableStateOf(false) }
     var errorMessage by remember { 
         mutableStateOf<String?>(
-            if (isExpiredOrSuspended) "Your 3-day free trial has expired or payment was suspended. Please enter a valid lifetime key or upgrade below." 
+            if (isUnbound) "This license was transferred to another device. Please enter a valid license key to activate this phone."
+            else if (isExpiredOrSuspended) "Your 3-day free trial has expired or payment was suspended. Please enter a valid lifetime key or upgrade below." 
             else null
         ) 
     }

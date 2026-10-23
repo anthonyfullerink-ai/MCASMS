@@ -27,21 +27,73 @@ exports.handler = async (event) => {
       };
     }
 
+    // Capture old device token before clearing so we can send the remote unbind push
+    let previousToken = null;
+    const path = require('path');
+    const fs = require('fs');
+    const localCachePath = path.join(__dirname, '../../.device_tokens_cache.json');
+    if (fs.existsSync(localCachePath)) {
+      try {
+        const cache = JSON.parse(fs.readFileSync(localCachePath, 'utf8') || '{}');
+        if (cache[licenseKey]) {
+          previousToken = cache[licenseKey].fcm_token || null;
+        }
+      } catch (e) {}
+    }
+
     // 1. Clear Firestore device binding & master_licenses doc deviceId
     try {
       const fsModule = require('../../lib/firestore');
       if (fsModule && (process.env.FIREBASE_SERVICE_ACCOUNT_KEY || process.env.FIREBASE_SERVICE_ACCOUNT)) {
+        const devDoc = await fsModule.getDeviceBinding(licenseKey);
+        if (devDoc && !previousToken) {
+          previousToken = devDoc.fcmToken || devDoc.fcm_token || null;
+        }
         await fsModule.clearDeviceBinding(licenseKey);
       }
     } catch (fsErr) {
       console.warn('[reset-device] Firestore clear notice:', fsErr.message);
     }
 
+    // Broadcast remote unbind push to previous phone so it wipes license and locks immediately
+    if (previousToken) {
+      try {
+        let adminApp = null, adminMsg = null;
+        try {
+          adminApp = require('firebase-admin/app');
+          adminMsg = require('firebase-admin/messaging');
+        } catch (e) {}
+
+        if (adminApp && adminMsg && (process.env.FIREBASE_SERVICE_ACCOUNT || process.env.FIREBASE_SERVICE_ACCOUNT_KEY)) {
+          const saRaw = process.env.FIREBASE_SERVICE_ACCOUNT || process.env.FIREBASE_SERVICE_ACCOUNT_KEY;
+          if (adminApp.getApps().length === 0) {
+            const sa = JSON.parse(saRaw);
+            adminApp.initializeApp({
+              credential: adminApp.cert(sa),
+              projectId: sa.project_id || 'offgrid-saas-core-1e97a9'
+            });
+          }
+          const messaging = adminMsg.getMessaging();
+          await messaging.send({
+            token: previousToken,
+            data: {
+              type: 'device_unbound',
+              action: 'revoke_device_binding',
+              licenseKey: licenseKey,
+              timestamp: String(Date.now()),
+              reason: 'Hardware device binding was reset in the dashboard.'
+            },
+            android: { priority: 'high' }
+          });
+          console.log(`🔒 [REMOTE DEVICE REVOKE SENT] Broadcast unbind to old token for ${licenseKey}`);
+        }
+      } catch (pushErr) {
+        console.warn('[reset-device] Remote unbind push notice:', pushErr.message);
+      }
+    }
+
     // 2. Clear from local .device_tokens_cache.json
     try {
-      const fs = require('fs');
-      const path = require('path');
-      const localCachePath = path.join(__dirname, '../../.device_tokens_cache.json');
       if (fs.existsSync(localCachePath)) {
         const cache = JSON.parse(fs.readFileSync(localCachePath, 'utf8') || '{}');
         if (cache[licenseKey]) {
@@ -68,8 +120,6 @@ exports.handler = async (event) => {
     let voiceSubscriptionActive = false;
     let voiceDetails = null;
     try {
-      const fs = require('fs');
-      const path = require('path');
       const voiceBindingsPath = path.join(__dirname, '../../.voice_pro_bindings.json');
       if (fs.existsSync(voiceBindingsPath)) {
         const bindings = JSON.parse(fs.readFileSync(voiceBindingsPath, 'utf8'));

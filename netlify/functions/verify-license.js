@@ -240,6 +240,7 @@ exports.handler = async (event) => {
               valid: false,
               error: `This license is hardware-bound to another device (${boundDeviceId}). Please reset device lock in your dashboard before activating on this phone.`,
               hardwareLocked: true,
+              status: "UNBOUND",
               boundDeviceId
             })
           };

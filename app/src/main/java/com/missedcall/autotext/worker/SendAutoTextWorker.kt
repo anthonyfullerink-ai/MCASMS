@@ -78,12 +78,17 @@ class SendAutoTextWorker(
 
         val settings = settingsRepo.getSettings()
 
-        // Step 0: Check Appliance License Status
+        // Step 0: Check Appliance License Status & Hardware Binding
         val licenseInfo = LicenseManager.verifyLicenseKey(settings.licenseKey)
         val isRevoked = LicenseManager.checkOnlineRevocation(settings.licenseKey, settings.revocationManifestUrl)
-        if (licenseInfo.status == LicenseStatus.UNLICENSED || licenseInfo.status == LicenseStatus.EXPIRED || isRevoked) {
+        val isUnbound = settings.licenseKey.isBlank() || settings.subscriptionStatus.equals("UNBOUND", ignoreCase = true)
+
+        if (licenseInfo.status == LicenseStatus.UNLICENSED || licenseInfo.status == LicenseStatus.EXPIRED || isRevoked || isUnbound) {
             recentDispatches.remove(clean10)
-            val reason = if (isRevoked) "License Revoked" else if (licenseInfo.status == LicenseStatus.EXPIRED) "License Expired" else "Appliance Unlicensed"
+            val reason = if (isUnbound) "Device Unbound (Transferred to Another Phone)" 
+                else if (isRevoked) "License Revoked" 
+                else if (licenseInfo.status == LicenseStatus.EXPIRED) "License Expired" 
+                else "Appliance Unlicensed"
             Log.w(TAG, "SMS dispatch locked: $reason for $targetNumber")
             dao.insertLog(
                 CallLogEvent(

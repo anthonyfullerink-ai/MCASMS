@@ -155,6 +155,50 @@ exports.handler = async (event) => {
           };
         }
 
+        // If there was a previous device with a different ID and token, broadcast unbind to old phone
+        let previousToken = null;
+        const localCachePath = path.join(__dirname, '..', '..', '.device_tokens_cache.json');
+        if (fs.existsSync(localCachePath)) {
+          try {
+            const cache = JSON.parse(fs.readFileSync(localCachePath, 'utf8') || '{}');
+            if (cache[key] && cache[key].device_id && cache[key].device_id !== incomingDeviceId) {
+              previousToken = cache[key].fcm_token || null;
+            }
+          } catch (e) {}
+        }
+        if (previousToken) {
+          try {
+            let adminApp = null, adminMsg = null;
+            try {
+              adminApp = require('firebase-admin/app');
+              adminMsg = require('firebase-admin/messaging');
+            } catch (e) {}
+            if (adminApp && adminMsg && (process.env.FIREBASE_SERVICE_ACCOUNT || process.env.FIREBASE_SERVICE_ACCOUNT_KEY)) {
+              const saRaw = process.env.FIREBASE_SERVICE_ACCOUNT || process.env.FIREBASE_SERVICE_ACCOUNT_KEY;
+              if (adminApp.getApps().length === 0) {
+                const sa = JSON.parse(saRaw);
+                adminApp.initializeApp({
+                  credential: adminApp.cert(sa),
+                  projectId: sa.project_id || 'offgrid-saas-core-1e97a9'
+                });
+              }
+              const messaging = adminMsg.getMessaging();
+              messaging.send({
+                token: previousToken,
+                data: {
+                  type: 'device_unbound',
+                  action: 'revoke_device_binding',
+                  licenseKey: key,
+                  timestamp: String(Date.now()),
+                  reason: 'Hardware binding was transferred to another device.'
+                },
+                android: { priority: 'high' }
+              }).catch(err => console.warn('Old device unbind push error:', err.message));
+              console.log('🔒 [PROVISION REVOKE] Broadcast unbind to replaced device for ' + key);
+            }
+          } catch (e) {}
+        }
+
         boundDeviceId = incomingDeviceId;
         boundDeviceModel = incomingDeviceModel || boundDeviceModel;
 

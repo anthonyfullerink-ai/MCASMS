@@ -144,16 +144,19 @@ class MainActivity : ComponentActivity() {
                     val licenseInfo = remember(settings.licenseKey) {
                         com.missedcall.autotext.data.license.LicenseManager.verifyLicenseKey(settings.licenseKey)
                     }
+                    val isUnbound = settings.subscriptionStatus.equals("UNBOUND", ignoreCase = true)
                     val isExpiredOrSuspended = settings.licenseKey.isNotBlank() && (
                         licenseInfo.status == com.missedcall.autotext.data.license.LicenseStatus.EXPIRED ||
                         settings.subscriptionStatus.equals("SUSPENDED", ignoreCase = true) ||
-                        settings.subscriptionStatus.equals("CANCELLED", ignoreCase = true)
+                        settings.subscriptionStatus.equals("CANCELLED", ignoreCase = true) ||
+                        isUnbound
                     )
 
-                    if (settings.licenseKey.isBlank() || isExpiredOrSuspended) {
+                    if (settings.licenseKey.isBlank() || isExpiredOrSuspended || isUnbound) {
                         com.missedcall.autotext.ui.screens.LicenseGateScreen(
-                            initialLicenseKey = deepLinkLicenseKey ?: settings.licenseKey,
+                            initialLicenseKey = if (isUnbound) "" else (deepLinkLicenseKey ?: settings.licenseKey),
                             isExpiredOrSuspended = isExpiredOrSuspended,
+                            isUnbound = isUnbound,
                             onActivationSuccess = { updater ->
                                 lifecycleScope.launch {
                                     settingsRepo.updateSettings(settings.updater().copy(subscriptionStatus = "ACTIVE"))
@@ -249,9 +252,66 @@ class MainActivity : ComponentActivity() {
         }
     }
 
-    override fun onResume() {
+        override fun onResume() {
         super.onResume()
         checkPermissions()
+        checkHardwareBinding()
+    }
+
+    private fun checkHardwareBinding() {
+        lifecycleScope.launch(kotlinx.coroutines.Dispatchers.IO) {
+            try {
+                val app = application as? App ?: return@launch
+                val settingsRepo = app.settingsRepository
+                val currentSettings = settingsRepo.getSettings()
+                val key = currentSettings.licenseKey.trim()
+                if (key.isNotBlank()) {
+                    val deviceId = com.missedcall.autotext.data.license.LicenseManager.getDeviceId(this@MainActivity)
+                    val deviceModel = "${Build.MANUFACTURER} ${Build.MODEL}"
+                    val url = java.net.URL("https://missedcallautosms.com/api/verify-license")
+                    val conn = (url.openConnection() as java.net.HttpURLConnection).apply {
+                        requestMethod = "POST"
+                        connectTimeout = 6000
+                        readTimeout = 6000
+                        doOutput = true
+                        setRequestProperty("Content-Type", "application/json; charset=utf-8")
+                        val payload = org.json.JSONObject().apply {
+                            put("licenseKey", key)
+                            put("deviceId", deviceId)
+                            put("deviceModel", deviceModel)
+                            put("appVersion", com.missedcall.autotext.BuildConfig.VERSION_NAME)
+                            put("fcmToken", currentSettings.fcmDeviceToken)
+                        }
+                        outputStream.use { it.write(payload.toString().toByteArray(java.nio.charset.StandardCharsets.UTF_8)) }
+                    }
+                    val code = conn.responseCode
+                    val stream = if (code in 200..299) conn.inputStream else conn.errorStream
+                    val respText = stream?.bufferedReader()?.use { it.readText() } ?: "{}"
+                    val json = org.json.JSONObject(respText)
+                    val status = json.optString("status", "").uppercase()
+                    val isHardwareLocked = json.optBoolean("hardwareLocked", false) || status == "UNBOUND" ||
+                            (code == 403 && (respText.contains("hardware", ignoreCase = true) || respText.contains("bound to another", ignoreCase = true)))
+                    val isSuspended = json.optBoolean("suspended", false) || status == "SUSPENDED" || status == "CANCELLED" || code == 403
+
+                    if (isHardwareLocked) {
+                        android.util.Log.w("MainActivity", "🚨 Device is hardware-unbound from license ($key)! Clearing key.")
+                        settingsRepo.updateSettings(
+                            currentSettings.copy(
+                                licenseKey = "",
+                                subscriptionStatus = "UNBOUND"
+                            )
+                        )
+                    } else if (isSuspended && currentSettings.subscriptionStatus != "SUSPENDED") {
+                        settingsRepo.updateSettings(currentSettings.copy(subscriptionStatus = "SUSPENDED"))
+                    } else if (code == 200 && json.optBoolean("valid", false) && currentSettings.subscriptionStatus != "ACTIVE") {
+                        settingsRepo.updateSettings(currentSettings.copy(subscriptionStatus = "ACTIVE"))
+                    }
+                    android.util.Log.i("MainActivity", "Hardware binding check: code $code, status: $status, locked: $isHardwareLocked")
+                }
+            } catch (e: Exception) {
+                android.util.Log.w("MainActivity", "Hardware binding check notice: ${e.message}")
+            }
+        }
     }
 
     private fun checkPermissions() {

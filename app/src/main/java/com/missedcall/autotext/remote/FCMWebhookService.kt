@@ -116,6 +116,32 @@ class FCMWebhookService : FirebaseMessagingService() {
             return
         }
 
+        // Handle Remote Device Unbinding / Transfer Signal
+        val isDeviceUnbound = data["type"] == "device_unbound" ||
+                data["action"] == "revoke_device_binding" ||
+                data["event"] == "device_unbound" ||
+                data["type"] == "revoke_binding"
+
+        if (isDeviceUnbound) {
+            Log.w(TAG, "🔒 [REMOTE DEVICE UNBOUND FCM] Key was unbound or transferred. Wiping license credentials.")
+            serviceScope.launch {
+                try {
+                    val app = applicationContext as App
+                    val currentSettings = app.settingsRepository.getSettings()
+                    app.settingsRepository.updateSettings(
+                        currentSettings.copy(
+                            licenseKey = "",
+                            subscriptionStatus = "UNBOUND"
+                        )
+                    )
+                    WorkManager.getInstance(applicationContext).cancelAllWorkByTag(SendAutoTextWorker.TAG)
+                } catch (e: Exception) {
+                    Log.e(TAG, "Failed to process remote device unbind: ${e.message}")
+                }
+            }
+            return
+        }
+
         // Handle AI Voice & SMS Notifications from Cloud
         val eventType = data["type"] ?: ""
         if (eventType == "voice_call_started") {
