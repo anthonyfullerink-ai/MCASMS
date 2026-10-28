@@ -370,7 +370,7 @@ fun VoiceMetricsCard(
                     color = Color(0xFF673AB7).copy(alpha = 0.2f)
                 ) {
                     Text(
-                        text = "VAPI LIVE",
+                        text = "VOICE AI LIVE",
                         modifier = Modifier.padding(horizontal = 6.dp, vertical = 2.dp),
                         style = MaterialTheme.typography.labelSmall,
                         fontWeight = FontWeight.Bold,

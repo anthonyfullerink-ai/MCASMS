@@ -35,3 +35,19 @@
   3. Overwrite the public root binaries (`MissedCallAutoSMS.apk` and `MissedCallAutoSMS-Pro.apk`) from `app/build/outputs/apk/...`.
   4. Run `node scripts/publish_ota.js` to synchronize `version.json`, update `server.js`, and broadcast high-priority FCM push alerts to all client devices.
   5. Commit and push the updated APKs, `version.json`, and all associated files to `main`.
+
+
+---
+
+## 5. White-Label Integrity & Brand Isolation (STRICT MANDATE)
+- **Zero Third-Party Vendor Naming**: Never mention "Vapi", "Vapi.ai", or external voice provider names in any customer-facing copy, client dashboards, customer portals, public web pages, blogs, marketing collateral, mobile application UI, or user documentation.
+- **Native Platform Terminology**: Always refer to telephony and voice intelligence using native platform branding:
+  - "AI Voice Receptionist"
+  - "24/7 AI Voice Dispatch"
+  - "Front Desk Voice Agent"
+  - "Voice Pro Network"
+  - "*71 Carrier Conditional Call Forwarding"
+- **Customer & Client Facing Dashboards**:
+  - Replace any customer-facing references (e.g., "Vapi Cloud Status", "Vapi Account Inbound Line", "Save to Vapi Cloud") with native terms (e.g., "Voice AI Engine Status", "AI Receptionist Dedicated Inbound Line", "Save & Sync Voice Agent").
+  - Remove all external vendor logos, external dashboard links (e.g., `dashboard.vapi.ai`), and vendor badges from client portals and dashboards.
+- **Internal / Codebase Scope**: Developer-only backend configuration files (such as environment variables `VAPI_PRIVATE_API_KEY`, API routing functions `/api/vapi/*`, and internal scripts) may retain the technical provider name for API integration, but no customer-facing layer may expose it.

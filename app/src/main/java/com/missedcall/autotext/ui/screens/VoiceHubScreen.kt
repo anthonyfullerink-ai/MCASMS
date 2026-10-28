@@ -382,7 +382,7 @@ fun VoiceHubScreen(
                                 )
                             )
                             isSyncingFromVapi = false
-                            saveStatusMessage = "✅ Synced live with Vapi Cloud: $serverName is active!"
+                            saveStatusMessage = "✅ Synced live: $serverName is active!"
                             if (showToast) {
                                 Toast.makeText(context, "✅ Synced live: $serverName", Toast.LENGTH_SHORT).show()
                             }
@@ -1978,7 +1978,7 @@ fun VoiceHubScreen(
                                         saveStatusMessage = "✅ Assistant Settings Saved & Synced Live!"
                                         Toast.makeText(context, "AI Voice Assistant Synced Live!", Toast.LENGTH_SHORT).show()
                                     } else {
-                                        saveStatusMessage = "⚠️ Saved locally (Vapi Cloud returned HTTP $code)"
+                                        saveStatusMessage = "⚠️ Saved locally (Voice Cloud returned HTTP $code)"
                                     }
                                 }
                             } catch (e: Exception) {
@@ -2001,7 +2001,7 @@ fun VoiceHubScreen(
                         Icon(if (isVoiceActive) Icons.Default.CloudUpload else Icons.Default.Lock, contentDescription = null, modifier = Modifier.size(16.dp), tint = if (isVoiceActive) Color.White else MaterialTheme.colorScheme.onSurfaceVariant)
                         Spacer(modifier = Modifier.width(6.dp))
                         Text(
-                            text = if (isVoiceActive) "Save to Vapi" else "Save (Locked)",
+                            text = if (isVoiceActive) "Save to Cloud" else "Save (Locked)",
                             fontWeight = FontWeight.Bold,
                             color = if (isVoiceActive) Color.White else MaterialTheme.colorScheme.onSurfaceVariant
                         )
@@ -2165,7 +2165,7 @@ fun VoiceHubScreen(
                             }
                             Spacer(modifier = Modifier.height(4.dp))
                             Text(
-                                "Vapi calls your cell phone directly so you can talk with your AI assistant live. (Uses 1 pooled minute).",
+                                "AI Voice Assistant calls your cell phone directly so you can talk with your receptionist live. (Uses 1 pooled minute).",
                                 style = MaterialTheme.typography.bodySmall,
                                 color = MaterialTheme.colorScheme.onSurfaceVariant
                             )
@@ -2190,7 +2190,7 @@ fun VoiceHubScreen(
                                         return@Button
                                     }
                                     isPlacingOutboundCall = true
-                                    testCallDialogStatus = "Initiating live call from Vapi..."
+                                    testCallDialogStatus = "Initiating live test call..."
 
                                     coroutineScope.launch(Dispatchers.IO) {
                                         try {

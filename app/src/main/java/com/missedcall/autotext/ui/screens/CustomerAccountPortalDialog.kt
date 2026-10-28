@@ -1108,7 +1108,7 @@ fun CustomerAccountPortalDialog(
 
                                 Text(
                                     text = if (settings.voiceSubscriptionActive || liveVoiceSubActive) {
-                                        "Turnkey AI Receptionist forwards unanswered calls to your Vapi agent. Cancelling terminates your $9.99/mo Stripe subscription and immediately launches your phone dialer to deactivate carrier call forwarding (*73 or ##004#)."
+                                        "Turnkey AI Receptionist forwards unanswered calls to your dedicated AI receptionist. Cancelling terminates your $9.99/mo Stripe subscription and immediately launches your phone dialer to deactivate carrier call forwarding (*73 or ##004#)."
                                     } else {
                                         "Activate the 24/7 AI Voice Receptionist to answer incoming customer calls when you're busy. Qualifies callers, captures names and job needs, and sends you instant SMS alerts."
                                     },

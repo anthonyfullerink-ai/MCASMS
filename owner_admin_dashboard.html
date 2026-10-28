@@ -1424,7 +1424,7 @@
         <!-- Row 1: Live Cloud Connection & Identity Badges -->
         <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(210px, 1fr)); gap: 14px; margin-bottom: 20px;">
             <div style="background: #090B0E; border: 1px solid var(--card-border); border-radius: 12px; padding: 16px;">
-                <div style="font-size: 11px; color: var(--muted); font-weight: 700; text-transform: uppercase;">Vapi Cloud API Status</div>
+                <div style="font-size: 11px; color: var(--muted); font-weight: 700; text-transform: uppercase;">Voice Engine API Status</div>
                 <div id="vapiLiveStatusBadge" style="font-size: 16px; font-weight: 900; color: var(--success); margin-top: 6px; display: flex; align-items: center; gap: 6px;">
                     <span style="display: inline-block; width: 10px; height: 10px; background: #10B981; border-radius: 50%;"></span>
                     🟢 Connected (Live)
@@ -1477,15 +1477,13 @@
 
             <div id="vapiPhoneNumbersCard" style="margin-top: 14px; padding-top: 14px; border-top: 1px dashed rgba(255,255,255,0.1); font-size: 12px; color: var(--muted); display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 10px;">
                 <div id="vapiPhoneNumbersList">
-                    📞 <strong>Vapi Account Inbound Line:</strong> <span id="vapiPhoneNumberText">Checking registered numbers...</span>
+                    📞 <strong>AI Receptionist Inbound Line:</strong> <span id="vapiPhoneNumberText">Checking registered numbers...</span>
                 </div>
-                <a href="https://dashboard.vapi.ai/phone-numbers" target="_blank" class="btn-action" style="margin: 0; font-size: 11px; padding: 5px 12px; text-decoration: none; border-color: #38BDF8; color: #38BDF8;">
-                    🔗 Vapi Phone Numbers Dashboard ↗
-                </a>
+                <span style="font-size: 11px; color: #10B981; font-weight: 700;">✔ Direct Carrier Inbound Trunk Active</span>
             </div>
         </div>
 
-        <!-- Row 3: Live Vapi Assistant Prompt & Spoken Greeting Editor -->
+        <!-- Row 3: Live Voice Receptionist Prompt & Greeting Editor -->
         <div style="background: #090B0E; border: 1px solid var(--card-border); border-radius: 14px; padding: 22px; margin-bottom: 24px;">
             <div style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 10px; margin-bottom: 16px;">
                 <div>
@@ -1493,7 +1491,7 @@
                         <span>🎙️</span> Live Vapi Assistant Prompt & Spoken Greeting
                     </h3>
                     <div style="font-size: 12px; color: var(--muted); margin-top: 4px;">
-                        Edits made here are saved directly to your live Vapi Cloud Assistant in real time via the Vapi API.
+                        Edits made here are saved directly to your live Voice Receptionist Engine in real time.
                     </div>
                 </div>
                 <div style="display: flex; gap: 8px; flex-wrap: wrap;">
@@ -1509,7 +1507,7 @@
                     <input type="text" id="editVapiName" value="Riley" placeholder="e.g. Riley or Anthony's AI Assistant" style="width: 100%; background: #131720; border: 1px solid var(--card-border); border-radius: 8px; color: #FFF; padding: 10px; font-size: 13px;">
                 </div>
                 <div>
-                    <label style="font-size: 12px; color: #CBD5E0; font-weight: 700;">Assistant ID (from Vapi):</label>
+                    <label style="font-size: 12px; color: #CBD5E0; font-weight: 700;">Voice Agent System ID:</label>
                     <input type="text" id="editVapiId" value="5105b379-8cbf-4037-becc-bba45504f781" readonly style="width: 100%; background: #0D1117; border: 1px solid var(--card-border); border-radius: 8px; color: #8B949E; padding: 10px; font-size: 12px; font-family: monospace;">
                 </div>
             </div>
@@ -1529,7 +1527,7 @@
                     🛡️ Built-in safeguards: 3-minute hard ceiling, address read-back confirmation, and urgent keyword triage.
                 </div>
                 <button class="btn-action btn-primary-action" style="padding: 12px 24px; font-size: 14px; font-weight: 800;" onclick="saveVapiAssistantLive()">
-                    💾 Save & Sync Directly to Vapi Cloud
+                    💾 Save & Sync Voice Agent
                 </button>
             </div>
         </div>
@@ -5234,11 +5232,11 @@ Return your response STRICTLY as a raw JSON object (no extra commentary) matchin
             if (phoneNumbers && phoneNumbers.length > 0) {
                 assignedNumber = phoneNumbers[0].number || phoneNumbers[0].id || assignedNumber;
                 if (phoneTextEl) {
-                    phoneTextEl.innerHTML = `<strong style="color:var(--primary); font-family:monospace; font-size:14px;">${escapeHtml(assignedNumber)}</strong> (Vapi Active Line)`;
+                    phoneTextEl.innerHTML = `<strong style="color:var(--primary); font-family:monospace; font-size:14px;">${escapeHtml(assignedNumber)}</strong> (Native Voice Line)`;
                 }
             } else {
                 if (phoneTextEl) {
-                    phoneTextEl.innerHTML = `<span style="color:#F59E0B;">No phone number linked on Vapi yet.</span> <small style="color:var(--muted);">(Using provisioned local line for subscriber bindings)</small>`;
+                    phoneTextEl.innerHTML = `<span style="color:#F59E0B;">No inbound phone number linked yet.</span> <small style="color:var(--muted);">(Using provisioned local line for subscriber bindings)</small>`;
                 }
             }
 
@@ -5348,7 +5346,7 @@ Return your response STRICTLY as a raw JSON object (no extra commentary) matchin
         } catch (e) {
             console.error('Failed to load voice dashboard:', e);
             const tbody = document.getElementById('voiceCallsTableBody');
-            if (tbody) tbody.innerHTML = `<tr><td colspan="6" style="text-align: center; color: var(--danger); padding: 24px;">Failed to connect to Vapi: ${escapeHtml(e.message)}</td></tr>`;
+            if (tbody) tbody.innerHTML = `<tr><td colspan="6" style="text-align: center; color: var(--danger); padding: 24px;">Failed to connect to Voice Engine: ${escapeHtml(e.message)}</td></tr>`;
         }
     }
 
@@ -5393,11 +5391,11 @@ Return your response STRICTLY as a raw JSON object (no extra commentary) matchin
             if (voiceEl) voiceEl.innerText = assistant.voiceProvider || 'vapi';
 
             if (showFeedback) {
-                alert(`✅ Live Sync Complete!\n\nAssistant: "${assistant.name || 'Riley'}" is synchronized from Vapi Cloud.\nPrompt and greeting are up to date.`);
+                alert(`✅ Live Sync Complete!\n\nAssistant: "${assistant.name || 'Riley'}" is synchronized from Voice Engine Cloud.\nPrompt and greeting are up to date.`);
             }
         } catch (e) {
             console.error('Failed to sync from Vapi Cloud:', e);
-            if (showFeedback) alert('Failed to sync from Vapi: ' + e.message);
+            if (showFeedback) alert('Failed to sync voice settings: ' + e.message);
         }
     }
 
@@ -5456,13 +5454,13 @@ Return your response STRICTLY as a raw JSON object (no extra commentary) matchin
             });
 
             if (res.success) {
-                alert(`✅ Successfully saved and synced directly to Vapi Cloud!\n\nAssistant "${name}" is now answering with your updated prompt and greeting.`);
+                alert(`✅ Successfully saved and synced to Voice Engine!\n\nAssistant "${name}" is now answering with your updated prompt and greeting.`);
                 loadVoiceDashboard();
             } else {
-                alert('Vapi update error: ' + (res.error || 'Failed to update'));
+                alert('Voice update error: ' + (res.error || 'Failed to update'));
             }
         } catch (e) {
-            alert('Failed to save to Vapi: ' + e.message);
+            alert('Failed to save voice settings: ' + e.message);
         }
     }
 
@@ -5481,7 +5479,7 @@ Return your response STRICTLY as a raw JSON object (no extra commentary) matchin
             });
 
             if (res.success) {
-                alert(`⚡ Webhook Successfully Linked!\n\nVapi Assistant serverUrl is now set to:\n${webhookUrl}\n\nWhen callers hang up, Vapi will immediately stream call summaries, recordings, and trigger post-call SMS!`);
+                alert(`⚡ Webhook Successfully Linked!\n\nVoice Webhook destination is now set to:\n${webhookUrl}\n\nWhen callers hang up, the Voice Engine will immediately stream call summaries, recordings, and trigger post-call SMS!`);
                 loadVoiceDashboard();
             } else {
                 alert('Failed to set webhook: ' + (res.error || 'Unknown error'));
