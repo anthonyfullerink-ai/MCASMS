@@ -5012,7 +5012,7 @@ const server = http.createServer((req, res) => {
           }
 
           if (!targetAssistantId && (key === 'MCAS-OWNER-ANTHONY' || key === 'MCAS-PRO-DEMO-89F2' || key.includes('OWNER') || key.includes('ANTHONY') || key === 'MCAS-PRO-416E74686F6E792046756C6C65727C307C31373930383830303030-0C72EF35')) {
-            targetAssistantId = '5ad3f565-09a4-4eac-b632-bae823fea118';
+            targetAssistantId = process.env.VAPI_ASSISTANT_ID || '5105b379-8cbf-4037-becc-bba45504f781';
           }
 
           if (!targetAssistantId) {

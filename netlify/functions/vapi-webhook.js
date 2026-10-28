@@ -318,7 +318,7 @@ exports.handler = async (event) => {
                           (matchedSub?.licenseKey && (matchedSub.licenseKey.includes('OWNER') || matchedSub.licenseKey.includes('ANTHONY') || matchedSub.licenseKey === 'MCAS-PRO-DEMO-89F2'));
 
       const dedicatedAssistantId = isOwnerCall
-        ? '5ad3f565-09a4-4eac-b632-bae823fea118'
+        ? '5105b379-8cbf-4037-becc-bba45504f781'
         : (matchedSub?.vapiAssistantId || matchedSub?.assistantId || null);
 
       if (dedicatedAssistantId) {

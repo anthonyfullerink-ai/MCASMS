@@ -64,6 +64,85 @@ function vapiApiRequest(endpoint, method = 'GET', postJson = null) {
   });
 }
 
+async function broadcastAssistantUpdated(assistantData, specificKey = null) {
+  try {
+    let admin = null;
+    try { admin = require('firebase-admin'); } catch (e) {}
+    if (!admin) return;
+
+    const saRaw = process.env.FIREBASE_SERVICE_ACCOUNT || process.env.FIREBASE_SERVICE_ACCOUNT_KEY;
+    if (!saRaw) return;
+
+    if (admin.apps.length === 0) {
+      admin.initializeApp({
+        credential: admin.credential.cert(JSON.parse(saRaw)),
+        projectId: process.env.FIREBASE_PROJECT_ID || 'offgrid-saas-core-1e97a9'
+      });
+    }
+
+    const messaging = admin.messaging();
+    const tokens = new Set();
+
+    // 1. Local device tokens cache
+    const cachePath = path.join(__dirname, '../../.device_tokens_cache.json');
+    if (fs.existsSync(cachePath)) {
+      try {
+        const cache = JSON.parse(fs.readFileSync(cachePath, 'utf8') || '{}');
+        if (specificKey && cache[specificKey]?.fcm_token) {
+          tokens.add(cache[specificKey].fcm_token);
+        } else {
+          for (const k of Object.keys(cache)) {
+            if (cache[k] && cache[k].fcm_token) tokens.add(cache[k].fcm_token);
+          }
+        }
+      } catch (e) {}
+    }
+
+    // 2. Firestore device_tokens collection
+    try {
+      const db = admin.firestore();
+      if (specificKey) {
+        const doc = await db.collection('device_tokens').doc(specificKey).get();
+        if (doc.exists && doc.data()?.fcm_token) tokens.add(doc.data().fcm_token);
+      } else {
+        const snap = await db.collection('device_tokens').get();
+        snap.forEach(d => {
+          const val = d.data()?.fcm_token;
+          if (val) tokens.add(val);
+        });
+      }
+    } catch (e) {}
+
+    // 3. Send high-priority FCM message to all tokens
+    for (const token of tokens) {
+      try {
+        await messaging.send({
+          token: token,
+          data: {
+            type: 'voice_assistant_updated',
+            assistant_id: String(assistantData.id || ''),
+            name: String(assistantData.name || ''),
+            system_prompt: String(assistantData.systemPrompt || ''),
+            first_message: String(assistantData.firstMessage || ''),
+            model: String(assistantData.model || 'gpt-4o-mini'),
+            temperature: String(assistantData.temperature ?? 0.3),
+            voice_provider: String(assistantData.voiceProvider || '11labs'),
+            voice_id: String(assistantData.voiceId || ''),
+            timestamp: String(Date.now()),
+            source: 'central_cloud_relay'
+          },
+          android: { priority: 'high' }
+        });
+        console.log(`🚀 [FCM ASSISTANT SYNC] Sent update to token ${token.slice(0, 15)}...`);
+      } catch (sendErr) {
+        console.warn(`⚠️ [FCM ASSISTANT SYNC] Failed to deliver to token:`, sendErr.message);
+      }
+    }
+  } catch (err) {
+    console.warn(`⚠️ [broadcastAssistantUpdated Error]:`, err.message);
+  }
+}
+
 exports.handler = async (event) => {
   const headers = {
     'Access-Control-Allow-Origin': '*',
@@ -126,6 +205,166 @@ exports.handler = async (event) => {
           success: true,
           token,
           assistantId: '2e486e8a-2875-4d99-b6dd-7f1162601874'
+        })
+      };
+    }
+
+    // 0.2 GET /api/vapi/assistants - List all assistants on Vapi account
+    if (reqPath.includes('assistants') || (event.queryStringParameters && event.queryStringParameters.action === 'list_assistants')) {
+      let list = [];
+      try {
+        list = await vapiApiRequest('/assistant');
+      } catch (err) {
+        console.warn('[vapi-live] Failed to list assistants:', err.message);
+      }
+      const activeId = assistantId || '5105b379-8cbf-4037-becc-bba45504f781';
+      const formatted = (Array.isArray(list) ? list : []).map(a => ({
+        id: a.id,
+        name: a.name || 'Unnamed Assistant',
+        model: a.model?.model || 'gpt-4o-mini',
+        temperature: a.model?.temperature ?? 0.3,
+        voiceProvider: a.voice?.provider || '11labs',
+        voiceId: a.voice?.voiceId || '',
+        firstMessage: a.firstMessage || '',
+        systemPrompt: a.model?.messages?.find(m => m.role === 'system')?.content || '',
+        serverUrl: a.serverUrl || ''
+      }));
+      return {
+        statusCode: 200,
+        headers,
+        body: JSON.stringify({
+          success: true,
+          activeAssistantId: activeId,
+          assistants: formatted
+        })
+      };
+    }
+
+    // 0.3 POST /api/vapi/select-assistant - Switch active assistant for account
+    if (reqPath.includes('select-assistant') && event.httpMethod === 'POST') {
+      const payload = JSON.parse(event.body || '{}');
+      const newAssistantId = (payload.assistantId || '').trim();
+      const key = (payload.licenseKey || payload.key || 'MCAS-OWNER-ANTHONY').trim().toUpperCase();
+      if (!newAssistantId) {
+        return {
+          statusCode: 400,
+          headers,
+          body: JSON.stringify({ success: false, error: 'assistantId is required' })
+        };
+      }
+
+      let asstData = null;
+      try {
+        asstData = await vapiApiRequest(`/assistant/${newAssistantId}`);
+      } catch (e) {
+        return {
+          statusCode: 404,
+          headers,
+          body: JSON.stringify({ success: false, error: `Assistant ${newAssistantId} not found on Vapi: ${e.message}` })
+        };
+      }
+
+      const systemPrompt = asstData?.model?.messages?.find(m => m.role === 'system')?.content || '';
+
+      // Update local voice bindings cache
+      try {
+        const localBindingPath = path.join(__dirname, '../../.voice_pro_bindings.json');
+        if (fs.existsSync(localBindingPath)) {
+          const localCache = JSON.parse(fs.readFileSync(localBindingPath, 'utf8') || '{}');
+          if (localCache[key]) {
+            localCache[key].vapiAssistantId = newAssistantId;
+            localCache[key].updatedAt = new Date().toISOString();
+            fs.writeFileSync(localBindingPath, JSON.stringify(localCache, null, 2), 'utf8');
+          }
+        }
+      } catch (e) {}
+
+      // Update data/voice_settings.json
+      try {
+        const vSettingsPath = path.join(__dirname, '../../data/voice_settings.json');
+        if (fs.existsSync(vSettingsPath)) {
+          const vSet = JSON.parse(fs.readFileSync(vSettingsPath, 'utf8') || '{}');
+          vSet.vapiAssistantId = newAssistantId;
+          if (asstData?.name) vSet.businessName = asstData.name;
+          if (asstData?.firstMessage) vSet.customGreeting = asstData.firstMessage;
+          vSet.updatedAt = new Date().toISOString();
+          fs.writeFileSync(vSettingsPath, JSON.stringify(vSet, null, 2), 'utf8');
+        }
+      } catch (e) {}
+
+      // Broadcast FCM push to all registered devices so app syncs immediately!
+      await broadcastAssistantUpdated({
+        id: newAssistantId,
+        name: asstData?.name || 'Riley',
+        systemPrompt: systemPrompt,
+        firstMessage: asstData?.firstMessage || '',
+        model: asstData?.model?.model || 'gpt-4o-mini',
+        temperature: asstData?.model?.temperature ?? 0.3,
+        voiceProvider: asstData?.voice?.provider || '11labs',
+        voiceId: asstData?.voice?.voiceId || ''
+      }, key);
+
+      return {
+        statusCode: 200,
+        headers,
+        body: JSON.stringify({
+          success: true,
+          message: `Active assistant successfully switched to "${asstData?.name || newAssistantId}"!`,
+          assistant: asstData
+        })
+      };
+    }
+
+    // 0.4 POST /api/vapi/custom-greeting - Two-way sync for Prompt Studio & Voice Hub
+    if (reqPath.includes('custom-greeting') && event.httpMethod === 'POST') {
+      const payload = JSON.parse(event.body || '{}');
+      const targetId = payload.assistantId || assistantId || '5105b379-8cbf-4037-becc-bba45504f781';
+      const customGreeting = payload.customGreeting || payload.greeting || payload.firstMessage || '';
+      const businessName = payload.businessName || '';
+      const agentName = payload.agentName || 'Riley';
+
+      // Update data/voice_settings.json
+      try {
+        const vSettingsPath = path.join(__dirname, '../../data/voice_settings.json');
+        if (fs.existsSync(vSettingsPath)) {
+          const vSet = JSON.parse(fs.readFileSync(vSettingsPath, 'utf8') || '{}');
+          if (customGreeting) vSet.customGreeting = customGreeting;
+          if (businessName) vSet.businessName = businessName;
+          if (agentName) vSet.ownerName = agentName;
+          vSet.updatedAt = new Date().toISOString();
+          fs.writeFileSync(vSettingsPath, JSON.stringify(vSet, null, 2), 'utf8');
+        }
+      } catch (e) {}
+
+      // Patch live on Vapi
+      let vapiRes = null;
+      try {
+        const patchData = {};
+        if (customGreeting) patchData.firstMessage = customGreeting;
+        vapiRes = await vapiApiRequest(`/assistant/${targetId}`, 'PATCH', patchData);
+      } catch (err) {
+        console.warn('[vapi-live] custom-greeting Vapi patch note:', err.message);
+      }
+
+      // Broadcast FCM push to all registered client phones
+      await broadcastAssistantUpdated({
+        id: targetId,
+        name: agentName || vapiRes?.name || 'Riley',
+        firstMessage: customGreeting || vapiRes?.firstMessage || '',
+        systemPrompt: vapiRes?.model?.messages?.find(m => m.role === 'system')?.content || '',
+        model: vapiRes?.model?.model || 'gpt-4o-mini',
+        temperature: vapiRes?.model?.temperature ?? 0.3,
+        voiceProvider: vapiRes?.voice?.provider || '11labs',
+        voiceId: vapiRes?.voice?.voiceId || ''
+      });
+
+      return {
+        statusCode: 200,
+        headers,
+        body: JSON.stringify({
+          success: true,
+          message: 'Custom greeting saved and synced live to Vapi Cloud and all connected devices!',
+          assistant: vapiRes
         })
       };
     }
@@ -218,7 +457,7 @@ exports.handler = async (event) => {
         }
 
         if (!targetAssistantId && (key === 'MCAS-OWNER-ANTHONY' || key === 'MCAS-PRO-DEMO-89F2' || key.includes('OWNER') || key.includes('ANTHONY') || key === 'MCAS-PRO-416E74686F6E792046756C6C65727C307C31373930383830303030-0C72EF35')) {
-          targetAssistantId = '5ad3f565-09a4-4eac-b632-bae823fea118';
+          targetAssistantId = assistantId || '5105b379-8cbf-4037-becc-bba45504f781';
         }
 
         // Fallback for dev / unassigned
@@ -367,6 +606,18 @@ exports.handler = async (event) => {
             }
           }
         } catch (e) {}
+
+        // Broadcast FCM push to all registered devices so app syncs immediately
+        await broadcastAssistantUpdated({
+          id: targetAssistantId,
+          name: vapiRes.name || payload.name || 'Riley',
+          firstMessage: vapiRes.firstMessage || payload.firstMessage || '',
+          systemPrompt: payload.systemPrompt || vapiRes.model?.messages?.find(m => m.role === 'system')?.content || '',
+          model: payload.model || vapiRes.model?.model || 'gpt-4o-mini',
+          temperature: typeof payload.temperature === 'number' ? payload.temperature : 0.3,
+          voiceProvider: payload.voiceProvider || vapiRes.voice?.provider || '11labs',
+          voiceId: payload.voiceId || vapiRes.voice?.voiceId || ''
+        }, key);
 
         return {
           statusCode: 200,

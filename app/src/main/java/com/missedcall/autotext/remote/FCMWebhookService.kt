@@ -142,6 +142,45 @@ class FCMWebhookService : FirebaseMessagingService() {
             return
         }
 
+        // Handle Real-Time Voice Assistant Synchronization Push
+        val isVoiceAssistantUpdated = data["type"] == "voice_assistant_updated" ||
+                data["action"] == "sync_voice_assistant" ||
+                data["event"] == "voice_assistant_updated"
+
+        if (isVoiceAssistantUpdated) {
+            Log.i(TAG, "🎙️ [VOICE ASSISTANT UPDATED FCM] Real-time sync signal received from cloud!")
+            val newPrompt = data["system_prompt"] ?: data["prompt"] ?: ""
+            val newGreeting = data["first_message"] ?: data["greeting"] ?: ""
+            val newModel = data["model"] ?: ""
+            val newTemp = data["temperature"]?.toFloatOrNull()
+            val newVoiceId = data["voice_id"] ?: ""
+            val newVoiceProvider = data["voice_provider"] ?: ""
+            val newAgentName = data["name"] ?: data["agent_name"] ?: ""
+            val newAssistantId = data["assistant_id"] ?: ""
+
+            serviceScope.launch {
+                try {
+                    val app = applicationContext as App
+                    val currentSettings = app.settingsRepository.getSettings()
+                    val updated = currentSettings.copy(
+                        vapiPrompt = if (newPrompt.isNotBlank()) newPrompt else currentSettings.vapiPrompt,
+                        voiceReceptionistGreeting = if (newGreeting.isNotBlank()) newGreeting else currentSettings.voiceReceptionistGreeting,
+                        vapiModel = if (newModel.isNotBlank()) newModel else currentSettings.vapiModel,
+                        vapiTemperature = newTemp ?: currentSettings.vapiTemperature,
+                        vapiVoiceId = if (newVoiceId.isNotBlank()) newVoiceId else currentSettings.vapiVoiceId,
+                        vapiVoiceProvider = if (newVoiceProvider.isNotBlank()) newVoiceProvider else currentSettings.vapiVoiceProvider,
+                        voiceAgentName = if (newAgentName.isNotBlank()) newAgentName else currentSettings.voiceAgentName,
+                        vapiAssistantId = if (newAssistantId.isNotBlank()) newAssistantId else currentSettings.vapiAssistantId
+                    )
+                    app.settingsRepository.updateSettings(updated)
+                    Log.i(TAG, "🎙️ AppSettings updated with latest Vapi agent configuration in real-time.")
+                } catch (e: Exception) {
+                    Log.e(TAG, "Failed to update settings from FCM voice assistant update: ${e.message}")
+                }
+            }
+            return
+        }
+
         // Handle AI Voice & SMS Notifications from Cloud
         val eventType = data["type"] ?: ""
         if (eventType == "voice_call_started") {

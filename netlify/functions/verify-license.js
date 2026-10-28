@@ -173,7 +173,7 @@ exports.handler = async (event) => {
       vapiProvisioned = true;
       voiceForwardingNumber = voiceForwardingNumber || '+1 (732) 660-9121';
       voiceCarrierCode = voiceCarrierCode || '*717326609121';
-      vapiAssistantId = '5ad3f565-09a4-4eac-b632-bae823fea118';
+      vapiAssistantId = process.env.VAPI_ASSISTANT_ID || '5105b379-8cbf-4037-becc-bba45504f781';
       voiceMinutesBalance = 999999.0;
       voiceActive = true;
       isPaused = false;

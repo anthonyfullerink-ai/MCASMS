@@ -5352,6 +5352,90 @@ Return your response STRICTLY as a raw JSON object (no extra commentary) matchin
         }
     }
 
+        let cachedVapiAssistantsList = [];
+
+    async function syncFromVapiCloud(showFeedback = false) {
+        try {
+            const [statusRes, asstListRes] = await Promise.all([
+                safeFetchJson('/api/vapi/live-status').catch(() => safeFetchJson('/api/vapi/status')),
+                safeFetchJson('/api/vapi/assistants').catch(() => ({ assistants: [] }))
+            ]);
+
+            const assistant = statusRes?.assistant || {};
+            cachedVapiAssistantsList = asstListRes?.assistants || [];
+
+            // Populate selector dropdown
+            const selector = document.getElementById('vapiAssistantSelector');
+            if (selector && cachedVapiAssistantsList.length > 0) {
+                selector.innerHTML = cachedVapiAssistantsList.map(a => {
+                    const isSelected = a.id === assistant.id;
+                    return `<option value="${escapeHtml(a.id)}" ${isSelected ? 'selected' : ''}>${escapeHtml(a.name || 'Assistant')} (${escapeHtml(a.id.slice(0, 8))}...)</option>`;
+                }).join('');
+            }
+
+            // Update inputs
+            const editName = document.getElementById('editVapiName');
+            if (editName && assistant.name) editName.value = assistant.name;
+            const editId = document.getElementById('editVapiId');
+            if (editId && assistant.id) editId.value = assistant.id;
+            const editFirst = document.getElementById('editVapiFirstMessage');
+            if (editFirst && assistant.firstMessage) editFirst.value = assistant.firstMessage;
+            const editPrompt = document.getElementById('editVapiSystemPrompt');
+            if (editPrompt && assistant.systemPrompt) editPrompt.value = assistant.systemPrompt;
+
+            const headerAsstEl = document.getElementById('headerAssistantName');
+            if (headerAsstEl) headerAsstEl.innerText = assistant.name || 'Riley';
+            const asstNameEl = document.getElementById('vapiAssistantName');
+            if (asstNameEl) asstNameEl.innerText = assistant.name || 'Riley';
+            const modelEl = document.getElementById('vapiModelDisplay');
+            if (modelEl) modelEl.innerText = `${(assistant.model || 'gpt-4.1').toUpperCase()} (OpenAI)`;
+            const voiceEl = document.getElementById('vapiVoiceName');
+            if (voiceEl) voiceEl.innerText = assistant.voiceProvider || 'vapi';
+
+            if (showFeedback) {
+                alert(`✅ Live Sync Complete!\n\nAssistant: "${assistant.name || 'Riley'}" is synchronized from Vapi Cloud.\nPrompt and greeting are up to date.`);
+            }
+        } catch (e) {
+            console.error('Failed to sync from Vapi Cloud:', e);
+            if (showFeedback) alert('Failed to sync from Vapi: ' + e.message);
+        }
+    }
+
+    async function onVapiAssistantSelected(selectedId) {
+        if (!selectedId) return;
+        const matched = cachedVapiAssistantsList.find(a => a.id === selectedId);
+        if (matched) {
+            const editName = document.getElementById('editVapiName');
+            if (editName) editName.value = matched.name || 'Assistant';
+            const editId = document.getElementById('editVapiId');
+            if (editId) editId.value = matched.id;
+            const editFirst = document.getElementById('editVapiFirstMessage');
+            if (editFirst) editFirst.value = matched.firstMessage || '';
+            const editPrompt = document.getElementById('editVapiSystemPrompt');
+            if (editPrompt) editPrompt.value = matched.systemPrompt || '';
+        }
+
+        try {
+            const res = await safeFetchJson('/api/vapi/select-assistant', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                    assistantId: selectedId,
+                    licenseKey: 'MCAS-OWNER-ANTHONY'
+                })
+            });
+            if (res.success) {
+                const headerAsstEl = document.getElementById('headerAssistantName');
+                if (headerAsstEl) headerAsstEl.innerText = res.assistant?.name || 'Active Assistant';
+                const asstNameEl = document.getElementById('vapiAssistantName');
+                if (asstNameEl) asstNameEl.innerText = res.assistant?.name || 'Active Assistant';
+                alert(`✅ Switched active assistant to "${res.assistant?.name || selectedId}"!\nAll connected mobile devices and call forwarding have been updated in real-time.`);
+            }
+        } catch (e) {
+            console.warn('select-assistant error:', e.message);
+        }
+    }
+
     async function saveVapiAssistantLive() {
         const name = document.getElementById('editVapiName')?.value.trim() || 'Riley';
         const asstId = document.getElementById('editVapiId')?.value.trim() || '5105b379-8cbf-4037-becc-bba45504f781';

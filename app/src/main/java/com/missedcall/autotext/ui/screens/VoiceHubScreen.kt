@@ -330,9 +330,11 @@ fun VoiceHubScreen(
         }
     }
 
-    // Fetch live assistant data from backend on first launch
-    LaunchedEffect(settings.licenseKey) {
-        if (settings.licenseKey.isBlank()) return@LaunchedEffect
+    var isSyncingFromVapi by remember { mutableStateOf(false) }
+
+    suspend fun syncFromVapiCloud(showToast: Boolean = false) {
+        if (settings.licenseKey.isBlank()) return
+        isSyncingFromVapi = true
         withContext(Dispatchers.IO) {
             try {
                 val endpoint = if (settings.remoteUpdateUrl.contains("localhost") || settings.remoteUpdateUrl.contains("10.0.")) {
@@ -342,8 +344,8 @@ fun VoiceHubScreen(
                 }
                 val url = URL(endpoint)
                 val conn = (url.openConnection() as HttpURLConnection).apply {
-                    connectTimeout = 4000
-                    readTimeout = 4000
+                    connectTimeout = 6000
+                    readTimeout = 6000
                 }
                 if (conn.responseCode == 200) {
                     val body = conn.inputStream.bufferedReader().use { it.readText() }
@@ -352,25 +354,60 @@ fun VoiceHubScreen(
                         val asst = json.optJSONObject("assistant")
                         val fwdNum = json.optString("forwardingNumber", "")
                         withContext(Dispatchers.Main) {
-                            if (fwdNum.isNotBlank() && fwdNum != settings.voiceReceptionistForwardingNumber) {
-                                onSettingsChanged(settings.copy(voiceReceptionistForwardingNumber = fwdNum))
-                            }
-                            if (asst != null) {
-                                val serverPrompt = asst.optString("systemPrompt", "")
-                                val serverFirstMsg = asst.optString("firstMessage", "")
-                                val serverTemp = asst.optDouble("temperature", 0.3).toFloat()
-                                val serverModel = asst.optString("model", "gpt-4o-mini")
-                                if (serverPrompt.isNotBlank()) systemPromptInput = serverPrompt
-                                if (serverFirstMsg.isNotBlank()) firstMessageInput = serverFirstMsg
-                                temperatureVal = serverTemp
-                                selectedModel = serverModel
+                            val serverPrompt = asst?.optString("systemPrompt", "") ?: ""
+                            val serverFirstMsg = asst?.optString("firstMessage", "") ?: ""
+                            val serverTemp = asst?.optDouble("temperature", 0.3)?.toFloat() ?: 0.3f
+                            val serverModel = asst?.optString("model", "gpt-4o-mini") ?: "gpt-4o-mini"
+                            val serverVoiceId = asst?.optString("voiceId", "") ?: ""
+                            val serverVoiceProvider = asst?.optString("voiceProvider", "") ?: ""
+                            val serverName = asst?.optString("name", "Riley") ?: "Riley"
+                            val serverAsstId = asst?.optString("id", "") ?: ""
+
+                            if (serverPrompt.isNotBlank()) systemPromptInput = serverPrompt
+                            if (serverFirstMsg.isNotBlank()) firstMessageInput = serverFirstMsg
+                            temperatureVal = serverTemp
+                            selectedModel = serverModel
+
+                            onSettingsChanged(
+                                settings.copy(
+                                    vapiPrompt = if (serverPrompt.isNotBlank()) serverPrompt else settings.vapiPrompt,
+                                    voiceReceptionistGreeting = if (serverFirstMsg.isNotBlank()) serverFirstMsg else settings.voiceReceptionistGreeting,
+                                    vapiModel = serverModel,
+                                    vapiTemperature = serverTemp,
+                                    vapiVoiceId = if (serverVoiceId.isNotBlank()) serverVoiceId else settings.vapiVoiceId,
+                                    vapiVoiceProvider = if (serverVoiceProvider.isNotBlank()) serverVoiceProvider else settings.vapiVoiceProvider,
+                                    voiceAgentName = if (serverName.isNotBlank()) serverName else settings.voiceAgentName,
+                                    vapiAssistantId = if (serverAsstId.isNotBlank()) serverAsstId else settings.vapiAssistantId,
+                                    voiceReceptionistForwardingNumber = if (fwdNum.isNotBlank()) fwdNum else settings.voiceReceptionistForwardingNumber
+                                )
+                            )
+                            isSyncingFromVapi = false
+                            saveStatusMessage = "✅ Synced live with Vapi Cloud: $serverName is active!"
+                            if (showToast) {
+                                Toast.makeText(context, "✅ Synced live: $serverName", Toast.LENGTH_SHORT).show()
                             }
                         }
+                    } else {
+                        withContext(Dispatchers.Main) { isSyncingFromVapi = false }
                     }
+                } else {
+                    withContext(Dispatchers.Main) { isSyncingFromVapi = false }
                 }
             } catch (e: Exception) {
-                // Background fetch note
+                withContext(Dispatchers.Main) {
+                    isSyncingFromVapi = false
+                    if (showToast) {
+                        Toast.makeText(context, "Sync note: ${e.message}", Toast.LENGTH_SHORT).show()
+                    }
+                }
             }
+        }
+    }
+
+    // Fetch live assistant data from backend on first launch
+    LaunchedEffect(settings.licenseKey) {
+        if (settings.licenseKey.isNotBlank()) {
+            syncFromVapiCloud(showToast = false)
         }
         refreshLicenseAndVoiceStatus()
     }
@@ -1843,90 +1880,132 @@ fun VoiceHubScreen(
             }
         }
 
-        // 7. SAVE TO VAPI CLOUD BUTTON
+        // 7. SAVE & SYNC TO VAPI CLOUD BUTTONS
         item {
-            Button(
-                onClick = {
-                    isSavingToVapi = true
-                    saveStatusMessage = null
-                    coroutineScope.launch(Dispatchers.IO) {
-                        try {
-                            val endpoint = if (settings.remoteUpdateUrl.contains("localhost") || settings.remoteUpdateUrl.contains("10.0.")) {
-                                "http://10.0.2.2:8000/api/vapi/user-assistant"
-                            } else {
-                                "https://missedcallautosms.com/api/vapi/user-assistant"
-                            }
-                            val url = URL(endpoint)
-                            val conn = (url.openConnection() as HttpURLConnection).apply {
-                                requestMethod = "POST"
-                                connectTimeout = 8000
-                                readTimeout = 8000
-                                doOutput = true
-                                setRequestProperty("Content-Type", "application/json")
-                                val payload = JSONObject().apply {
-                                    put("licenseKey", settings.licenseKey)
-                                    put("firstMessage", firstMessageInput)
-                                    put("systemPrompt", systemPromptInput)
-                                    put("model", selectedModel)
-                                    put("temperature", temperatureVal)
-                                    put("voiceProvider", "11labs")
-                                    put("voiceId", if (selectedVoice.contains("Austin")) "pNInz6obpgDQGcFmaJgB" else "21m00Tcm4TlvDq8ikWAM")
-                                    put("aiSmsMasterEnabled", aiSmsMasterEnabled)
-                                    put("aiSmsVoicePostCallEnabled", aiSmsVoicePostCallEnabled)
-                                    put("aiSmsInboundAgentEnabled", aiSmsInboundAgentEnabled)
-                                    put("aiSmsScope", aiSmsScope)
-                                    put("aiSmsBusinessServiceType", aiSmsBusinessServiceType)
-                                    put("aiSmsShopAddress", aiSmsShopAddressInput)
-                                    put("aiSmsShopInstructions", aiSmsShopInstructionsInput)
-                                    put("aiSmsCalendarConnected", aiSmsCalendarConnected)
-                                    put("aiSmsCalendarEmail", settings.aiSmsCalendarEmail)
-                                    put("aiSmsCalendarAccountName", settings.aiSmsCalendarAccountName)
-                                    put("aiSmsCalendarId", settings.aiSmsCalendarId)
-                                    put("aiSmsCalendarDisplayName", settings.aiSmsCalendarDisplayName)
-                                    put("aiSmsSlotDurationMinutes", settings.aiSmsSlotDurationMinutes)
-                                    put("aiSmsTravelBufferMinutes", settings.aiSmsTravelBufferMinutes)
-                                    val masterWorkingHours = if (settings.businessHoursEnabled) "${settings.schedule.startTime} - ${settings.schedule.endTime}" else "24/7"
-                                    put("aiSmsCalendarWorkingHours", masterWorkingHours)
-                                    put("aiSmsAutoPauseOnHumanReply", aiSmsAutoPauseOnHumanReply)
-                                    put("aiSmsEmergencyAlertsEnabled", aiSmsEmergencyAlertsEnabled)
-                                }
-                                outputStream.use { os -> os.write(payload.toString().toByteArray(StandardCharsets.UTF_8)) }
-                            }
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.spacedBy(8.dp)
+            ) {
+                OutlinedButton(
+                    onClick = {
+                        coroutineScope.launch {
+                            syncFromVapiCloud(showToast = true)
+                        }
+                    },
+                    modifier = Modifier.weight(1f),
+                    enabled = isVoiceActive && !isSyncingFromVapi && !isSavingToVapi
+                ) {
+                    if (isSyncingFromVapi) {
+                        CircularProgressIndicator(modifier = Modifier.size(16.dp))
+                    } else {
+                        Icon(Icons.Default.Refresh, contentDescription = null, modifier = Modifier.size(16.dp))
+                    }
+                    Spacer(modifier = Modifier.width(6.dp))
+                    Text("Sync Live", fontWeight = FontWeight.Bold)
+                }
 
-                            val code = conn.responseCode
-                            withContext(Dispatchers.Main) {
-                                isSavingToVapi = false
-                                if (code in 200..299) {
-                                    saveStatusMessage = "✅ Assistant Settings Saved & Synced Live!"
-                                    Toast.makeText(context, "AI Voice Assistant Synced Live!", Toast.LENGTH_SHORT).show()
+                Button(
+                    onClick = {
+                        isSavingToVapi = true
+                        saveStatusMessage = null
+                        coroutineScope.launch(Dispatchers.IO) {
+                            try {
+                                val endpoint = if (settings.remoteUpdateUrl.contains("localhost") || settings.remoteUpdateUrl.contains("10.0.")) {
+                                    "http://10.0.2.2:8000/api/vapi/user-assistant"
                                 } else {
-                                    saveStatusMessage = "⚠️ Saved locally (Vapi Cloud returned HTTP $code)"
+                                    "https://missedcallautosms.com/api/vapi/user-assistant"
                                 }
-                            }
-                        } catch (e: Exception) {
-                            withContext(Dispatchers.Main) {
-                                isSavingToVapi = false
-                                saveStatusMessage = "Saved locally on device (Offline: ${e.message})"
+                                val url = URL(endpoint)
+                                val conn = (url.openConnection() as HttpURLConnection).apply {
+                                    requestMethod = "POST"
+                                    connectTimeout = 8000
+                                    readTimeout = 8000
+                                    doOutput = true
+                                    setRequestProperty("Content-Type", "application/json")
+                                    val payload = JSONObject().apply {
+                                        put("licenseKey", settings.licenseKey)
+                                        put("firstMessage", firstMessageInput)
+                                        put("systemPrompt", systemPromptInput)
+                                        put("model", selectedModel)
+                                        put("temperature", temperatureVal)
+                                        put("voiceProvider", "11labs")
+                                        put("voiceId", if (selectedVoice.contains("Austin")) "pNInz6obpgDQGcFmaJgB" else "21m00Tcm4TlvDq8ikWAM")
+                                        put("aiSmsMasterEnabled", aiSmsMasterEnabled)
+                                        put("aiSmsVoicePostCallEnabled", aiSmsVoicePostCallEnabled)
+                                        put("aiSmsInboundAgentEnabled", aiSmsInboundAgentEnabled)
+                                        put("aiSmsScope", aiSmsScope)
+                                        put("aiSmsBusinessServiceType", aiSmsBusinessServiceType)
+                                        put("aiSmsShopAddress", aiSmsShopAddressInput)
+                                        put("aiSmsShopInstructions", aiSmsShopInstructionsInput)
+                                        put("aiSmsCalendarConnected", aiSmsCalendarConnected)
+                                        put("aiSmsCalendarEmail", settings.aiSmsCalendarEmail)
+                                        put("aiSmsCalendarAccountName", settings.aiSmsCalendarAccountName)
+                                        put("aiSmsCalendarId", settings.aiSmsCalendarId)
+                                        put("aiSmsCalendarDisplayName", settings.aiSmsCalendarDisplayName)
+                                        put("aiSmsSlotDurationMinutes", settings.aiSmsSlotDurationMinutes)
+                                        put("aiSmsTravelBufferMinutes", settings.aiSmsTravelBufferMinutes)
+                                        val masterWorkingHours = if (settings.businessHoursEnabled) "${settings.schedule.startTime} - ${settings.schedule.endTime}" else "24/7"
+                                        put("aiSmsCalendarWorkingHours", masterWorkingHours)
+                                        put("aiSmsAutoPauseOnHumanReply", aiSmsAutoPauseOnHumanReply)
+                                        put("aiSmsEmergencyAlertsEnabled", aiSmsEmergencyAlertsEnabled)
+                                    }
+                                    outputStream.use { os -> os.write(payload.toString().toByteArray(StandardCharsets.UTF_8)) }
+                                }
+
+                                val code = conn.responseCode
+                                withContext(Dispatchers.Main) {
+                                    isSavingToVapi = false
+                                    if (code in 200..299) {
+                                        onSettingsChanged(
+                                            settings.copy(
+                                                vapiPrompt = systemPromptInput,
+                                                voiceReceptionistGreeting = firstMessageInput,
+                                                vapiModel = selectedModel,
+                                                vapiTemperature = temperatureVal,
+                                                vapiVoiceId = if (selectedVoice.contains("Austin")) "pNInz6obpgDQGcFmaJgB" else "21m00Tcm4TlvDq8ikWAM",
+                                                aiSmsMasterEnabled = aiSmsMasterEnabled,
+                                                aiSmsVoicePostCallEnabled = aiSmsVoicePostCallEnabled,
+                                                aiSmsInboundAgentEnabled = aiSmsInboundAgentEnabled,
+                                                aiSmsScope = aiSmsScope,
+                                                aiSmsBusinessServiceType = aiSmsBusinessServiceType,
+                                                aiSmsShopAddress = aiSmsShopAddressInput,
+                                                aiSmsShopInstructions = aiSmsShopInstructionsInput,
+                                                aiSmsCalendarConnected = aiSmsCalendarConnected,
+                                                aiSmsAutoPauseOnHumanReply = aiSmsAutoPauseOnHumanReply,
+                                                aiSmsEmergencyAlertsEnabled = aiSmsEmergencyAlertsEnabled
+                                            )
+                                        )
+                                        saveStatusMessage = "✅ Assistant Settings Saved & Synced Live!"
+                                        Toast.makeText(context, "AI Voice Assistant Synced Live!", Toast.LENGTH_SHORT).show()
+                                    } else {
+                                        saveStatusMessage = "⚠️ Saved locally (Vapi Cloud returned HTTP $code)"
+                                    }
+                                }
+                            } catch (e: Exception) {
+                                withContext(Dispatchers.Main) {
+                                    isSavingToVapi = false
+                                    saveStatusMessage = "Saved locally on device (Offline: ${e.message})"
+                                }
                             }
                         }
+                    },
+                    colors = ButtonDefaults.buttonColors(containerColor = if (isVoiceActive) Color(0xFF673AB7) else MaterialTheme.colorScheme.surfaceVariant),
+                    modifier = Modifier.weight(1.4f),
+                    enabled = isVoiceActive && !isSavingToVapi && !isSyncingFromVapi
+                ) {
+                    if (isSavingToVapi) {
+                        CircularProgressIndicator(modifier = Modifier.size(16.dp), color = Color.White)
+                        Spacer(modifier = Modifier.width(6.dp))
+                        Text("Saving...", fontWeight = FontWeight.Bold)
+                    } else {
+                        Icon(if (isVoiceActive) Icons.Default.CloudUpload else Icons.Default.Lock, contentDescription = null, modifier = Modifier.size(16.dp), tint = if (isVoiceActive) Color.White else MaterialTheme.colorScheme.onSurfaceVariant)
+                        Spacer(modifier = Modifier.width(6.dp))
+                        Text(
+                            text = if (isVoiceActive) "Save to Vapi" else "Save (Locked)",
+                            fontWeight = FontWeight.Bold,
+                            color = if (isVoiceActive) Color.White else MaterialTheme.colorScheme.onSurfaceVariant
+                        )
                     }
-                },
-                colors = ButtonDefaults.buttonColors(containerColor = if (isVoiceActive) Color(0xFF673AB7) else MaterialTheme.colorScheme.surfaceVariant),
-                modifier = Modifier.fillMaxWidth(),
-                enabled = isVoiceActive && !isSavingToVapi
-            ) {
-                if (isSavingToVapi) {
-                    CircularProgressIndicator(modifier = Modifier.size(18.dp), color = Color.White)
-                    Spacer(modifier = Modifier.width(8.dp))
-                    Text("Saving Live to Vapi Cloud...")
-                } else {
-                    Icon(if (isVoiceActive) Icons.Default.CloudUpload else Icons.Default.Lock, contentDescription = null, modifier = Modifier.size(18.dp), tint = if (isVoiceActive) Color.White else MaterialTheme.colorScheme.onSurfaceVariant)
-                    Spacer(modifier = Modifier.width(8.dp))
-                    Text(
-                        text = if (isVoiceActive) "Save & Sync AI Voice Agent" else "Save & Sync (Locked — Sub Required)",
-                        fontWeight = FontWeight.Bold,
-                        color = if (isVoiceActive) Color.White else MaterialTheme.colorScheme.onSurfaceVariant
-                    )
                 }
             }
 
