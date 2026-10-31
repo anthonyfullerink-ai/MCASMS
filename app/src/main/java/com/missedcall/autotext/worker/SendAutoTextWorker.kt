@@ -34,6 +34,7 @@ class SendAutoTextWorker(
         const val KEY_IS_REMOTE_TRIGGER = "key_is_remote_trigger"
         const val KEY_CALLBACK_URL = "key_callback_url"
         const val KEY_SIM_SLOT = "key_sim_slot"
+        const val KEY_IS_POST_CALL = "key_is_post_call"
 
         private val recentDispatches = java.util.concurrent.ConcurrentHashMap<String, Long>()
     }
@@ -48,6 +49,7 @@ class SendAutoTextWorker(
 
         val overrideMessage = inputData.getString(KEY_OVERRIDE_MESSAGE)
         val isRemoteTrigger = inputData.getBoolean(KEY_IS_REMOTE_TRIGGER, false)
+        val isPostCall = inputData.getBoolean(KEY_IS_POST_CALL, false)
         val callbackUrl = inputData.getString(KEY_CALLBACK_URL)
         val requestedSimSlot = inputData.getInt(KEY_SIM_SLOT, 0)
 
@@ -250,17 +252,26 @@ class SendAutoTextWorker(
         }
 
         // Apply Pacing Delay
-        val delayMillis = if (isRemoteTrigger) {
-            40_000L // 40-second delay strictly for Conversational AI back-and-forth replies
-        } else {
-            // For missed call auto-text: respect user's configured jitterDelaySeconds (minimum 2s)
-            (settings.jitterDelaySeconds * 1000L).coerceAtLeast(2_000L)
+        val delayMillis = when {
+            isPostCall -> 0L // Post-call summaries must be delivered immediately upon call completion!
+            isRemoteTrigger -> 40_000L // 40-second delay strictly for Conversational AI back-and-forth replies
+            settings.voiceReceptionistEnabled || settings.voiceSubscriptionActive -> {
+                // Ensure adequate buffer (minimum 6s) for carrier forwarding and AI Voice Receptionist pickup
+                (settings.jitterDelaySeconds * 1000L).coerceAtLeast(6_000L)
+            }
+            else -> {
+                // For standard missed call auto-text: respect user's configured jitterDelaySeconds (minimum 2s)
+                (settings.jitterDelaySeconds * 1000L).coerceAtLeast(2_000L)
+            }
         }
-        Log.d(TAG, "Applying pacing delay (${delayMillis / 1000}s) before sending SMS to $targetNumber...")
-        delay(delayMillis)
+        if (delayMillis > 0L) {
+            Log.d(TAG, "Applying pacing delay (${delayMillis / 1000}s) before sending SMS to $targetNumber...")
+            delay(delayMillis)
+        }
 
-        // Safety Safeguard: Verify call was NOT answered while worker was delayed
+        // Safety Safeguards: Verify call was NOT answered by user or handled by AI Voice Receptionist while delayed
         if (!isRemoteTrigger) {
+            // Safeguard A: Did the user answer locally on the handset?
             val wasAnswered = isCallAnsweredInCallLog(applicationContext, targetNumber)
             if (wasAnswered) {
                 recentDispatches.remove(clean10)
@@ -274,6 +285,29 @@ class SendAutoTextWorker(
                     )
                 )
                 return Result.success()
+            }
+
+            // Safeguard B: Did the AI Voice Receptionist answer or handle this call during the buffer?
+            if (settings.voiceReceptionistEnabled || settings.voiceSubscriptionActive) {
+                val recentCutoff = System.currentTimeMillis() - 60_000L // 60-second reconciliation window
+                val hasVoiceCall = try {
+                    app.database.voiceCallDao().countRecentVoiceCalls(clean10, recentCutoff) > 0
+                } catch (e: Exception) {
+                    false
+                }
+
+                if (hasVoiceCall) {
+                    recentDispatches.remove(clean10)
+                    Log.i(TAG, "🛡️ [BULLETPROOF SAFEGUARD] AI Voice Receptionist answered call for $targetNumber within recent window. Suppressing missed-call auto-text!")
+                    dao.insertLog(
+                        CallLogEvent(
+                            phoneNumber = targetNumber,
+                            status = LogStatus.FORWARDED_TO_WEBHOOK,
+                            messageSent = "[Muted - Handed over to AI Voice Receptionist]"
+                        )
+                    )
+                    return Result.success()
+                }
             }
         }
 

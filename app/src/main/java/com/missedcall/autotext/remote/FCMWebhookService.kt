@@ -185,6 +185,17 @@ class FCMWebhookService : FirebaseMessagingService() {
         val eventType = data["type"] ?: ""
         if (eventType == "voice_call_started") {
             val callerPhone = data["caller_phone"] ?: data["phone"] ?: "Unknown"
+            val cleanDigits = callerPhone.filter { it.isDigit() }.takeLast(10)
+
+            // CRITICAL CANCELLATION: Voice receptionist picked up the call!
+            // Immediately cancel any pending missed call auto-text for this phone number.
+            if (cleanDigits.isNotEmpty()) {
+                WorkManager.getInstance(applicationContext).cancelUniqueWork("autotext_$cleanDigits")
+                WorkManager.getInstance(applicationContext).cancelAllWorkByTag("caller_$cleanDigits")
+            }
+            WorkManager.getInstance(applicationContext).cancelUniqueWork("autotext_$callerPhone")
+            Log.i(TAG, "🛡️ [INSTANT CANCELLATION] Voice receptionist picked up call for $callerPhone ($cleanDigits). Canceled pending auto-text jobs!")
+
             serviceScope.launch {
                 try {
                     val app = applicationContext as App
@@ -346,18 +357,25 @@ class FCMWebhookService : FirebaseMessagingService() {
             return
         }
 
-        Log.i(TAG, "Valid FCM Webhook payload verified! Dispatching SMS to $targetPhone (SIM Slot: $simSlot)")
+        val isPostCall = data["sub_type"] == "post_call_summary" ||
+                data["type"] == "post_call_sms" ||
+                data["is_post_call"] == "true" ||
+                data["event"] == "post_call_sms"
+
+        Log.i(TAG, "Valid FCM Webhook payload verified! Dispatching SMS to $targetPhone (SIM Slot: $simSlot, isPostCall: $isPostCall)")
 
         val workData = Data.Builder()
             .putString(SendAutoTextWorker.KEY_PHONE_NUMBER, targetPhone)
             .putString(SendAutoTextWorker.KEY_OVERRIDE_MESSAGE, customMessage)
             .putBoolean(SendAutoTextWorker.KEY_IS_REMOTE_TRIGGER, true)
+            .putBoolean(SendAutoTextWorker.KEY_IS_POST_CALL, isPostCall)
             .putString(SendAutoTextWorker.KEY_CALLBACK_URL, callbackUrl)
             .putInt(SendAutoTextWorker.KEY_SIM_SLOT, simSlot)
             .build()
 
         val workRequest = OneTimeWorkRequestBuilder<SendAutoTextWorker>()
             .setInputData(workData)
+            .addTag(SendAutoTextWorker.TAG)
             .build()
 
         WorkManager.getInstance(applicationContext).enqueue(workRequest)

@@ -269,7 +269,7 @@ class CallStateReceiver : BroadcastReceiver() {
         return false
     }
 
-    private fun enqueueAutoTextWorker(context: Context, phoneNumber: String) {
+    private suspend fun enqueueAutoTextWorker(context: Context, phoneNumber: String) {
         val cleanDigits = phoneNumber.filter { it.isDigit() }.takeLast(10)
         val uniqueWorkName = if (cleanDigits.isNotEmpty()) "autotext_$cleanDigits" else "autotext_$phoneNumber"
 
@@ -277,14 +277,31 @@ class CallStateReceiver : BroadcastReceiver() {
             .putString(SendAutoTextWorker.KEY_PHONE_NUMBER, phoneNumber)
             .build()
 
-        val workRequest = OneTimeWorkRequestBuilder<SendAutoTextWorker>()
+        val isVoiceActive = try {
+            val settings = (context.applicationContext as App).settingsRepository.getSettings()
+            settings.voiceReceptionistEnabled || settings.voiceSubscriptionActive
+        } catch (_: Exception) {
+            false
+        }
+
+        val workRequestBuilder = OneTimeWorkRequestBuilder<SendAutoTextWorker>()
             .setInputData(inputData)
-            .build()
+            .addTag(SendAutoTextWorker.TAG)
+            .addTag("caller_$cleanDigits")
+
+        if (isVoiceActive) {
+            // 8-second quarantine buffer: allows carrier conditional call forwarding (*71)
+            // and AI Voice Receptionist pickup to register and cancel this work request before any SMS fires!
+            workRequestBuilder.setInitialDelay(8, java.util.concurrent.TimeUnit.SECONDS)
+            Log.d(TAG, "🛡️ [VOICE BUFFER] Enqueued auto-text with 8s quarantine buffer for $phoneNumber ($uniqueWorkName)")
+        } else {
+            Log.d(TAG, "Standard auto-text enqueued immediately for $phoneNumber ($uniqueWorkName)")
+        }
 
         WorkManager.getInstance(context.applicationContext).enqueueUniqueWork(
             uniqueWorkName,
             ExistingWorkPolicy.KEEP,
-            workRequest
+            workRequestBuilder.build()
         )
     }
 }

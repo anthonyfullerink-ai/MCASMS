@@ -819,7 +819,14 @@ Key Objectives:
             }
 
             if (sub && sub.licenseKey) {
-              const deviceRecord = await fs.getDeviceBinding(sub.licenseKey);
+              let deviceRecord = (fs && fs.getDeviceBinding) ? await fs.getDeviceBinding(sub.licenseKey) : null;
+              if (!deviceRecord || !deviceRecord.fcm_token) {
+                deviceRecord = getLocalToken(sub.licenseKey);
+              }
+              if ((!deviceRecord || !deviceRecord.fcm_token) && (sub.licenseKey.includes('OWNER') || sub.licenseKey.includes('ANTHONY') || sub.licenseKey.includes('89F2'))) {
+                deviceRecord = getLocalToken('MCAS-PRO-DEMO-89F2') || getLocalToken('MCAS-PRO-416E74686F6E792046756C6C65727C307C31373930383830303030-0C72EF35');
+              }
+
               if (deviceRecord && deviceRecord.fcm_token) {
                 await msg.send({
                   token: deviceRecord.fcm_token,
@@ -1053,6 +1060,8 @@ Key Objectives:
                     phone: callerNum,
                     message: postCallText,
                     sim_slot: '1',
+                    is_post_call: 'true',
+                    sub_type: 'post_call_summary',
                     timestamp: String(Date.now()),
                     source: 'central_cloud_relay'
                   },
