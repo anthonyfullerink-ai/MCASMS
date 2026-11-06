@@ -65,13 +65,21 @@ class SendAutoTextWorker(
         val now = System.currentTimeMillis()
 
         // Deduplication safeguard: Prevent duplicate dispatch if back-to-back calls or triggers arrive concurrently
-        val lastDispatched = recentDispatches[clean10] ?: 0L
-        if (now - lastDispatched < 30_000L) {
-            Log.i(TAG, "Suppressing duplicate SMS dispatch for $targetNumber ($clean10) within 30s in-flight/dedup window.")
+        val dedupKey = if (isRemoteTrigger) {
+            // For AI conversational SMS & remote triggers: isolate key by message hash so it never collides with initial missed call auto-SMS, but cleanly deduplicates twin HTTP/FCM triggers for the same reply
+            "$clean10:${overrideMessage?.trim()?.hashCode() ?: 0}"
+        } else {
+            // For standard missed calls: deduplicate rapid repeated call rings to the same phone number
+            clean10
+        }
+        val dedupWindowMs = if (isRemoteTrigger) 15_000L else 30_000L
+        val lastDispatched = recentDispatches[dedupKey] ?: 0L
+        if (now - lastDispatched < dedupWindowMs) {
+            Log.i(TAG, "Suppressing duplicate SMS dispatch for $targetNumber ($dedupKey) within ${dedupWindowMs / 1000}s in-flight/dedup window.")
             return Result.success()
         }
         // Immediately record in-flight timestamp to lock against race conditions while delaying or dispatching
-        recentDispatches[clean10] = now
+        recentDispatches[dedupKey] = now
 
         val app = applicationContext as App
         val settingsRepo = app.settingsRepository
@@ -86,7 +94,7 @@ class SendAutoTextWorker(
         val isUnbound = settings.licenseKey.isBlank() || settings.subscriptionStatus.equals("UNBOUND", ignoreCase = true)
 
         if (licenseInfo.status == LicenseStatus.UNLICENSED || licenseInfo.status == LicenseStatus.EXPIRED || isRevoked || isUnbound) {
-            recentDispatches.remove(clean10)
+            recentDispatches.remove(dedupKey)
             val reason = if (isUnbound) "Device Unbound (Transferred to Another Phone)" 
                 else if (isRevoked) "License Revoked" 
                 else if (licenseInfo.status == LicenseStatus.EXPIRED) "License Expired" 
@@ -105,7 +113,7 @@ class SendAutoTextWorker(
 
         // 1. Check Master Switch (Skip for explicit remote webhook triggers)
         if (!isRemoteTrigger && !settings.masterEnabled) {
-            recentDispatches.remove(clean10)
+            recentDispatches.remove(dedupKey)
             Log.d(TAG, "Master switch is disabled. Skipping auto-text for $targetNumber")
             return Result.success()
         }
@@ -113,7 +121,7 @@ class SendAutoTextWorker(
         // 2. Check Exclude Saved Contacts (Only for automatic missed call triggers, skip if remote override message is explicit)
         val contactName = ContactUtils.getContactName(applicationContext, targetNumber)
         if (!isRemoteTrigger && settings.excludeSavedContacts && contactName != null) {
-            recentDispatches.remove(clean10)
+            recentDispatches.remove(dedupKey)
             Log.d(TAG, "Number $targetNumber is in contacts ($contactName). Skipping.")
             dao.insertLog(
                 CallLogEvent(
@@ -166,7 +174,7 @@ class SendAutoTextWorker(
 
         // 4. Check Business Hours / Day of Week (Skip for explicit remote webhook triggers)
         if (!isRemoteTrigger && settings.businessHoursEnabled && !ScheduleUtils.isWithinBusinessHours(settings.schedule)) {
-            recentDispatches.remove(clean10)
+            recentDispatches.remove(dedupKey)
             Log.d(TAG, "Outside business hours. Skipping auto-text for $targetNumber")
             dao.insertLog(
                 CallLogEvent(
@@ -254,7 +262,7 @@ class SendAutoTextWorker(
         // Apply Pacing Delay
         val delayMillis = when {
             isPostCall -> 0L // Post-call summaries must be delivered immediately upon call completion!
-            isRemoteTrigger -> 40_000L // 40-second delay strictly for Conversational AI back-and-forth replies
+            isRemoteTrigger -> 4_000L // 4-second natural pacing delay for Conversational AI back-and-forth replies
             settings.voiceReceptionistEnabled || settings.voiceSubscriptionActive -> {
                 // Ensure adequate buffer (minimum 6s) for carrier forwarding and AI Voice Receptionist pickup
                 (settings.jitterDelaySeconds * 1000L).coerceAtLeast(6_000L)
@@ -274,7 +282,7 @@ class SendAutoTextWorker(
             // Safeguard A: Did the user answer locally on the handset?
             val wasAnswered = isCallAnsweredInCallLog(applicationContext, targetNumber)
             if (wasAnswered) {
-                recentDispatches.remove(clean10)
+                recentDispatches.remove(dedupKey)
                 Log.w(TAG, "Safety Safeguard Triggered: Call from $targetNumber was confirmed ANSWERED in CallLog. Suppressing SMS dispatch!")
                 dao.insertLog(
                     CallLogEvent(
@@ -297,7 +305,7 @@ class SendAutoTextWorker(
                 }
 
                 if (hasVoiceCall) {
-                    recentDispatches.remove(clean10)
+                    recentDispatches.remove(dedupKey)
                     Log.i(TAG, "🛡️ [BULLETPROOF SAFEGUARD] AI Voice Receptionist answered call for $targetNumber within recent window. Suppressing missed-call auto-text!")
                     dao.insertLog(
                         CallLogEvent(
@@ -328,7 +336,7 @@ class SendAutoTextWorker(
             }
 
             Log.i(TAG, "SMS successfully dispatched to $targetNumber via SIM slot $effectiveSimSlot")
-            recentDispatches[clean10] = System.currentTimeMillis()
+            recentDispatches[dedupKey] = System.currentTimeMillis()
             dao.insertLog(
                 CallLogEvent(
                     phoneNumber = targetNumber,
@@ -359,7 +367,7 @@ class SendAutoTextWorker(
 
             Result.success()
         } catch (e: Exception) {
-            recentDispatches.remove(clean10)
+            recentDispatches.remove(dedupKey)
             Log.e(TAG, "Failed to send SMS to $targetNumber", e)
             dao.insertLog(
                 CallLogEvent(

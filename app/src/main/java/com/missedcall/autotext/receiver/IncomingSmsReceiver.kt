@@ -84,6 +84,7 @@ class IncomingSmsReceiver : BroadcastReceiver() {
                         licenseInfo.tier == com.missedcall.autotext.data.license.LicenseTier.PRO ||
                         settings.licenseKey.contains("PRO", ignoreCase = true) ||
                         settings.licenseKey.contains("TRIAL", ignoreCase = true) ||
+                        settings.licenseKey.contains("OWNER", ignoreCase = true) ||
                         settings.licenseKey == "MCAS-PRO-DEMO-89F2" ||
                         com.missedcall.autotext.BuildConfig.IS_PRO_EDITION
 

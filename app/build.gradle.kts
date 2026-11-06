@@ -14,8 +14,8 @@ android {
         applicationId = "com.missedcall.autotext"
         minSdk = 26
         targetSdk = 35
-        versionCode = 47
-        versionName = "2.0.7"
+        versionCode = 48
+        versionName = "2.0.8"
 
 
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
