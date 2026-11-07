@@ -20,10 +20,10 @@ const workerSource = fs.readFileSync(path.join(__dirname, '../app/src/main/java/
 const receiverSource = fs.readFileSync(path.join(__dirname, '../app/src/main/java/com/missedcall/autotext/receiver/CallStateReceiver.kt'), 'utf8');
 const fcmSource = fs.readFileSync(path.join(__dirname, '../app/src/main/java/com/missedcall/autotext/remote/FCMWebhookService.kt'), 'utf8');
 
-// Verify CallStateReceiver has 8-second quarantine delay
-assert(receiverSource.includes('workRequestBuilder.setInitialDelay(8, java.util.concurrent.TimeUnit.SECONDS)'), 'CallStateReceiver must set 8s quarantine delay');
+// Verify CallStateReceiver has 12-second quarantine delay
+assert(receiverSource.includes('workRequestBuilder.setInitialDelay(12, java.util.concurrent.TimeUnit.SECONDS)'), 'CallStateReceiver must set 8s quarantine delay');
 assert(receiverSource.includes('addTag("caller_$cleanDigits")'), 'CallStateReceiver must tag work request with caller digits');
-console.log('   ✔ CallStateReceiver has 8s quarantine buffer and caller tag.');
+console.log('   ✔ CallStateReceiver has 12s quarantine buffer and caller tag.');
 
 // Verify FCMWebhookService instantly cancels WorkManager jobs
 assert(fcmSource.includes('cancelUniqueWork("autotext_$cleanDigits")'), 'FCMWebhookService must cancel unique work');

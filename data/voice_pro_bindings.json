@@ -67,7 +67,10 @@
     "boundAt": "2026-10-01T19:00:00.000Z",
     "updatedAt": "2026-10-19T00:32:49.800Z",
     "isVoicePaused": false,
-    "provisionedAt": "2026-10-01T19:00:00.000Z"
+    "provisionedAt": "2026-10-01T19:00:00.000Z",
+    "voiceAgentName": "Alex",
+    "voiceId": "nPczCjzI2devNBz1zQrb",
+    "voiceProvider": "11labs"
   },
   "7325523896": {
     "active": true,
@@ -96,7 +99,10 @@
     "boundAt": "2026-10-01T19:00:00.000Z",
     "updatedAt": "2026-10-19T00:32:49.800Z",
     "isVoicePaused": false,
-    "provisionedAt": "2026-10-01T19:00:00.000Z"
+    "provisionedAt": "2026-10-01T19:00:00.000Z",
+    "voiceAgentName": "Alex",
+    "voiceId": "nPczCjzI2devNBz1zQrb",
+    "voiceProvider": "11labs"
   },
   "MCAS-PRO-DEMO-89F2": {
     "active": true,

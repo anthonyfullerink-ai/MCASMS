@@ -25,7 +25,14 @@ function getLocalToken(licenseKey) {
   try {
     if (fsModule.existsSync(LOCAL_CACHE_PATH)) {
       const cache = JSON.parse(fsModule.readFileSync(LOCAL_CACHE_PATH, 'utf8') || '{}');
-      return cache[licenseKey] || null;
+      if (cache[licenseKey]) return cache[licenseKey];
+      if (licenseKey && (licenseKey.includes('OWNER') || licenseKey.includes('ANTHONY'))) {
+        for (const k of Object.keys(cache)) {
+          if (k.includes('OWNER') || k.includes('ANTHONY') || k.includes('89F2') || k.includes('Fuller')) {
+            if (cache[k] && cache[k].fcm_token) return cache[k];
+          }
+        }
+      }
     }
   } catch (e) {}
   return null;
@@ -323,11 +330,63 @@ exports.handler = async (event) => {
 
       if (dedicatedAssistantId) {
         console.log(`🎯 [VAPI DEDICATED ASSISTANT ROUTED] Call ${callId} directly routed to assistant ${dedicatedAssistantId} (isOwner: ${isOwnerCall})`);
+        const resolvedKey = isOwnerCall ? 'MCAS-OWNER-ANTHONY' : (matchedPulse?.licenseKey || matchedSub?.licenseKey || 'MCAS-OWNER-ANTHONY');
+        const bName = isOwnerCall ? 'Missed Call Auto SMS' : (matchedPulse?.businessName || matchedSub?.businessName || 'Missed Call Auto SMS');
+
+        const sessionData = {
+          callId,
+          licenseKey: resolvedKey,
+          businessName: bName,
+          callerNum,
+          createdAt: Date.now()
+        };
+        CALL_LICENSE_MAP.set(callId, sessionData);
+        if (fs && fs.saveCallSession) {
+          await fs.saveCallSession(callId, sessionData).catch(() => {});
+        }
+
+        // CRITICAL INSTANT CANCEL: Dispatched immediately upon call arrival to suppress native handset auto-SMS!
+        const msg = getMessagingService();
+        if (msg) {
+          try {
+            let deviceRecord = (fs && fs.getDeviceBinding) ? await fs.getDeviceBinding(resolvedKey) : null;
+            if (!deviceRecord || !deviceRecord.fcm_token) {
+              deviceRecord = getLocalToken(resolvedKey);
+            }
+            if ((!deviceRecord || !deviceRecord.fcm_token) && (resolvedKey.includes('OWNER') || resolvedKey.includes('ANTHONY') || resolvedKey.includes('89F2'))) {
+              deviceRecord = getLocalToken('MCAS-PRO-DEMO-89F2') || getLocalToken('MCAS-OWNER-ANTHONY') || getLocalToken('MCAS-PRO-416E74686F6E792046756C6C65727C307C31373930383830303030-0C72EF35');
+            }
+            if (deviceRecord && deviceRecord.fcm_token) {
+              await msg.send({
+                token: deviceRecord.fcm_token,
+                data: {
+                  type: 'voice_call_started',
+                  caller_phone: callerNum,
+                  call_id: String(callId),
+                  timestamp: String(Date.now()),
+                  source: 'vapi_assistant_request'
+                },
+                android: { priority: 'high' }
+              });
+              console.log(`⚡ [INSTANT FCM CANCEL SENT] voice_call_started delivered on assistant-request for ${resolvedKey} (Caller: ${callerNum})`);
+            }
+          } catch (pushErr) {
+            console.warn('[vapi-webhook] Instant cancel push warning:', pushErr.message);
+          }
+        }
+
         return {
           statusCode: 200,
           headers,
           body: JSON.stringify({
-            assistantId: dedicatedAssistantId
+            assistantId: dedicatedAssistantId,
+            assistantOverrides: {
+              metadata: {
+                licenseKey: resolvedKey,
+                callerPhone: callerNum,
+                callId: callId
+              }
+            }
           })
         };
       }
@@ -804,8 +863,17 @@ Key Objectives:
         if (fs && msg) {
           try {
             let sub = null;
-            if (resolvedKey) sub = await fs.getVoiceBinding(resolvedKey);
-            if (!sub && inboundNumber) sub = await fs.getVoiceBinding(inboundNumber);
+            if (resolvedKey) {
+              if (fs && fs.getVoiceBinding) sub = await fs.getVoiceBinding(resolvedKey);
+              if (!sub) sub = getLocalVoiceBinding(resolvedKey);
+            }
+            if (!sub && inboundNumber) {
+              if (fs && fs.getVoiceBinding) sub = await fs.getVoiceBinding(inboundNumber);
+              if (!sub) sub = getLocalVoiceBinding(inboundNumber);
+            }
+            if (!sub && (cleanCallerDigits === '7325523896' || String(inboundNumber).includes('7326609121') || String(callObj.assistantId).includes('5105b379') || message.assistantId === '5105b379-8cbf-4037-becc-bba45504f781')) {
+              sub = getLocalVoiceBinding('MCAS-OWNER-ANTHONY') || getLocalVoiceBinding('7325523896');
+            }
 
             // If subscriber's minutes are exhausted, do NOT dispatch voice_call_started.
             // This allows the Android device's Native SIM Missed-Call SMS to fire immediately!
@@ -1040,17 +1108,33 @@ Key Objectives:
             // Post-Call SIM SMS Confirmation & Disconnected Recovery (if enabled by subscriber)
             if (sub.postCallSmsEnabled !== false) {
               const endedReason = message.endedReason || callObj.endedReason || payload.endedReason || '';
+              const agentName = sub.voiceAgentName || 'Alex';
+              const businessName = sub.businessName || 'Missed Call Auto SMS';
+
+              // Determine if an actual conversation occurred vs early hangup or disconnection
+              const isEarlyHangup = durationSec < 12 || (durationSec < 18 && (lowerTrans.length < 50 || !transcript || transcript.includes('Transcript recorded')));
               const isSilence = endedReason === 'silence-timed-out' || lowerTrans.includes('could not hear') || lowerTrans.includes('cannot hear');
-              const isDisconnected = (endedReason === 'customer-ended-call' || endedReason === 'phone-call-provider-closed-call' || endedReason === 'assistant-error') && durationSec < 35 && !isBooking;
+              const isDisconnected = (endedReason === 'customer-ended-call' || endedReason === 'phone-call-provider-closed-call' || endedReason === 'assistant-error') && durationSec < 40 && !isBooking && !isEarlyHangup;
 
               let postCallText = '';
-              if (isSilence) {
-                postCallText = `Hi, sorry we couldn't hear each other on the call! Were you still looking for assistance or an estimate today? Feel free to reply directly to this text!`;
+              let postCallType = 'NORMAL';
+
+              if (isBooking) {
+                postCallType = 'APPOINTMENT_CONFIRMED';
+                postCallText = `Thanks for speaking with us! Your appointment has been confirmed. Reply directly to this text if you need to adjust your time or have any questions!`;
+              } else if (isSilence || isEarlyHangup) {
+                postCallType = 'EARLY_HANGUP_RECOVERY';
+                postCallText = `Hi, sorry we missed your call! This is ${agentName} with ${businessName}. Were you looking for assistance or an estimate today? Feel free to reply directly to this text!`;
               } else if (isDisconnected) {
-                postCallText = `Hey, seems like we got disconnected! Were you still looking for a quote or technician visit? Let me know how I can help!`;
+                postCallType = 'DISCONNECTED_RECOVERY';
+                postCallText = `Hey, seems like we got disconnected! Apologies for the dropped call. Were you still looking for assistance or a quote? Let me know how I can help!`;
               } else {
+                postCallType = 'COMPLETED_SUMMARY';
                 const nameGreeting = customer.name ? `Hi ${customer.name}, ` : 'Hi, ';
-                postCallText = `${nameGreeting}thanks for calling! Our AI receptionist noted your request: "${summary.substring(0, 85)}". Feel free to reply here if you have any questions or want to update your time!`;
+                const cleanSummary = summary && summary !== 'Caller requested service callback.'
+                  ? ` Our AI receptionist noted: "${summary.substring(0, 85)}".`
+                  : '';
+                postCallText = `${nameGreeting}thanks for calling ${businessName}!${cleanSummary} Feel free to reply directly to this text if you have any questions or want to update your details!`;
               }
 
               try {

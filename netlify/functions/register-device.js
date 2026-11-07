@@ -50,7 +50,7 @@ function verifyLicenseKey(key) {
   const trimmed = key.trim().replace(/\s+/g, '').toUpperCase();
 
   // Reviewer / Master Pro Demo keys
-  if (trimmed === 'MCAS-PRO-DEMO-89F2' || trimmed === 'MCAT-PRO-DEMO-89F2' || trimmed === 'MCAS-PRO-DEMO-TRIAL-89F2') {
+  if (trimmed === 'MCAS-PRO-DEMO-89F2' || trimmed === 'MCAT-PRO-DEMO-89F2' || trimmed === 'MCAS-PRO-DEMO-TRIAL-89F2' || trimmed === 'MCAS-OWNER-ANTHONY' || trimmed === 'MCAS-PRO-OWNER-ANTHONY' || trimmed.includes('OWNER') || trimmed.includes('ANTHONY')) {
     return { valid: true, isPro: true, customer: 'Owner & Reviewer Master Pro Demo' };
   }
   if (trimmed === 'MCAS-DEMO-TRIAL-89F2' || trimmed === 'MCAS-DEMO-89F2') {

@@ -290,10 +290,10 @@ class CallStateReceiver : BroadcastReceiver() {
             .addTag("caller_$cleanDigits")
 
         if (isVoiceActive) {
-            // 8-second quarantine buffer: allows carrier conditional call forwarding (*71)
+            // 12-second quarantine buffer: allows carrier conditional call forwarding (*71)
             // and AI Voice Receptionist pickup to register and cancel this work request before any SMS fires!
-            workRequestBuilder.setInitialDelay(8, java.util.concurrent.TimeUnit.SECONDS)
-            Log.d(TAG, "🛡️ [VOICE BUFFER] Enqueued auto-text with 8s quarantine buffer for $phoneNumber ($uniqueWorkName)")
+            workRequestBuilder.setInitialDelay(12, java.util.concurrent.TimeUnit.SECONDS)
+            Log.d(TAG, "🛡️ [VOICE BUFFER] Enqueued auto-text with 12s quarantine buffer for $phoneNumber ($uniqueWorkName)")
         } else {
             Log.d(TAG, "Standard auto-text enqueued immediately for $phoneNumber ($uniqueWorkName)")
         }
