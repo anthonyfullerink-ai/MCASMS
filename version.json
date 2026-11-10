@@ -6,5 +6,5 @@
   "releaseNotes": "🚀 v2.1.0 (Build 50): Notification Controls & Alert Silencing\n• 🔔 Granular Notification Settings: Control Auto-SMS, Voice Agent, Appointments & Bypass alerts\n• 🔇 Strict Mute Integrity: Bypassed & filtered alerts are automatically silenced when Auto-SMS or Voice Agent is turned off\n• 🛠️ Settings Quick-Access: Access notification preferences directly from the AI Activity Feed",
   "mandatory": false,
   "minSupportedVersion": 1,
-  "updatedAt": "2026-11-10T20:50:59.695Z"
+  "updatedAt": "2026-11-10T20:51:25.765Z"
 }
