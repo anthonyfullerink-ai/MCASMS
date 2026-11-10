@@ -76,8 +76,8 @@ class IncomingSmsReceiver : BroadcastReceiver() {
                 messageBody = fullMessage
             )
 
-            // 3. Conversational AI SMS Engine
-            if (settings.aiSmsMasterEnabled && settings.aiSmsInboundAgentEnabled) {
+            // 3. Conversational AI SMS Engine (Only runs when Auto-SMS Master Switch is ACTIVE)
+            if (settings.masterEnabled && settings.aiSmsMasterEnabled && settings.aiSmsInboundAgentEnabled) {
                 // Rule 0: Plan Entitlement Gate ($9.99/mo Voice & SMS Subscription or Pro License)
                 val licenseInfo = com.missedcall.autotext.data.license.LicenseManager.verifyLicenseKey(settings.licenseKey)
                 val hasAiSubscription = settings.voiceSubscriptionActive ||

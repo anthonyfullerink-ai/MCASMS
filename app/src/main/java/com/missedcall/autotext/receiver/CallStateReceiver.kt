@@ -270,6 +270,18 @@ class CallStateReceiver : BroadcastReceiver() {
     }
 
     private suspend fun enqueueAutoTextWorker(context: Context, phoneNumber: String) {
+        val app = context.applicationContext as App
+        val settings = try {
+            app.settingsRepository.getSettings()
+        } catch (_: Exception) {
+            null
+        }
+
+        if (settings != null && !settings.masterEnabled) {
+            Log.d(TAG, "Master switch is disabled. Skipping worker enqueue for $phoneNumber")
+            return
+        }
+
         val cleanDigits = phoneNumber.filter { it.isDigit() }.takeLast(10)
         val uniqueWorkName = if (cleanDigits.isNotEmpty()) "autotext_$cleanDigits" else "autotext_$phoneNumber"
 
@@ -277,12 +289,7 @@ class CallStateReceiver : BroadcastReceiver() {
             .putString(SendAutoTextWorker.KEY_PHONE_NUMBER, phoneNumber)
             .build()
 
-        val isVoiceActive = try {
-            val settings = (context.applicationContext as App).settingsRepository.getSettings()
-            settings.voiceReceptionistEnabled || settings.voiceSubscriptionActive
-        } catch (_: Exception) {
-            false
-        }
+        val isVoiceActive = settings?.let { it.voiceReceptionistEnabled || it.voiceSubscriptionActive } ?: false
 
         val workRequestBuilder = OneTimeWorkRequestBuilder<SendAutoTextWorker>()
             .setInputData(inputData)

@@ -652,7 +652,280 @@ fun SettingsScreen(
         }
 
         // ═════════════════════════════════════════════════════════════════════
-        // SECTION 3: ⚡ WEBHOOKS & CRM AUTOMATIONS (STRICT PAYWALL ENFORCEMENT)
+        // SECTION 3: 🔔 NOTIFICATIONS & ALERTS
+        // ═════════════════════════════════════════════════════════════════════
+        Card(
+            shape = RoundedCornerShape(16.dp),
+            colors = CardDefaults.cardColors(containerColor = DarkSurface),
+            border = BorderStroke(1.dp, DarkCardBorder),
+            modifier = Modifier.fillMaxWidth()
+        ) {
+            Column(modifier = Modifier.padding(16.dp)) {
+                // Section Header
+                Row(
+                    modifier = Modifier.fillMaxWidth(),
+                    horizontalArrangement = Arrangement.SpaceBetween,
+                    verticalAlignment = Alignment.CenterVertically
+                ) {
+                    Row(
+                        modifier = Modifier.weight(1f),
+                        verticalAlignment = Alignment.CenterVertically
+                    ) {
+                        Surface(
+                            shape = RoundedCornerShape(10.dp),
+                            color = SapphireContainerSubtle,
+                            modifier = Modifier.size(36.dp)
+                        ) {
+                            Box(contentAlignment = Alignment.Center) {
+                                Icon(Icons.Default.Notifications, contentDescription = null, tint = SapphireLight, modifier = Modifier.size(20.dp))
+                            }
+                        }
+                        Spacer(modifier = Modifier.width(12.dp))
+                        Column {
+                            Text(
+                                text = "Notifications & Alerts",
+                                style = MaterialTheme.typography.titleMedium,
+                                fontWeight = FontWeight.Bold,
+                                color = TextHeading
+                            )
+                            Text(
+                                text = "Configure alerts for missed calls, voice & SMS",
+                                style = MaterialTheme.typography.labelSmall,
+                                color = TextMuted
+                            )
+                        }
+                    }
+
+                    Switch(
+                        checked = settings.notificationsEnabled,
+                        onCheckedChange = { onSettingsChanged(settings.copy(notificationsEnabled = it)) },
+                        colors = SwitchDefaults.colors(
+                            checkedThumbColor = SapphireLight,
+                            checkedTrackColor = SapphirePrimary
+                        )
+                    )
+                }
+
+                if (!settings.notificationsEnabled) {
+                    Spacer(modifier = Modifier.height(10.dp))
+                    Surface(
+                        shape = RoundedCornerShape(8.dp),
+                        color = RedContainerSubtle,
+                        modifier = Modifier.fillMaxWidth()
+                    ) {
+                        Row(modifier = Modifier.padding(10.dp), verticalAlignment = Alignment.CenterVertically) {
+                            Icon(Icons.Default.NotificationsNone, contentDescription = null, tint = RedError, modifier = Modifier.size(16.dp))
+                            Spacer(modifier = Modifier.width(8.dp))
+                            Text(
+                                text = "All system notifications are currently silenced.",
+                                style = MaterialTheme.typography.bodySmall,
+                                color = RedError
+                            )
+                        }
+                    }
+                } else {
+                    Spacer(modifier = Modifier.height(14.dp))
+                    HorizontalDivider(color = DarkCardBorder)
+                    Spacer(modifier = Modifier.height(12.dp))
+
+                    // 1. Bypass & Filter Alerts
+                    Row(
+                        modifier = Modifier.fillMaxWidth(),
+                        horizontalArrangement = Arrangement.SpaceBetween,
+                        verticalAlignment = Alignment.CenterVertically
+                    ) {
+                        Column(modifier = Modifier.weight(1f)) {
+                            Text(
+                                text = "Bypass & Filter Notifications",
+                                style = MaterialTheme.typography.bodyMedium,
+                                fontWeight = FontWeight.SemiBold,
+                                color = TextHeading
+                            )
+                            Text(
+                                text = "Alerts when an incoming text or call is bypassed by Contacts Shield, Business Hours, or Scope Off. Automatically silenced when Auto-SMS or Voice Agent is turned off.",
+                                style = MaterialTheme.typography.bodySmall,
+                                color = TextMuted
+                            )
+                        }
+                        Spacer(modifier = Modifier.width(12.dp))
+                        Switch(
+                            checked = settings.notifyOnBypassAndFilters,
+                            onCheckedChange = { onSettingsChanged(settings.copy(notifyOnBypassAndFilters = it)) },
+                            colors = SwitchDefaults.colors(
+                                checkedThumbColor = EmeraldLight,
+                                checkedTrackColor = EmeraldSuccess
+                            )
+                        )
+                    }
+
+                    Spacer(modifier = Modifier.height(12.dp))
+                    HorizontalDivider(color = DarkCardBorder)
+                    Spacer(modifier = Modifier.height(12.dp))
+
+                    // 2. Auto-SMS Sent Activity
+                    Row(
+                        modifier = Modifier.fillMaxWidth(),
+                        horizontalArrangement = Arrangement.SpaceBetween,
+                        verticalAlignment = Alignment.CenterVertically
+                    ) {
+                        Column(modifier = Modifier.weight(1f)) {
+                            Text(
+                                text = "Auto-SMS Sent Notifications",
+                                style = MaterialTheme.typography.bodyMedium,
+                                fontWeight = FontWeight.SemiBold,
+                                color = TextHeading
+                            )
+                            Text(
+                                text = "Alerts when an automated missed call text or AI reply is dispatched via your carrier SIM.",
+                                style = MaterialTheme.typography.bodySmall,
+                                color = TextMuted
+                            )
+                        }
+                        Spacer(modifier = Modifier.width(12.dp))
+                        Switch(
+                            checked = settings.notifyOnAutoSmsSent,
+                            onCheckedChange = { onSettingsChanged(settings.copy(notifyOnAutoSmsSent = it)) },
+                            colors = SwitchDefaults.colors(
+                                checkedThumbColor = EmeraldLight,
+                                checkedTrackColor = EmeraldSuccess
+                            )
+                        )
+                    }
+
+                    Spacer(modifier = Modifier.height(12.dp))
+                    HorizontalDivider(color = DarkCardBorder)
+                    Spacer(modifier = Modifier.height(12.dp))
+
+                    // 3. AI Voice Receptionist Alerts
+                    Row(
+                        modifier = Modifier.fillMaxWidth(),
+                        horizontalArrangement = Arrangement.SpaceBetween,
+                        verticalAlignment = Alignment.CenterVertically
+                    ) {
+                        Column(modifier = Modifier.weight(1f)) {
+                            Text(
+                                text = "Voice Receptionist Alerts",
+                                style = MaterialTheme.typography.bodyMedium,
+                                fontWeight = FontWeight.SemiBold,
+                                color = TextHeading
+                            )
+                            Text(
+                                text = "Alerts on incoming live call pickups and AI conversation recaps. Automatically silenced when Voice Agent is turned off.",
+                                style = MaterialTheme.typography.bodySmall,
+                                color = TextMuted
+                            )
+                        }
+                        Spacer(modifier = Modifier.width(12.dp))
+                        Switch(
+                            checked = settings.notifyOnVoiceCalls,
+                            onCheckedChange = { onSettingsChanged(settings.copy(notifyOnVoiceCalls = it)) },
+                            colors = SwitchDefaults.colors(
+                                checkedThumbColor = SapphireLight,
+                                checkedTrackColor = SapphirePrimary
+                            )
+                        )
+                    }
+
+                    Spacer(modifier = Modifier.height(12.dp))
+                    HorizontalDivider(color = DarkCardBorder)
+                    Spacer(modifier = Modifier.height(12.dp))
+
+                    // 4. Appointments & Bookings
+                    Row(
+                        modifier = Modifier.fillMaxWidth(),
+                        horizontalArrangement = Arrangement.SpaceBetween,
+                        verticalAlignment = Alignment.CenterVertically
+                    ) {
+                        Column(modifier = Modifier.weight(1f)) {
+                            Text(
+                                text = "Appointments & Bookings",
+                                style = MaterialTheme.typography.bodyMedium,
+                                fontWeight = FontWeight.SemiBold,
+                                color = TextHeading
+                            )
+                            Text(
+                                text = "High-priority alerts when appointments are scheduled into your calendar.",
+                                style = MaterialTheme.typography.bodySmall,
+                                color = TextMuted
+                            )
+                        }
+                        Spacer(modifier = Modifier.width(12.dp))
+                        Switch(
+                            checked = settings.notifyOnAppointments,
+                            onCheckedChange = { onSettingsChanged(settings.copy(notifyOnAppointments = it)) },
+                            colors = SwitchDefaults.colors(
+                                checkedThumbColor = SapphireLight,
+                                checkedTrackColor = SapphirePrimary
+                            )
+                        )
+                    }
+
+                    Spacer(modifier = Modifier.height(12.dp))
+                    HorizontalDivider(color = DarkCardBorder)
+                    Spacer(modifier = Modifier.height(12.dp))
+
+                    // 5. Human Takeover Alerts
+                    Row(
+                        modifier = Modifier.fillMaxWidth(),
+                        horizontalArrangement = Arrangement.SpaceBetween,
+                        verticalAlignment = Alignment.CenterVertically
+                    ) {
+                        Column(modifier = Modifier.weight(1f)) {
+                            Text(
+                                text = "Human Takeover Alerts",
+                                style = MaterialTheme.typography.bodyMedium,
+                                fontWeight = FontWeight.SemiBold,
+                                color = TextHeading
+                            )
+                            Text(
+                                text = "Alerts when AI text autopilot temporarily pauses because you texted the customer back directly.",
+                                style = MaterialTheme.typography.bodySmall,
+                                color = TextMuted
+                            )
+                        }
+                        Spacer(modifier = Modifier.width(12.dp))
+                        Switch(
+                            checked = settings.notifyOnHumanTakeover,
+                            onCheckedChange = { onSettingsChanged(settings.copy(notifyOnHumanTakeover = it)) },
+                            colors = SwitchDefaults.colors(
+                                checkedThumbColor = EmeraldLight,
+                                checkedTrackColor = EmeraldSuccess
+                            )
+                        )
+                    }
+                }
+
+                Spacer(modifier = Modifier.height(14.dp))
+
+                // Link to Android System Notification Channel Settings
+                OutlinedButton(
+                    onClick = {
+                        try {
+                            val intent = Intent(Settings.ACTION_APP_NOTIFICATION_SETTINGS).apply {
+                                putExtra(Settings.EXTRA_APP_PACKAGE, context.packageName)
+                            }
+                            context.startActivity(intent)
+                        } catch (e: Exception) {
+                            val intent = Intent(Settings.ACTION_APPLICATION_DETAILS_SETTINGS).apply {
+                                data = Uri.parse("package:${context.packageName}")
+                            }
+                            context.startActivity(intent)
+                        }
+                    },
+                    modifier = Modifier.fillMaxWidth(),
+                    shape = RoundedCornerShape(10.dp),
+                    border = BorderStroke(1.dp, DarkCardBorder),
+                    colors = ButtonDefaults.outlinedButtonColors(contentColor = SapphireLight)
+                ) {
+                    Icon(Icons.Default.Tune, contentDescription = null, modifier = Modifier.size(16.dp))
+                    Spacer(modifier = Modifier.width(8.dp))
+                    Text("Android System Notification Settings", fontSize = 12.sp, fontWeight = FontWeight.SemiBold)
+                }
+            }
+        }
+
+        // ═════════════════════════════════════════════════════════════════════
+        // SECTION 4: ⚡ WEBHOOKS & CRM AUTOMATIONS (STRICT PAYWALL ENFORCEMENT)
         // ═════════════════════════════════════════════════════════════════════
         Card(
             shape = RoundedCornerShape(16.dp),

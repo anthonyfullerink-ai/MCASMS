@@ -261,7 +261,11 @@ fun MainScreen(
             onDismiss = { showNotificationsPanel = false },
             onMarkAllRead = onMarkAllNotificationsRead,
             onClearAll = onClearNotifications,
-            onMarkRead = onMarkNotificationRead
+            onMarkRead = onMarkNotificationRead,
+            onOpenSettings = {
+                showNotificationsPanel = false
+                selectedTab = 4
+            }
         )
     }
 

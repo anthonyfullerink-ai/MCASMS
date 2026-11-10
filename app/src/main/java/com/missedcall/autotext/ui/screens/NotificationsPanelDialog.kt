@@ -36,7 +36,8 @@ fun NotificationsPanelDialog(
     onDismiss: () -> Unit,
     onMarkAllRead: () -> Unit,
     onClearAll: () -> Unit,
-    onMarkRead: (Long) -> Unit
+    onMarkRead: (Long) -> Unit,
+    onOpenSettings: (() -> Unit)? = null
 ) {
     val context = LocalContext.current
     var selectedFilter by remember { mutableStateOf("ALL") }
@@ -127,8 +128,15 @@ fun NotificationsPanelDialog(
                         }
                     }
 
-                    IconButton(onClick = onDismiss) {
-                        Icon(Icons.Default.Close, contentDescription = "Close", tint = Color(0xFF94A3B8))
+                    Row(verticalAlignment = Alignment.CenterVertically) {
+                        if (onOpenSettings != null) {
+                            IconButton(onClick = onOpenSettings) {
+                                Icon(Icons.Default.Tune, contentDescription = "Notification Settings", tint = Color(0xFF38BDF8))
+                            }
+                        }
+                        IconButton(onClick = onDismiss) {
+                            Icon(Icons.Default.Close, contentDescription = "Close", tint = Color(0xFF94A3B8))
+                        }
                     }
                 }
 

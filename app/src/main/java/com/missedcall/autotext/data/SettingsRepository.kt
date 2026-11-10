@@ -114,6 +114,13 @@ class SettingsRepository(private val context: Context) {
         val LOCK_HANDSET_SETTINGS = booleanPreferencesKey("lock_handset_settings")
         val LAST_REMOTE_CONFIG_TIMESTAMP = longPreferencesKey("last_remote_config_timestamp")
         val REMOTE_CONFIG_MANAGED_BY = stringPreferencesKey("remote_config_managed_by")
+
+        val NOTIFICATIONS_ENABLED = booleanPreferencesKey("notifications_enabled")
+        val NOTIFY_ON_AUTO_SMS_SENT = booleanPreferencesKey("notify_on_auto_sms_sent")
+        val NOTIFY_ON_BYPASS_AND_FILTERS = booleanPreferencesKey("notify_on_bypass_and_filters")
+        val NOTIFY_ON_VOICE_CALLS = booleanPreferencesKey("notify_on_voice_calls")
+        val NOTIFY_ON_APPOINTMENTS = booleanPreferencesKey("notify_on_appointments")
+        val NOTIFY_ON_HUMAN_TAKEOVER = booleanPreferencesKey("notify_on_human_takeover")
     }
 
 
@@ -225,7 +232,13 @@ class SettingsRepository(private val context: Context) {
             agencyName = preferences[AGENCY_NAME]?.ifBlank { com.missedcall.autotext.util.AppBranding.appName } ?: com.missedcall.autotext.util.AppBranding.appName,
             lockHandsetSettings = preferences[LOCK_HANDSET_SETTINGS] ?: false,
             lastRemoteConfigTimestamp = preferences[LAST_REMOTE_CONFIG_TIMESTAMP] ?: 0L,
-            remoteConfigManagedBy = preferences[REMOTE_CONFIG_MANAGED_BY] ?: ""
+            remoteConfigManagedBy = preferences[REMOTE_CONFIG_MANAGED_BY] ?: "",
+            notificationsEnabled = preferences[NOTIFICATIONS_ENABLED] ?: true,
+            notifyOnAutoSmsSent = preferences[NOTIFY_ON_AUTO_SMS_SENT] ?: true,
+            notifyOnBypassAndFilters = preferences[NOTIFY_ON_BYPASS_AND_FILTERS] ?: false,
+            notifyOnVoiceCalls = preferences[NOTIFY_ON_VOICE_CALLS] ?: true,
+            notifyOnAppointments = preferences[NOTIFY_ON_APPOINTMENTS] ?: true,
+            notifyOnHumanTakeover = preferences[NOTIFY_ON_HUMAN_TAKEOVER] ?: true
         )
 
 
@@ -356,6 +369,12 @@ class SettingsRepository(private val context: Context) {
             preferences[LOCK_HANDSET_SETTINGS] = settings.lockHandsetSettings
             preferences[LAST_REMOTE_CONFIG_TIMESTAMP] = settings.lastRemoteConfigTimestamp
             preferences[REMOTE_CONFIG_MANAGED_BY] = settings.remoteConfigManagedBy
+            preferences[NOTIFICATIONS_ENABLED] = settings.notificationsEnabled
+            preferences[NOTIFY_ON_AUTO_SMS_SENT] = settings.notifyOnAutoSmsSent
+            preferences[NOTIFY_ON_BYPASS_AND_FILTERS] = settings.notifyOnBypassAndFilters
+            preferences[NOTIFY_ON_VOICE_CALLS] = settings.notifyOnVoiceCalls
+            preferences[NOTIFY_ON_APPOINTMENTS] = settings.notifyOnAppointments
+            preferences[NOTIFY_ON_HUMAN_TAKEOVER] = settings.notifyOnHumanTakeover
         }
     }
 

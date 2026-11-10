@@ -1,10 +1,10 @@
 {
-  "versionCode": 49,
-  "versionName": "2.0.9",
+  "versionCode": 50,
+  "versionName": "2.1.0",
   "downloadUrl": "https://raw.githubusercontent.com/anthonyfullerink-ai/MCASMS/main/MissedCallAutoSMS.apk",
   "proDownloadUrl": "https://raw.githubusercontent.com/anthonyfullerink-ai/MCASMS/main/MissedCallAutoSMS-Pro.apk",
-  "releaseNotes": "🚀 Major Release v2.0 (Build 40): Client Portal & Voice Automation Suite\n• 🌐 Turnkey Client Portal: Access full call audio recordings, transcripts & interactive SMS history\n• 📋 Autonomous AI Task Engine: Automatically extracts action items following voice calls & texts\n• 💼 White-Label Fleet Architecture: Remote prompt updates & vanity domain support\n• 🛡️ Cellular P2P Carrier Reliability: Enhanced carrier detection & dual-SIM routing",
+  "releaseNotes": "🚀 v2.1.0 (Build 50): Notification Controls & Alert Silencing\n• 🔔 Granular Notification Settings: Control Auto-SMS, Voice Agent, Appointments & Bypass alerts\n• 🔇 Strict Mute Integrity: Bypassed & filtered alerts are automatically silenced when Auto-SMS or Voice Agent is turned off\n• 🛠️ Settings Quick-Access: Access notification preferences directly from the AI Activity Feed",
   "mandatory": false,
   "minSupportedVersion": 1,
-  "updatedAt": "2026-11-07T17:16:55.760Z"
+  "updatedAt": "2026-11-10T20:50:59.695Z"
 }

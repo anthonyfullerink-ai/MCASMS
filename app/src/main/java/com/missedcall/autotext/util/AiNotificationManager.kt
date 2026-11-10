@@ -182,59 +182,104 @@ object AiNotificationManager {
         channelId: String,
         notificationId: Int
     ) {
-        initChannels(context)
-
-        // 1. Post Android System Notification
-        val notificationManager = context.getSystemService(Context.NOTIFICATION_SERVICE) as? NotificationManager
-        if (notificationManager != null) {
-            val intent = Intent(context, MainActivity::class.java).apply {
-                flags = Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_CLEAR_TOP
-                putExtra("OPEN_NOTIFICATIONS_PANEL", true)
-            }
-            val pendingIntent = PendingIntent.getActivity(
-                context,
-                notificationId,
-                intent,
-                PendingIntent.FLAG_UPDATE_CURRENT or PendingIntent.FLAG_IMMUTABLE
-            )
-
-            val builder = NotificationCompat.Builder(context, channelId)
-                .setSmallIcon(android.R.drawable.stat_notify_chat)
-                .setContentTitle(title)
-                .setContentText(message)
-                .setStyle(NotificationCompat.BigTextStyle().bigText(message))
-                .setPriority(
-                    if (channelId == CHANNEL_EMERGENCY_ID || channelId == CHANNEL_BOOKINGS_ID)
-                        NotificationCompat.PRIORITY_HIGH
-                    else
-                        NotificationCompat.PRIORITY_DEFAULT
-                )
-                .setAutoCancel(true)
-                .setContentIntent(pendingIntent)
-
-            try {
-                notificationManager.notify(notificationId, builder.build())
-            } catch (e: Exception) {
-                android.util.Log.w("AiNotificationManager", "Failed to post system notification: ${e.message}")
-            }
-        }
-
-        // 2. Persist to In-App Room Database
         scope.launch {
             try {
                 val app = context.applicationContext as? App ?: return@launch
-                app.database.appNotificationDao().insertNotification(
-                    AppNotificationEvent(
-                        title = title,
-                        message = message,
-                        type = type,
-                        phoneNumber = phoneNumber,
-                        timestamp = System.currentTimeMillis(),
-                        isRead = false
+                val settings = try {
+                    app.settingsRepository.getSettings()
+                } catch (e: Exception) {
+                    return@launch
+                }
+
+                // 0. Master System Notification Gate
+                if (!settings.notificationsEnabled) {
+                    return@launch
+                }
+
+                // 1. Strict category & feature enablement gates
+                val isVoiceActive = settings.voiceReceptionistEnabled || settings.voiceSubscriptionActive
+                val isAutoSmsActive = settings.masterEnabled && settings.aiSmsMasterEnabled
+
+                val shouldNotify: Boolean = when (type) {
+                    "VOICE_CALL_STARTED", "VOICE_CALL_COMPLETED" -> {
+                        settings.notifyOnVoiceCalls && isVoiceActive
+                    }
+                    "EMERGENCY_ALERT" -> {
+                        settings.notifyOnVoiceCalls && isVoiceActive
+                    }
+                    "APPOINTMENT_BOOKED" -> {
+                        settings.notifyOnAppointments
+                    }
+                    "AI_SMS_SENT", "AI_SMS_RECEIVED" -> {
+                        settings.notifyOnAutoSmsSent && isAutoSmsActive
+                    }
+                    "HUMAN_TAKEOVER" -> {
+                        settings.notifyOnHumanTakeover && settings.masterEnabled
+                    }
+                    "SMS_ACTIVITY", "SMS_IGNORED" -> {
+                        settings.notifyOnBypassAndFilters && isAutoSmsActive
+                    }
+                    else -> true
+                }
+
+                if (!shouldNotify) {
+                    return@launch
+                }
+
+                initChannels(context)
+
+                // 2. Post Android System Notification
+                val notificationManager = context.getSystemService(Context.NOTIFICATION_SERVICE) as? NotificationManager
+                if (notificationManager != null) {
+                    val intent = Intent(context, MainActivity::class.java).apply {
+                        flags = Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_CLEAR_TOP
+                        putExtra("OPEN_NOTIFICATIONS_PANEL", true)
+                    }
+                    val pendingIntent = PendingIntent.getActivity(
+                        context,
+                        notificationId,
+                        intent,
+                        PendingIntent.FLAG_UPDATE_CURRENT or PendingIntent.FLAG_IMMUTABLE
                     )
-                )
+
+                    val builder = NotificationCompat.Builder(context, channelId)
+                        .setSmallIcon(android.R.drawable.stat_notify_chat)
+                        .setContentTitle(title)
+                        .setContentText(message)
+                        .setStyle(NotificationCompat.BigTextStyle().bigText(message))
+                        .setPriority(
+                            if (channelId == CHANNEL_EMERGENCY_ID || channelId == CHANNEL_BOOKINGS_ID)
+                                NotificationCompat.PRIORITY_HIGH
+                            else
+                                NotificationCompat.PRIORITY_DEFAULT
+                        )
+                        .setAutoCancel(true)
+                        .setContentIntent(pendingIntent)
+
+                    try {
+                        notificationManager.notify(notificationId, builder.build())
+                    } catch (e: Exception) {
+                        android.util.Log.w("AiNotificationManager", "Failed to post system notification: ${e.message}")
+                    }
+                }
+
+                // 3. Persist to In-App Room Database
+                try {
+                    app.database.appNotificationDao().insertNotification(
+                        AppNotificationEvent(
+                            title = title,
+                            message = message,
+                            type = type,
+                            phoneNumber = phoneNumber,
+                            timestamp = System.currentTimeMillis(),
+                            isRead = false
+                        )
+                    )
+                } catch (e: Exception) {
+                    android.util.Log.w("AiNotificationManager", "Failed to insert notification into database: ${e.message}")
+                }
             } catch (e: Exception) {
-                android.util.Log.w("AiNotificationManager", "Failed to insert notification into database: ${e.message}")
+                android.util.Log.w("AiNotificationManager", "Notification processing error: ${e.message}")
             }
         }
     }
